@@ -34,6 +34,9 @@ export default defineConfig({
 	define: {
 		__APP_VERSION__: JSON.stringify(pkg.version)
 	},
+	// Ambiente interno di Vitest: le dipendenze pre-raggruppate non usano il tsconfig del progetto,
+	// e rolldown non sa risolvere "$app/tsconfig" (Tsconfig not found all'avvio dei test).
+	environments: { __vitest__: { optimizeDeps: { rolldownOptions: { tsconfig: false } } } },
 	test: {
 		include: ['src/**/*.test.ts']
 	}
