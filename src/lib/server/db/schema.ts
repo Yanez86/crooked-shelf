@@ -189,3 +189,50 @@ export const timelineEvents = sqliteTable('timeline_events', {
 	createdAt: integer('created_at').notNull(),
 	updatedAt: integer('updated_at').notNull()
 });
+
+export const pageRevisions = sqliteTable('page_revisions', {
+	id: integer('id').primaryKey({ autoIncrement: true }),
+	pageId: integer('page_id')
+		.notNull()
+		.references(() => pages.id, { onDelete: 'cascade' }),
+	title: text('title').notNull(),
+	content: text('content', { mode: 'json' }).notNull(),
+	fields: text('fields', { mode: 'json' }).$type<PageField[]>().notNull().default([]),
+	visibility: text('visibility', { enum: VISIBILITIES }).notNull(),
+	hasSecret: integer('has_secret', { mode: 'boolean' }).notNull().default(false),
+	editedBy: integer('edited_by').references(() => users.id, { onDelete: 'set null' }),
+	createdAt: integer('created_at').notNull()
+});
+
+export const boards = sqliteTable('boards', {
+	id: integer('id').primaryKey({ autoIncrement: true }),
+	title: text('title').notNull(),
+	/** null = bacheca condivisa del gruppo. */
+	ownerId: integer('owner_id').references(() => users.id, { onDelete: 'cascade' }),
+	visibility: text('visibility', { enum: ['players', 'master'] }).notNull(),
+	createdBy: integer('created_by').references(() => users.id, { onDelete: 'set null' }),
+	createdAt: integer('created_at').notNull()
+});
+
+export const boardColumns = sqliteTable('board_columns', {
+	id: integer('id').primaryKey({ autoIncrement: true }),
+	boardId: integer('board_id')
+		.notNull()
+		.references(() => boards.id, { onDelete: 'cascade' }),
+	title: text('title').notNull(),
+	sort: integer('sort').notNull().default(0)
+});
+
+export const boardCards = sqliteTable('board_cards', {
+	id: integer('id').primaryKey({ autoIncrement: true }),
+	columnId: integer('column_id')
+		.notNull()
+		.references(() => boardColumns.id, { onDelete: 'cascade' }),
+	title: text('title').notNull(),
+	body: text('body').notNull().default(''),
+	color: text('color').notNull().default('yellow'),
+	sort: integer('sort').notNull().default(0),
+	createdBy: integer('created_by').references(() => users.id, { onDelete: 'set null' }),
+	createdAt: integer('created_at').notNull(),
+	updatedAt: integer('updated_at').notNull()
+});

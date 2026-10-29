@@ -3,6 +3,7 @@
 	import { getT } from '#lib/i18n/index.ts';
 	import TagBadge from '#lib/components/TagBadge.svelte';
 	import RelTime from '#lib/components/RelTime.svelte';
+	import FormOk from '#lib/components/FormOk.svelte';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
@@ -30,12 +31,15 @@
 		{/if}
 	</header>
 
+	<FormOk message={appPage.url.searchParams.has('restored') ? 'history.restored' : null} />
+
 	<p class="meta muted">
 		<span class="badge">{t('visibility.' + data.page.visibility)}</span>
 		{#if data.page.hasSecret}<span class="badge">🔒 {t('page.hasSecret')}</span>{/if}
 		{#if data.editor}
 			<span>{t('page.lastEdit', { name: data.editor })} <RelTime ts={data.page.updatedAt} {locale} /></span>
 		{/if}
+		<a href="/wiki/{data.page.slug}/history">{t('history.link')}</a>
 	</p>
 
 	{#if data.tags.length}

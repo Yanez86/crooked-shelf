@@ -1,6 +1,7 @@
 import { CALLOUT_KINDS, type DocNode } from './types.ts';
 import { INLINE_LINK } from './extract.ts';
 import { slugify } from '../slug.ts';
+import { ddbUrl, parseRuleKind, ruleKey, type RuleKind } from '../rules/index.ts';
 
 export interface LinkTarget {
 	title: string;
@@ -11,8 +12,10 @@ export interface LinkTarget {
 export interface RenderOptions {
 	showSecrets: boolean;
 	resolve: (slug: string) => LinkTarget | undefined;
-	/** Testi dell'interfaccia (già tradotti). */
-	labels: { secret: string; note: string; tip: string; warning: string; missing: string };
+	/** Testi dell'interfaccia (già tradotti). `preview` contiene {name}. */
+	labels: { secret: string; note: string; tip: string; warning: string; missing: string; preview?: string; external?: string };
+	/** C'è un'anteprima del testo della regola (SRD)? */
+	hasRule?: (kind: RuleKind, key: string) => boolean;
 }
 
 export const esc = (s: string) =>
@@ -131,6 +134,12 @@ export function renderDoc(doc: DocNode, opt: RenderOptions): string {
 			case 'secret':
 				if (!opt.showSecrets) return '';
 				return `<aside class="secret" aria-label="${esc(opt.labels.secret)}"><p class="secret-title">${esc(opt.labels.secret)}</p>${kids(n)}</aside>`;
+			case 'ruleRef': {
+				const kind = parseRuleKind(String(n.attrs?.kind ?? ''));
+				const name = String(n.attrs?.name ?? '');
+				if (!kind || !name) return '';
+				return ruleRefHtml(kind, name, n.attrs?.label ? String(n.attrs.label) : null, opt);
+			}
 			case 'wikiLink':
 				return wikiLinkHtml(
 					String(n.attrs?.target ?? ''),
@@ -145,7 +154,19 @@ export function renderDoc(doc: DocNode, opt: RenderOptions): string {
 	return node(doc);
 }
 
-type LinkOpts = Pick<RenderOptions, 'resolve' | 'labels'>;
+type LinkOpts = Pick<RenderOptions, 'resolve' | 'labels' | 'hasRule'>;
+
+/** Riferimento a una regola: link a D&D Beyond e, se c'è il testo SRD, il pulsante dell'anteprima. */
+function ruleRefHtml(kind: RuleKind, name: string, label: string | null, opt: LinkOpts): string {
+	const key = ruleKey(name);
+	const ext = opt.labels.external ? `<span class="visually-hidden"> ${esc(opt.labels.external)}</span>` : '';
+	const link = `<a class="ruleref-link" href="${esc(ddbUrl(kind, name))}" rel="noopener noreferrer nofollow" target="_blank">${esc(label ?? name)}${ext}</a>`;
+	const info =
+		opt.hasRule?.(kind, key) && opt.labels.preview
+			? `<button type="button" class="rule-info" data-rule="${kind}/${esc(key)}" aria-label="${esc(opt.labels.preview.replace('{name}', label ?? name))}" aria-expanded="false" aria-haspopup="dialog">i</button>`
+			: '';
+	return `<span class="ruleref">${link}${info}</span>`;
+}
 
 function wikiLinkHtml(target: string, fallback: string, label: string | null, opt: LinkOpts): string {
 	const page = target ? opt.resolve(target) : undefined;
@@ -163,8 +184,13 @@ export function renderInline(text: string, opt: LinkOpts): string {
 	let last = 0;
 	for (const m of text.matchAll(INLINE_LINK)) {
 		out += esc(text.slice(last, m.index));
-		const title = m[1].trim();
-		out += wikiLinkHtml(slugify(title), title, m[2]?.trim() || null, opt);
+		if (m[1]) {
+			const title = m[1].trim();
+			out += wikiLinkHtml(slugify(title), title, m[2]?.trim() || null, opt);
+		} else {
+			const kind = parseRuleKind(m[3]);
+			out += kind ? ruleRefHtml(kind, m[4].trim(), m[5]?.trim() || null, opt) : esc(m[0]);
+		}
 		last = m.index! + m[0].length;
 	}
 	return out + esc(text.slice(last));

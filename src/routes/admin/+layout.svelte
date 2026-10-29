@@ -8,7 +8,8 @@
 	const links = [
 		['/admin', 'admin.settings'],
 		['/admin/users', 'admin.users'],
-		['/admin/invites', 'admin.invites']
+		['/admin/invites', 'admin.invites'],
+		['/admin/themes', 'admin.themes']
 	];
 </script>
 
@@ -16,7 +17,7 @@
 <nav aria-label={t('nav.admin')} class="subnav">
 	<ul class="list-plain">
 		{#each links as [href, key] (href)}
-			<li><a {href} aria-current={page.url.pathname === href ? 'page' : undefined}>{t(key)}</a></li>
+			<li><a {href} aria-current={page.url.pathname === href || (href !== '/admin' && page.url.pathname.startsWith(href + '/')) ? 'page' : undefined}>{t(key)}</a></li>
 		{/each}
 	</ul>
 </nav>

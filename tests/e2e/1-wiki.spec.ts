@@ -97,7 +97,7 @@ test('pagine, collegamenti e segreti', async () => {
 			await p.keyboard.type('[[Bart');
 			const option = p.getByRole('option', { name: 'Bartolo Pancia' });
 			await expect(option).toBeVisible();
-			await expect(p.locator('.editor-content')).toHaveAttribute('aria-activedescendant', /wl-suggest/);
+			await expect(p.locator('.editor-content')).toHaveAttribute('aria-activedescendant', /suggest-/);
 			await p.keyboard.press('Enter');
 			await p.keyboard.type('e serve birra annacquata. Si parla di [[Drago Rosso]] ');
 			await p.keyboard.press('Enter');

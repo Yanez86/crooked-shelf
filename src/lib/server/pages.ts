@@ -9,8 +9,9 @@ import type { Visibility } from '../roles.ts';
 import { visibleTo } from './visibility.ts';
 import { ensureTags, tagsForPages } from './taxonomy.ts';
 import { syncSessionEvent } from './timeline.ts';
+import { hasRule } from './rules/index.ts';
 
-const { pages, pageTags, pageLinks, users, categories } = schema;
+const { pages, pageTags, pageLinks, users, categories, pageRevisions } = schema;
 
 export type PageRow = typeof pages.$inferSelect;
 
@@ -77,6 +78,25 @@ function writeIndex(id: number, title: string, doc: DocNode, fields: PageField[]
 	return ex;
 }
 
+/** Salva una versione della pagina così com'è dopo una modifica. */
+function writeRevision(id: number) {
+	const p = getDb().select().from(pages).where(eq(pages.id, id)).get();
+	if (!p) return;
+	getDb()
+		.insert(pageRevisions)
+		.values({
+			pageId: id,
+			title: p.title,
+			content: p.content,
+			fields: p.fields ?? [],
+			visibility: p.visibility,
+			hasSecret: p.hasSecret,
+			editedBy: p.updatedBy,
+			createdAt: p.updatedAt
+		})
+		.run();
+}
+
 function writeTags(id: number, names: string[]) {
 	const db = getDb();
 	db.delete(pageTags).where(eq(pageTags.pageId, id)).run();
@@ -112,6 +132,7 @@ export function createPage(input: PageInput, u: Viewer): PageRow {
 		writeIndex(row.id, row.title, doc, input.fields);
 		writeTags(row.id, input.tags);
 		syncSessionEvent(row, input.session);
+		writeRevision(row.id);
 		return row;
 	});
 }
@@ -139,6 +160,7 @@ export function updatePage(page: PageRow, input: PageInput, u: Viewer, manage: b
 		writeTags(page.id, input.tags);
 		const visibility = manage ? input.visibility : page.visibility;
 		syncSessionEvent({ id: page.id, title: input.title, visibility, authorId: page.authorId }, input.session);
+		writeRevision(page.id);
 	});
 }
 
@@ -187,8 +209,8 @@ export function renderPage(page: PageRow, u: Viewer | null, labels: RenderOption
 	const fields = page.fields ?? [];
 	const resolve = linkResolver(doc, u, fields);
 	return {
-		html: renderDoc(doc, { showSecrets: isMaster(u), resolve, labels }),
-		fields: fields.map((f) => ({ label: f.label, html: renderInline(f.value, { resolve, labels }) }))
+		html: renderDoc(doc, { showSecrets: isMaster(u), resolve, labels, hasRule }),
+		fields: fields.map((f) => ({ label: f.label, html: renderInline(f.value, { resolve, labels, hasRule }) }))
 	};
 }
 
@@ -266,4 +288,83 @@ export function pageMeta(page: PageRow) {
 		editor: name(page.updatedBy),
 		tags: tagsForPages([page.id]).get(page.id) ?? []
 	};
+}
+
+// --- Cestino ---
+
+/** Pagine eliminate che chi guarda può recuperare: il Master tutte (tranne le personali altrui), il giocatore le sue. */
+export function listTrash(u: Viewer) {
+	const mine = sql`${pages.authorId} = ${u.id}`;
+	const cond = isMaster(u) ? sql`(${pages.visibility} <> 'personal' OR ${mine})` : sql`(${mine} AND ${pages.hasSecret} = 0)`;
+	return getDb()
+		.select({ id: pages.id, slug: pages.slug, title: pages.title, deletedAt: pages.deletedAt, visibility: pages.visibility })
+		.from(pages)
+		.where(and(sql`${pages.deletedAt} IS NOT NULL`, cond))
+		.orderBy(desc(pages.deletedAt))
+		.all();
+}
+
+export function getDeletedPage(id: number) {
+	return getDb()
+		.select()
+		.from(pages)
+		.where(and(eq(pages.id, id), sql`${pages.deletedAt} IS NOT NULL`))
+		.get();
+}
+
+export function restorePage(id: number) {
+	const p = getDeletedPage(id);
+	if (!p) return;
+	getDb().transaction(() => {
+		getDb().update(pages).set({ deletedAt: null }).where(eq(pages.id, id)).run();
+		writeIndex(id, p.title, isDoc(p.content) ? p.content : EMPTY_DOC, p.fields ?? []);
+		syncSessionEvent(p, p.session ?? null);
+	});
+}
+
+/** Elimina per sempre (con versioni e collegamenti). */
+export function purgePage(id: number) {
+	getDb().transaction(() => {
+		getSqlite().prepare('DELETE FROM pages_fts WHERE rowid = ?').run(id);
+		getDb().delete(pages).where(and(eq(pages.id, id), sql`${pages.deletedAt} IS NOT NULL`)).run();
+	});
+}
+
+// --- Versioni ---
+
+export type RevisionRow = typeof pageRevisions.$inferSelect;
+
+/** Versioni che chi guarda può vedere (non quelle di quando la pagina era nascosta per lui). */
+export function listRevisions(page: PageRow, u: Viewer | null) {
+	return getDb()
+		.select({
+			id: pageRevisions.id,
+			title: pageRevisions.title,
+			visibility: pageRevisions.visibility,
+			createdAt: pageRevisions.createdAt,
+			editor: users.displayName
+		})
+		.from(pageRevisions)
+		.leftJoin(users, eq(users.id, pageRevisions.editedBy))
+		.where(eq(pageRevisions.pageId, page.id))
+		.orderBy(desc(pageRevisions.id))
+		.all()
+		.filter((r) => canView({ visibility: r.visibility, authorId: page.authorId, playersCanEdit: false, hasSecret: false }, u));
+}
+
+export function getRevision(page: PageRow, id: number, u: Viewer | null): RevisionRow | undefined {
+	const r = getDb()
+		.select()
+		.from(pageRevisions)
+		.where(and(eq(pageRevisions.id, id), eq(pageRevisions.pageId, page.id)))
+		.get();
+	return r && canView({ visibility: r.visibility, authorId: page.authorId, playersCanEdit: false, hasSecret: false }, u) ? r : undefined;
+}
+
+/** Testo di una versione per il confronto: chi non è Master non vede i segreti. */
+export function revisionText(r: Pick<RevisionRow, 'title' | 'content' | 'fields'>, u: Viewer | null): string {
+	const ex = extract(isDoc(r.content) ? r.content : EMPTY_DOC, r.fields ?? []);
+	const parts = [r.title, '', ex.body];
+	if (isMaster(u) && ex.secretBody) parts.push('', '🔒', ex.secretBody);
+	return parts.join('\n');
 }

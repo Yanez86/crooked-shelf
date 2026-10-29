@@ -7,6 +7,7 @@ import { PluginKey } from '@tiptap/pm/state';
 import { slugify } from '../slug.ts';
 import { safeHref, safeImageSrc } from '../content/render.ts';
 import { CALLOUT_KINDS } from '../content/types.ts';
+import { parseRuleKind } from '../rules/index.ts';
 
 export interface EditorLabels {
 	note: string;
@@ -16,12 +17,18 @@ export interface EditorLabels {
 	suggestions: string;
 	createLink: string;
 	noResults: string;
+	rules: string;
+	/** Nome di ogni tipo di regola nella lingua dell'interfaccia. */
+	kinds: Record<string, string>;
 }
 
 declare module '@tiptap/core' {
 	interface Commands<ReturnType> {
 		wikiLink: {
 			insertWikiLink: (attrs: { target: string; title: string; label?: string | null }) => ReturnType;
+		};
+		ruleRef: {
+			insertRuleRef: (attrs: { kind: string; name: string; label?: string | null }) => ReturnType;
 		};
 	}
 }
@@ -81,6 +88,13 @@ interface SuggestItem {
 	slug: string;
 	title: string;
 	create?: boolean;
+}
+
+export interface RuleItem {
+	kind: string;
+	key: string;
+	name: string;
+	summary: string;
 }
 
 const wikiKey = new PluginKey('wikiLinkSuggestion');
@@ -176,7 +190,94 @@ const WikiLink = Node.create<{ labels: EditorLabels; suggest: (q: string, signal
 						.insertWikiLink({ target: props.slug, title: props.title })
 						.run();
 				},
-				render: () => suggestionPopup(labels)
+				render: () =>
+					suggestionPopup<SuggestItem>(labels.suggestions, labels.noResults, (i) =>
+						i.create ? { text: labels.createLink.replace('{title}', i.title), className: 'create' } : { text: i.title }
+					)
+			})
+		];
+	}
+});
+
+const ruleKeyPlugin = new PluginKey('ruleSuggestion');
+const RULE_INPUT = /@([a-zA-Z]+)\[([^[\]|\n]{1,80})(?:\|([^[\]\n]{1,80}))?\]$/;
+
+/** Riferimento a una regola: @incantesimo[Fireball|Palla di fuoco]. */
+const RuleRef = Node.create<{ labels: EditorLabels; search: (q: string, signal: AbortSignal) => Promise<RuleItem[]> }>({
+	name: 'ruleRef',
+	group: 'inline',
+	inline: true,
+	atom: true,
+	selectable: true,
+	addOptions: () => ({ labels: {} as EditorLabels, search: async () => [] }),
+	addAttributes: () => ({
+		kind: { default: 'rule' },
+		name: { default: '' },
+		label: { default: null }
+	}),
+	parseHTML: () => [
+		{
+			tag: 'span[data-rule-kind]',
+			getAttrs: (el) => ({
+				kind: el.getAttribute('data-rule-kind'),
+				name: el.getAttribute('data-rule-name'),
+				label: el.getAttribute('data-label')
+			})
+		}
+	],
+	renderHTML({ node }) {
+		const { kind, name, label } = node.attrs;
+		return [
+			'span',
+			{ class: 'ruleref', 'data-rule-kind': kind, 'data-rule-name': name, ...(label ? { 'data-label': label } : {}), title: this.options.labels.kinds[kind] ?? kind },
+			`📖 ${label || name}`
+		];
+	},
+	renderText: ({ node }) => `@${node.attrs.kind}[${node.attrs.name}${node.attrs.label ? '|' + node.attrs.label : ''}]`,
+
+	addCommands() {
+		return {
+			insertRuleRef:
+				(attrs) =>
+				({ commands }) =>
+					commands.insertContent([{ type: this.name, attrs }, { type: 'text', text: ' ' }])
+		};
+	},
+
+	addInputRules() {
+		return [
+			new InputRule({
+				find: RULE_INPUT,
+				handler: ({ state, range, match }) => {
+					const kind = parseRuleKind(match[1]);
+					if (!kind) return null;
+					state.tr.replaceWith(range.from, range.to, this.type.create({ kind, name: match[2].trim(), label: match[3]?.trim() || null }));
+				}
+			})
+		];
+	},
+
+	addProseMirrorPlugins() {
+		const { labels, search } = this.options;
+		return [
+			Suggestion<RuleItem, RuleItem>({
+				editor: this.editor,
+				pluginKey: ruleKeyPlugin,
+				char: '@',
+				allowSpaces: true,
+				debounce: 120,
+				minQueryLength: 2,
+				// "@incantesimo[" si scrive a mano: niente suggerimenti dopo un tipo seguito da [.
+				allow: ({ state, range }) => {
+					const text = state.doc.textBetween(range.from, range.to);
+					return !/^@[a-zA-Z]+\[/.test(text);
+				},
+				items: async ({ query, signal }) => (query.trim().length >= 2 && !query.includes('[') ? search(query.trim(), signal).catch(() => []) : []),
+				command: ({ editor, range, props }) => {
+					editor.chain().focus().deleteRange(range).insertRuleRef({ kind: props.kind, name: props.name }).run();
+				},
+				render: () =>
+					suggestionPopup<RuleItem>(labels.rules, labels.noResults, (i) => ({ text: `${i.name} — ${labels.kinds[i.kind] ?? i.kind}`, detail: i.summary }))
 			})
 		];
 	}
@@ -184,13 +285,17 @@ const WikiLink = Node.create<{ labels: EditorLabels; suggest: (q: string, signal
 
 let popupSeq = 0;
 
-/** Elenco dei suggerimenti accessibile (listbox con aria-activedescendant). */
-function suggestionPopup(labels: EditorLabels) {
+/** Elenco dei suggerimenti accessibile (listbox con aria-activedescendant), per pagine e regole. */
+function suggestionPopup<I>(
+	listLabel: string,
+	emptyText: string,
+	show: (item: I) => { text: string; detail?: string; className?: string }
+) {
 	let el: HTMLDivElement;
 	let unmount: (() => void) | undefined;
-	let props: SuggestionProps<SuggestItem, SuggestItem>;
+	let props: SuggestionProps<I, I>;
 	let active = 0;
-	const id = `wl-suggest-${++popupSeq}`;
+	const id = `suggest-${++popupSeq}`;
 
 	const host = () => props.editor.view.dom as HTMLElement;
 
@@ -200,20 +305,27 @@ function suggestionPopup(labels: EditorLabels) {
 		const list = document.createElement('ul');
 		list.id = id;
 		list.setAttribute('role', 'listbox');
-		list.setAttribute('aria-label', labels.suggestions);
+		list.setAttribute('aria-label', listLabel);
 		if (!items.length) {
 			const li = document.createElement('li');
 			li.className = 'empty';
-			li.textContent = props.loading ? '…' : labels.noResults;
+			li.textContent = props.loading ? '…' : emptyText;
 			list.append(li);
 		}
 		items.forEach((item, i) => {
+			const s = show(item);
 			const li = document.createElement('li');
 			li.id = `${id}-${i}`;
 			li.setAttribute('role', 'option');
 			li.setAttribute('aria-selected', String(i === active));
-			li.textContent = item.create ? labels.createLink.replace('{title}', item.title) : item.title;
-			if (item.create) li.className = 'create';
+			li.textContent = s.text;
+			if (s.detail) {
+				const d = document.createElement('span');
+				d.className = 'detail';
+				d.textContent = s.detail;
+				li.append(d);
+			}
+			if (s.className) li.className = s.className;
 			li.addEventListener('mousedown', (e) => {
 				e.preventDefault();
 				props.command(item);
@@ -238,7 +350,7 @@ function suggestionPopup(labels: EditorLabels) {
 	}
 
 	return {
-		onStart(p: SuggestionProps<SuggestItem, SuggestItem>) {
+		onStart(p: SuggestionProps<I, I>) {
 			props = p;
 			active = 0;
 			el = document.createElement('div');
@@ -246,7 +358,7 @@ function suggestionPopup(labels: EditorLabels) {
 			draw();
 			unmount = p.mount(el);
 		},
-		onUpdate(p: SuggestionProps<SuggestItem, SuggestItem>) {
+		onUpdate(p: SuggestionProps<I, I>) {
 			props = p;
 			if (active >= p.items.length) active = 0;
 			draw();
@@ -288,6 +400,7 @@ export function buildExtensions(opts: {
 	labels: EditorLabels;
 	canSecret: boolean;
 	suggest: (q: string, signal: AbortSignal) => Promise<SuggestItem[]>;
+	searchRules: (q: string, signal: AbortSignal) => Promise<RuleItem[]>;
 }) {
 	return [
 		StarterKit.configure({
@@ -310,6 +423,7 @@ export function buildExtensions(opts: {
 		Callout.configure({ labels: opts.labels }),
 		...(opts.canSecret ? [Secret.configure({ labels: opts.labels })] : []),
 		WikiLink.configure({ labels: opts.labels, suggest: opts.suggest }),
+		RuleRef.configure({ labels: opts.labels, search: opts.searchRules }),
 		EscapeLeaves
 	];
 }

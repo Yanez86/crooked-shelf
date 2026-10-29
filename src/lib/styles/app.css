@@ -443,3 +443,33 @@ table.data td {
 		border: 2px solid CanvasText;
 	}
 }
+
+/* --- Riferimenti alle regole --- */
+
+.ruleref {
+	white-space: nowrap;
+}
+.ruleref-link {
+	text-decoration-style: dotted;
+	text-decoration-thickness: 2px;
+}
+.rule-info {
+	display: inline-grid;
+	place-items: center;
+	width: 1.6rem;
+	height: 1.6rem;
+	margin-left: 0.2rem;
+	padding: 0;
+	vertical-align: middle;
+	border-radius: 50%;
+	border: 2px solid var(--c-control);
+	background: var(--c-surface);
+	color: var(--c-text);
+	font: italic 700 0.9rem/1 Georgia, serif;
+	cursor: pointer;
+}
+.rule-info[aria-expanded='true'] {
+	background: var(--c-primary);
+	border-color: var(--c-primary);
+	color: var(--c-on-primary);
+}

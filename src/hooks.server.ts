@@ -7,7 +7,7 @@ import {
 	setSessionCookie,
 	validateSession
 } from '#lib/server/auth.ts';
-import { getSettings } from '#lib/server/settings.ts';
+import { customThemes, getSettings } from '#lib/server/settings.ts';
 import { cleanPrefs, PREFS_COOKIE } from '#lib/prefs.ts';
 import { fromAcceptLanguage, isLocale, DEFAULT_LOCALE } from '#lib/i18n/index.ts';
 
@@ -38,7 +38,11 @@ export const handle: Handle = async ({ event, resolve }) => {
 	}
 
 	const settings = getSettings();
-	locals.prefs = cleanPrefs(locals.user ? locals.user.prefs : readCookiePrefs(cookies.get(PREFS_COOKIE)), isLocale);
+	locals.prefs = cleanPrefs(
+		locals.user ? locals.user.prefs : readCookiePrefs(cookies.get(PREFS_COOKIE)),
+		isLocale,
+		customThemes().map((t) => t.id)
+	);
 	locals.locale =
 		locals.prefs.locale ??
 		(ready ? settings.defaultLocale : fromAcceptLanguage(event.request.headers.get('accept-language'))) ??

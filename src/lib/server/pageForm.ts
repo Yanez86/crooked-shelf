@@ -119,5 +119,7 @@ export const contentLabels = (locale: string) => ({
 	note: translate(locale, 'editor.note'),
 	tip: translate(locale, 'editor.tip'),
 	warning: translate(locale, 'editor.warning'),
-	missing: translate(locale, 'page.missing')
+	missing: translate(locale, 'page.missing'),
+	preview: translate(locale, 'rules.preview'),
+	external: translate(locale, 'rules.external')
 });

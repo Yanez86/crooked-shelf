@@ -11,7 +11,9 @@
 	const t = getT();
 	const user = $derived(page.data.user);
 	const msg = (s: string) => (form?.section === s ? form : null);
-	const swatch = (id: string) => THEMES.find((th) => th.id === id)?.colors;
+	const swatch = (id: string) => [...THEMES, ...data.custom].find((th) => th.id === id)?.colors;
+	const themeIds = $derived([...data.options.theme, ...data.custom.map((c) => c.id)]);
+	const themeName = (id: string) => data.custom.find((c) => c.id === id)?.name ?? t('themes.' + id);
 </script>
 
 <svelte:head><title>{t('prefs.title')} · {page.data.siteName}</title></svelte:head>
@@ -27,14 +29,14 @@
 		<fieldset>
 			<legend>{t('prefs.theme')}</legend>
 			<div class="themes">
-				{#each data.options.theme as th (th)}
+				{#each themeIds as th (th)}
 					{@const c = swatch(th)}
 					<label class="choice theme-choice">
 						<input type="radio" name="theme" value={th} checked={data.current.theme === th} />
 						<span class="swatch" aria-hidden="true" style={c ? `background:${c.bg};color:${c.text};border-color:${c.control}` : ''}>
 							{#if c}<span style="color:{c.link}">Aa</span>{:else}◐{/if}
 						</span>
-						<span>{t('themes.' + th)}</span>
+						<span>{themeName(th)}</span>
 					</label>
 				{/each}
 			</div>

@@ -28,13 +28,14 @@ export const DEFAULT_PREFS: Prefs = {
 	motion: 'auto'
 };
 
-/** Tiene solo i valori validi. */
-export function cleanPrefs(raw: Record<string, unknown> | null | undefined, isLocale: (l: unknown) => boolean): Prefs {
+/** Tiene solo i valori validi. `extraThemes` = temi creati dall'Admin. */
+export function cleanPrefs(raw: Record<string, unknown> | null | undefined, isLocale: (l: unknown) => boolean, extraThemes: string[] = []): Prefs {
 	const out: Prefs = { ...DEFAULT_PREFS };
 	if (!raw) return out;
 	for (const k of Object.keys(PREF_OPTIONS) as (keyof typeof PREF_OPTIONS)[]) {
 		const v = raw[k];
-		if (typeof v === 'string' && (PREF_OPTIONS[k] as readonly string[]).includes(v)) out[k] = v;
+		const allowed: readonly string[] = k === 'theme' ? [...PREF_OPTIONS.theme, ...extraThemes] : PREF_OPTIONS[k];
+		if (typeof v === 'string' && allowed.includes(v)) out[k] = v;
 	}
 	if (isLocale(raw.locale)) out.locale = raw.locale as string;
 	return out;

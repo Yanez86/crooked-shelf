@@ -1,6 +1,7 @@
 import { getDb, schema } from './db/index.ts';
 import { DEFAULT_LOCALE } from '../i18n/index.ts';
 import { isCalendar, preset, type Calendar } from '../calendar.ts';
+import type { Theme } from '../themes.ts';
 
 export interface SiteSettings {
 	siteName: string;
@@ -9,13 +10,16 @@ export interface SiteSettings {
 	allowVisitors: boolean;
 	/** Calendario del mondo; finché non viene scelto si usa il gregoriano. */
 	calendar: Calendar | null;
+	/** Temi creati dall'Admin (id "custom-N"). */
+	themes: Theme[];
 }
 
 const DEFAULTS: SiteSettings = {
 	siteName: 'Crooked Shelf',
 	defaultLocale: DEFAULT_LOCALE,
 	allowVisitors: false,
-	calendar: null
+	calendar: null,
+	themes: []
 };
 
 let cache: SiteSettings | undefined;
@@ -49,3 +53,5 @@ export function getCalendar(): Calendar {
 	const s = getSettings();
 	return isCalendar(s.calendar) ? s.calendar : preset('gregorian', s.defaultLocale);
 }
+
+export const customThemes = (): Theme[] => (Array.isArray(getSettings().themes) ? getSettings().themes : []);

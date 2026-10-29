@@ -22,7 +22,13 @@ Progetto completo: [docs/design.md](docs/design.md).
 - mappe da immagine con pin collegati a pagine e ad altre mappe, livelli, pin segreti, righello delle distanze, elenco accessibile dei pin
 - cronologia del mondo e della campagna, calendari personalizzati (gregoriano, Harptos, semplice o inventato), resoconti di sessione che entrano da soli nella cronologia
 
-Prossime fasi: bacheca, regole (D&D Beyond + SRD 5.2), editor dei temi, cronologia delle modifiche, plugin, Docker.
+**Fase 3 completata**:
+- riferimenti alle regole nel testo: `@incantesimo[Fireball|Palla di fuoco]` diventa un link a D&D Beyond con l'anteprima del testo SRD 5.2 (scrivendo `@` compaiono i suggerimenti); pagina «Regole» per cercare incantesimi, mostri, condizioni, oggetti magici, talenti, specie, classi e background
+- bacheche degli appunti personali e del gruppo, con schede spostabili con i pulsanti o trascinandole
+- cronologia delle modifiche di ogni pagina (confronto e ripristino) e cestino
+- editor dei temi con anteprima e controllo dei contrasti; temi esportabili e importabili come file
+
+Prossime fasi: plugin, Docker, backup, «pacchetto mondo» `.shelf`, esportazione in Markdown, documentazione.
 
 ## Avvio
 
@@ -58,4 +64,6 @@ Le traduzioni sono in `src/lib/i18n/locales/`: una lingua nuova è un file JSON 
 
 ## Licenza
 
-[GNU AGPL-3.0](LICENSE). Testi SRD 5.2 (quando arriveranno): CC-BY-4.0, Wizards of the Coast. Progetto non affiliato a Wizards of the Coast né a D&D Beyond.
+[GNU AGPL-3.0](LICENSE). Testi SRD 5.2: CC-BY-4.0, Wizards of the Coast; dati ricavati dal progetto 5e-database (MIT). Dettagli in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Progetto non affiliato a Wizards of the Coast né a D&D Beyond.
+
+Per aggiornare i testi SRD: `node tools/import-srd.mjs <cartella di 5e-database>`.

@@ -1,5 +1,6 @@
 import type { LayoutServerLoad } from './$types';
-import { getSettings } from '#lib/server/settings.ts';
+import { customThemes, getSettings } from '#lib/server/settings.ts';
+import { themeCss } from '#lib/themes.ts';
 
 export const load: LayoutServerLoad = ({ locals }) => {
 	const u = locals.user;
@@ -9,6 +10,7 @@ export const load: LayoutServerLoad = ({ locals }) => {
 		prefs: locals.prefs,
 		locale: locals.locale,
 		siteName: s.siteName,
-		version: __APP_VERSION__
+		version: __APP_VERSION__,
+		themeCss: themeCss(customThemes())
 	};
 };

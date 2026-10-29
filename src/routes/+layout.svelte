@@ -6,7 +6,7 @@
 	import '#lib/styles/app.css';
 	import { page } from '$app/state';
 	import { setI18n, translate } from '#lib/i18n/index.ts';
-	import { themeCss } from '#lib/themes.ts';
+	import RulePopover from '#lib/components/RulePopover.svelte';
 	import type { LayoutProps } from './$types';
 
 	let { data, children }: LayoutProps = $props();
@@ -15,7 +15,6 @@
 	// Il layout non può leggere il contesto che crea: traduce direttamente.
 	const t = (k: string, p?: Record<string, string | number>) => translate(data.locale, k, p);
 
-	const css = themeCss();
 	const REPO = 'https://github.com/yanez86/crooked-shelf';
 
 	// Le preferenze cambiate senza ricaricare la pagina vanno applicate anche a <html>.
@@ -38,7 +37,7 @@
 </script>
 
 <svelte:head>
-	{@html `<style>${css}</style>`}
+	{@html `<style>${data.themeCss}</style>`}
 	<title>{data.siteName}</title>
 </svelte:head>
 
@@ -75,6 +74,8 @@
 				<li><a href="/tags" aria-current={current('/tags')}>{t('nav.tags')}</a></li>
 				<li><a href="/maps" aria-current={current('/maps')}>{t('nav.maps')}</a></li>
 				<li><a href="/timeline/world" aria-current={current('/timeline')}>{t('nav.timeline')}</a></li>
+				<li><a href="/rules" aria-current={current('/rules')}>{t('nav.rules')}</a></li>
+				{#if data.user}<li><a href="/boards" aria-current={current('/boards')}>{t('nav.boards')}</a></li>{/if}
 				{#if data.user}
 					<li><a class="nav-new" href="/wiki/new" aria-current={current('/wiki/new')}>+ {t('nav.newPage')}</a></li>
 				{/if}
@@ -104,6 +105,8 @@
 <main id="main" tabindex="-1" class="container">
 	{@render children()}
 </main>
+
+<RulePopover />
 
 <footer class="site-footer">
 	<div class="container">

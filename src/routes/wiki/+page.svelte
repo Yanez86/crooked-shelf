@@ -27,6 +27,7 @@
 <svelte:head><title>{heading} · {appPage.data.siteName}</title></svelte:head>
 
 <FormOk message={data.deleted ? 'page.deleted' : null} />
+{#if data.deleted}<p><a href="/trash">{t('trash.goTo')}</a></p>{/if}
 
 <div class="head">
 	<h1>{heading}</h1>

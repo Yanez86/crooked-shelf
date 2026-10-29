@@ -10,6 +10,7 @@ import { contentLabels } from '#lib/server/pageForm.ts';
 import { canView } from '#lib/access.ts';
 import { formatDate, weekday } from '#lib/calendar.ts';
 import { listPages } from '#lib/server/pages.ts';
+import { hasRule } from '#lib/server/rules/index.ts';
 
 function which(p: string): Timeline {
 	if (!TIMELINES.includes(p as Timeline)) error(404, 'Not found');
@@ -28,7 +29,7 @@ export const load: PageServerLoad = ({ params, locals, url }) => {
 		return {
 			id: r.id,
 			title: r.title,
-			html: renderInline(r.description, { resolve, labels }),
+			html: renderInline(r.description, { resolve, labels, hasRule }),
 			when: d ? formatDate(cal, d) : null,
 			weekday: d ? weekday(cal, d) : null,
 			year: d?.year ?? null,

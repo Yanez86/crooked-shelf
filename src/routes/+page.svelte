@@ -48,6 +48,8 @@
 				<li><a href="/timeline/campaign">{t('timeline.campaign')}</a></li>
 				<li><a href="/calendar">{t('calendar.title')}</a></li>
 				<li><a href="/templates">{t('templates.title')}</a></li>
+				<li><a href="/rules">{t('nav.rules')}</a></li>
+				{#if user}<li><a href="/boards">{t('nav.boards')}</a></li><li><a href="/trash">{t('trash.title')}</a></li>{/if}
 			</ul>
 		</section>
 	</div>

@@ -119,3 +119,62 @@ describe('template', () => {
 		expect(getTemplate('b:nope', 'it')).toBeUndefined();
 	});
 });
+
+import { getRevision, listRevisions, listTrash, purgePage, restorePage, revisionText } from './pages.ts';
+import { searchPages } from './search.ts';
+
+describe('versioni e cestino', () => {
+	it('ogni salvataggio crea una versione, visibile solo a chi poteva vederla', () => {
+		const pg = createPage({ ...base, visibility: 'master', title: 'Piano', content: { type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'segretissimo' }] }] } }, master);
+		updatePage(getPageBySlug('piano')!, { ...base, title: 'Piano pubblico' }, master, true);
+		const page = getPageBySlug('piano')!;
+		expect(listRevisions(page, master)).toHaveLength(2);
+		// La prima versione era "solo Master": il giocatore non la vede.
+		const forAlice = listRevisions(page, alice);
+		expect(forAlice.map((r) => r.title)).toEqual(['Piano pubblico']);
+		const first = listRevisions(page, master).at(-1)!;
+		expect(getRevision(page, first.id, alice)).toBeUndefined();
+		expect(revisionText(getRevision(page, first.id, master)!, master)).toContain('segretissimo');
+		expect(pg.id).toBe(page.id);
+	});
+
+	it('il cestino recupera e cancella per sempre', () => {
+		const pg = createPage({ ...base, title: 'Torre', content: { type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'antica' }] }] } }, alice);
+		deletePage(pg.id);
+		expect(searchPages('antica', alice)).toEqual([]);
+		expect(listTrash(alice).map((t) => t.title)).toEqual(['Torre']);
+		expect(listTrash(master).map((t) => t.title)).toEqual(['Torre']);
+		restorePage(pg.id);
+		expect(getPageBySlug('torre')).toBeDefined();
+		expect(searchPages('antica', alice).map((h) => h.title)).toEqual(['Torre']);
+		deletePage(pg.id);
+		purgePage(pg.id);
+		expect(listTrash(master)).toEqual([]);
+	});
+});
+
+import { boardContent, canSeeBoard, createBoard, listBoards, moveCard, addCard, placeCard } from './boards.ts';
+
+describe('bacheche', () => {
+	it('personali, condivise e spostamenti', () => {
+		const mine = createBoard('Appunti di Alice', true, 'players', ['Indizi'], alice);
+		const shared = createBoard('Missioni', false, 'players', ['Da fare', 'Fatto'], master);
+		const gm = createBoard('Trama', false, 'master', ['Idee'], master);
+		expect(listBoards(alice).map((b) => b.title)).toEqual(['Appunti di Alice', 'Missioni']);
+		expect(listBoards(master).map((b) => b.title)).toEqual(['Missioni', 'Trama']);
+		expect(canSeeBoard({ ownerId: alice.id, visibility: 'players' }, master)).toBe(false);
+		expect(gm).toBeGreaterThan(mine);
+
+		const [todo, done] = boardContent(shared);
+		addCard(todo.id, { title: 'A', body: '', color: 'yellow' }, 2);
+		addCard(todo.id, { title: 'B', body: '', color: 'yellow' }, 2);
+		const titles = () => boardContent(shared).map((c) => c.cards.map((k) => k.title));
+		const idOf = (t: string) => boardContent(shared).flatMap((c) => c.cards).find((k) => k.title === t)!.id;
+		moveCard(shared, idOf('B'), 'up');
+		expect(titles()).toEqual([['B', 'A'], []]);
+		moveCard(shared, idOf('A'), 'right');
+		expect(titles()).toEqual([['B'], ['A']]);
+		placeCard(idOf('B'), done.id, 0);
+		expect(titles()).toEqual([[], ['B', 'A']]);
+	});
+});

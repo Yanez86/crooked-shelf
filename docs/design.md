@@ -2,7 +2,7 @@
 
 Wiki self-hosted per creare, curare e registrare campagne di giochi di ruolo da tavolo (pensata per D&D 5.5, aperta ad altri sistemi).
 
-> Stato: **approvato**. Fasi 1 e 2 completate.
+> Stato: **approvato**. Fasi 1, 2 e 3 completate.
 
 ## 1. Obiettivi
 
@@ -207,7 +207,16 @@ Ogni fase si chiude con test automatici (unità, interfaccia con Playwright, acc
 - Ordine della cronologia della campagna: per data reale (l'ordine in cui si è giocato), poi per data nel mondo.
 - Chi può aggiungere eventi: nella cronologia del mondo Master e Admin; in quella della campagna anche i giocatori (non come "Solo Master").
 
-## 19. Decisioni prese
+## 19. Note sulla fase 3
+
+- Riferimenti alle regole: `@tipo[Nome inglese|testo mostrato]`; tipi in inglese o italiano (incantesimo, mostro, condizione, oggetto, talento, specie, classe, background, regola). Il link porta alla ricerca di D&D Beyond, che non ha un'API pubblica.
+- Testi SRD 5.2 solo in inglese (999 voci), ricavati dal progetto 5e-database con `tools/import-srd.mjs`; attribuzione in `THIRD_PARTY_NOTICES.md` e nell'interfaccia.
+- Le pagine che citano una regola compaiono nella sua scheda e nell'anteprima: così le regole della casa sono collegate alle regole ufficiali.
+- Versioni: ogni salvataggio crea una versione. Chi guarda vede solo le versioni di quando la pagina era visibile per lui, e i segreti solo se è Master.
+- Bacheche: tutti quelli che vedono una bacheca del gruppo possono aggiungere e spostare schede; colonne e bacheca le gestisce il Master (o il proprietario per quelle personali).
+- Temi personalizzati: salvati nelle impostazioni, accettati solo se tutti i contrasti WCAG AA sono rispettati, anche quando importati da file.
+
+## 20. Decisioni prese
 
 - Il nome **Crooked Shelf** resta anche nell'interfaccia italiana.
 - L'accesso dei **visitatori** è **spento** di default; l'Admin può attivarlo.

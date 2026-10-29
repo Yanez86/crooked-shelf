@@ -23,6 +23,7 @@ import { inlineLinks } from '#lib/content/extract.ts';
 import { contentLabels } from '#lib/server/pageForm.ts';
 import { str } from '#lib/server/forms.ts';
 import { slugify } from '#lib/slug.ts';
+import { hasRule } from '#lib/server/rules/index.ts';
 import { getDb, schema } from '#lib/server/db/index.ts';
 import { eq } from 'drizzle-orm';
 
@@ -76,7 +77,7 @@ export const load: PageServerLoad = ({ params, locals }) => {
 				y: p.y,
 				label: p.label,
 				description: p.description,
-				html: renderInline(p.description, { resolve, labels }),
+				html: renderInline(p.description, { resolve, labels, hasRule }),
 				icon: p.icon,
 				color: p.color,
 				layerId: p.layerId,

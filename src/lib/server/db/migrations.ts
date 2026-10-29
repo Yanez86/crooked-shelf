@@ -165,5 +165,48 @@ export const MIGRATIONS: string[] = [
 	);
 	CREATE INDEX timeline_events_sort ON timeline_events(timeline, sort_key);
 	CREATE UNIQUE INDEX timeline_events_session ON timeline_events(page_id) WHERE source = 'session';
+	`,
+	// Fase 3: versioni delle pagine, bacheche.
+	`
+	CREATE TABLE page_revisions (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		page_id INTEGER NOT NULL REFERENCES pages(id) ON DELETE CASCADE,
+		title TEXT NOT NULL,
+		content TEXT NOT NULL,
+		fields TEXT NOT NULL DEFAULT '[]',
+		visibility TEXT NOT NULL,
+		has_secret INTEGER NOT NULL DEFAULT 0,
+		edited_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
+		created_at INTEGER NOT NULL
+	);
+	CREATE INDEX page_revisions_page ON page_revisions(page_id, id);
+	INSERT INTO page_revisions (page_id, title, content, fields, visibility, has_secret, edited_by, created_at)
+		SELECT id, title, content, fields, visibility, has_secret, updated_by, updated_at FROM pages;
+	CREATE TABLE boards (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		title TEXT NOT NULL,
+		owner_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+		visibility TEXT NOT NULL CHECK (visibility IN ('players','master')),
+		created_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
+		created_at INTEGER NOT NULL
+	);
+	CREATE TABLE board_columns (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		board_id INTEGER NOT NULL REFERENCES boards(id) ON DELETE CASCADE,
+		title TEXT NOT NULL,
+		sort INTEGER NOT NULL DEFAULT 0
+	);
+	CREATE TABLE board_cards (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		column_id INTEGER NOT NULL REFERENCES board_columns(id) ON DELETE CASCADE,
+		title TEXT NOT NULL,
+		body TEXT NOT NULL DEFAULT '',
+		color TEXT NOT NULL DEFAULT 'yellow',
+		sort INTEGER NOT NULL DEFAULT 0,
+		created_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
+		created_at INTEGER NOT NULL,
+		updated_at INTEGER NOT NULL
+	);
+	CREATE INDEX board_cards_column ON board_cards(column_id, sort);
 	`
 ];

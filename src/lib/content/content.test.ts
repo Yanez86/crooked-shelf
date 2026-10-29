@@ -116,3 +116,37 @@ describe('campi e immagini', () => {
 		expect(html).toBe('<img src="/files/x1" alt="Mappa &quot;vecchia&quot;" loading="lazy">');
 	});
 });
+
+describe('riferimenti alle regole', () => {
+	const ruleLabels = { ...labels, preview: 'Anteprima: {name}', external: '(sito esterno)' };
+	const hasRule = (k: string, key: string) => k === 'spell' && key === 'fireball';
+
+	it('nodo dell\'editor: link a D&D Beyond e anteprima se il testo SRD esiste', () => {
+		const html = renderDoc(
+			{ type: 'doc', content: [p({ type: 'ruleRef', attrs: { kind: 'spell', name: 'Fireball', label: 'Palla di fuoco' } })] },
+			{ showSecrets: false, resolve, labels: ruleLabels, hasRule }
+		);
+		expect(html).toContain('href="https://www.dndbeyond.com/search?q=Fireball"');
+		expect(html).toContain('>Palla di fuoco<');
+		expect(html).toContain('data-rule="spell/fireball"');
+		expect(html).toContain('aria-label="Anteprima: Palla di fuoco"');
+	});
+
+	it('nel testo semplice, con alias italiani; niente anteprima se manca il testo', () => {
+		const html = renderInline('Lancia @incantesimo[Fireball] e poi @mostro[Beholder|il tiranno]. @sconosciuto[X]', { resolve, labels: ruleLabels, hasRule });
+		expect(html).toContain('data-rule="spell/fireball"');
+		expect(html).toContain('>il tiranno<');
+		expect(html).not.toContain('data-rule="monster/beholder"');
+		expect(html).toContain('@sconosciuto[X]');
+	});
+
+	it('i riferimenti contano come collegamenti e come testo', () => {
+		const ex = extract(
+			{ type: 'doc', content: [p({ type: 'ruleRef', attrs: { kind: 'condition', name: 'Prone' } })] },
+			[{ label: 'Incantesimo preferito', value: '@spell[Fireball|Palla di fuoco]' }]
+		);
+		expect(ex.links.map((l) => l.target).sort()).toEqual(['@condition/prone', '@spell/fireball']);
+		expect(ex.body).toContain('Palla di fuoco');
+		expect(ex.body).toContain('Prone');
+	});
+});

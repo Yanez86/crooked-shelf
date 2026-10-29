@@ -1,7 +1,7 @@
 import { test, expect, type Page, type Browser } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
-// Fase 2: template, immagini, calendario, cronologie, mappe. Usa la wiki creata da wiki.spec.ts.
+// Fase 2: template, immagini, calendario, cronologie, mappe. Usa la wiki creata da 1-wiki.spec.ts.
 test.describe.configure({ mode: 'serial' });
 
 const SHOTS = 'test-results/screens';

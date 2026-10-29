@@ -26,6 +26,8 @@ export interface ThemeColors {
 
 export interface Theme {
 	id: string;
+	/** Solo per i temi creati dall'Admin (quelli preinstallati hanno il nome tradotto). */
+	name?: string;
 	scheme: 'light' | 'dark';
 	colors: ThemeColors;
 }
@@ -143,6 +145,26 @@ export const THEMES: Theme[] = [
 
 export const THEME_IDS = ['auto', ...THEMES.map((t) => t.id)];
 
+export const COLOR_KEYS = Object.keys(THEMES[0].colors) as (keyof ThemeColors)[];
+
+const HEX = /^#[0-9a-f]{6}$/i;
+
+/** Controlla un tema (es. importato da un file): colori validi e contrasti WCAG AA. */
+export function checkTheme(v: unknown): { ok: true; theme: Omit<Theme, 'id'> } | { ok: false; error: string; problems?: string[] } {
+	const t = v as Theme;
+	if (!t || typeof t !== 'object' || !t.colors || typeof t.colors !== 'object') return { ok: false, error: 'themes.errFile' };
+	const colors = {} as ThemeColors;
+	for (const k of COLOR_KEYS) {
+		const c = t.colors[k];
+		if (typeof c !== 'string' || !HEX.test(c)) return { ok: false, error: 'themes.errColor' };
+		colors[k] = c.toLowerCase();
+	}
+	const theme = { name: String(t.name ?? '').trim().slice(0, 40) || 'Theme', scheme: t.scheme === 'dark' ? 'dark' : 'light', colors } as const;
+	const problems = contrastProblems({ id: 'x', ...theme });
+	if (problems.length) return { ok: false, error: 'themes.errContrast', problems };
+	return { ok: true, theme };
+}
+
 const cssName = (k: string) => '--c-' + k.replace(/[A-Z]/g, (c) => '-' + c.toLowerCase());
 
 function vars(t: Theme) {
@@ -154,11 +176,11 @@ function vars(t: Theme) {
 }
 
 /** CSS di tutti i temi; "auto" segue l'impostazione chiaro/scuro del sistema. */
-export function themeCss(): string {
+export function themeCss(custom: Theme[] = []): string {
 	const light = THEMES.find((t) => t.id === 'light')!;
 	const dark = THEMES.find((t) => t.id === 'dark')!;
 	return [
-		...THEMES.map((t) => `:root[data-theme="${t.id}"]{${vars(t)}}`),
+		...[...THEMES, ...custom].map((t) => `:root[data-theme="${t.id}"]{${vars(t)}}`),
 		`:root[data-theme="auto"]{${vars(light)}}`,
 		`@media (prefers-color-scheme: dark){:root[data-theme="auto"]{${vars(dark)}}}`
 	].join('\n');
@@ -217,4 +239,12 @@ export function contrastProblems(t: Theme): string[] {
 	return CONTRAST_PAIRS.filter(([fg, bg, min]) => contrast(t.colors[fg], t.colors[bg]) < min).map(
 		([fg, bg, min]) => `${t.id}: ${fg}/${bg} = ${contrast(t.colors[fg], t.colors[bg]).toFixed(2)} < ${min}`
 	);
+}
+
+/** Le stesse coppie con il valore misurato, per la tabella dell'editor. */
+export function contrastReport(colors: ThemeColors) {
+	return CONTRAST_PAIRS.map(([fg, bg, min]) => {
+		const ratio = contrast(colors[fg], colors[bg]);
+		return { fg, bg, min, ratio, ok: ratio >= min };
+	});
 }

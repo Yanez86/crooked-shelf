@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { onDestroy, onMount, untrack } from 'svelte';
 	import { Editor } from '@tiptap/core';
-	import { buildExtensions, type SuggestItem } from './extensions.ts';
+	import { buildExtensions, type SuggestItem, type RuleItem } from './extensions.ts';
+	import { RULE_KINDS } from '../rules/index.ts';
 	import { getT } from '../i18n/index.ts';
 	import type { DocNode } from '../content/types.ts';
 
@@ -35,6 +36,11 @@
 		return r.ok ? r.json() : [];
 	}
 
+	async function searchRules(q: string, signal: AbortSignal): Promise<RuleItem[]> {
+		const r = await fetch(`/api/rules/search?q=${encodeURIComponent(q)}`, { signal });
+		return r.ok ? r.json() : [];
+	}
+
 	onMount(() => {
 		editor = new Editor({
 			element: host,
@@ -42,6 +48,7 @@
 			extensions: buildExtensions({
 				canSecret,
 				suggest,
+				searchRules,
 				labels: {
 					note: t('editor.note'),
 					tip: t('editor.tip'),
@@ -49,10 +56,19 @@
 					secret: t('editor.secret'),
 					suggestions: t('editor.suggestions'),
 					createLink: t('editor.createLink'),
-					noResults: t('editor.noResults')
+					noResults: t('editor.noResults'),
+					rules: t('rules.suggestions'),
+					kinds: Object.fromEntries(RULE_KINDS.map((k) => [k, t('rules.kinds.' + k)]))
 				}
 			}),
 			editorProps: {
+				// Un clic su un collegamento dentro l'editor non deve uscire dalla pagina (si perderebbe il lavoro).
+				handleDOMEvents: {
+					click: (_view, e) => {
+						if ((e.target as HTMLElement).closest('a')) e.preventDefault();
+						return false;
+					}
+				},
 				attributes: {
 					class: 'prose editor-content',
 					role: 'textbox',
@@ -130,6 +146,10 @@
 		chain().insertContent('[[').run();
 	}
 
+	function ruleRef() {
+		chain().insertContent(' @').run();
+	}
+
 	// Barra degli strumenti: frecce sinistra/destra tra i comandi, Tab per uscire.
 	function toolbarKeys(e: KeyboardEvent) {
 		if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) return;
@@ -181,6 +201,7 @@
 		<span class="sep" aria-hidden="true"></span>
 		<button type="button" aria-pressed={active('link')} onclick={setLink}>{t('editor.link')}</button>
 		<button type="button" onclick={wikiLink} title={t('editor.wikiLinkHint')}>[[ {t('editor.wikiLink')} ]]</button>
+		<button type="button" onclick={ruleRef} title={t('editor.ruleHint')}>📖 {t('editor.ruleRef')}</button>
 		<span class="sep" aria-hidden="true"></span>
 		<button type="button" aria-pressed={active('bulletList')} onclick={() => chain().toggleBulletList().run()}>• {t('editor.bulletList')}</button>
 		<button type="button" aria-pressed={active('orderedList')} onclick={() => chain().toggleOrderedList().run()}>1. {t('editor.orderedList')}</button>
@@ -360,6 +381,14 @@
 	:global(.suggest-popup li[aria-selected='true']) {
 		background: var(--c-primary);
 		color: var(--c-on-primary);
+	}
+	:global(.suggest-popup .detail) {
+		display: block;
+		font-size: 0.85rem;
+		opacity: 0.85;
+	}
+	.area :global(.ruleref) {
+		border-bottom: 2px dotted currentColor;
 	}
 	:global(.suggest-popup li.create) {
 		font-style: italic;

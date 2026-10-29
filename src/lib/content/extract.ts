@@ -1,17 +1,32 @@
 import type { DocNode, PageField } from './types.ts';
 import { slugify } from '../slug.ts';
+import { parseRuleKind, ruleTarget } from '../rules/index.ts';
 
-/** [[Titolo]] o [[Titolo|testo]] dentro un testo semplice. */
-export const INLINE_LINK = /\[\[([^[\]|\n]{1,200})(?:\|([^[\]\n]{1,200}))?\]\]/g;
+/**
+ * Collegamenti dentro un testo semplice:
+ * [[Titolo]] o [[Titolo|testo]] (gruppi 1-2) e @incantesimo[Nome] o @incantesimo[Nome|testo] (gruppi 3-5).
+ */
+export const INLINE_LINK = /\[\[([^[\]|\n]{1,200})(?:\|([^[\]\n]{1,200}))?\]\]|@([a-zA-Z]+)\[([^[\]|\n]{1,80})(?:\|([^[\]\n]{1,80}))?\]/g;
 
-/** Collegamenti scritti come testo. */
+/** Collegamenti scritti come testo (pagine e regole). */
 export function inlineLinks(text: string): string[] {
-	return [...text.matchAll(INLINE_LINK)].map((m) => slugify(m[1].trim()));
+	const out: string[] = [];
+	for (const m of text.matchAll(INLINE_LINK)) {
+		if (m[1]) out.push(slugify(m[1].trim()));
+		else {
+			const kind = parseRuleKind(m[3]);
+			if (kind) out.push(ruleTarget(kind, m[4]));
+		}
+	}
+	return out;
 }
 
-/** Testo leggibile: [[Titolo|testo]] diventa "testo". */
+/** Testo leggibile: [[Titolo|testo]] diventa "testo", @incantesimo[Fireball] diventa "Fireball". */
 export function inlinePlain(text: string): string {
-	return text.replace(INLINE_LINK, (_, t, l) => (l ?? t).trim());
+	return text.replace(INLINE_LINK, (all, t, l, k, n, rl) => {
+		if (t) return (l ?? t).trim();
+		return parseRuleKind(k) ? (rl ?? n).trim() : all;
+	});
 }
 
 export interface WikiLinkRef {
@@ -59,6 +74,11 @@ export function extract(doc: DocNode, fields: PageField[] = []): Extracted {
 			if (target) links.push({ target, secret });
 			const label = n.attrs?.label ?? n.attrs?.title;
 			if (label) out.push(String(label));
+		} else if (n.type === 'ruleRef') {
+			const kind = parseRuleKind(String(n.attrs?.kind ?? ''));
+			const name = String(n.attrs?.name ?? '');
+			if (kind && name) links.push({ target: ruleTarget(kind, name), secret });
+			out.push(String(n.attrs?.label || name));
 		} else if (n.type === 'hardBreak') out.push(' ');
 		else if (n.type === 'image' && n.attrs?.alt) out.push(` ${n.attrs.alt} `);
 		for (const c of n.content ?? []) walk(c, secret);
