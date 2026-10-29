@@ -41,6 +41,14 @@
 				<p class="muted">{t('categories.empty')}</p>
 			{/if}
 			<p><a href="/categories">{t('home.manageCategories')}</a></p>
+			<h2>{t('home.world')}</h2>
+			<ul class="cats">
+				<li><a href="/maps">{t('nav.maps')}</a></li>
+				<li><a href="/timeline/world">{t('timeline.world')}</a></li>
+				<li><a href="/timeline/campaign">{t('timeline.campaign')}</a></li>
+				<li><a href="/calendar">{t('calendar.title')}</a></li>
+				<li><a href="/templates">{t('templates.title')}</a></li>
+			</ul>
 		</section>
 	</div>
 {/if}

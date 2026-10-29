@@ -1,6 +1,7 @@
-import { sqliteTable, text, integer, primaryKey, index } from 'drizzle-orm/sqlite-core';
+import { sqliteTable, text, integer, real, primaryKey, index } from 'drizzle-orm/sqlite-core';
 
 import { ROLES, VISIBILITIES } from '../../roles.ts';
+import type { PageField, SessionInfo } from '../../content/types.ts';
 
 export const users = sqliteTable('users', {
 	id: integer('id').primaryKey({ autoIncrement: true }),
@@ -67,7 +68,10 @@ export const pages = sqliteTable(
 		updatedBy: integer('updated_by').references(() => users.id, { onDelete: 'set null' }),
 		createdAt: integer('created_at').notNull(),
 		updatedAt: integer('updated_at').notNull(),
-		deletedAt: integer('deleted_at')
+		deletedAt: integer('deleted_at'),
+		fields: text('fields', { mode: 'json' }).$type<PageField[]>().notNull().default([]),
+		template: text('template'),
+		session: text('session', { mode: 'json' }).$type<SessionInfo | null>()
 	},
 	(t) => [index('pages_category').on(t.categoryId), index('pages_updated').on(t.updatedAt)]
 );
@@ -96,3 +100,92 @@ export const pageLinks = sqliteTable(
 	},
 	(t) => [index('page_links_target').on(t.targetSlug)]
 );
+
+export const files = sqliteTable('files', {
+	id: text('id').primaryKey(),
+	sha256: text('sha256').notNull(),
+	name: text('name').notNull(),
+	mime: text('mime').notNull(),
+	size: integer('size').notNull(),
+	width: integer('width').notNull(),
+	height: integer('height').notNull(),
+	uploadedBy: integer('uploaded_by').references(() => users.id, { onDelete: 'set null' }),
+	createdAt: integer('created_at').notNull()
+});
+
+export const templates = sqliteTable('templates', {
+	id: integer('id').primaryKey({ autoIncrement: true }),
+	name: text('name').notNull(),
+	description: text('description').notNull().default(''),
+	fields: text('fields', { mode: 'json' }).$type<string[]>().notNull().default([]),
+	content: text('content', { mode: 'json' }).notNull(),
+	session: integer('session', { mode: 'boolean' }).notNull().default(false),
+	createdBy: integer('created_by').references(() => users.id, { onDelete: 'set null' }),
+	createdAt: integer('created_at').notNull(),
+	updatedAt: integer('updated_at').notNull()
+});
+
+export const maps = sqliteTable('maps', {
+	id: integer('id').primaryKey({ autoIncrement: true }),
+	slug: text('slug').notNull().unique(),
+	title: text('title').notNull(),
+	description: text('description').notNull().default(''),
+	fileId: text('file_id')
+		.notNull()
+		.references(() => files.id),
+	width: integer('width').notNull(),
+	height: integer('height').notNull(),
+	visibility: text('visibility', { enum: ['public', 'players', 'master'] }).notNull(),
+	parentId: integer('parent_id'),
+	scale: real('scale'),
+	unit: text('unit').notNull().default(''),
+	createdBy: integer('created_by').references(() => users.id, { onDelete: 'set null' }),
+	createdAt: integer('created_at').notNull(),
+	updatedAt: integer('updated_at').notNull()
+});
+
+export const mapLayers = sqliteTable('map_layers', {
+	id: integer('id').primaryKey({ autoIncrement: true }),
+	mapId: integer('map_id')
+		.notNull()
+		.references(() => maps.id, { onDelete: 'cascade' }),
+	name: text('name').notNull(),
+	visibility: text('visibility', { enum: ['players', 'master'] }).notNull(),
+	sort: integer('sort').notNull().default(0)
+});
+
+export const mapPins = sqliteTable('map_pins', {
+	id: integer('id').primaryKey({ autoIncrement: true }),
+	mapId: integer('map_id')
+		.notNull()
+		.references(() => maps.id, { onDelete: 'cascade' }),
+	layerId: integer('layer_id').references(() => mapLayers.id, { onDelete: 'set null' }),
+	x: real('x').notNull(),
+	y: real('y').notNull(),
+	label: text('label').notNull(),
+	description: text('description').notNull().default(''),
+	icon: text('icon').notNull().default('pin'),
+	color: text('color').notNull().default('red'),
+	pageSlug: text('page_slug'),
+	targetMapId: integer('target_map_id'),
+	visibility: text('visibility', { enum: ['players', 'master'] }).notNull()
+});
+
+export const timelineEvents = sqliteTable('timeline_events', {
+	id: integer('id').primaryKey({ autoIncrement: true }),
+	timeline: text('timeline', { enum: ['world', 'campaign'] }).notNull(),
+	title: text('title').notNull(),
+	description: text('description').notNull().default(''),
+	year: integer('year'),
+	month: integer('month'),
+	day: integer('day'),
+	approx: text('approx').notNull().default(''),
+	sortKey: integer('sort_key'),
+	realDate: text('real_date'),
+	pageId: integer('page_id').references(() => pages.id, { onDelete: 'cascade' }),
+	source: text('source', { enum: ['manual', 'session'] }).notNull().default('manual'),
+	visibility: text('visibility', { enum: ['public', 'players', 'master'] }).notNull(),
+	createdBy: integer('created_by').references(() => users.id, { onDelete: 'set null' }),
+	createdAt: integer('created_at').notNull(),
+	updatedAt: integer('updated_at').notNull()
+});

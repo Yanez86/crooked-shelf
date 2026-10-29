@@ -23,7 +23,7 @@ async function axe(page: Page, label: string) {
 const shot = (page: Page, name: string) => page.screenshot({ path: `${SHOTS}/${name}.png`, fullPage: true });
 
 async function newPage(page: Page, title: string, write: (p: Page) => Promise<void>, opts: { visibility?: string; tags?: string; category?: string } = {}) {
-	await page.goto('/wiki/new');
+	await page.goto('/wiki/new?template=none');
 	await page.getByLabel('Titolo', { exact: true }).fill(title);
 	const editor = page.locator('.editor-content');
 	await editor.click();
@@ -119,7 +119,9 @@ test('pagine, collegamenti e segreti', async () => {
 
 	// Il collegamento rosso porta alla creazione con il titolo già scritto.
 	await content.locator('.wikilink.missing').click();
+	await admin.getByRole('link', { name: /Mostro/ }).click();
 	await expect(admin.getByLabel('Titolo', { exact: true })).toHaveValue('Drago Rosso');
+	await expect(admin.getByLabel('Nome del campo 1')).toHaveValue('Tipo');
 
 	// Backlink.
 	await admin.goto('/wiki/bartolo-pancia');
@@ -219,7 +221,7 @@ test('il giocatore non vede i segreti', async ({ browser }) => {
 	await expect(p.getByRole('heading', { name: 'Pagina non trovata' })).toBeVisible();
 
 	// Il giocatore crea una sua pagina, senza pulsante "Segreto".
-	await p.goto('/wiki/new');
+	await p.goto('/wiki/new?template=none');
 	await expect(p.getByRole('button', { name: /Segreto del Master/ })).toHaveCount(0);
 	await expect(p.getByRole('radio', { name: /Solo Master/ })).toHaveCount(0);
 	await newPage(p, 'Diario di Alice', async (pg) => {

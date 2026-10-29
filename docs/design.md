@@ -2,7 +2,7 @@
 
 Wiki self-hosted per creare, curare e registrare campagne di giochi di ruolo da tavolo (pensata per D&D 5.5, aperta ad altri sistemi).
 
-> Stato: **approvato**. Fase 1 completata.
+> Stato: **approvato**. Fasi 1 e 2 completate.
 
 ## 1. Obiettivi
 
@@ -199,7 +199,15 @@ Ogni fase si chiude con test automatici (unità, interfaccia con Playwright, acc
 - Testi SRD 5.2: CC-BY-4.0 di Wizards of the Coast, con attribuzione visibile.
 - D&D, D&D Beyond e relativi marchi appartengono ai rispettivi proprietari; il progetto non è affiliato.
 
-## 18. Decisioni prese
+## 18. Note sulla fase 2
+
+- Le immagini caricate hanno un indirizzo casuale non indovinabile (`/files/<id>`): chi non vede la pagina o la mappa non può risalirci. Formati: PNG, JPEG, WebP, GIF (niente SVG, che può contenere codice), massimo 25 MB.
+- Le mappe sono mostrate intere (non ancora divise in tasselli): per immagini molto grandi la divisione in tasselli resta un miglioramento futuro.
+- Le lune del calendario non sono ancora gestite.
+- Ordine della cronologia della campagna: per data reale (l'ordine in cui si è giocato), poi per data nel mondo.
+- Chi può aggiungere eventi: nella cronologia del mondo Master e Admin; in quella della campagna anche i giocatori (non come "Solo Master").
+
+## 19. Decisioni prese
 
 - Il nome **Crooked Shelf** resta anche nell'interfaccia italiana.
 - L'accesso dei **visitatori** è **spento** di default; l'Admin può attivarlo.

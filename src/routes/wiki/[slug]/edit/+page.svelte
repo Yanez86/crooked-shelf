@@ -29,6 +29,7 @@
 		canSecret={data.canSecret}
 		knownTags={data.knownTags}
 		updatedAt={data.page.updatedAt}
+		months={data.months}
 		submitLabel={t('common.save')}
 		cancelHref="/wiki/{data.page.slug}"
 	/>

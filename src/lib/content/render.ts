@@ -1,4 +1,6 @@
 import { CALLOUT_KINDS, type DocNode } from './types.ts';
+import { INLINE_LINK } from './extract.ts';
+import { slugify } from '../slug.ts';
 
 export interface LinkTarget {
 	title: string;
@@ -13,8 +15,16 @@ export interface RenderOptions {
 	labels: { secret: string; note: string; tip: string; warning: string; missing: string };
 }
 
-const esc = (s: string) =>
+export const esc = (s: string) =>
 	s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
+
+/** Immagini: solo file caricati nella wiki o indirizzi https. */
+export function safeImageSrc(src: unknown): string | null {
+	if (typeof src !== 'string') return null;
+	if (/^\/files\/[\w-]+$/.test(src)) return src;
+	if (/^https:\/\/[^\s"'<>]+$/i.test(src)) return src;
+	return null;
+}
 
 /** Solo indirizzi sicuri: http(s), mailto e percorsi interni. */
 export function safeHref(href: unknown): string | null {
@@ -98,6 +108,13 @@ export function renderDoc(doc: DocNode, opt: RenderOptions): string {
 				return '<hr>';
 			case 'hardBreak':
 				return '<br>';
+			case 'image': {
+				const src = safeImageSrc(n.attrs?.src);
+				if (!src) return '';
+				const alt = esc(String(n.attrs?.alt ?? ''));
+				const title = n.attrs?.title ? ` title="${esc(String(n.attrs.title))}"` : '';
+				return `<img src="${esc(src)}" alt="${alt}"${title} loading="lazy">`;
+			}
 			case 'table':
 				return `<div class="table-wrap" tabindex="0"><table><tbody>${kids(n)}</tbody></table></div>`;
 			case 'tableRow':
@@ -114,21 +131,41 @@ export function renderDoc(doc: DocNode, opt: RenderOptions): string {
 			case 'secret':
 				if (!opt.showSecrets) return '';
 				return `<aside class="secret" aria-label="${esc(opt.labels.secret)}"><p class="secret-title">${esc(opt.labels.secret)}</p>${kids(n)}</aside>`;
-			case 'wikiLink': {
-				const target = String(n.attrs?.target ?? '');
-				const fallback = String(n.attrs?.title ?? target);
-				const label = n.attrs?.label ? String(n.attrs.label) : null;
-				const page = target ? opt.resolve(target) : undefined;
-				if (page?.visible) {
-					return `<a class="wikilink" href="/wiki/${encodeURIComponent(target)}">${esc(label ?? page.title)}</a>`;
-				}
-				if (page) return `<span class="wikilink-hidden">${esc(label ?? fallback)}</span>`;
-				const q = new URLSearchParams({ title: fallback, slug: target });
-				return `<a class="wikilink missing" href="/wiki/new?${esc(q.toString())}" title="${esc(opt.labels.missing)}">${esc(label ?? fallback)}<span class="visually-hidden"> (${esc(opt.labels.missing)})</span></a>`;
-			}
+			case 'wikiLink':
+				return wikiLinkHtml(
+					String(n.attrs?.target ?? ''),
+					String(n.attrs?.title ?? n.attrs?.target ?? ''),
+					n.attrs?.label ? String(n.attrs.label) : null,
+					opt
+				);
 			default:
 				return '';
 		}
 	}
 	return node(doc);
+}
+
+type LinkOpts = Pick<RenderOptions, 'resolve' | 'labels'>;
+
+function wikiLinkHtml(target: string, fallback: string, label: string | null, opt: LinkOpts): string {
+	const page = target ? opt.resolve(target) : undefined;
+	if (page?.visible) {
+		return `<a class="wikilink" href="/wiki/${encodeURIComponent(target)}">${esc(label ?? page.title)}</a>`;
+	}
+	if (page) return `<span class="wikilink-hidden">${esc(label ?? fallback)}</span>`;
+	const q = new URLSearchParams({ title: fallback, slug: target });
+	return `<a class="wikilink missing" href="/wiki/new?${esc(q.toString())}" title="${esc(opt.labels.missing)}">${esc(label ?? fallback)}<span class="visually-hidden"> (${esc(opt.labels.missing)})</span></a>`;
+}
+
+/** Testo semplice con [[collegamenti]] (campi della scheda, descrizioni di eventi e pin). */
+export function renderInline(text: string, opt: LinkOpts): string {
+	let out = '';
+	let last = 0;
+	for (const m of text.matchAll(INLINE_LINK)) {
+		out += esc(text.slice(last, m.index));
+		const title = m[1].trim();
+		out += wikiLinkHtml(slugify(title), title, m[2]?.trim() || null, opt);
+		last = m.index! + m[0].length;
+	}
+	return out + esc(text.slice(last));
 }

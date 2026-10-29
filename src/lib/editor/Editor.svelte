@@ -102,6 +102,30 @@
 		else chain().extendMarkRange('link').setLink({ href: url.trim() }).run();
 	}
 
+	let fileInput: HTMLInputElement;
+	let status = $state('');
+
+	async function uploadImage(file: File) {
+		status = t('editor.uploading');
+		const body = new FormData();
+		body.append('file', file);
+		const r = await fetch('/api/files', { method: 'POST', body }).catch(() => null);
+		const data = r ? await r.json().catch(() => ({})) : {};
+		if (!r?.ok || !data.url) {
+			status = t(data.error ?? 'errors.generic');
+			return;
+		}
+		const alt = window.prompt(t('editor.altPrompt'), '') ?? '';
+		chain().setImage({ src: data.url, alt: alt.trim() }).run();
+		status = t('editor.uploaded');
+	}
+
+	function editAlt() {
+		const cur = editor!.getAttributes('image').alt ?? '';
+		const alt = window.prompt(t('editor.altPrompt'), cur);
+		if (alt !== null) chain().updateAttributes('image', { alt: alt.trim() }).run();
+	}
+
 	function wikiLink() {
 		chain().insertContent('[[').run();
 	}
@@ -171,6 +195,10 @@
 		<span class="sep" aria-hidden="true"></span>
 		<button type="button" onclick={() => chain().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()} disabled={active('table')}>{t('editor.table')}</button>
 		<button type="button" onclick={() => chain().setHorizontalRule().run()}>― {t('editor.rule')}</button>
+		<button type="button" onclick={() => fileInput.click()}>🖼 {t('editor.image')}</button>
+		{#if active('image')}
+			<button type="button" onclick={editAlt}>{t('editor.altEdit')}</button>
+		{/if}
 		<span class="sep" aria-hidden="true"></span>
 		<button type="button" onclick={() => chain().undo().run()} disabled={!can((e) => e.can().undo())}>↶ {t('editor.undo')}</button>
 		<button type="button" onclick={() => chain().redo().run()} disabled={!can((e) => e.can().redo())}>↷ {t('editor.redo')}</button>
@@ -187,6 +215,18 @@
 		</div>
 	{/if}
 
+	<input
+		bind:this={fileInput}
+		type="file"
+		accept="image/png,image/jpeg,image/webp,image/gif"
+		hidden
+		onchange={(e) => {
+			const f = e.currentTarget.files?.[0];
+			if (f) uploadImage(f);
+			e.currentTarget.value = '';
+		}}
+	/>
+	<p class="upload-status" role="status">{status}</p>
 	<div class="area" id="{labelId}-area" bind:this={host}></div>
 	<input type="hidden" {name} value={json} />
 	<noscript><p class="alert alert-error">{t('editor.noscript')}</p></noscript>
@@ -243,6 +283,15 @@
 		color: var(--c-danger);
 		border-color: var(--c-danger);
 	}
+	.upload-status:empty {
+		display: none;
+	}
+	.upload-status {
+		margin: 0;
+		padding: 0.3rem 0.75rem;
+		font-size: 0.9rem;
+		border-bottom: 1px solid var(--c-border);
+	}
 	.sep {
 		width: 1px;
 		align-self: stretch;
@@ -271,6 +320,10 @@
 	}
 	.area :global(.wikilink) {
 		cursor: text;
+	}
+	.area :global(img) {
+		max-width: 100%;
+		height: auto;
 	}
 	.area :global(.ProseMirror-selectednode) {
 		outline: 2px solid var(--c-focus);

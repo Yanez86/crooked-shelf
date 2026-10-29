@@ -73,6 +73,8 @@
 				<li><a href="/wiki" aria-current={current('/wiki')}>{t('nav.pages')}</a></li>
 				<li><a href="/categories" aria-current={current('/categories')}>{t('nav.categories')}</a></li>
 				<li><a href="/tags" aria-current={current('/tags')}>{t('nav.tags')}</a></li>
+				<li><a href="/maps" aria-current={current('/maps')}>{t('nav.maps')}</a></li>
+				<li><a href="/timeline/world" aria-current={current('/timeline')}>{t('nav.timeline')}</a></li>
 				{#if data.user}
 					<li><a class="nav-new" href="/wiki/new" aria-current={current('/wiki/new')}>+ {t('nav.newPage')}</a></li>
 				{/if}

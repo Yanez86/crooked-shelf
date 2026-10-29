@@ -27,14 +27,14 @@ beforeEach(() => {
 			.run();
 });
 
-const base = { visibility: 'players' as const, playersCanEdit: false, categoryId: null, tags: [] };
+const base = { visibility: 'players' as const, playersCanEdit: false, categoryId: null, tags: [], fields: [], session: null };
 
 describe('pagine', () => {
 	it('crea, collega e trova i backlink', () => {
 		createPage({ ...base, title: 'Bartolo', content: doc(p('Il locandiere')) }, master);
 		createPage({ ...base, title: 'Locanda del Grifone', content: doc(link('bartolo')) }, master);
 		expect(backlinks('bartolo', alice).map((b) => b.title)).toEqual(['Locanda del Grifone']);
-		const html = renderPage(getPageBySlug('locanda-del-grifone')!, alice, labels);
+		const html = renderPage(getPageBySlug('locanda-del-grifone')!, alice, labels).html;
 		expect(html).toContain('href="/wiki/bartolo">Bartolo</a>');
 	});
 
@@ -63,7 +63,7 @@ describe('pagine', () => {
 		expect(backlinks('piano-malvagio', master).map((b) => b.title)).toEqual(['Torre']);
 		expect(suggestPages('pia', alice)).toEqual([]);
 		expect(suggestPages('pia', master).map((s) => s.slug)).toEqual(['piano-malvagio']);
-		expect(renderPage(getPageBySlug('torre')!, alice, labels)).not.toContain('tesoro');
+		expect(renderPage(getPageBySlug('torre')!, alice, labels).html).not.toContain('tesoro');
 	});
 
 	it('un giocatore non può scrivere segreti né cambiare la visibilità altrui', () => {

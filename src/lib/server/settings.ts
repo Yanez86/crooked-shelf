@@ -1,17 +1,21 @@
 import { getDb, schema } from './db/index.ts';
 import { DEFAULT_LOCALE } from '../i18n/index.ts';
+import { isCalendar, preset, type Calendar } from '../calendar.ts';
 
 export interface SiteSettings {
 	siteName: string;
 	defaultLocale: string;
 	/** Visitori senza account: spento di default. */
 	allowVisitors: boolean;
+	/** Calendario del mondo; finché non viene scelto si usa il gregoriano. */
+	calendar: Calendar | null;
 }
 
 const DEFAULTS: SiteSettings = {
 	siteName: 'Crooked Shelf',
 	defaultLocale: DEFAULT_LOCALE,
-	allowVisitors: false
+	allowVisitors: false,
+	calendar: null
 };
 
 let cache: SiteSettings | undefined;
@@ -39,3 +43,9 @@ export function saveSettings(patch: Partial<SiteSettings>) {
 }
 
 export const resetSettingsCache = () => (cache = undefined);
+
+/** Calendario del mondo di gioco. */
+export function getCalendar(): Calendar {
+	const s = getSettings();
+	return isCalendar(s.calendar) ? s.calendar : preset('gregorian', s.defaultLocale);
+}

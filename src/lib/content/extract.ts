@@ -1,4 +1,18 @@
-import type { DocNode } from './types.ts';
+import type { DocNode, PageField } from './types.ts';
+import { slugify } from '../slug.ts';
+
+/** [[Titolo]] o [[Titolo|testo]] dentro un testo semplice. */
+export const INLINE_LINK = /\[\[([^[\]|\n]{1,200})(?:\|([^[\]\n]{1,200}))?\]\]/g;
+
+/** Collegamenti scritti come testo. */
+export function inlineLinks(text: string): string[] {
+	return [...text.matchAll(INLINE_LINK)].map((m) => slugify(m[1].trim()));
+}
+
+/** Testo leggibile: [[Titolo|testo]] diventa "testo". */
+export function inlinePlain(text: string): string {
+	return text.replace(INLINE_LINK, (_, t, l) => (l ?? t).trim());
+}
 
 export interface WikiLinkRef {
 	target: string;
@@ -26,8 +40,8 @@ const BLOCK = new Set([
 	'secret'
 ]);
 
-/** Estrae testo per la ricerca, collegamenti e presenza di segreti. */
-export function extract(doc: DocNode): Extracted {
+/** Estrae testo per la ricerca, collegamenti e presenza di segreti (anche dai campi della scheda). */
+export function extract(doc: DocNode, fields: PageField[] = []): Extracted {
 	const pub: string[] = [];
 	const sec: string[] = [];
 	const links: WikiLinkRef[] = [];
@@ -46,9 +60,14 @@ export function extract(doc: DocNode): Extracted {
 			const label = n.attrs?.label ?? n.attrs?.title;
 			if (label) out.push(String(label));
 		} else if (n.type === 'hardBreak') out.push(' ');
+		else if (n.type === 'image' && n.attrs?.alt) out.push(` ${n.attrs.alt} `);
 		for (const c of n.content ?? []) walk(c, secret);
 		if (BLOCK.has(n.type)) out.push('\n');
 	};
+	for (const f of fields) {
+		pub.push(`${f.label}: ${inlinePlain(f.value)}\n`);
+		for (const target of inlineLinks(f.value)) links.push({ target, secret: false });
+	}
 	walk(doc, false);
 
 	const clean = (parts: string[]) =>

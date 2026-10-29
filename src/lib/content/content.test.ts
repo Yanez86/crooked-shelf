@@ -91,3 +91,28 @@ describe('renderDoc', () => {
 		expect(safeHref('data:text/html,x')).toBeNull();
 	});
 });
+
+import { renderInline, safeImageSrc } from './render.ts';
+
+describe('campi e immagini', () => {
+	it('i campi con collegamenti entrano in ricerca e backlink', () => {
+		const ex = extract({ type: 'doc', content: [] }, [{ label: 'Residenza', value: '[[Locanda del Grifone|la locanda]]' }]);
+		expect(ex.body).toContain('Residenza: la locanda');
+		expect(ex.links).toEqual([{ target: 'locanda-del-grifone', secret: false }]);
+	});
+	it('renderInline scappa il testo e crea i link', () => {
+		const html = renderInline('<b>Vive a [[Bartolo]]', { resolve, labels });
+		expect(html).toBe('&lt;b&gt;Vive a <a class="wikilink" href="/wiki/bartolo">Bartolo Pancia</a>');
+	});
+	it('immagini sicure', () => {
+		expect(safeImageSrc('/files/abc_DEF-1')).toBe('/files/abc_DEF-1');
+		expect(safeImageSrc('https://esempio.it/a.png')).toBe('https://esempio.it/a.png');
+		expect(safeImageSrc('javascript:alert(1)')).toBeNull();
+		expect(safeImageSrc('/files/../x')).toBeNull();
+		const html = renderDoc(
+			{ type: 'doc', content: [{ type: 'image', attrs: { src: '/files/x1', alt: 'Mappa "vecchia"' } }] },
+			{ showSecrets: false, resolve, labels }
+		);
+		expect(html).toBe('<img src="/files/x1" alt="Mappa &quot;vecchia&quot;" loading="lazy">');
+	});
+});

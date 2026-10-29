@@ -4,6 +4,7 @@ import { allowedVisibilities, canEdit, canManage, isMaster } from '#lib/access.t
 import { deletePage, getPageBySlug, pageMeta, updatePage } from '#lib/server/pages.ts';
 import { readPageForm } from '#lib/server/pageForm.ts';
 import { categoryTree, listTags } from '#lib/server/taxonomy.ts';
+import { getCalendar } from '#lib/server/settings.ts';
 
 function editable(slug: string, u: App.Locals['user']) {
 	const page = getPageBySlug(slug);
@@ -23,8 +24,12 @@ export const load: PageServerLoad = ({ params, locals, url }) => {
 			playersCanEdit: page.playersCanEdit,
 			categoryId: page.categoryId,
 			updatedAt: page.updatedAt,
-			tags: pageMeta(page).tags.map((t) => t.name).join(', ')
+			tags: pageMeta(page).tags.map((t) => t.name).join(', '),
+			fields: page.fields ?? [],
+			template: page.template,
+			session: page.session ?? null
 		},
+		months: getCalendar().months,
 		categories: categoryTree(locals.user).flat.map(({ id, label }) => ({ id, label })),
 		visibilities: allowedVisibilities(locals.user),
 		canManage: canManage(page, locals.user),
@@ -38,11 +43,11 @@ export const actions: Actions = {
 		if (!locals.user) return fail(401, { error: 'errors.forbidden', values: null });
 		const page = editable(params.slug, locals.user);
 		const f = await request.formData();
-		const r = readPageForm(f, locals.user);
+		const r = readPageForm(f, locals.user, getCalendar());
 		if (!r.ok) return fail(400, { error: r.error, values: r.values });
 		// Qualcun altro ha salvato nel frattempo: non sovrascriviamo il suo lavoro.
 		if (Number(f.get('updatedAt')) !== page.updatedAt) {
-			return fail(409, { error: 'errors.conflict', values: { ...r.input, tags: r.input.tags.join(', '), slug: '' } });
+			return fail(409, { error: 'errors.conflict', values: { ...r.input, tags: r.input.tags.join(', '), slug: '', template: r.input.template ?? null } });
 		}
 		updatePage(page, r.input, locals.user, canManage(page, locals.user));
 		redirect(303, `/wiki/${page.slug}`);

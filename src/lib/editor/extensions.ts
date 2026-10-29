@@ -1,10 +1,11 @@
 import { Extension, InputRule, Node, mergeAttributes, type Editor } from '@tiptap/core';
 import StarterKit from '@tiptap/starter-kit';
 import { Table, TableCell, TableHeader, TableRow } from '@tiptap/extension-table';
+import Image from '@tiptap/extension-image';
 import Suggestion, { type SuggestionProps, type SuggestionKeyDownProps } from '@tiptap/suggestion';
 import { PluginKey } from '@tiptap/pm/state';
 import { slugify } from '../slug.ts';
-import { safeHref } from '../content/render.ts';
+import { safeHref, safeImageSrc } from '../content/render.ts';
 import { CALLOUT_KINDS } from '../content/types.ts';
 
 export interface EditorLabels {
@@ -297,6 +298,10 @@ export function buildExtensions(opts: {
 				defaultProtocol: 'https',
 				isAllowedUri: (url) => safeHref(url) !== null
 			}
+		}),
+		Image.configure({ inline: false, allowBase64: false }).extend({
+			// Solo immagini caricate nella wiki o in https.
+			parseHTML: () => [{ tag: 'img[src]', getAttrs: (el) => (safeImageSrc((el as HTMLElement).getAttribute('src')) ? null : false) }]
 		}),
 		Table.configure({ resizable: false }),
 		TableRow,

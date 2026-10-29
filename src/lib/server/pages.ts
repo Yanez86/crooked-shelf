@@ -2,12 +2,13 @@ import { and, desc, eq, inArray, sql, type SQL } from 'drizzle-orm';
 import { getDb, getSqlite, schema } from './db/index.ts';
 import { slugify } from '../slug.ts';
 import { extract, stripSecrets } from '../content/extract.ts';
-import { renderDoc, type LinkTarget, type RenderOptions } from '../content/render.ts';
-import { EMPTY_DOC, isDoc, type DocNode } from '../content/types.ts';
+import { renderDoc, renderInline, type LinkTarget, type RenderOptions } from '../content/render.ts';
+import { EMPTY_DOC, isDoc, type DocNode, type PageField, type SessionInfo } from '../content/types.ts';
 import { canView, isMaster, type Viewer } from '../access.ts';
 import type { Visibility } from '../roles.ts';
 import { visibleTo } from './visibility.ts';
 import { ensureTags, tagsForPages } from './taxonomy.ts';
+import { syncSessionEvent } from './timeline.ts';
 
 const { pages, pageTags, pageLinks, users, categories } = schema;
 
@@ -44,6 +45,11 @@ export interface PageInput {
 	tags: string[];
 	/** Indirizzo richiesto (da un collegamento rosso); usato solo alla creazione. */
 	slug?: string;
+	fields: PageField[];
+	/** Template usato ("b:npc", "c:3"), solo informativo. */
+	template?: string | null;
+	/** Dati del resoconto di sessione, se la pagina lo è. */
+	session: SessionInfo | null;
 }
 
 function normalizeContent(raw: unknown, u: Viewer): DocNode {
@@ -52,8 +58,8 @@ function normalizeContent(raw: unknown, u: Viewer): DocNode {
 	return isMaster(u) ? doc : stripSecrets(doc);
 }
 
-function writeIndex(id: number, title: string, doc: DocNode) {
-	const ex = extract(doc);
+function writeIndex(id: number, title: string, doc: DocNode, fields: PageField[]) {
+	const ex = extract(doc, fields);
 	const db = getDb();
 	db.delete(pageLinks).where(eq(pageLinks.fromPageId, id)).run();
 	if (ex.links.length)
@@ -93,6 +99,9 @@ export function createPage(input: PageInput, u: Viewer): PageRow {
 				playersCanEdit: input.playersCanEdit,
 				hasSecret: extract(doc).hasSecret,
 				categoryId: input.categoryId,
+				fields: input.fields,
+				template: input.template ?? null,
+				session: input.session,
 				authorId: u.id,
 				updatedBy: u.id,
 				createdAt: now,
@@ -100,8 +109,9 @@ export function createPage(input: PageInput, u: Viewer): PageRow {
 			})
 			.returning()
 			.get();
-		writeIndex(row.id, row.title, doc);
+		writeIndex(row.id, row.title, doc, input.fields);
 		writeTags(row.id, input.tags);
+		syncSessionEvent(row, input.session);
 		return row;
 	});
 }
@@ -117,14 +127,18 @@ export function updatePage(page: PageRow, input: PageInput, u: Viewer, manage: b
 				content: doc,
 				hasSecret: extract(doc).hasSecret,
 				categoryId: input.categoryId,
+				fields: input.fields,
+				session: input.session,
 				updatedBy: u.id,
 				updatedAt: Math.max(Date.now(), page.updatedAt + 1),
 				...(manage ? { visibility: input.visibility, playersCanEdit: input.playersCanEdit } : {})
 			})
 			.where(eq(pages.id, page.id))
 			.run();
-		writeIndex(page.id, input.title, doc);
+		writeIndex(page.id, input.title, doc, input.fields);
 		writeTags(page.id, input.tags);
+		const visibility = manage ? input.visibility : page.visibility;
+		syncSessionEvent({ id: page.id, title: input.title, visibility, authorId: page.authorId }, input.session);
 	});
 }
 
@@ -133,12 +147,20 @@ export function deletePage(id: number) {
 		getDb().update(pages).set({ deletedAt: Date.now() }).where(eq(pages.id, id)).run();
 		getDb().delete(pageLinks).where(eq(pageLinks.fromPageId, id)).run();
 		getSqlite().prepare('DELETE FROM pages_fts WHERE rowid = ?').run(id);
+		syncSessionEvent({ id, title: '', visibility: 'personal', authorId: null }, null);
 	});
 }
 
 /** Titoli e visibilità delle pagine collegate, per disegnare i collegamenti. */
-export function linkResolver(doc: DocNode, u: Viewer | null): (slug: string) => LinkTarget | undefined {
-	const slugs = extract(doc).links.map((l) => l.target);
+export function linkResolver(doc: DocNode, u: Viewer | null, fields: PageField[] = []): (slug: string) => LinkTarget | undefined {
+	return resolverFor(
+		extract(doc, fields).links.map((l) => l.target),
+		u
+	);
+}
+
+/** Come linkResolver, partendo da un elenco di indirizzi. */
+export function resolverFor(slugs: string[], u: Viewer | null): (slug: string) => LinkTarget | undefined {
 	const map = new Map<string, LinkTarget>();
 	if (slugs.length) {
 		const rows = getDb()
@@ -160,9 +182,14 @@ export function linkResolver(doc: DocNode, u: Viewer | null): (slug: string) => 
 	return (slug) => map.get(slug);
 }
 
-export function renderPage(page: PageRow, u: Viewer | null, labels: RenderOptions['labels']): string {
+export function renderPage(page: PageRow, u: Viewer | null, labels: RenderOptions['labels']) {
 	const doc = isDoc(page.content) ? page.content : EMPTY_DOC;
-	return renderDoc(doc, { showSecrets: isMaster(u), resolve: linkResolver(doc, u), labels });
+	const fields = page.fields ?? [];
+	const resolve = linkResolver(doc, u, fields);
+	return {
+		html: renderDoc(doc, { showSecrets: isMaster(u), resolve, labels }),
+		fields: fields.map((f) => ({ label: f.label, html: renderInline(f.value, { resolve, labels }) }))
+	};
 }
 
 /** Pagine visibili che collegano a questa (i collegamenti nei segreti solo per il Master). */
