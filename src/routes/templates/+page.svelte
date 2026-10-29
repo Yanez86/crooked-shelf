@@ -50,11 +50,11 @@
 		gap: 0.75rem;
 	}
 	h2 {
-		font-size: 1.2rem;
+		font-size: var(--fs-md);
 		margin: 0 0 0.25rem;
 	}
 	.small {
-		font-size: 0.95rem;
+		font-size: var(--fs-sm);
 		margin: 0.25rem 0;
 	}
 	.actions {

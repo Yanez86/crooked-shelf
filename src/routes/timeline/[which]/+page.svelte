@@ -154,7 +154,7 @@
 		font-weight: 700;
 	}
 	.group h2 {
-		font-size: 1.3rem;
+		font-size: var(--fs-lg);
 		margin: 1.5rem 0 0.5rem;
 	}
 	.event {
@@ -177,12 +177,12 @@
 	}
 	.when {
 		margin: 0;
-		font-size: 0.95rem;
+		font-size: var(--fs-sm);
 		font-weight: 600;
 	}
 	.ev-title {
 		margin: 0.1rem 0 0.25rem;
-		font-size: 1.15rem;
+		font-size: var(--fs-md);
 	}
 	.desc {
 		margin: 0 0 0.25rem;
@@ -195,7 +195,7 @@
 		margin: 0;
 	}
 	.edit {
-		font-size: 0.95rem;
+		font-size: var(--fs-sm);
 	}
 	.line {
 		overflow-x: auto;

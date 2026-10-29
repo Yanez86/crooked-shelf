@@ -235,7 +235,7 @@
 	}
 	.map :global(.cs-pin-label) {
 		font-weight: 700;
-		font-size: 0.9rem;
+		font-size: var(--fs-sm);
 		background: #fff;
 		color: #111;
 		border: 1px solid #111;
@@ -254,13 +254,13 @@
 	}
 	.map :global(.pin-title) {
 		font-weight: 700;
-		font-size: 1.05rem;
+		font-size: var(--fs-md);
 	}
 	.map :global(.leaflet-control-zoom a) {
 		width: 2.75rem;
 		height: 2.75rem;
 		line-height: 2.75rem;
-		font-size: 1.4rem;
+		font-size: var(--fs-lg);
 		background: var(--c-surface);
 		color: var(--c-text);
 	}

@@ -196,7 +196,7 @@
 	}
 	.placeholder p {
 		margin: 0;
-		font-size: 0.95rem;
+		font-size: var(--fs-sm);
 	}
 	.tools {
 		display: flex;
@@ -205,7 +205,7 @@
 	}
 	.status {
 		margin: 0;
-		font-size: 0.9rem;
+		font-size: var(--fs-sm);
 		color: var(--c-muted);
 	}
 	.status.failed {

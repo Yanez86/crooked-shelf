@@ -29,5 +29,6 @@
 <style>
 	.narrow {
 		max-width: 28rem;
+		margin: 1.5rem auto 0;
 	}
 </style>

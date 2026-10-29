@@ -9,4 +9,7 @@
 
 <h1>{notFound ? t('errors.notFoundTitle') : t('errors.title')}</h1>
 <p>{notFound ? t('errors.notFound') : t('errors.unexpected')}</p>
-<p><a href="/">{t('nav.home')}</a></p>
+<div class="actions">
+	<a class="btn btn-primary" href="/">{t('nav.home')}</a>
+	{#if notFound}<a class="btn" href="/wiki">{t('nav.pages')}</a>{/if}
+</div>

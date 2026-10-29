@@ -288,7 +288,7 @@
 	.toolbar button,
 	.toolbar select {
 		font: inherit;
-		font-size: 0.9rem;
+		font-size: var(--fs-sm);
 		min-height: 2.5rem;
 		min-width: 2.5rem;
 		padding: 0.2rem 0.55rem;
@@ -326,7 +326,7 @@
 	.upload-status {
 		margin: 0;
 		padding: 0.3rem 0.75rem;
-		font-size: 0.9rem;
+		font-size: var(--fs-sm);
 		border-bottom: 1px solid var(--c-border);
 	}
 	.sep {
@@ -400,7 +400,7 @@
 	}
 	:global(.suggest-popup .detail) {
 		display: block;
-		font-size: 0.85rem;
+		font-size: var(--fs-sm);
 		opacity: 0.85;
 	}
 	.area :global(.ruleref) {

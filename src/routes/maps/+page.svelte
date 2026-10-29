@@ -56,11 +56,11 @@
 		background: var(--c-surface2);
 	}
 	h2 {
-		font-size: 1.15rem;
+		font-size: var(--fs-md);
 		margin: 0.5rem 0 0.25rem;
 	}
 	.small {
 		margin: 0 0 0.25rem;
-		font-size: 0.95rem;
+		font-size: var(--fs-sm);
 	}
 </style>

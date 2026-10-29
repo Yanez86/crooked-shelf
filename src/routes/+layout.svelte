@@ -57,7 +57,7 @@
 <a class="skip-link" href="#main">{t('nav.skip')}</a>
 
 <header class="site-header">
-	<div class="container header-inner" class:wide={!!tree}>
+	<div class="container header-inner" class:wide={!!tree} class:bare>
 		<a class="brand" href="/">
 			<img src="/favicon.svg" alt="" width="32" height="32" />
 			<span>{data.siteName}</span>
@@ -130,7 +130,7 @@
 <RulePopover />
 
 <footer class="site-footer">
-	<div class="container" class:wide={!!tree}>
+	<div class="container" class:wide={!!tree} class:bare>
 		<p>
 			Crooked Shelf {data.version} ·
 			<a href={REPO} rel="noopener noreferrer">{t('footer.source')}</a> ·
@@ -159,7 +159,7 @@
 		align-items: center;
 		gap: 0.6rem;
 		font-family: var(--font-head);
-		font-size: 1.4rem;
+		font-size: var(--fs-lg);
 		font-weight: 700;
 		color: var(--c-text);
 		text-decoration: none;
@@ -216,6 +216,13 @@
 	}
 	.menu-toggle {
 		display: none;
+	}
+	/* Accesso, prima configurazione e invito: tutto al centro, come il modulo. */
+	.header-inner.bare {
+		justify-content: center;
+	}
+	.site-footer .bare {
+		text-align: center;
 	}
 	/* Telefono: marchio e Menu sulla prima riga, ricerca sotto, navigazione chiusa. */
 	@media (max-width: 48rem) {
@@ -289,7 +296,7 @@
 	.site-footer {
 		border-top: 1px solid var(--c-border);
 		color: var(--c-muted);
-		font-size: 0.9rem;
+		font-size: var(--fs-sm);
 		padding: 1rem 0;
 	}
 </style>

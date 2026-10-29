@@ -222,13 +222,13 @@
 		padding: 0.5rem 0.75rem 0.75rem;
 	}
 	.column h2 {
-		font-size: 1.15rem;
+		font-size: var(--fs-md);
 		margin: 0.25rem 0 0.75rem;
 	}
 	.count {
 		font-weight: 400;
 		color: var(--c-muted);
-		font-size: 0.95rem;
+		font-size: var(--fs-sm);
 	}
 	.cards {
 		display: grid;
@@ -250,7 +250,7 @@
 	.color-purple { --card: #8a55c9; }
 	.color-gray { --card: #8a8a8a; }
 	h3 {
-		font-size: 1.05rem;
+		font-size: var(--fs-md);
 		margin: 0 0 0.25rem;
 	}
 	.body {
@@ -259,7 +259,7 @@
 	}
 	.by {
 		margin: 0;
-		font-size: 0.85rem;
+		font-size: var(--fs-sm);
 		color: var(--c-muted);
 	}
 	.tools {

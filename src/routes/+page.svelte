@@ -11,10 +11,10 @@
 
 <svelte:head><title>{page.data.siteName}</title></svelte:head>
 
-<h1>{page.data.siteName}</h1>
-{#if user}
-	<p>{t('home.welcome', { name: user.displayName })}</p>
-{/if}
+<header class="intro">
+	<h1>{page.data.siteName}</h1>
+	{#if user}<p class="muted">{t('home.welcome', { name: user.displayName })}</p>{/if}
+</header>
 
 {#if data.total === 0}
 	<section class="card empty">
@@ -26,7 +26,7 @@
 	<div class="grid">
 		<section aria-labelledby="recent-title">
 			<h2 id="recent-title">{t('home.recent')}</h2>
-			<PageList rows={data.recent} />
+			<PageList rows={data.recent} lead />
 			<p><a href="/wiki">{t('home.allPages', { n: data.total })}</a></p>
 		</section>
 		<section aria-labelledby="cat-title">
@@ -69,10 +69,34 @@
 	.empty h2 {
 		margin-top: 0;
 	}
+	.intro {
+		margin-bottom: 1.5rem;
+	}
+	.intro h1 {
+		margin-bottom: 0;
+	}
+	.intro p {
+		margin: 0.25rem 0 0;
+	}
+	section > h2:first-child {
+		margin-top: 0.5rem;
+	}
+	/* Elenchi di navigazione: niente puntini, una riga per voce. */
 	.cats {
-		padding-left: 1.2rem;
+		list-style: none;
+		padding: 0;
+		margin: 0 0 0.75rem;
 	}
 	.cats li {
-		margin: 0.35rem 0;
+		border-bottom: 1px solid var(--c-border);
+	}
+	.cats a {
+		display: inline-flex;
+		align-items: center;
+		min-height: 2.5rem;
+		text-decoration: none;
+	}
+	.cats a:hover {
+		text-decoration: underline;
 	}
 </style>

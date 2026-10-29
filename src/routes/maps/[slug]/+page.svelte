@@ -112,7 +112,7 @@
 			{#each data.layers as l (l.id)}
 				<label class="choice">
 					<input type="checkbox" checked={!hidden.includes(l.id)} onchange={(e) => toggleLayer(l.id, e.currentTarget.checked)} />
-					<span>{l.name}{#if l.visibility === 'master'} <span class="badge">{t('visibility.master')}</span>{/if}</span>
+					<span>{l.name} {#if l.visibility === 'master'}<span class="badge">{t('visibility.master')}</span>{/if}</span>
 				</label>
 			{/each}
 		</fieldset>
@@ -258,7 +258,7 @@
 						<tr>
 							<th scope="row">
 								<span aria-hidden="true">{PIN_SYMBOL[p.icon]}</span> {p.label}
-								{#if p.visibility === 'master'} <span class="badge">{t('visibility.master')}</span>{/if}
+								{#if p.visibility === 'master'}<span class="badge">{t('visibility.master')}</span>{/if}
 								{#if p.html}<br /><span class="muted small">{@html p.html}</span>{/if}
 							</th>
 							{#if data.layers.length}<td>{layerName(p.layerId)}</td>{/if}
@@ -389,7 +389,7 @@
 		overflow-x: auto;
 	}
 	.small {
-		font-size: 0.9rem;
+		font-size: var(--fs-sm);
 		font-weight: 400;
 	}
 	.row-actions {

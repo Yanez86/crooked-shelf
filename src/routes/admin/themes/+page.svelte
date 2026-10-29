@@ -89,7 +89,7 @@
 		border-radius: var(--radius);
 		font-family: var(--font-head);
 		font-weight: 700;
-		font-size: 1.2rem;
+		font-size: var(--fs-md);
 	}
 	.dot {
 		width: 1.2rem;
@@ -105,6 +105,6 @@
 	}
 	.problems {
 		font-family: var(--font-mono);
-		font-size: 0.9rem;
+		font-size: var(--fs-sm);
 	}
 </style>

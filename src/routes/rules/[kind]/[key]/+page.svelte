@@ -51,7 +51,7 @@
 		margin: 1rem 0 2rem;
 	}
 	.attr {
-		font-size: 0.85rem;
+		font-size: var(--fs-sm);
 		margin-top: 2rem;
 	}
 </style>

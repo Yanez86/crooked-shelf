@@ -109,7 +109,7 @@
 		flex: 1;
 		min-width: 0;
 		font-family: var(--font-mono);
-		font-size: 0.9rem;
+		font-size: var(--fs-sm);
 	}
 	.scroll {
 		overflow-x: auto;

@@ -115,7 +115,7 @@
 	}
 	.color label {
 		font-weight: 600;
-		font-size: 0.95rem;
+		font-size: var(--fs-sm);
 	}
 	.summary {
 		font-weight: 700;
@@ -137,7 +137,7 @@
 	}
 	.pv-title {
 		font-family: var(--font-head);
-		font-size: 1.3rem;
+		font-size: var(--fs-lg);
 		font-weight: 700;
 		margin-top: 0;
 	}
@@ -177,6 +177,6 @@
 		outline-color: var(--c-focus);
 	}
 	table {
-		font-size: 0.9rem;
+		font-size: var(--fs-sm);
 	}
 </style>

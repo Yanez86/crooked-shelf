@@ -133,7 +133,7 @@
 
 <style>
 	.title-input {
-		font-size: 1.4rem;
+		font-size: var(--fs-lg);
 		font-family: var(--font-head);
 	}
 	.label {

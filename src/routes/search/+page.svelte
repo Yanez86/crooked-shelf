@@ -30,8 +30,13 @@
 				</li>
 			{/each}
 		</ol>
-	{:else if page.data.user}
-		<p><a href="/wiki/new?title={encodeURIComponent(data.q)}">{t('search.create', { q: data.q })}</a></p>
+	{:else}
+		<div class="card empty">
+			<p class="muted">{t('search.emptyHint')}</p>
+			{#if page.data.user}
+				<a class="btn btn-primary" href="/wiki/new?title={encodeURIComponent(data.q)}">+ {t('search.create', { q: data.q })}</a>
+			{/if}
+		</div>
 	{/if}
 {/if}
 
@@ -55,9 +60,15 @@
 	}
 	.hits h2 {
 		margin: 0 0 0.25rem;
-		font-size: 1.2rem;
+		font-size: var(--fs-md);
 	}
 	.hits p {
 		margin: 0;
+	}
+	.empty {
+		max-width: 40rem;
+	}
+	.empty p {
+		margin-top: 0;
 	}
 </style>

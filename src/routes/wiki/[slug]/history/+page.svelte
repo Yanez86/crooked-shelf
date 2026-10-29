@@ -75,7 +75,7 @@
 	.diff {
 		white-space: pre-wrap;
 		font-family: var(--font-mono);
-		font-size: 0.95rem;
+		font-size: var(--fs-sm);
 		line-height: 1.6;
 		overflow-wrap: anywhere;
 	}

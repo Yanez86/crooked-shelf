@@ -160,7 +160,7 @@
 	}
 	figcaption {
 		padding: 0.5rem 0.75rem;
-		font-size: 0.9rem;
+		font-size: var(--fs-sm);
 		overflow-wrap: anywhere;
 	}
 	.viewer {

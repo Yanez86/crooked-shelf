@@ -91,7 +91,7 @@
 	}
 	.template-card strong {
 		color: var(--c-link);
-		font-size: 1.1rem;
+		font-size: var(--fs-md);
 		text-decoration: underline;
 	}
 	.template-card:hover {

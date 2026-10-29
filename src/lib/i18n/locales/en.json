@@ -36,7 +36,8 @@
 		"submit": "Search",
 		"title": "Search",
 		"results": "{n} results for “{q}”",
-		"create": "Create the page “{q}”"
+		"create": "Create the page “{q}”",
+		"emptyHint": "Try fewer words or a different form of the word."
 	},
 	"common": {
 		"cancel": "Cancel",

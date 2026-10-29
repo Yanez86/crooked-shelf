@@ -36,7 +36,8 @@
 		"submit": "Cerca",
 		"title": "Ricerca",
 		"results": "{n} risultati per «{q}»",
-		"create": "Crea la pagina «{q}»"
+		"create": "Crea la pagina «{q}»",
+		"emptyHint": "Prova con meno parole o con un'altra forma della parola."
 	},
 	"common": {
 		"cancel": "Annulla",

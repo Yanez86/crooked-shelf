@@ -32,7 +32,7 @@
 		<tbody>
 			{#each data.users as u (u.id)}
 				<tr>
-					<th scope="row">{u.username}{#if u.id === me} <span class="badge">{t('admin.you')}</span>{/if}</th>
+					<th scope="row">{u.username} {#if u.id === me}<span class="badge">{t('admin.you')}</span>{/if}</th>
 					<td>{u.displayName}</td>
 					<td>
 						<form id="user-{u.id}" method="post" action="?/update"><input type="hidden" name="id" value={u.id} /></form>

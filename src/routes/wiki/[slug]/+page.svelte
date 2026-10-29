@@ -123,7 +123,7 @@
 		list-style: none;
 		padding: 0;
 		margin: 0;
-		font-size: 0.95rem;
+		font-size: var(--fs-sm);
 	}
 	.crumbs li + li::before {
 		content: '›';
@@ -145,7 +145,7 @@
 		flex-wrap: wrap;
 		gap: 0.5rem;
 		align-items: center;
-		font-size: 0.95rem;
+		font-size: var(--fs-sm);
 	}
 	.tags {
 		display: flex;
@@ -220,7 +220,7 @@
 		max-width: var(--measure);
 	}
 	.related h2 {
-		font-size: 1.15rem;
+		font-size: var(--fs-md);
 		margin-top: 1rem;
 	}
 	.related h3 {
@@ -232,7 +232,7 @@
 		max-width: var(--measure);
 	}
 	.backlinks h2 {
-		font-size: 1.15rem;
+		font-size: var(--fs-md);
 		margin-top: 1rem;
 	}
 </style>

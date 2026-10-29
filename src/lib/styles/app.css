@@ -14,6 +14,13 @@
 	--radius: 0.375rem;
 	--space: 1rem;
 	--measure: 72ch;
+	/* Scala dei caratteri (rapporto ~1.2): usare solo questi valori. */
+	--fs-sm: 0.875rem;
+	--fs-base: 1rem;
+	--fs-md: 1.2rem;
+	--fs-lg: 1.45rem;
+	--fs-xl: 1.75rem;
+	--fs-2xl: 2.1rem;
 	font-size: calc(100% * var(--font-scale, 1));
 }
 
@@ -48,19 +55,27 @@ h4 {
 	line-height: 1.25;
 	margin: 1.6em 0 0.5em;
 	overflow-wrap: anywhere;
+	text-wrap: balance;
 }
 h1 {
-	font-size: 2rem;
+	font-size: var(--fs-2xl);
 	margin-top: 0.5em;
+	letter-spacing: -0.015em;
 }
 h2 {
-	font-size: 1.5rem;
+	font-size: var(--fs-lg);
+	letter-spacing: -0.01em;
 }
 h3 {
-	font-size: 1.25rem;
+	font-size: var(--fs-md);
 }
 h4 {
-	font-size: 1.1rem;
+	font-size: var(--fs-base);
+}
+/* Date e numeri che si confrontano in colonna. */
+time,
+table.data {
+	font-variant-numeric: tabular-nums;
 }
 
 a {
@@ -161,7 +176,7 @@ legend {
 }
 .hint {
 	color: var(--c-muted);
-	font-size: 0.9rem;
+	font-size: var(--fs-sm);
 	font-weight: 400;
 }
 input[type='text'],
@@ -220,6 +235,14 @@ fieldset {
 	text-decoration: none;
 	cursor: pointer;
 	line-height: 1.2;
+	transition:
+		background-color 0.15s ease-out,
+		border-color 0.15s ease-out,
+		filter 0.15s ease-out,
+		transform 0.1s ease-out;
+}
+.btn:active:not(:disabled) {
+	transform: scale(0.97);
 }
 .btn:hover {
 	background: var(--c-surface2);
@@ -240,7 +263,7 @@ fieldset {
 .btn-small {
 	min-height: 2.25rem;
 	padding: 0.25rem 0.65rem;
-	font-size: 0.95rem;
+	font-size: var(--fs-sm);
 }
 /* Azioni di terzo livello (barre degli strumenti, righe delle tabelle): il bordo compare solo al passaggio. */
 .btn-ghost {
@@ -315,7 +338,7 @@ fieldset {
 	padding: 0.05rem 0.55rem;
 	border: 1px solid var(--c-control);
 	border-radius: 999px;
-	font-size: 0.85rem;
+	font-size: var(--fs-sm);
 	color: var(--c-text);
 	background: var(--c-surface);
 	text-decoration: none;

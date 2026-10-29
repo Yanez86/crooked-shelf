@@ -107,7 +107,7 @@
 	}
 	h2 {
 		margin: 0 2rem 0.25rem 0;
-		font-size: 1.25rem;
+		font-size: var(--fs-lg);
 	}
 	h2:focus {
 		outline: none;
@@ -126,7 +126,7 @@
 		right: 0.4rem;
 		width: 2.5rem;
 		height: 2.5rem;
-		font-size: 1.5rem;
+		font-size: var(--fs-lg);
 		line-height: 1;
 		border: 1px solid var(--c-control);
 		border-radius: var(--radius);
@@ -135,7 +135,7 @@
 		cursor: pointer;
 	}
 	.attr {
-		font-size: 0.8rem;
+		font-size: var(--fs-sm);
 		color: var(--c-muted);
 		margin-bottom: 0;
 	}

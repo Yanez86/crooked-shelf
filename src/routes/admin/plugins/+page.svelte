@@ -71,10 +71,10 @@
 	}
 	h3 {
 		margin: 0;
-		font-size: 1.15rem;
+		font-size: var(--fs-md);
 	}
 	.small {
-		font-size: 0.95rem;
+		font-size: var(--fs-sm);
 	}
 	.warn summary {
 		cursor: pointer;

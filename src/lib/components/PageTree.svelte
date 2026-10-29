@@ -123,7 +123,7 @@
 		top: 1rem;
 		max-height: calc(100vh - 2rem);
 		overflow-y: auto;
-		font-size: 0.95rem;
+		font-size: var(--fs-sm);
 		line-height: 1.35;
 		background: var(--c-surface);
 		border: 1px solid var(--c-border);

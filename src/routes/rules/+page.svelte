@@ -22,7 +22,6 @@
 	<div class="field grow">
 		<label for="q">{t('rules.search')}</label>
 		<input id="q" name="q" type="search" value={data.q} aria-describedby="q-hint" />
-		<span id="q-hint" class="hint">{t('rules.searchHint')}</span>
 	</div>
 	<div class="field">
 		<label for="kind">{t('rules.kind')}</label>
@@ -32,6 +31,8 @@
 		</select>
 	</div>
 	<div class="field"><button class="btn btn-primary" type="submit">{t('search.submit')}</button></div>
+	<!-- Sotto la riga, così campo, tendina e pulsante restano allineati. -->
+	<span id="q-hint" class="hint q-hint">{t('rules.searchHint')}</span>
 </form>
 
 {#if data.q || data.kind}
@@ -59,15 +60,18 @@
 	.how summary {
 		cursor: pointer;
 		font-weight: 600;
-		min-height: 2.75rem;
-		display: flex;
-		align-items: center;
+		padding: 0.6rem 0;
 	}
 	.filters {
 		display: flex;
 		flex-wrap: wrap;
 		gap: 0 1rem;
 		align-items: flex-end;
+		margin-bottom: 1.5rem;
+	}
+	.q-hint {
+		flex-basis: 100%;
+		margin: -0.6rem 0 0.25rem;
 	}
 	.filters .grow {
 		flex: 1 1 16rem;
@@ -82,7 +86,7 @@
 		gap: 0.5rem;
 	}
 	.attr {
-		font-size: 0.85rem;
+		font-size: var(--fs-sm);
 		margin-top: 2rem;
 	}
 </style>

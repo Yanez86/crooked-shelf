@@ -54,6 +54,6 @@
 		border-top: 1px solid var(--c-border);
 	}
 	.danger-zone h2 {
-		font-size: 1.15rem;
+		font-size: var(--fs-md);
 	}
 </style>
