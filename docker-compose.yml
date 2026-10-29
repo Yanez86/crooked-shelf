@@ -1,0 +1,19 @@
+# Avvio:   docker compose up -d
+# Poi apri http://localhost:3000 (o l'indirizzo del computer in rete locale, es. http://192.168.1.20:3000).
+services:
+  crooked-shelf:
+    build: .
+    image: crooked-shelf:latest
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - crooked-shelf-data:/data
+    environment:
+      # Dietro un proxy con HTTPS (Caddy, nginx…), togli il # dalle due righe qui sotto:
+      # CS_ORIGIN: "https://wiki.esempio.it"
+      # CS_TRUST_PROXY: "1"
+      TZ: "Europe/Rome"
+
+volumes:
+  crooked-shelf-data:

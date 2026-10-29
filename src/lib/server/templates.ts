@@ -2,6 +2,7 @@ import { asc, eq } from 'drizzle-orm';
 import { getDb, schema } from './db/index.ts';
 import { BUILTIN_TEMPLATES, builtinTemplate, type BuiltinTemplate, type TemplateData } from '../templates.ts';
 import { EMPTY_DOC, isDoc, type DocNode } from '../content/types.ts';
+import { pluginTemplates } from './plugins.ts';
 
 const { templates } = schema;
 
@@ -19,12 +20,17 @@ function fromRow(r: typeof templates.$inferSelect): TemplateData {
 
 export function listTemplates(locale: string): TemplateData[] {
 	const custom = getDb().select().from(templates).orderBy(asc(templates.name)).all().map(fromRow);
-	return [...BUILTIN_TEMPLATES.map((id) => builtinTemplate(id, locale)), ...custom];
+	const fromPlugins = pluginTemplates().map((t) => ({ key: t.key, name: t.name, description: t.description || t.plugin, fields: t.fields, content: t.content, session: t.session, builtin: true }));
+	return [...BUILTIN_TEMPLATES.map((id) => builtinTemplate(id, locale)), ...fromPlugins, ...custom];
 }
 
 export function getTemplate(key: string, locale: string): TemplateData | undefined {
 	const [kind, id] = key.split(':');
 	if (kind === 'b' && BUILTIN_TEMPLATES.includes(id as BuiltinTemplate)) return builtinTemplate(id as BuiltinTemplate, locale);
+	if (kind === 'p') {
+		const t = pluginTemplates().find((x) => x.key === key);
+		return t && { key: t.key, name: t.name, description: t.description, fields: t.fields, content: t.content, session: t.session, builtin: true };
+	}
 	if (kind === 'c' && /^\d+$/.test(id)) {
 		const r = getDb().select().from(templates).where(eq(templates.id, Number(id))).get();
 		return r ? fromRow(r) : undefined;

@@ -17,7 +17,7 @@ const trustProxy = process.env.CS_TRUST_PROXY === '1';
 
 process.env.PROTOCOL_HEADER = 'x-cs-proto';
 process.env.HOST_HEADER = 'x-cs-host';
-process.env.BODY_SIZE_LIMIT ??= '30M';
+process.env.BODY_SIZE_LIMIT ??= '100M';
 if (trustProxy) process.env.ADDRESS_HEADER ??= 'x-forwarded-for';
 
 const { handler } = await import('./build/handler.js');

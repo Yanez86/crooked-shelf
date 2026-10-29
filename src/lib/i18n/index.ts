@@ -13,12 +13,29 @@ export const LOCALES: Record<string, Dict> = Object.fromEntries(
 	Object.entries(files).map(([path, dict]) => [path.replace(/^.*\/(.+)\.json$/, '$1'), dict])
 );
 
+/** Traduzioni portate dai plugin: completano o sostituiscono quelle incluse. */
+const EXTRA: Record<string, Dict> = {};
+
+export function setExtraLocales(extra: Record<string, Dict>) {
+	for (const k of Object.keys(EXTRA)) delete EXTRA[k];
+	Object.assign(EXTRA, extra);
+}
+
+/** Nel browser: aggiunge le traduzioni del plugin per la lingua in uso (arrivano dal server). */
+export function registerLocale(code: string, dict: Dict | null | undefined) {
+	if (dict) EXTRA[code] = dict;
+}
+
+const nameOf = (code: string) => String(((EXTRA[code]?._meta ?? LOCALES[code]?._meta) as Dict)?.name ?? code);
+
 export const localeNames = (): { code: string; name: string }[] =>
-	Object.entries(LOCALES)
-		.map(([code, d]) => ({ code, name: String((d._meta as Dict)?.name ?? code) }))
+	[...new Set([...Object.keys(LOCALES), ...Object.keys(EXTRA)])]
+		.map((code) => ({ code, name: nameOf(code) }))
 		.sort((a, b) => a.name.localeCompare(b.name));
 
-export const isLocale = (l: unknown): l is string => typeof l === 'string' && l in LOCALES;
+export const isLocale = (l: unknown): l is string => typeof l === 'string' && (l in LOCALES || l in EXTRA);
+
+export const extraLocale = (code: string): Dict | null => EXTRA[code] ?? null;
 
 /** Sceglie la lingua migliore da un'intestazione Accept-Language. */
 export function fromAcceptLanguage(header: string | null): string | null {
@@ -41,7 +58,7 @@ function lookup(d: Dict | undefined, key: string): string | undefined {
 
 /** Traduce una chiave; se manca nella lingua scelta usa l'inglese, poi la chiave stessa. */
 export function translate(locale: string, key: string, params?: Params): string {
-	const s = lookup(LOCALES[locale], key) ?? lookup(LOCALES[DEFAULT_LOCALE], key) ?? key;
+	const s = lookup(EXTRA[locale], key) ?? lookup(LOCALES[locale], key) ?? lookup(LOCALES[DEFAULT_LOCALE], key) ?? key;
 	return params ? s.replace(/\{(\w+)\}/g, (m, k) => (k in params ? String(params[k]) : m)) : s;
 }
 

@@ -364,7 +364,11 @@
 		"revoke": "Revoke",
 		"inviteRevoked": "Invite revoked.",
 		"noInvites": "No pending invites.",
-		"themes": "Themes"
+		"themes": "Themes",
+		"plugins": "Plugins",
+		"backup": "Backup",
+		"world": "World package",
+		"export": "Export to Markdown"
 	},
 	"files": {
 		"empty": "Choose a file to upload.",
@@ -739,5 +743,85 @@
 		"newColumn": "New column",
 		"delete": "Delete board",
 		"deleteConfirm": "Yes, I want to delete “{title}” with all its cards"
+	},
+	"plugins": {
+		"intro": "Plugins add themes, templates, calendars, languages and rules. They contain only data, not programs: installing them doesn't put the server at risk. They stay off until you turn them on.",
+		"on": "On",
+		"off": "Off",
+		"enable": "Turn on",
+		"disable": "Turn off",
+		"enabled": "Plugin turned on.",
+		"disabled": "Plugin turned off.",
+		"reload": "Look for plugins again",
+		"reloaded": "Plugin list updated.",
+		"none": "No plugins found.",
+		"author": "by {name}",
+		"contains": "Contains:",
+		"kinds": {
+			"themes": "{n} themes",
+			"templates": "{n} templates",
+			"calendars": "{n} calendars",
+			"locales": "{n} languages",
+			"rules": "{n} rules"
+		},
+		"warnings": "{n} invalid files (ignored)",
+		"installTitle": "Installing a plugin",
+		"installText": "Copy the plugin folder (the one with plugin.json) into one of these folders, then press the button below:",
+		"docs": "How to create a plugin:"
+	},
+	"backup": {
+		"fullTitle": "Full backup",
+		"fullText": "One file with everything: database, uploaded images and installed plugins. Do it often and keep it on another disk.",
+		"download": "Download backup",
+		"restoreHint": "To restore it: stop the wiki and use the restore tool (full instructions in docs/installazione.md).",
+		"otherTitle": "Other ways to take your data with you",
+		"markdownHint": "all pages as text files, readable anywhere",
+		"worldHint": "maps, house rules and templates to reuse in another campaign"
+	},
+	"export": {
+		"intro": "Download the whole wiki as Markdown files in a .zip archive:",
+		"point1": "one folder per category, one file per page, with tags and infobox fields at the top;",
+		"point2": "links are written as [[Page]], notes as callouts: it opens directly in Obsidian;",
+		"point3": "it contains pages as you see them, Game Master secrets included.",
+		"download": "Download as Markdown"
+	},
+	"world": {
+		"intro": "A world package (.shelf) takes maps, pages, house rules, templates, calendar and world timeline to another wiki. Users, passwords, session recaps and boards stay here.",
+		"exportTitle": "Create a package",
+		"name": "Package name",
+		"namePlaceholder": "e.g. Sword Coast",
+		"pages": "Pages",
+		"allPages": "All pages",
+		"somePages": "Only some categories or tags",
+		"pagesHint": "Personal pages are never included.",
+		"alsoInclude": "Also include",
+		"secrets": "Include Game Master secrets",
+		"secretsHint": "“Game Master only” pages, blocks, maps, pins and events. Leave it off if the package goes to players.",
+		"download": "Download package",
+		"importTitle": "Import a package",
+		"file": "Package file (.shelf)",
+		"check": "Check contents",
+		"importHint": "Before importing you'll see what it contains and what already exists in this wiki.",
+		"withSecrets": "with Game Master secrets",
+		"conflicts": "Already present: {list}",
+		"conflictTitle": "If a page or map already exists",
+		"rename": "Import it with a new name (e.g. “bartolo-2”): nothing is lost",
+		"skip": "Skip it: keep the one in this wiki",
+		"replace": "Replace it with the one in the package",
+		"useCalendar": "Use the package calendar instead of the current one",
+		"confirm": "Import",
+		"imported": "Package imported.",
+		"errFile": "The file isn't a valid world package.",
+		"errExpired": "The uploaded file is no longer available: upload it again.",
+		"done": {
+			"pages": "{n} pages",
+			"skipped": "{n} pages skipped",
+			"categories": "{n} categories",
+			"maps": "{n} maps",
+			"templates": "{n} templates",
+			"events": "{n} timeline events",
+			"themes": "{n} themes",
+			"files": "{n} images"
+		}
 	}
 }

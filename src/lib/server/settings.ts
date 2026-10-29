@@ -12,6 +12,8 @@ export interface SiteSettings {
 	calendar: Calendar | null;
 	/** Temi creati dall'Admin (id "custom-N"). */
 	themes: Theme[];
+	/** Id dei plugin accesi. */
+	plugins: string[];
 }
 
 const DEFAULTS: SiteSettings = {
@@ -19,7 +21,8 @@ const DEFAULTS: SiteSettings = {
 	defaultLocale: DEFAULT_LOCALE,
 	allowVisitors: false,
 	calendar: null,
-	themes: []
+	themes: [],
+	plugins: []
 };
 
 let cache: SiteSettings | undefined;

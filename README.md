@@ -1,69 +1,46 @@
 # Crooked Shelf
 
-Wiki self-hosted per creare, curare e registrare campagne di giochi di ruolo da tavolo (D&D 5.5 e altri sistemi).
+**Wiki self-hosted per creare, curare e registrare campagne di giochi di ruolo da tavolo** (pensata per D&D 5.5, aperta ad altri sistemi).
 
-*Self-hosted wiki to build, maintain and chronicle tabletop RPG campaigns (D&D 5.5 and other systems).*
+*A self-hosted wiki to build, maintain and chronicle tabletop RPG campaigns. Interface in Italian and English.*
 
-Progetto completo: [docs/design.md](docs/design.md).
+## Cosa fa
 
-## Stato
+- **Pagine** con editor a blocchi e Markdown, collegamenti `[[Pagina]]`, template (PNG, luoghi, fazioni, resoconti di sessione…), scheda laterale, immagini, categorie, tag e ricerca.
+- **Segreti del Master**: pagine e blocchi che i giocatori non vedono e non trovano neanche cercando.
+- **Ruoli**: Admin, Master, Giocatore; accesso solo su invito, visitatori spenti di default.
+- **Mappe** da immagine con pin collegati a pagine e ad altre mappe, livelli, pin segreti, righello.
+- **Cronologie** del mondo e della campagna con **calendari fantasy** (Harptos, inventati…); i resoconti di sessione entrano da soli.
+- **Regole D&D 5.5**: `@incantesimo[Fireball]` diventa un link a D&D Beyond con l'anteprima del testo SRD 5.2.
+- **Bacheche** degli appunti, personali e del gruppo.
+- **Versioni** di ogni pagina, cestino.
+- **Temi** (chiaro, scuro, pergamena, alto contrasto, e quelli creati da te) e **accessibilità** WCAG 2.2 AA: testo fino al 200%, caratteri per la dislessia, uso completo da tastiera.
+- **Italiano e inglese**, altre lingue con un file o un plugin.
+- **Plugin** di soli dati: temi, template, calendari, lingue, regole.
+- **I tuoi dati restano tuoi**: backup completo, esportazione in Markdown (compatibile con Obsidian), **pacchetto mondo** `.shelf` per portare mappe e regole della casa in un'altra campagna.
 
-**Fase 1 completata**:
-- accesso con ruoli (Admin, Master, Giocatore), inviti con link, visitatori spenti di default
-- pagine con editor a blocchi e Markdown, collegamenti `[[Pagina]]` con suggerimenti, pagine che collegano qui
-- blocchi segreti del Master, visibilità per pagina (pubblica, giocatori, solo Master, personale)
-- categorie annidate e tag colorati, ricerca nel testo
-- italiano e inglese, quattro temi (chiaro, scuro, pergamena, alto contrasto)
-- preferenze di lettura: dimensione del testo, font ad alta leggibilità o per la dislessia, spaziatura, riduci movimento
-
-**Fase 2 completata**:
-- template preinstallati (PNG, personaggio giocante, luogo, fazione, oggetto, divinità, mostro, resoconto di sessione, regola della casa) e template creati dal Master
-- scheda laterale con campi (anche con `[[collegamenti]]`), immagini nelle pagine con descrizione per chi non vede
-- mappe da immagine con pin collegati a pagine e ad altre mappe, livelli, pin segreti, righello delle distanze, elenco accessibile dei pin
-- cronologia del mondo e della campagna, calendari personalizzati (gregoriano, Harptos, semplice o inventato), resoconti di sessione che entrano da soli nella cronologia
-
-**Fase 3 completata**:
-- riferimenti alle regole nel testo: `@incantesimo[Fireball|Palla di fuoco]` diventa un link a D&D Beyond con l'anteprima del testo SRD 5.2 (scrivendo `@` compaiono i suggerimenti); pagina «Regole» per cercare incantesimi, mostri, condizioni, oggetti magici, talenti, specie, classi e background
-- bacheche degli appunti personali e del gruppo, con schede spostabili con i pulsanti o trascinandole
-- cronologia delle modifiche di ogni pagina (confronto e ripristino) e cestino
-- editor dei temi con anteprima e controllo dei contrasti; temi esportabili e importabili come file
-
-Prossime fasi: plugin, Docker, backup, «pacchetto mondo» `.shelf`, esportazione in Markdown, documentazione.
-
-## Avvio
-
-Serve Node.js 22.17 o più recente.
+## Avvio rapido
 
 ```bash
-npm install
-npm run build
-npm start
+git clone https://github.com/yanez86/crooked-shelf.git
+cd crooked-shelf
+docker compose up -d
 ```
 
-Apri `http://localhost:3000`: la prima volta si crea la wiki e l'account amministratore.
+Apri http://localhost:3000: la prima volta si crea la wiki e l'account amministratore.
 
-| Variabile | Significato | Predefinito |
-|---|---|---|
-| `PORT` | porta | `3000` |
-| `CS_DATA_DIR` | cartella dei dati (database e immagini caricate) | `./data` |
-| `CS_ORIGIN` | indirizzo pubblico, es. `https://wiki.esempio.it` | — |
-| `CS_TRUST_PROXY` | `1` dietro un proxy (Caddy, nginx) che invia `X-Forwarded-*` | — |
+Senza Docker, su Raspberry Pi, su internet con HTTPS, backup e ripristino: **[docs/installazione.md](docs/installazione.md)**.
 
-**Backup**: copia la cartella `data` (a server fermo).
+## Documentazione
 
-## Sviluppo
-
-```bash
-npm run dev         # server di sviluppo
-npm run check       # controllo dei tipi
-npm run test:unit   # test delle regole (permessi, contenuti, temi, traduzioni)
-npm run test:e2e    # test nel browser con Playwright e controlli di accessibilità axe
-```
-
-Le traduzioni sono in `src/lib/i18n/locales/`: una lingua nuova è un file JSON nuovo.
+- [Installazione](docs/installazione.md)
+- [Guida all'uso](docs/guida.md)
+- [Creare un plugin](docs/plugin.md)
+- [Contribuire](CONTRIBUTING.md)
+- [Progetto completo](docs/design.md)
 
 ## Licenza
 
-[GNU AGPL-3.0](LICENSE). Testi SRD 5.2: CC-BY-4.0, Wizards of the Coast; dati ricavati dal progetto 5e-database (MIT). Dettagli in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Progetto non affiliato a Wizards of the Coast né a D&D Beyond.
+Codice: [GNU AGPL-3.0](LICENSE). Puoi usarlo, modificarlo e ridistribuirlo liberamente; chi distribuisce o offre online una versione modificata deve renderne disponibile il codice.
 
-Per aggiornare i testi SRD: `node tools/import-srd.mjs <cartella di 5e-database>`.
+Testi SRD 5.2: Wizards of the Coast, CC-BY-4.0; dati ricavati dal progetto 5e-database (MIT). Dettagli in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Crooked Shelf non è affiliato a Wizards of the Coast né a D&D Beyond.

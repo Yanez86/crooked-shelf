@@ -1,0 +1,25 @@
+{
+	"name": "Calendario di Lunargento",
+	"months": [
+		{ "name": "Gelobuio", "days": 28 },
+		{ "name": "Notte delle Lanterne", "days": 1, "festival": true },
+		{ "name": "Brinafonda", "days": 28 },
+		{ "name": "Germoglio", "days": 28 },
+		{ "name": "Pioggiargento", "days": 28 },
+		{ "name": "Solealto", "days": 28 },
+		{ "name": "Mezzestate", "days": 1, "festival": true },
+		{ "name": "Spigadoro", "days": 28 },
+		{ "name": "Vendemmia", "days": 28 },
+		{ "name": "Foglierosse", "days": 28 },
+		{ "name": "Nebbiacorta", "days": 28 },
+		{ "name": "Lunga Notte", "days": 1, "festival": true },
+		{ "name": "Ultimogelo", "days": 28 }
+	],
+	"weekdays": ["Lunadì", "Fuocodì", "Acquadì", "Ventodì", "Terradì", "Stelladì", "Quietedì"],
+	"eras": [
+		{ "name": "Era delle Ombre", "abbr": "EO", "start": -500 },
+		{ "name": "Era della Corona d'Argento", "abbr": "CA", "start": 1 }
+	],
+	"leap": null,
+	"today": { "year": 312, "month": 4, "day": 9 }
+}

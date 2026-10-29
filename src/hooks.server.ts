@@ -7,7 +7,8 @@ import {
 	setSessionCookie,
 	validateSession
 } from '#lib/server/auth.ts';
-import { customThemes, getSettings } from '#lib/server/settings.ts';
+import { getSettings } from '#lib/server/settings.ts';
+import { allPlugins, extraThemes } from '#lib/server/plugins.ts';
 import { cleanPrefs, PREFS_COOKIE } from '#lib/prefs.ts';
 import { fromAcceptLanguage, isLocale, DEFAULT_LOCALE } from '#lib/i18n/index.ts';
 
@@ -26,6 +27,7 @@ function readCookiePrefs(raw: string | undefined): Record<string, unknown> | nul
 export const handle: Handle = async ({ event, resolve }) => {
 	const { cookies, url, locals } = event;
 	const ready = hasUsers();
+	allPlugins();
 
 	locals.user = null;
 	const token = cookies.get(SESSION_COOKIE);
@@ -41,7 +43,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 	locals.prefs = cleanPrefs(
 		locals.user ? locals.user.prefs : readCookiePrefs(cookies.get(PREFS_COOKIE)),
 		isLocale,
-		customThemes().map((t) => t.id)
+		extraThemes().map((t) => t.id)
 	);
 	locals.locale =
 		locals.prefs.locale ??

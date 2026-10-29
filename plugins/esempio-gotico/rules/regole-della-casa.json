@@ -1,0 +1,9 @@
+[
+	{
+		"kind": "rule",
+		"key": "riposo-in-taverna",
+		"name": "Riposo in taverna",
+		"summary": "Regola della casa (esempio)",
+		"text": "Un riposo lungo in una taverna decente costa 5 mo a testa.\n**Bonus.** Ogni personaggio recupera un Dado Vita in più.\n**Rischio.** Il Master tira un d20: con 1 qualcuno ha frugato nei bagagli."
+	}
+]

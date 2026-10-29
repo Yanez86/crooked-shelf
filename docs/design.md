@@ -2,7 +2,7 @@
 
 Wiki self-hosted per creare, curare e registrare campagne di giochi di ruolo da tavolo (pensata per D&D 5.5, aperta ad altri sistemi).
 
-> Stato: **approvato**. Fasi 1, 2 e 3 completate.
+> Stato: **approvato**. Tutte e quattro le fasi completate (versione 0.9.0, da provare).
 
 ## 1. Obiettivi
 
@@ -216,7 +216,15 @@ Ogni fase si chiude con test automatici (unità, interfaccia con Playwright, acc
 - Bacheche: tutti quelli che vedono una bacheca del gruppo possono aggiungere e spostare schede; colonne e bacheca le gestisce il Master (o il proprietario per quelle personali).
 - Temi personalizzati: salvati nelle impostazioni, accettati solo se tutti i contrasti WCAG AA sono rispettati, anche quando importati da file.
 
-## 20. Decisioni prese
+## 20. Note sulla fase 4
+
+- Plugin di **soli dati** (temi, template, calendari, lingue, regole): nessun codice eseguito, quindi nessun rischio per il server. Tipi di blocco e pannelli nuovi richiederebbero codice: restano un possibile sviluppo futuro.
+- Backup completo in un file .zip (database copiato in modo coerente anche a wiki accesa, immagini, plugin); ripristino con `tools/restore.mjs`, che non cancella il database esistente ma lo rinomina.
+- Pacchetto mondo `.shelf`: zip con `manifest.json`, `pages.json` (più una copia `.md` leggibile per pagina), `categories.json`, `maps.json`, `templates.json`, `calendar.json`, `timeline.json`, `themes.json`, `files/`. All'importazione i collegamenti tra pagine rinominate e gli indirizzi delle immagini vengono aggiornati.
+- Esportazione Markdown compatibile con Obsidian: una cartella per categoria, intestazione YAML, `[[collegamenti]]`, callout `> [!note]`.
+- Docker: immagine Node 22 (amd64 e arm64), volume `/data`, controllo di salute; GitHub Actions per i test e per pubblicare l'immagine su ghcr.io a ogni versione.
+
+## 21. Decisioni prese
 
 - Il nome **Crooked Shelf** resta anche nell'interfaccia italiana.
 - L'accesso dei **visitatori** è **spento** di default; l'Admin può attivarlo.

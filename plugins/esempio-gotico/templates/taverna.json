@@ -1,0 +1,29 @@
+{
+	"name": "Taverna",
+	"description": "Una locanda o taverna: oste, specialità, voci di corridoio.",
+	"fields": ["Oste", "Specialità", "Prezzo di una stanza", "Città"],
+	"content": {
+		"type": "doc",
+		"content": [
+			{ "type": "heading", "attrs": { "level": 2 }, "content": [{ "type": "text", "text": "Atmosfera" }] },
+			{ "type": "paragraph" },
+			{ "type": "heading", "attrs": { "level": 2 }, "content": [{ "type": "text", "text": "Menù" }] },
+			{
+				"type": "table",
+				"content": [
+					{ "type": "tableRow", "content": [
+						{ "type": "tableHeader", "content": [{ "type": "paragraph", "content": [{ "type": "text", "text": "Piatto" }] }] },
+						{ "type": "tableHeader", "content": [{ "type": "paragraph", "content": [{ "type": "text", "text": "Prezzo" }] }] }
+					] },
+					{ "type": "tableRow", "content": [
+						{ "type": "tableCell", "content": [{ "type": "paragraph" }] },
+						{ "type": "tableCell", "content": [{ "type": "paragraph" }] }
+					] }
+				]
+			},
+			{ "type": "heading", "attrs": { "level": 2 }, "content": [{ "type": "text", "text": "Voci di corridoio" }] },
+			{ "type": "paragraph" },
+			{ "type": "secret", "content": [{ "type": "paragraph", "content": [{ "type": "text", "text": "Cosa sa davvero l'oste." }] }] }
+		]
+	}
+}

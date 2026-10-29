@@ -63,6 +63,7 @@
 			<label for="preset">{t('calendar.preset')}</label>
 			<select id="preset" name="preset">
 				{#each data.presets as p (p)}<option value={p}>{t('calendar.presets.' + p)}</option>{/each}
+				{#each data.pluginPresets as p (p.key)}<option value={p.key}>{p.name}</option>{/each}
 			</select>
 			<button class="btn" type="submit">{t('calendar.loadPreset')}</button>
 			<span class="hint">{t('calendar.presetHint')}</span>

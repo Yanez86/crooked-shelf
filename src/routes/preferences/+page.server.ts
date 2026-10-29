@@ -6,11 +6,11 @@ import { isLocale, localeNames } from '#lib/i18n/index.ts';
 import { getDb, schema } from '#lib/server/db/index.ts';
 import { PASSWORD_MIN, deleteUserSessions, createSession, hashPassword, setSessionCookie, verifyPassword } from '#lib/server/auth.ts';
 import { str } from '#lib/server/forms.ts';
-import { customThemes } from '#lib/server/settings.ts';
+import { extraThemes } from '#lib/server/plugins.ts';
 
 export const load: PageServerLoad = ({ locals }) => ({
 	options: PREF_OPTIONS,
-	custom: customThemes().map(({ id, name, scheme, colors }) => ({ id, name: name ?? id, scheme, colors })),
+	custom: extraThemes().map(({ id, name, scheme, colors }) => ({ id, name: name ?? id, scheme, colors })),
 	locales: localeNames(),
 	current: { ...locals.prefs, locale: locals.prefs.locale ?? '' }
 });
@@ -19,7 +19,7 @@ export const actions: Actions = {
 	prefs: async ({ request, locals, cookies, url }) => {
 		const f = await request.formData();
 		const raw = Object.fromEntries([...f.entries()].map(([k, v]) => [k, String(v)]));
-		const prefs = cleanPrefs(raw, isLocale, customThemes().map((t) => t.id));
+		const prefs = cleanPrefs(raw, isLocale, extraThemes().map((t) => t.id));
 		if (!isLocale(raw.locale)) delete prefs.locale;
 		if (locals.user) {
 			getDb()

@@ -9,7 +9,11 @@
 		['/admin', 'admin.settings'],
 		['/admin/users', 'admin.users'],
 		['/admin/invites', 'admin.invites'],
-		['/admin/themes', 'admin.themes']
+		['/admin/themes', 'admin.themes'],
+		['/admin/plugins', 'admin.plugins'],
+		['/admin/backup', 'admin.backup'],
+		['/admin/world', 'admin.world'],
+		['/admin/export', 'admin.export']
 	];
 </script>
 

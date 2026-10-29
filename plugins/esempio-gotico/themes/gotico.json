@@ -1,0 +1,27 @@
+{
+	"name": "Gotico",
+	"scheme": "dark",
+	"colors": {
+		"bg": "#14111a",
+		"surface": "#1d1924",
+		"surface2": "#2a2433",
+		"text": "#efe9f5",
+		"muted": "#bdb2c9",
+		"border": "#3b3346",
+		"control": "#8f84a0",
+		"primary": "#d9a6ff",
+		"onPrimary": "#1a0f22",
+		"link": "#c9b0ff",
+		"missing": "#ff9aa8",
+		"focus": "#ffd166",
+		"danger": "#ff9aa8",
+		"success": "#8fe0a8",
+		"secretBg": "#2d1838",
+		"secretText": "#f3e2ff",
+		"secretBorder": "#c08ae6",
+		"noteBorder": "#8fb4ff",
+		"tipBorder": "#8fe0a8",
+		"warningBorder": "#f0b860",
+		"codeBg": "#2a2433"
+	}
+}

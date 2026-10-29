@@ -5,12 +5,16 @@
 	import '@fontsource/opendyslexic/700.css';
 	import '#lib/styles/app.css';
 	import { page } from '$app/state';
-	import { setI18n, translate } from '#lib/i18n/index.ts';
+	import { untrack } from 'svelte';
+	import { registerLocale, setI18n, translate } from '#lib/i18n/index.ts';
 	import RulePopover from '#lib/components/RulePopover.svelte';
 	import type { LayoutProps } from './$types';
 
 	let { data, children }: LayoutProps = $props();
 
+	// Traduzioni dei plugin: subito (anche sul server) e di nuovo se cambia la lingua.
+	untrack(() => registerLocale(data.locale, data.localeExtra));
+	$effect.pre(() => registerLocale(data.locale, data.localeExtra));
 	setI18n(() => data.locale);
 	// Il layout non può leggere il contesto che crea: traduce direttamente.
 	const t = (k: string, p?: Record<string, string | number>) => translate(data.locale, k, p);

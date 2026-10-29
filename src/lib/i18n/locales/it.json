@@ -364,7 +364,11 @@
 		"revoke": "Revoca",
 		"inviteRevoked": "Invito revocato.",
 		"noInvites": "Nessun invito in attesa.",
-		"themes": "Temi"
+		"themes": "Temi",
+		"plugins": "Plugin",
+		"backup": "Backup",
+		"world": "Pacchetto mondo",
+		"export": "Esporta in Markdown"
 	},
 	"files": {
 		"empty": "Scegli un file da caricare.",
@@ -739,5 +743,85 @@
 		"newColumn": "Nuova colonna",
 		"delete": "Elimina la bacheca",
 		"deleteConfirm": "Sì, voglio eliminare «{title}» con tutte le schede"
+	},
+	"plugins": {
+		"intro": "I plugin aggiungono temi, template, calendari, lingue e regole. Contengono solo dati, non programmi: installarli non mette a rischio il server. Sono spenti finché non li accendi.",
+		"on": "Acceso",
+		"off": "Spento",
+		"enable": "Accendi",
+		"disable": "Spegni",
+		"enabled": "Plugin acceso.",
+		"disabled": "Plugin spento.",
+		"reload": "Cerca di nuovo i plugin",
+		"reloaded": "Elenco dei plugin aggiornato.",
+		"none": "Nessun plugin trovato.",
+		"author": "di {name}",
+		"contains": "Contiene:",
+		"kinds": {
+			"themes": "{n} temi",
+			"templates": "{n} template",
+			"calendars": "{n} calendari",
+			"locales": "{n} lingue",
+			"rules": "{n} regole"
+		},
+		"warnings": "{n} file non validi (ignorati)",
+		"installTitle": "Installare un plugin",
+		"installText": "Copia la cartella del plugin (quella con il file plugin.json) in una di queste cartelle, poi premi il pulsante qui sotto:",
+		"docs": "Come creare un plugin:"
+	},
+	"backup": {
+		"fullTitle": "Backup completo",
+		"fullText": "Un unico file con tutto: database, immagini caricate e plugin installati. Fallo spesso e conservalo su un altro disco.",
+		"download": "Scarica il backup",
+		"restoreHint": "Per ripristinarlo: ferma la wiki e usa lo strumento di ripristino (le istruzioni complete sono in docs/installazione.md).",
+		"otherTitle": "Altri modi di portare via i dati",
+		"markdownHint": "tutte le pagine come file di testo, leggibili ovunque",
+		"worldHint": "mappe, regole della casa e template da riusare in un'altra campagna"
+	},
+	"export": {
+		"intro": "Scarica tutta la wiki come file Markdown in un archivio .zip:",
+		"point1": "una cartella per categoria, un file per pagina, con tag e campi della scheda in cima;",
+		"point2": "i collegamenti sono scritti come [[Pagina]], le note come callout: si apre direttamente con Obsidian;",
+		"point3": "contiene le pagine come le vedi tu, segreti del Master compresi.",
+		"download": "Scarica in Markdown"
+	},
+	"world": {
+		"intro": "Un pacchetto mondo (.shelf) porta in un'altra wiki mappe, pagine, regole della casa, template, calendario e cronologia del mondo. Utenti, password, resoconti di sessione e bacheche restano qui.",
+		"exportTitle": "Crea un pacchetto",
+		"name": "Nome del pacchetto",
+		"namePlaceholder": "es. Costa della Spada",
+		"pages": "Pagine",
+		"allPages": "Tutte le pagine",
+		"somePages": "Solo alcune categorie o tag",
+		"pagesHint": "Le pagine personali non entrano mai nel pacchetto.",
+		"alsoInclude": "Includi anche",
+		"secrets": "Includi i segreti del Master",
+		"secretsHint": "Pagine, blocchi, mappe, pin ed eventi «Solo Master». Lascialo spento se il pacchetto va a dei giocatori.",
+		"download": "Scarica il pacchetto",
+		"importTitle": "Importa un pacchetto",
+		"file": "File del pacchetto (.shelf)",
+		"check": "Controlla il contenuto",
+		"importHint": "Prima di importare vedrai cosa contiene e cosa esiste già in questa wiki.",
+		"withSecrets": "con segreti del Master",
+		"conflicts": "Esistono già: {list}",
+		"conflictTitle": "Se una pagina o una mappa esiste già",
+		"rename": "Importala con un nome nuovo (es. «bartolo-2»): non si perde niente",
+		"skip": "Saltala: tieni quella di questa wiki",
+		"replace": "Sostituiscila con quella del pacchetto",
+		"useCalendar": "Usa il calendario del pacchetto al posto di quello attuale",
+		"confirm": "Importa",
+		"imported": "Pacchetto importato.",
+		"errFile": "Il file non è un pacchetto mondo valido.",
+		"errExpired": "Il file caricato non è più disponibile: caricalo di nuovo.",
+		"done": {
+			"pages": "{n} pagine",
+			"skipped": "{n} pagine saltate",
+			"categories": "{n} categorie",
+			"maps": "{n} mappe",
+			"templates": "{n} template",
+			"events": "{n} eventi della cronologia",
+			"themes": "{n} temi",
+			"files": "{n} immagini"
+		}
 	}
 }
