@@ -172,8 +172,11 @@
 		display: flex;
 		flex-direction: column;
 		gap: 1rem;
-		width: 20rem;
 		max-width: 100%;
+	}
+	/* Senza immagine né scheda resta solo il pulsante: la colonna non ruba spazio al testo. */
+	.side:has(:global(.page-image:not(.bare)), .infobox) {
+		width: 20rem;
 	}
 	.infobox {
 		background: var(--c-surface);
@@ -187,7 +190,8 @@
 		.body {
 			grid-template-columns: minmax(0, 1fr);
 		}
-		.side {
+		.side,
+		.side:has(:global(.page-image:not(.bare)), .infobox) {
 			grid-column: 1;
 			width: auto;
 		}

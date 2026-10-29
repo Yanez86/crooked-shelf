@@ -40,6 +40,13 @@
 	const isAdmin = $derived(data.user?.role === 'admin');
 	const bare = $derived(path.startsWith('/setup') || path.startsWith('/login') || path.startsWith('/invite/'));
 	const tree = $derived(bare ? null : data.tree);
+
+	// Sul telefono la navigazione sta dietro il pulsante Menu; si richiude a ogni cambio di pagina.
+	let menuOpen = $state(false);
+	$effect(() => {
+		path;
+		menuOpen = false;
+	});
 </script>
 
 <svelte:head>
@@ -68,11 +75,15 @@
 				/>
 				<button class="btn" type="submit">{t('search.submit')}</button>
 			</form>
+			<button class="btn menu-toggle" type="button" aria-expanded={menuOpen} aria-controls="main-nav" onclick={() => (menuOpen = !menuOpen)}>
+				<span aria-hidden="true">{menuOpen ? '✕' : '☰'}</span>
+				{t('nav.menu')}
+			</button>
 		{/if}
 	</div>
 
 	{#if !bare}
-		<nav class="container main-nav" class:wide={!!tree} aria-label={t('nav.main')}>
+		<nav id="main-nav" class="container main-nav" class:wide={!!tree} class:open={menuOpen} aria-label={t('nav.main')}>
 			<ul class="list-plain">
 				<li><a href="/" aria-current={current('/')}>{t('nav.home')}</a></li>
 				<li><a href="/wiki" aria-current={current('/wiki')}>{t('nav.pages')}</a></li>
@@ -202,6 +213,55 @@
 	.nav-new {
 		color: var(--c-primary) !important;
 		font-weight: 700;
+	}
+	.menu-toggle {
+		display: none;
+	}
+	/* Telefono: marchio e Menu sulla prima riga, ricerca sotto, navigazione chiusa. */
+	@media (max-width: 48rem) {
+		.header-inner {
+			gap: 0.5rem;
+		}
+		.brand {
+			flex: 1;
+			min-width: 0;
+		}
+		.brand span {
+			overflow: hidden;
+			text-overflow: ellipsis;
+			white-space: nowrap;
+		}
+		.menu-toggle {
+			display: inline-flex;
+		}
+		.search {
+			order: 3;
+			flex-basis: 100%;
+			max-width: none;
+		}
+		.main-nav:not(.open) {
+			display: none;
+		}
+		.main-nav {
+			flex-direction: column;
+			padding-bottom: 0.5rem;
+		}
+		.main-nav ul {
+			flex-direction: column;
+		}
+		.main-nav a,
+		.linklike {
+			width: 100%;
+			border-bottom: 0;
+			border-left: 3px solid transparent;
+		}
+		.main-nav a[aria-current='page'] {
+			border-left-color: var(--c-primary);
+		}
+		.user-nav {
+			border-top: 1px solid var(--c-border);
+			padding-top: 0.25rem;
+		}
 	}
 	/* Albero a sinistra, pagina a destra. */
 	.shell.wide {

@@ -120,11 +120,11 @@
 	<div class="buttons">
 		<label class="choice"><input type="checkbox" bind:checked={showLabels} /><span>{t('maps.showLabels')}</span></label>
 		{#if data.map.scale}
-			<button class="btn btn-small" type="button" aria-pressed={measuring} onclick={() => { measuring = !measuring; adding = false; distance = null; status = measuring ? t('maps.measureHint') : ''; }}>📏 {t('maps.measure')}</button>
+			<button class="btn btn-small btn-ghost" type="button" aria-pressed={measuring} onclick={() => { measuring = !measuring; adding = false; distance = null; status = measuring ? t('maps.measureHint') : ''; }}>📏 {t('maps.measure')}</button>
 		{/if}
 		{#if data.canEdit}
 			<button class="btn btn-small" type="button" aria-pressed={adding} onclick={() => { adding = !adding; measuring = false; status = adding ? t('maps.addHint') : ''; }}>📍 {t('maps.addPin')}</button>
-			<button class="btn btn-small" type="button" onclick={() => { const c = view?.center(); if (c) newDraft(c.x, c.y); }}>{t('maps.addCenter')}</button>
+			<button class="btn btn-small btn-ghost" type="button" onclick={() => { const c = view?.center(); if (c) newDraft(c.x, c.y); }}>{t('maps.addCenter')}</button>
 		{/if}
 	</div>
 </div>
@@ -267,8 +267,8 @@
 								{#if p.target}<a href="/maps/{p.target.slug}">🗺 {p.target.title}</a>{/if}
 							</td>
 							<td class="row-actions">
-								<button class="btn btn-small" type="button" onclick={() => view?.openPin(p.id)}>{t('maps.showOnMap')}<span class="visually-hidden">: {p.label}</span></button>
-								{#if data.canEdit}<button class="btn btn-small" type="button" onclick={() => editPin(p.id)}>{t('page.edit')}<span class="visually-hidden">: {p.label}</span></button>{/if}
+								<button class="btn btn-small btn-ghost" type="button" onclick={() => view?.openPin(p.id)}>{t('maps.showOnMap')}<span class="visually-hidden">: {p.label}</span></button>
+								{#if data.canEdit}<button class="btn btn-small btn-ghost" type="button" onclick={() => editPin(p.id)}>{t('page.edit')}<span class="visually-hidden">: {p.label}</span></button>{/if}
 							</td>
 						</tr>
 					{/each}
@@ -291,8 +291,8 @@
 {/if}
 
 {#if data.canEdit}
-	<section aria-labelledby="layers-title">
-		<h2 id="layers-title">{t('maps.manageLayers')}</h2>
+	<details class="disclosure layers-admin">
+		<summary class="btn">⚙ {t('maps.manageLayers')}</summary>
 		{#each data.layers as l (l.id)}
 			<div class="layer-row">
 				<form method="post" action="?/layer" use:enhance class="inline">
@@ -322,7 +322,7 @@
 			</select>
 			<button class="btn btn-small" type="submit">{t('categories.add')}</button>
 		</form>
-	</section>
+	</details>
 {/if}
 
 <style>
@@ -409,7 +409,8 @@
 		gap: 0.5rem;
 		align-items: center;
 	}
-	section {
+	section,
+	.layers-admin {
 		margin-top: 1.5rem;
 	}
 </style>

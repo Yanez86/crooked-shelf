@@ -21,6 +21,8 @@
 	let form = $state<HTMLFormElement>();
 	let input = $state<HTMLInputElement>();
 	let over = $state(false);
+	// Un file trascinato da fuori sopra la finestra: solo allora compare il riquadro vuoto.
+	let dragging = $state(false);
 	let busy = $state(false);
 	const message = $derived(busy ? t('pageImage.uploading') : error ? t(error) : ok ? t(ok) : '');
 
@@ -46,9 +48,21 @@
 		const file = e.dataTransfer?.files[0];
 		if (!file) return;
 		e.preventDefault();
-		over = false;
+		over = dragging = false;
 		if (!busy) upload(file);
 	}
+
+	const windowDrag = {
+		dragenter: (e: DragEvent) => {
+			if (e.dataTransfer?.types.includes('Files')) dragging = true;
+		},
+		// relatedTarget nullo = il file è uscito dalla finestra.
+		dragleave: (e: DragEvent) => {
+			if (!e.relatedTarget) dragging = false;
+		},
+		drop: () => (dragging = false),
+		dragend: () => (dragging = false)
+	};
 
 	const sending = () => {
 		busy = true;
@@ -59,9 +73,18 @@
 	};
 </script>
 
+<svelte:window
+	ondragenter={canEdit ? windowDrag.dragenter : undefined}
+	ondragleave={canEdit ? windowDrag.dragleave : undefined}
+	ondrop={canEdit ? windowDrag.drop : undefined}
+	ondragend={canEdit ? windowDrag.dragend : undefined}
+/>
+
+<!-- Senza immagine e senza permessi non c'è niente da mostrare. -->
+{#if image || canEdit}
 <div
 	class="page-image"
-	class:empty={!image}
+	class:bare={!image && !dragging}
 	class:over
 	role="group"
 	aria-label={t('pageImage.label')}
@@ -72,14 +95,14 @@
 >
 	{#if image}
 		<img src={image.url} alt={title} width={image.width} height={image.height} />
-	{:else}
+	{:else if dragging}
 		<div class="placeholder">
 			<svg viewBox="0 0 24 24" aria-hidden="true">
 				<rect x="3" y="4" width="18" height="16" rx="2" />
 				<circle cx="9" cy="9.5" r="1.75" />
 				<path d="m3.5 18 5.5-5.5 4 4 2.5-2.5 5 5" />
 			</svg>
-			<p>{canEdit ? t('pageImage.drop') : t('pageImage.none')}</p>
+			<p>{t('pageImage.drop')}</p>
 		</div>
 	{/if}
 
@@ -98,8 +121,8 @@
 						if (f) form!.requestSubmit();
 					}}
 				/>
-				<button class="btn btn-small" type="button" disabled={busy} onclick={() => input!.click()}>
-					{image ? t('pageImage.change') : t('pageImage.choose')}
+				<button class="btn btn-small" class:btn-ghost={!image} type="button" disabled={busy} onclick={() => input!.click()}>
+					{image ? t('pageImage.change') : '+ ' + t('pageImage.add')}
 				</button>
 			</form>
 			{#if image}
@@ -120,6 +143,7 @@
 		<p class="status" class:failed={!busy && !!error} role="status">{message}</p>
 	{/if}
 </div>
+{/if}
 
 <style>
 	.page-image {

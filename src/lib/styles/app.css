@@ -242,6 +242,32 @@ fieldset {
 	padding: 0.25rem 0.65rem;
 	font-size: 0.95rem;
 }
+/* Azioni di terzo livello (barre degli strumenti, righe delle tabelle): il bordo compare solo al passaggio. */
+.btn-ghost {
+	border-color: transparent;
+	background: transparent;
+}
+.btn-ghost:hover {
+	background: var(--c-surface2);
+	border-color: var(--c-border);
+}
+/* Moduli di gestione chiusi finché non servono: <details class="disclosure"><summary class="btn">. */
+.disclosure > summary {
+	list-style: none;
+}
+.disclosure > summary::-webkit-details-marker {
+	display: none;
+}
+.disclosure > summary::after {
+	content: '▾';
+	font-size: 0.8em;
+}
+.disclosure[open] > summary::after {
+	content: '▴';
+}
+.disclosure[open] > summary {
+	margin-bottom: 1rem;
+}
 .actions {
 	display: flex;
 	flex-wrap: wrap;

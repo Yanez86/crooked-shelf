@@ -166,6 +166,7 @@ test('bacheche', async ({ browser }) => {
 
 	// Bacheca personale dell'Admin: il giocatore non la vede.
 	await admin.goto('/boards');
+	await admin.getByText('Nuova bacheca').click();
 	await admin.getByLabel('Titolo').fill('Idee segrete');
 	await admin.getByRole('radio', { name: /Personale/ }).check();
 	await admin.getByRole('button', { name: 'Crea la bacheca' }).click();

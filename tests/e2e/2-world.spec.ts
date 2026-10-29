@@ -113,7 +113,8 @@ test('template PNG con scheda, segreto e immagine', async () => {
 test("immagine della pagina: si trascina nel riquadro in alto a destra", async () => {
 	await admin.goto('/wiki/elminster');
 	const box = admin.getByRole('group', { name: 'Immagine della pagina' });
-	await expect(box).toContainText("Trascina qui un'immagine");
+	// Senza immagine resta solo il pulsante; il riquadro compare mentre si trascina un file.
+	await expect(box.getByRole('button', { name: "Aggiungi un'immagine" })).toBeVisible();
 	await axe(admin, 'pagina senza immagine');
 
 	// Un file trascinato dal computer sul riquadro.
@@ -249,6 +250,7 @@ test('mappe con pin, livelli e mappe annidate', async () => {
 	await expect(admin.locator('.leaflet-image-layer')).toBeVisible();
 
 	// Livello segreto.
+	await admin.getByText('Gestisci i livelli').click();
 	await admin.getByLabel('Nuovo livello').fill('Segreti');
 	await admin.locator('#new-layer-vis').selectOption('master');
 	await admin.getByRole('button', { name: 'Aggiungi', exact: true }).click();
@@ -372,10 +374,11 @@ test('il giocatore non vede pin, livelli ed eventi segreti', async ({ browser })
 	await p.goto('/timeline/world');
 	await expect(p.locator('main')).not.toContainText('Il patto segreto');
 	await expect(p.locator('main')).toContainText('Caduta di Myth Drannor');
-	await expect(p.getByRole('heading', { name: 'Aggiungi un evento' })).toHaveCount(0);
+	await expect(p.getByText('Aggiungi un evento')).toHaveCount(0);
 
 	// Nella cronologia della campagna anche i giocatori aggiungono eventi.
 	await p.goto('/timeline/campaign');
+	await p.getByText('Aggiungi un evento').click();
 	await p.getByLabel('Titolo').fill('Alice trova una mappa del tesoro');
 	await p.getByRole('button', { name: 'Aggiungi', exact: true }).click();
 	await expect(p.getByRole('status').first()).toContainText('Evento aggiunto');
@@ -396,7 +399,8 @@ test('il giocatore non vede pin, livelli ed eventi segreti', async ({ browser })
 	});
 	expect(up.status()).toBe(404);
 	await p.goto('/wiki/locanda-del-grifone');
-	await expect(p.getByRole('group', { name: 'Immagine della pagina' })).toContainText('Nessuna immagine');
+	// Senza immagine e senza permessi il riquadro non c'è proprio.
+	await expect(p.getByRole('group', { name: 'Immagine della pagina' })).toHaveCount(0);
 
 	await p.goto('/gallery');
 	await expect(p.locator('main').getByRole('link', { name: 'Ritratto di un vecchio mago con la barba' })).toBeVisible();

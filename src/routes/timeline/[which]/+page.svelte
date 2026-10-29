@@ -61,6 +61,25 @@
 	<a href="?view=line" aria-current={data.view === 'line' ? 'page' : undefined}>{t('timeline.viewLine')}</a>
 </nav>
 
+{#if data.canAdd}
+	<!-- In alto ma chiuso: la cronologia si legge, il modulo si apre quando serve (e resta aperto dopo un inserimento). -->
+	<details class="disclosure add" open={!data.events.length || !!form}>
+		<summary class="btn">+ {t('timeline.add')}</summary>
+		<FormError error={form && 'error' in form ? form.error : null} />
+		{#key form}
+			<EventForm
+				values={form && 'values' in form && form.values ? { ...form.values } : emptyValues}
+				timeline={data.timeline}
+				months={data.months}
+				visibilities={data.visibilities}
+				pageTitles={data.pageTitles}
+				action="?/add"
+				submitLabel={t('timeline.addSubmit')}
+			/>
+		{/key}
+	</details>
+{/if}
+
 {#snippet eventBody(e: (typeof data.events)[number])}
 	<p class="when">
 		{#if e.approx}<span>{e.approx}</span>{#if e.when}<span class="muted">&nbsp;({e.when})</span>{/if}
@@ -103,24 +122,6 @@
 			</ol>
 		</section>
 	{/each}
-{/if}
-
-{#if data.canAdd}
-	<section aria-labelledby="add-title" class="add">
-		<h2 id="add-title">{t('timeline.add')}</h2>
-		<FormError error={form && 'error' in form ? form.error : null} />
-		{#key form}
-			<EventForm
-				values={form && 'values' in form && form.values ? { ...form.values } : emptyValues}
-				timeline={data.timeline}
-				months={data.months}
-				visibilities={data.visibilities}
-				pageTitles={data.pageTitles}
-				action="?/add"
-				submitLabel={t('timeline.addSubmit')}
-			/>
-		{/key}
-	</section>
 {/if}
 
 <style>
@@ -223,8 +224,11 @@
 		background: var(--c-primary);
 	}
 	.add {
-		margin-top: 3rem;
-		border-top: 1px solid var(--c-border);
 		max-width: 48rem;
+		margin: 0 0 1.5rem;
+	}
+	.add[open] {
+		padding-bottom: 1rem;
+		border-bottom: 1px solid var(--c-border);
 	}
 </style>

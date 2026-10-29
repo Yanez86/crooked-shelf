@@ -38,8 +38,9 @@
 	</section>
 </div>
 
-<section aria-labelledby="new-title" class="new">
-	<h2 id="new-title">{t('boards.new')}</h2>
+<!-- Aperto finché non c'è nessuna bacheca: allora creare è l'unica cosa da fare. -->
+<details class="disclosure new" open={!data.mine.length && !data.shared.length || !!form?.error}>
+	<summary class="btn btn-primary">+ {t('boards.new')}</summary>
 	<FormError error={form?.error} />
 	<form method="post" action="?/create" class="card">
 		<div class="field">
@@ -63,7 +64,7 @@
 		</div>
 		<button class="btn btn-primary" type="submit">{t('boards.create')}</button>
 	</form>
-</section>
+</details>
 
 <style>
 	.cols {

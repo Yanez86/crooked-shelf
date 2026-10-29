@@ -163,6 +163,12 @@
 		e.preventDefault();
 	}
 
+	// Un clic sui pulsanti non toglie il focus all'editor: selezione e testo restano dove sono
+	// (altrimenti i primi tasti premuti subito dopo finiscono sul pulsante). La tendina invece deve aprirsi.
+	function keepFocus(e: MouseEvent) {
+		if ((e.target as HTMLElement).closest('button')) e.preventDefault();
+	}
+
 	$effect(() => {
 		void tick;
 		if (!toolbar) return;
@@ -174,7 +180,7 @@
 
 <div class="editor">
 	<!-- svelte-ignore a11y_interactive_supports_focus -->
-	<div class="toolbar" role="toolbar" aria-label={t('editor.toolbar')} aria-controls="{labelId}-area" bind:this={toolbar} onkeydown={toolbarKeys}>
+	<div class="toolbar" role="toolbar" aria-label={t('editor.toolbar')} aria-controls="{labelId}-area" bind:this={toolbar} onkeydown={toolbarKeys} onmousedown={keepFocus}>
 		<select aria-label={t('editor.blockType')} value={blockType} onchange={(e) => setBlock(e.currentTarget.value)} disabled={!editor}>
 			<option value="paragraph">{t('editor.paragraph')}</option>
 			<option value="h2">{t('editor.heading', { n: 2 })}</option>
@@ -226,7 +232,8 @@
 	</div>
 
 	{#if active('table')}
-		<div class="toolbar table-tools" role="group" aria-label={t('editor.tableTools')}>
+		<!-- svelte-ignore a11y_no_noninteractive_element_interactions (mousedown solo per non togliere il focus all'editor; i comandi sono i pulsanti) -->
+		<div class="toolbar table-tools" role="group" aria-label={t('editor.tableTools')} onmousedown={keepFocus}>
 			<button type="button" onclick={() => chain().addRowAfter().run()}>+ {t('editor.addRow')}</button>
 			<button type="button" onclick={() => chain().addColumnAfter().run()}>+ {t('editor.addCol')}</button>
 			<button type="button" onclick={() => chain().deleteRow().run()}>− {t('editor.delRow')}</button>
@@ -290,6 +297,15 @@
 		background: var(--c-surface);
 		color: var(--c-text);
 		cursor: pointer;
+	}
+	/* I pulsanti sono raggruppati dai separatori: il bordo compare solo al passaggio. */
+	.toolbar button {
+		border-color: transparent;
+		background: transparent;
+	}
+	.toolbar button:not(:disabled):hover {
+		background: var(--c-surface);
+		border-color: var(--c-border);
 	}
 	.toolbar button[aria-pressed='true'] {
 		background: var(--c-primary);

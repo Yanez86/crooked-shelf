@@ -5,6 +5,7 @@
 	"nav": {
 		"skip": "Skip to content",
 		"main": "Main navigation",
+		"menu": "Menu",
 		"home": "Home",
 		"pages": "Pages",
 		"categories": "Categories",
@@ -265,9 +266,8 @@
 	},
 	"pageImage": {
 		"label": "Page image",
-		"none": "No image",
 		"drop": "Drop an image here, or pick one with the button.",
-		"choose": "Choose an image",
+		"add": "Add an image",
 		"change": "Change image",
 		"remove": "Remove",
 		"file": "Page image file",

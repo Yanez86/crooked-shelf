@@ -5,6 +5,7 @@
 	"nav": {
 		"skip": "Vai al contenuto",
 		"main": "Navigazione principale",
+		"menu": "Menu",
 		"home": "Home",
 		"pages": "Pagine",
 		"categories": "Categorie",
@@ -265,9 +266,8 @@
 	},
 	"pageImage": {
 		"label": "Immagine della pagina",
-		"none": "Nessuna immagine",
 		"drop": "Trascina qui un'immagine, oppure sceglila dal pulsante.",
-		"choose": "Scegli un'immagine",
+		"add": "Aggiungi un'immagine",
 		"change": "Cambia immagine",
 		"remove": "Rimuovi",
 		"file": "File dell'immagine della pagina",
