@@ -2,7 +2,7 @@
 
 Wiki self-hosted per creare, curare e registrare campagne di giochi di ruolo da tavolo (pensata per D&D 5.5, aperta ad altri sistemi).
 
-> Stato: **bozza da approvare**. Nessuna riga di codice viene scritta prima dell'approvazione di questo documento.
+> Stato: **approvato**. Fase 1 completata.
 
 ## 1. Obiettivi
 
@@ -199,8 +199,9 @@ Ogni fase si chiude con test automatici (unità, interfaccia con Playwright, acc
 - Testi SRD 5.2: CC-BY-4.0 di Wizards of the Coast, con attribuzione visibile.
 - D&D, D&D Beyond e relativi marchi appartengono ai rispettivi proprietari; il progetto non è affiliato.
 
-## 18. Domande ancora aperte
+## 18. Decisioni prese
 
-- Nome e logo definitivi ("Crooked Shelf" va bene anche nell'interfaccia italiana?).
-- Accesso visitatori attivo o spento di default?
-- I giocatori possono creare pagine nuove o solo modificare quelle consentite?
+- Il nome **Crooked Shelf** resta anche nell'interfaccia italiana.
+- L'accesso dei **visitatori** è **spento** di default; l'Admin può attivarlo.
+- I **giocatori possono creare pagine nuove**; modificano le proprie e quelle segnate come "modificabili dai giocatori". Le pagine che contengono blocchi segreti del Master le modificano solo Master e Admin, così un giocatore non cancella per errore un segreto che non vede.
+- Le preferenze di lettura (tema, dimensione del testo, font, movimento, lingua) sono salvate nel profilo; per chi non ha fatto l'accesso restano nel browser.
