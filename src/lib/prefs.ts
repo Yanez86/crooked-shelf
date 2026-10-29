@@ -9,6 +9,8 @@ export interface Prefs {
 	font: string;
 	spacing: string;
 	motion: string;
+	/** Albero delle cartelle e delle pagine a sinistra. */
+	tree: string;
 	locale?: string;
 }
 
@@ -17,7 +19,8 @@ export const PREF_OPTIONS = {
 	fontSize: ['100', '112', '125', '150', '175', '200'],
 	font: ['default', 'atkinson', 'opendyslexic'],
 	spacing: ['normal', 'wide'],
-	motion: ['auto', 'reduce']
+	motion: ['auto', 'reduce'],
+	tree: ['show', 'hide']
 } as const;
 
 export const DEFAULT_PREFS: Prefs = {
@@ -25,7 +28,8 @@ export const DEFAULT_PREFS: Prefs = {
 	fontSize: '100',
 	font: 'default',
 	spacing: 'normal',
-	motion: 'auto'
+	motion: 'auto',
+	tree: 'show'
 };
 
 /** Tiene solo i valori validi. `extraThemes` = temi creati dall'Admin. */

@@ -15,9 +15,16 @@
 		"logout": "Log out",
 		"login": "Log in",
 		"maps": "Maps",
+		"gallery": "Gallery",
 		"timeline": "Timeline",
 		"rules": "Rules",
 		"boards": "Boards"
+	},
+	"tree": {
+		"label": "Folder and page tree",
+		"title": "Folders and pages",
+		"empty": "No pages yet.",
+		"emptyFolder": "Empty folder"
 	},
 	"footer": {
 		"source": "Source code"
@@ -185,6 +192,10 @@
 		"auto": "Like your system",
 		"reduce": "Reduce motion"
 	},
+	"treePref": {
+		"show": "Show",
+		"hide": "Hide"
+	},
 	"colors": {
 		"gray": "Gray",
 		"red": "Red",
@@ -251,6 +262,19 @@
 		"deleted": "Page deleted.",
 		"newFromTemplate": "New page: {name}",
 		"related": "Connections"
+	},
+	"pageImage": {
+		"label": "Page image",
+		"none": "No image",
+		"drop": "Drop an image here, or pick one with the button.",
+		"choose": "Choose an image",
+		"change": "Change image",
+		"remove": "Remove",
+		"file": "Page image file",
+		"confirmRemove": "Remove the image from this page?",
+		"uploading": "Uploading…",
+		"saved": "Image saved.",
+		"removed": "Image removed."
 	},
 	"editor": {
 		"toolbar": "Formatting",
@@ -327,6 +351,8 @@
 		"fontHint": "Atkinson and OpenDyslexic help people with reading difficulties.",
 		"spacing": "Spacing",
 		"motion": "Animations",
+		"tree": "Page tree on the left",
+		"treeHint": "On the left, with categories as folders you can open and close.",
 		"locale": "Language",
 		"localeDefault": "Wiki language",
 		"saved": "Preferences saved.",
@@ -374,6 +400,27 @@
 		"empty": "Choose a file to upload.",
 		"tooBig": "The file is too big (max 25 MB).",
 		"badType": "Unsupported format: use PNG, JPEG, WebP or GIF."
+	},
+	"gallery": {
+		"title": "Gallery",
+		"intro": "All of the campaign's images: page images, images in the text and maps.",
+		"filter": "Which images",
+		"show": {
+			"all": "All",
+			"pages": "Pages",
+			"maps": "Maps"
+		},
+		"count": "{n} images",
+		"empty": "No images yet. Drop one in the box at the top right of a page, add one to the text or create a map.",
+		"kind": {
+			"cover": "Image of the page",
+			"content": "In the text of",
+			"map": "Map"
+		},
+		"viewer": "Image {n} of {total}",
+		"prev": "Previous",
+		"next": "Next",
+		"original": "Open the original"
 	},
 	"fields": {
 		"title": "Infobox",

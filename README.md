@@ -7,6 +7,9 @@
 ## Cosa fa
 
 - **Pagine** con editor a blocchi e Markdown, collegamenti `[[Pagina]]`, template (PNG, luoghi, fazioni, resoconti di sessione…), scheda laterale, immagini, categorie, tag e ricerca.
+- **Albero a sinistra** come in Esplora risorse: le categorie sono cartelle da aprire e chiudere, con le pagine dentro.
+- **Immagine della pagina** in alto a destra: chi può modificare la pagina ci trascina sopra un'immagine.
+- **Galleria** con tutte le immagini della campagna (pagine, testo, mappe) e visore a schermo intero.
 - **Segreti del Master**: pagine e blocchi che i giocatori non vedono e non trovano neanche cercando.
 - **Ruoli**: Admin, Master, Giocatore; accesso solo su invito, visitatori spenti di default.
 - **Mappe** da immagine con pin collegati a pagine e ad altre mappe, livelli, pin segreti, righello.

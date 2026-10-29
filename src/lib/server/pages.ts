@@ -164,6 +164,11 @@ export function updatePage(page: PageRow, input: PageInput, u: Viewer, manage: b
 	});
 }
 
+/** Immagine della pagina: non crea una versione e non cambia la data di modifica (chi sta scrivendo non va in conflitto). */
+export function setPageImage(id: number, fileId: string | null) {
+	getDb().update(pages).set({ imageId: fileId }).where(eq(pages.id, id)).run();
+}
+
 export function deletePage(id: number) {
 	getDb().transaction(() => {
 		getDb().update(pages).set({ deletedAt: Date.now() }).where(eq(pages.id, id)).run();

@@ -1,5 +1,6 @@
 import { test, expect, type Page, type Browser } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
+import { readFileSync } from 'node:fs';
 
 // Fase 2: template, immagini, calendario, cronologie, mappe. Usa la wiki creata da 1-wiki.spec.ts.
 test.describe.configure({ mode: 'serial' });
@@ -106,7 +107,54 @@ test('template PNG con scheda, segreto e immagine', async () => {
 	await expect(admin.getByRole('region', { name: 'Pagine che collegano qui' })).toContainText('Elminster');
 	// E la ricerca trova i campi.
 	await admin.goto('/search?q=caotico');
-	await expect(admin.getByRole('link', { name: 'Elminster' })).toBeVisible();
+	await expect(admin.locator('main').getByRole('link', { name: 'Elminster' })).toBeVisible();
+});
+
+test("immagine della pagina: si trascina nel riquadro in alto a destra", async () => {
+	await admin.goto('/wiki/elminster');
+	const box = admin.getByRole('group', { name: 'Immagine della pagina' });
+	await expect(box).toContainText("Trascina qui un'immagine");
+	await axe(admin, 'pagina senza immagine');
+
+	// Un file trascinato dal computer sul riquadro.
+	const png = readFileSync('tests/fixtures/city.png').toString('base64');
+	const dataTransfer = await admin.evaluateHandle((b64) => {
+		const dt = new DataTransfer();
+		dt.items.add(new File([Uint8Array.from(atob(b64), (c) => c.charCodeAt(0))], 'elminster.png', { type: 'image/png' }));
+		return dt;
+	}, png);
+	await box.dispatchEvent('dragenter', { dataTransfer });
+	await box.dispatchEvent('dragover', { dataTransfer });
+	await box.dispatchEvent('drop', { dataTransfer });
+	await expect(box.getByRole('status')).toContainText('Immagine salvata');
+	const img = box.getByRole('img', { name: 'Elminster' });
+	await expect(img).toBeVisible();
+
+	// È salvata davvero.
+	await admin.reload();
+	await expect(img).toBeVisible();
+	const first = (await img.getAttribute('src'))!;
+	expect((await admin.request.get(first)).headers()['content-type']).toBe('image/png');
+	await axe(admin, 'pagina con immagine');
+	await shot(admin, '11c-immagine-della-pagina');
+
+	// Senza mouse: «Cambia immagine» apre la scelta del file.
+	await expect(box.getByRole('button', { name: 'Cambia immagine' })).toBeVisible();
+	await box.getByLabel("File dell'immagine della pagina").setInputFiles('tests/fixtures/map.png');
+	await expect(box.getByRole('status')).toContainText('Immagine salvata');
+	await expect(img).not.toHaveAttribute('src', first);
+
+	// Un file che non è un'immagine viene rifiutato.
+	await box.getByLabel("File dell'immagine della pagina").setInputFiles({ name: 'x.svg', mimeType: 'image/svg+xml', buffer: Buffer.from('<svg/>') });
+	await expect(box.getByRole('status')).toContainText('Formato non supportato');
+
+	admin.once('dialog', (d) => d.accept());
+	await box.getByRole('button', { name: 'Rimuovi' }).click();
+	await expect(box.getByRole('status')).toContainText('Immagine rimossa');
+	await expect(box.getByRole('img')).toHaveCount(0);
+
+	await box.getByLabel("File dell'immagine della pagina").setInputFiles('tests/fixtures/city.png');
+	await expect(img).toBeVisible();
 });
 
 test('un file che non è un\'immagine viene rifiutato', async () => {
@@ -276,6 +324,36 @@ test('mappe con pin, livelli e mappe annidate', async () => {
 	await admin.setViewportSize({ width: 1280, height: 800 });
 });
 
+test('galleria: tutte le immagini della campagna', async () => {
+	await admin.goto('/gallery');
+	const main = admin.locator('main');
+	// Immagine della pagina, immagine nel testo, due mappe; le più recenti prima.
+	await expect(main.getByRole('status')).toHaveText('4 immagini');
+	const figures = main.locator('figure');
+	await expect(figures.nth(0)).toContainText('Mappa Waterdeep');
+	await expect(figures.nth(2)).toContainText('Immagine della pagina Elminster');
+	await expect(figures.nth(3)).toContainText('Nel testo di Elminster');
+	await axe(admin, 'galleria');
+	await shot(admin, '16-galleria');
+
+	// Il visore: frecce per scorrere, Esc per chiudere.
+	const thumb = main.getByRole('link', { name: 'Ritratto di un vecchio mago con la barba' });
+	await thumb.click();
+	const viewer = admin.getByRole('dialog', { name: 'Immagine 4 di 4' });
+	await expect(viewer.getByRole('img', { name: 'Ritratto di un vecchio mago con la barba' })).toBeVisible();
+	await axe(admin, 'galleria: visore');
+	await shot(admin, '17-galleria-visore');
+	await admin.keyboard.press('ArrowRight');
+	await expect(admin.getByRole('dialog', { name: 'Immagine 1 di 4' }).getByRole('img', { name: 'Waterdeep' })).toBeVisible();
+	await admin.keyboard.press('Escape');
+	await expect(admin.getByRole('dialog')).toHaveCount(0);
+	await expect(thumb).toBeFocused();
+
+	await admin.getByRole('navigation', { name: 'Quali immagini' }).getByRole('link', { name: /Mappe/ }).click();
+	await expect(main.getByRole('status')).toHaveText('2 immagini');
+	await expect(main.getByRole('link', { name: 'Elminster', exact: true })).toHaveCount(0);
+});
+
 test('il giocatore non vede pin, livelli ed eventi segreti', async ({ browser }) => {
 	const p = await login(browser, PLAYER);
 	// Nella fase 1 il giocatore ha scelto l'inglese: torna alla lingua della wiki.
@@ -307,5 +385,21 @@ test('il giocatore non vede pin, livelli ed eventi segreti', async ({ browser })
 	await p.goto('/wiki/elminster');
 	await expect(p.locator('.content')).not.toContainText('solo il Master');
 	await expect(p.locator('.content img')).toBeVisible();
+
+	// Vede l'immagine della pagina ma non può cambiarla.
+	const box = p.getByRole('group', { name: 'Immagine della pagina' });
+	await expect(box.getByRole('img', { name: 'Elminster' })).toBeVisible();
+	await expect(box.getByRole('button')).toHaveCount(0);
+	const up = await p.request.post('/wiki/elminster?/image', {
+		multipart: { file: { name: 'x.png', mimeType: 'image/png', buffer: readFileSync('tests/fixtures/city.png') } },
+		headers: { origin: new URL(p.url()).origin }
+	});
+	expect(up.status()).toBe(404);
+	await p.goto('/wiki/locanda-del-grifone');
+	await expect(p.getByRole('group', { name: 'Immagine della pagina' })).toContainText('Nessuna immagine');
+
+	await p.goto('/gallery');
+	await expect(p.locator('main').getByRole('link', { name: 'Ritratto di un vecchio mago con la barba' })).toBeVisible();
+	await axe(p, 'galleria giocatore');
 	await p.context().close();
 });

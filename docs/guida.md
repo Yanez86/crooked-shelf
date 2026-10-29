@@ -13,6 +13,8 @@ Le persone entrano con un **invito**: Amministrazione › Inviti › «Crea invi
 
 ## Pagine
 
+- **Albero a sinistra**: le categorie sono cartelle che si aprono e si chiudono con un clic (o con Invio da tastiera); dentro ci sono le sottocartelle e le pagine. Le pagine senza categoria stanno in fondo, alla radice. La cartella della pagina che stai leggendo si apre da sola. Sul telefono l'albero è nel pulsante «Cartelle e pagine»; chi non lo vuole lo nasconde in Preferenze.
+- **Immagine della pagina**: ogni pagina ha un riquadro in alto a destra. Se puoi modificare la pagina, trascinaci sopra un'immagine dal computer (oppure usa «Scegli un'immagine»): si salva subito. Con «Cambia immagine» e «Rimuovi» la sostituisci o la togli.
 - **Nuova pagina** parte da un **template** (PNG, Luogo, Fazione, Resoconto di sessione…) o da una pagina vuota.
 - **Chi la vede**: pubblica, giocatori, solo Master, oppure personale (solo tu: va bene per gli appunti privati).
 - **Scheda**: i campi a lato (es. «Allineamento: Caotico buono»). Anche lì si può scrivere `[[Pagina]]`.
@@ -46,6 +48,10 @@ I **livelli** raggruppano i pin e si accendono e spengono; un livello «Solo Mas
 
 Tutti i pin sono anche nell'elenco sotto la mappa.
 
+## Galleria
+
+Tutte le immagini della campagna in un posto solo: le immagini delle pagine, quelle inserite nel testo e le mappe, le più recenti prima. Sotto ogni immagine c'è dove compare; cliccandola si apre in grande (frecce ← → per scorrere, Esc per chiudere). Si possono vedere tutte, solo quelle delle pagine o solo le mappe. Ognuno vede solo le immagini delle pagine e delle mappe che può leggere.
+
 ## Cronologie e calendario
 
 - **Cronologia del mondo**: la storia, scritta dal Master.
@@ -67,7 +73,8 @@ In **Preferenze** ognuno sceglie:
 - tema: chiaro, scuro, pergamena, alto contrasto (o quelli creati dall'Admin);
 - dimensione del testo fino al 200%;
 - carattere Atkinson Hyperlegible o OpenDyslexic;
-- spaziatura ampia, animazioni ridotte, lingua.
+- spaziatura ampia, animazioni ridotte, lingua;
+- albero delle cartelle e delle pagine a sinistra (mostra o nascondi).
 
 Tutta la wiki si usa da tastiera e con i lettori di schermo; i colori rispettano le regole WCAG 2.2 AA.
 

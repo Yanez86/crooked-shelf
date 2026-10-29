@@ -9,6 +9,7 @@ const SHOTS = 'test-results/screens';
 mkdirSync(SHOTS, { recursive: true });
 
 const ADMIN = { user: 'davide', pass: 'drago-rosso-2024' };
+const TREE = 'Albero delle cartelle e delle pagine';
 const PLAYER = { user: 'alice', pass: 'elfa-dei-boschi-99' };
 
 let admin: Page;
@@ -132,6 +133,43 @@ test('pagine, collegamenti e segreti', async () => {
 	}, { visibility: 'Solo Master' });
 });
 
+test('albero delle cartelle e delle pagine', async () => {
+	await admin.goto('/wiki/locanda-del-grifone');
+	const tree = admin.getByRole('navigation', { name: TREE });
+	// Le cartelle della pagina aperta sono già aperte, la pagina è evidenziata.
+	const locanda = tree.getByRole('link', { name: 'Locanda del Grifone' });
+	await expect(locanda).toHaveAttribute('aria-current', 'page');
+	// Le pagine senza categoria stanno alla radice.
+	await expect(tree.getByRole('link', { name: 'Bartolo Pancia' })).toBeVisible();
+	await expect(tree.getByRole('link', { name: 'Piano del cattivo' })).toBeVisible();
+
+	// Una cartella si chiude col mouse e si riapre da tastiera.
+	const luoghi = tree.locator('summary', { hasText: 'Luoghi' });
+	await luoghi.click();
+	await expect(locanda).toBeHidden();
+	await luoghi.focus();
+	await admin.keyboard.press('Enter');
+	await expect(locanda).toBeVisible();
+
+	await tree.getByRole('link', { name: 'Bartolo Pancia' }).click();
+	await expect(admin.getByRole('heading', { level: 1, name: 'Bartolo Pancia' })).toBeVisible();
+	await expect(tree.getByRole('link', { name: 'Bartolo Pancia' })).toHaveAttribute('aria-current', 'page');
+	// Le cartelle aperte restano aperte.
+	await expect(locanda).toBeVisible();
+	await axe(admin, 'albero');
+	await shot(admin, '02b-albero');
+
+	// Sul telefono l'albero sta chiuso in un pulsante.
+	await admin.setViewportSize({ width: 390, height: 844 });
+	const toggle = admin.getByRole('button', { name: 'Cartelle e pagine' });
+	await expect(locanda).toBeHidden();
+	await toggle.click();
+	await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+	await expect(locanda).toBeVisible();
+	await shot(admin, '02c-albero-telefono');
+	await admin.setViewportSize({ width: 1280, height: 800 });
+});
+
 test('editor: accessibilità e telefono', async () => {
 	await admin.goto('/wiki/locanda-del-grifone/edit');
 	await expect(admin.locator('.editor-content')).toContainText('spia');
@@ -164,7 +202,7 @@ test('modifica concorrente non sovrascrive', async ({ browser }) => {
 
 test('ricerca', async () => {
 	await admin.goto('/search?q=spia');
-	await expect(admin.getByRole('link', { name: 'Locanda del Grifone' })).toBeVisible();
+	await expect(admin.locator('main').getByRole('link', { name: 'Locanda del Grifone' })).toBeVisible();
 	await admin.goto('/search?q=locandiere');
 	await expect(admin.locator('.hits mark').first()).toBeVisible();
 	await axe(admin, 'ricerca');
@@ -203,6 +241,9 @@ test('il giocatore non vede i segreti', async ({ browser }) => {
 	await expect(p.locator('.content')).not.toContainText('spia');
 	await expect(p.getByText('Contiene segreti')).toHaveCount(0);
 	await expect(p.getByRole('link', { name: /Modifica/ })).toHaveCount(0);
+
+	await expect(p.getByRole('navigation', { name: TREE })).toContainText('Bartolo Pancia');
+	await expect(p.getByRole('navigation', { name: TREE })).not.toContainText('Piano del cattivo');
 
 	const r = await p.goto('/wiki/piano-del-cattivo');
 	expect(r?.status()).toBe(404);
@@ -260,6 +301,9 @@ test('visitatori: spenti di default', async ({ browser }) => {
 	const p = await (await browser.newContext({ locale: 'it-IT' })).newPage();
 	await p.goto('/wiki');
 	await expect(p).toHaveURL(/\/login\?next=%2Fwiki/);
+	// Nessun titolo di pagina a chi non ha fatto l'accesso.
+	await expect(p.getByRole('navigation', { name: TREE })).toHaveCount(0);
+	expect(await p.content()).not.toContain('Bartolo Pancia');
 	await axe(p, 'login');
 	await shot(p, '07-login');
 	await p.context().close();
@@ -278,6 +322,21 @@ test('temi: contrasti e accessibilità', async () => {
 		await admin.goto('/wiki/locanda-del-grifone');
 		await shot(admin, `08-tema-${theme.toLowerCase().replace(' ', '-')}`);
 	}
+});
+
+test("l'albero si può nascondere", async () => {
+	const save = async (choice: string) => {
+		await admin.goto('/preferences');
+		await admin.getByLabel('Albero delle pagine a sinistra').selectOption({ label: choice });
+		await admin.getByRole('button', { name: 'Salva' }).first().click();
+		await expect(admin.getByRole('status').first()).toContainText('Preferenze salvate');
+	};
+	await save('Nascondi');
+	await admin.goto('/wiki/locanda-del-grifone');
+	await expect(admin.getByRole('navigation', { name: TREE })).toHaveCount(0);
+	await save('Mostra');
+	await admin.goto('/wiki/locanda-del-grifone');
+	await expect(admin.getByRole('navigation', { name: TREE })).toBeVisible();
 });
 
 test('tastiera: link per saltare al contenuto', async () => {

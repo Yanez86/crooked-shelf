@@ -142,6 +142,10 @@ mark {
 	margin: 0 auto;
 	padding: 0 var(--space);
 }
+/* Con l'albero delle pagine a sinistra serve più spazio. */
+.container.wide {
+	max-width: 90rem;
+}
 
 /* --- Moduli --- */
 

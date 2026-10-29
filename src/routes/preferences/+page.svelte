@@ -69,6 +69,13 @@
 				</select>
 			</div>
 			<div class="field">
+				<label for="tree">{t('prefs.tree')}</label>
+				<select id="tree" name="tree" aria-describedby="tree-hint">
+					{#each data.options.tree as s (s)}<option value={s} selected={data.current.tree === s}>{t('treePref.' + s)}</option>{/each}
+				</select>
+				<span id="tree-hint" class="hint">{t('prefs.treeHint')}</span>
+			</div>
+			<div class="field">
 				<label for="locale">{t('prefs.locale')}</label>
 				<select id="locale" name="locale">
 					<option value="" selected={!data.current.locale}>{t('prefs.localeDefault')}</option>

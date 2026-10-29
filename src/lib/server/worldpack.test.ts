@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { strFromU8, unzipSync } from 'fflate';
 import { useMemoryDb, schema } from './db/index.ts';
 import { resetSettingsCache, saveSettings, getCalendar } from './settings.ts';
-import { createPage, getPageBySlug, listPages } from './pages.ts';
+import { createPage, getPageBySlug, listPages, setPageImage } from './pages.ts';
 import { createCategory } from './taxonomy.ts';
 import { createMap, listMaps, pinsOf, saveLayer, layersOf, savePin } from './maps.ts';
 import { saveImage } from './files.ts';
@@ -33,7 +33,10 @@ function buildWorld() {
 	const img = saveImage(readFileSync('tests/fixtures/city.png'), 'city.png', 1);
 	if (!img.ok) throw new Error('img');
 	createPage({ ...base, title: 'Bartolo', categoryId: cat.id, tags: ['Nord'], content: { type: 'doc', content: [p('Oste.'), { type: 'secret', content: [p('Spia.')] }, { type: 'image', attrs: { src: `/files/${img.file.id}`, alt: 'Ritratto' } }] } }, admin);
-	createPage({ ...base, title: 'Locanda', categoryId: cat.id, content: { type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'wikiLink', attrs: { target: 'bartolo', title: 'Bartolo' } }] }] } }, admin);
+	const locanda = createPage({ ...base, title: 'Locanda', categoryId: cat.id, content: { type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'wikiLink', attrs: { target: 'bartolo', title: 'Bartolo' } }] }] } }, admin);
+	const sign = saveImage(readFileSync('tests/fixtures/map.png'), 'insegna.png', 1);
+	if (!sign.ok) throw new Error('img');
+	setPageImage(locanda.id, sign.file.id);
 	createPage({ ...base, visibility: 'master', title: 'Piano segreto', content: { type: 'doc', content: [p('x')] } }, admin);
 	createPage({ ...base, visibility: 'personal', title: 'Diario', content: { type: 'doc', content: [p('x')] } }, admin);
 	const map = createMap({ title: 'Costa', description: '', visibility: 'players', parentId: null, scale: 1, unit: 'km' }, img.file, 1);
@@ -55,7 +58,8 @@ describe('pacchetto mondo', () => {
 		const maps = JSON.parse(strFromU8(zip['maps.json']));
 		expect(maps[0].pins.map((x: { label: string }) => x.label)).toEqual(['Locanda']);
 		expect(JSON.parse(strFromU8(zip['timeline.json'])).map((e: { title: string }) => e.title)).toEqual(['Fondazione']);
-		expect(Object.keys(zip).filter((k) => k.startsWith('files/'))).toHaveLength(1);
+		expect(Object.keys(zip).filter((k) => k.startsWith('files/'))).toHaveLength(2);
+		expect(zip[`files/${pages.find((x: { title: string }) => x.title === 'Locanda').image}.png`]).toBeDefined();
 		expect(strFromU8(zip['pages/locanda.md'])).toContain('[[Bartolo]]');
 	});
 
@@ -78,6 +82,9 @@ describe('pacchetto mondo', () => {
 		// "Bartolo" importato diventa bartolo-2 e il collegamento della Locanda lo segue.
 		const loc = getPageBySlug('locanda')!;
 		expect(JSON.stringify(loc.content)).toContain('"target":"bartolo-2"');
+		// L'immagine della pagina arriva con un indirizzo nuovo.
+		expect(loc.imageId).toMatch(/^[\w-]+$/);
+		expect(db.select().from(schema.files).all().map((f) => f.id)).toContain(loc.imageId);
 		expect(getPageBySlug('bartolo-2')!.title).toBe('Bartolo');
 		expect(JSON.stringify(getPageBySlug('bartolo-2')!.content)).toMatch(/\/files\/[\w-]+/);
 		expect(getCalendar().name).toBe('Harptos');
@@ -98,6 +105,10 @@ describe('pacchetto mondo', () => {
 		expect(Object.keys(zip).sort()).toEqual(expect.arrayContaining(['Luoghi/Bartolo.md', 'Luoghi/Locanda.md', 'Piano segreto.md', 'Diario.md', 'Indice.md']));
 		expect(strFromU8(zip['Luoghi/Bartolo.md'])).toContain('![Ritratto](../_files/');
 		expect(strFromU8(zip['Luoghi/Bartolo.md'])).toContain('> [!secret]');
+		// L'immagine della pagina in cima al testo, con il file accanto.
+		const cover = /^!\[Locanda\]\(\.\.\/(_files\/[\w-]+\.png)\)$/m.exec(strFromU8(zip['Luoghi/Locanda.md']));
+		expect(cover).not.toBeNull();
+		expect(zip[cover![1]]).toBeDefined();
 	});
 });
 

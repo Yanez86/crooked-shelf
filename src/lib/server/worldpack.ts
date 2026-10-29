@@ -2,7 +2,7 @@ import { strFromU8, strToU8, unzipSync, zipSync, type Zippable } from 'fflate';
 import { and, asc, eq, inArray, sql } from 'drizzle-orm';
 import { getDb, schema } from './db/index.ts';
 import { getFile, readFile, saveImage } from './files.ts';
-import { createPage, getPageBySlug, pageMeta, uniquePageSlug, updatePage, type PageRow } from './pages.ts';
+import { createPage, getPageBySlug, pageMeta, setPageImage, uniquePageSlug, updatePage, type PageRow } from './pages.ts';
 import { categoryWithDescendants, createCategory, listCategories, categoryPath } from './taxonomy.ts';
 import { getCalendar, saveSettings, customThemes } from './settings.ts';
 import { recomputeSortKeys, saveEvent } from './timeline.ts';
@@ -44,6 +44,8 @@ interface PackPage {
 	category: string | null;
 	tags: string[];
 	template: string | null;
+	/** Immagine della pagina (riquadro in alto a destra): nome del file in files/. */
+	image?: string | null;
 }
 
 const { pages, pageTags, maps, mapLayers, mapPins, timelineEvents, templates } = schema;
@@ -109,6 +111,7 @@ export function exportWorld(o: ExportOptions, u: Viewer): Uint8Array {
 		const raw = isDoc(p.content) ? p.content : EMPTY_DOC;
 		const content = secrets ? raw : stripSecrets(raw);
 		imageIds(content, fileIds);
+		if (p.imageId) fileIds.add(p.imageId);
 		const meta = pageMeta(p);
 		out[`pages/${p.slug}.md`] = strToU8(
 			frontMatter({ title: p.title, category: categoryPath(p.categoryId).map((c) => c.name).join(' / ') || null, tags: meta.tags.map((t) => t.name), fields: p.fields ?? [] }) +
@@ -124,7 +127,8 @@ export function exportWorld(o: ExportOptions, u: Viewer): Uint8Array {
 			visibility: p.visibility,
 			category: p.categoryId ? (catSlug.get(p.categoryId) ?? null) : null,
 			tags: meta.tags.map((t) => t.name),
-			template: p.template
+			template: p.template,
+			image: p.imageId
 		};
 	});
 	out['pages.json'] = json(packPages);
@@ -345,8 +349,13 @@ export function importPack(pack: Pack, opts: { conflict: Conflict; calendar: boo
 			session: null,
 			slug
 		};
-		if (existing) updatePage(existing, input, u, true);
-		else createPage(input, u);
+		let id: number;
+		if (existing) {
+			updatePage(existing, input, u, true);
+			id = existing.id;
+		} else id = createPage(input, u).id;
+		// I pacchetti di prima non hanno l'immagine della pagina: in quel caso resta quella che c'è.
+		if (p.image !== undefined) setPageImage(id, (typeof p.image === 'string' && fileMap.get(p.image)) || null);
 		done.pages++;
 	}
 
@@ -480,7 +489,9 @@ export function exportMarkdown(u: Viewer): Uint8Array {
 	const safe = (s: string) => s.replace(/[\\/:*?"<>|]+/g, '-').trim() || '_';
 	const index: string[] = ['# Indice', ''];
 	for (const p of all) {
-		const doc = isDoc(p.content) ? p.content : EMPTY_DOC;
+		const body = isDoc(p.content) ? p.content : EMPTY_DOC;
+		// L'immagine della pagina va in cima al testo.
+		const doc: DocNode = p.imageId ? { ...body, content: [{ type: 'image', attrs: { src: `/files/${p.imageId}`, alt: p.title } }, ...(body.content ?? [])] } : body;
 		const folder = categoryPath(p.categoryId).map((c) => safe(c.name));
 		const depth = folder.length;
 		const path = [...folder, `${safe(p.title)}.md`].join('/');

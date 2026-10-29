@@ -113,3 +113,13 @@ export function stripSecrets(n: DocNode): DocNode {
 	if (!n.content) return n;
 	return { ...n, content: n.content.filter((c) => c.type !== 'secret').map(stripSecrets) };
 }
+
+/** Immagini caricate nella wiki (/files/<id>) usate in un documento, con la loro descrizione. */
+export function uploadedImages(n: DocNode, out: { id: string; alt: string }[] = []): { id: string; alt: string }[] {
+	if (n.type === 'image') {
+		const m = /^\/files\/([\w-]+)$/.exec(String(n.attrs?.src ?? ''));
+		if (m) out.push({ id: m[1], alt: String(n.attrs?.alt ?? '').trim() });
+	}
+	for (const c of n.content ?? []) uploadedImages(c, out);
+	return out;
+}

@@ -4,9 +4,10 @@
 	import TagBadge from '#lib/components/TagBadge.svelte';
 	import RelTime from '#lib/components/RelTime.svelte';
 	import FormOk from '#lib/components/FormOk.svelte';
+	import PageImage from '#lib/components/PageImage.svelte';
 	import type { PageProps } from './$types';
 
-	let { data }: PageProps = $props();
+	let { data, form }: PageProps = $props();
 	const t = getT();
 	const locale = $derived(appPage.data.locale as string);
 </script>
@@ -49,24 +50,27 @@
 	{/if}
 
 	<div class="body">
-		{#if data.fields.length || data.session}
-			<aside class="infobox" aria-label={t('fields.title')}>
-				<dl>
-					{#if data.session}
-						{#if data.session.number}<dt>{t('session.number')}</dt><dd>{data.session.number}</dd>{/if}
-						{#if data.session.realDate}
-							<dt>{t('session.realDate')}</dt>
-							<dd><time datetime={data.session.realDate}>{new Intl.DateTimeFormat(locale, { dateStyle: 'long' }).format(new Date(data.session.realDate + 'T12:00:00'))}</time></dd>
+		<div class="side">
+			<PageImage image={data.image} title={data.page.title} canEdit={data.canEdit} error={form?.imageError} ok={form?.imageOk} />
+			{#if data.fields.length || data.session}
+				<aside class="infobox" aria-label={t('fields.title')}>
+					<dl>
+						{#if data.session}
+							{#if data.session.number}<dt>{t('session.number')}</dt><dd>{data.session.number}</dd>{/if}
+							{#if data.session.realDate}
+								<dt>{t('session.realDate')}</dt>
+								<dd><time datetime={data.session.realDate}>{new Intl.DateTimeFormat(locale, { dateStyle: 'long' }).format(new Date(data.session.realDate + 'T12:00:00'))}</time></dd>
+							{/if}
+							{#if data.session.world}<dt>{t('session.worldDate')}</dt><dd>{data.session.world}</dd>{/if}
 						{/if}
-						{#if data.session.world}<dt>{t('session.worldDate')}</dt><dd>{data.session.world}</dd>{/if}
-					{/if}
-					{#each data.fields as f, i (i)}
-						<dt>{f.label}</dt>
-						<dd>{@html f.html || '—'}</dd>
-					{/each}
-				</dl>
-			</aside>
-		{/if}
+						{#each data.fields as f, i (i)}
+							<dt>{f.label}</dt>
+							<dd>{@html f.html || '—'}</dd>
+						{/each}
+					</dl>
+				</aside>
+			{/if}
+		</div>
 
 		<div class="prose content">
 			{#if data.html}
@@ -161,25 +165,34 @@
 		grid-row: 1;
 		min-width: 0;
 	}
-	.infobox {
+	/* Immagine e scheda in alto a destra. */
+	.side {
 		grid-column: 2;
 		grid-row: 1;
+		display: flex;
+		flex-direction: column;
+		gap: 1rem;
 		width: 20rem;
 		max-width: 100%;
+	}
+	.infobox {
 		background: var(--c-surface);
 		border: 1px solid var(--c-border);
 		border-top: 4px solid var(--c-primary);
 		border-radius: var(--radius);
 		padding: 0.5rem 1rem;
 	}
-	/* Sul telefono la scheda va in cima, prima del testo. */
-	@media (max-width: 56rem) {
+	/* Nello spazio stretto (telefono) immagine e scheda vanno in cima, prima del testo. */
+	@container (max-width: 44rem) {
 		.body {
 			grid-template-columns: minmax(0, 1fr);
 		}
-		.infobox {
+		.side {
 			grid-column: 1;
 			width: auto;
+		}
+		.side > :global(.page-image) {
+			max-width: 22rem;
 		}
 		.content {
 			grid-row: 2;

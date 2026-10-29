@@ -113,7 +113,7 @@ test('cestino', async () => {
 	await admin.getByRole('button', { name: /^Recupera ?: Pagina da cestinare$/ }).click();
 	await expect(admin.getByRole('heading', { level: 1, name: 'Pagina da cestinare' })).toBeVisible();
 	await admin.goto('/search?q=sparirà');
-	await expect(admin.getByRole('link', { name: 'Pagina da cestinare' })).toBeVisible();
+	await expect(admin.locator('main').getByRole('link', { name: 'Pagina da cestinare' })).toBeVisible();
 
 	await admin.goto('/wiki/pagina-da-cestinare/edit');
 	await admin.getByRole('checkbox', { name: /Sì, voglio eliminare/ }).check();

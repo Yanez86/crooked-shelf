@@ -2,8 +2,9 @@ import { and, asc, eq, inArray, sql } from 'drizzle-orm';
 import { getDb, schema } from './db/index.ts';
 import { slugify } from '../slug.ts';
 import { visibleTo } from './visibility.ts';
-import type { Viewer } from '../access.ts';
+import { isMaster, type Viewer } from '../access.ts';
 import { TAG_COLORS, type TagColor } from '../roles.ts';
+import { buildTree, type Tree } from '../tree.ts';
 
 const { categories, tags, pageTags, pages } = schema;
 
@@ -69,6 +70,16 @@ export function categoryTree(u: Viewer | null): { roots: CategoryNode[]; flat: C
 	};
 	walk(roots, 0, '', new Set());
 	return { roots, flat };
+}
+
+/** Cartelle e pagine visibili per l'albero a sinistra. Il Master vede anche le cartelle vuote. */
+export function pageTree(u: Viewer | null): Tree {
+	const rows = getDb()
+		.select({ slug: pages.slug, title: pages.title, categoryId: pages.categoryId })
+		.from(pages)
+		.where(visibleTo(u))
+		.all();
+	return buildTree(listCategories(), rows, isMaster(u));
 }
 
 /** Id della categoria e di tutte le sue discendenti. */

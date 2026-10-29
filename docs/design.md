@@ -55,7 +55,7 @@ Così una pagina "Locanda del Grifone" può avere la descrizione pubblica e, nel
 ## 4. Pagine
 
 ### Struttura
-- Titolo, indirizzo leggibile (`/wiki/locanda-del-grifone`), contenuto a blocchi, categoria, tag, immagine di copertina, visibilità.
+- Titolo, indirizzo leggibile (`/wiki/locanda-del-grifone`), contenuto a blocchi, categoria, tag, immagine della pagina (riquadro in alto a destra), visibilità.
 - **Cronologia delle modifiche** per ogni pagina, con confronto e ripristino.
 - Cestino con recupero.
 
@@ -224,7 +224,13 @@ Ogni fase si chiude con test automatici (unità, interfaccia con Playwright, acc
 - Esportazione Markdown compatibile con Obsidian: una cartella per categoria, intestazione YAML, `[[collegamenti]]`, callout `> [!note]`.
 - Docker: immagine Node 22 (amd64 e arm64), volume `/data`, controllo di salute; GitHub Actions per i test e per pubblicare l'immagine su ghcr.io a ogni versione.
 
-## 21. Decisioni prese
+## 21. Note su albero, immagine della pagina e galleria
+
+- **Albero a sinistra** (come Esplora risorse) in tutti i temi: le categorie sono cartelle che si aprono e si chiudono, sotto ci sono le pagine; le pagine senza categoria stanno alla radice. Si apre da sola la cartella della pagina che stai leggendo; le cartelle aperte a mano sono ricordate nel browser. Ognuno può nasconderlo dalle Preferenze. Mostra solo le pagine che chi guarda può vedere; le cartelle vuote solo a Master e Admin; nessun titolo a chi non ha fatto l'accesso se i visitatori sono spenti. Sul telefono sta sopra la pagina, chiuso in un pulsante.
+- **Immagine della pagina**: ogni pagina ha un riquadro in alto a destra (sopra la scheda). Chi può modificare la pagina ci trascina un'immagine, oppure la sceglie col pulsante (da tastiera); la può cambiare o togliere. Non crea una versione e non cambia la data di modifica, così non va in conflitto con chi sta scrivendo la pagina. Entra nel pacchetto mondo e nell'esportazione Markdown (in cima al testo).
+- **Galleria**: tutte le immagini della campagna (immagine delle pagine, immagini nel testo, mappe), le più recenti prima, con il visore a schermo intero (frecce per scorrere, Esc per chiudere). Ognuno vede solo le immagini di pagine e mappe che può vedere; quelle dentro i segreti solo il Master. Le miniature sono le immagini originali caricate in ritardo: generare miniature più leggere resta un miglioramento futuro.
+
+## 22. Decisioni prese
 
 - Il nome **Crooked Shelf** resta anche nell'interfaccia italiana.
 - L'accesso dei **visitatori** è **spento** di default; l'Admin può attivarlo.

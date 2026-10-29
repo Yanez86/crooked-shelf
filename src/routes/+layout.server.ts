@@ -1,6 +1,7 @@
 import type { LayoutServerLoad } from './$types';
 import { getSettings } from '#lib/server/settings.ts';
 import { extraThemes } from '#lib/server/plugins.ts';
+import { pageTree } from '#lib/server/taxonomy.ts';
 import { extraLocale } from '#lib/i18n/index.ts';
 import { themeCss } from '#lib/themes.ts';
 
@@ -15,6 +16,8 @@ export const load: LayoutServerLoad = ({ locals }) => {
 		version: __APP_VERSION__,
 		themeCss: themeCss(extraThemes()),
 		// Traduzioni dei plugin per la lingua in uso (il browser non le ha nel pacchetto).
-		localeExtra: extraLocale(locals.locale)
+		localeExtra: extraLocale(locals.locale),
+		// Albero a sinistra: niente titoli a chi non può ancora leggere la wiki (es. nella pagina di accesso).
+		tree: locals.prefs.tree === 'show' && (u || s.allowVisitors) ? pageTree(u) : null
 	};
 };

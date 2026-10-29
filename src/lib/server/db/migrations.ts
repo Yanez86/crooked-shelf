@@ -208,5 +208,9 @@ export const MIGRATIONS: string[] = [
 		updated_at INTEGER NOT NULL
 	);
 	CREATE INDEX board_cards_column ON board_cards(column_id, sort);
+	`,
+	// Immagine della pagina (riquadro in alto a destra).
+	`
+	ALTER TABLE pages ADD COLUMN image_id TEXT REFERENCES files(id) ON DELETE SET NULL;
 	`
 ];

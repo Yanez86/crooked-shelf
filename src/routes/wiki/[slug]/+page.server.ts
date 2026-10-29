@@ -1,13 +1,19 @@
-import { error } from '@sveltejs/kit';
-import type { PageServerLoad } from './$types';
+import { error, fail } from '@sveltejs/kit';
+import type { Actions, PageServerLoad } from './$types';
 import { canEdit, canView, isMaster } from '#lib/access.ts';
-import { backlinks, getPageBySlug, pageMeta, renderPage } from '#lib/server/pages.ts';
+import { backlinks, getPageBySlug, pageMeta, renderPage, setPageImage } from '#lib/server/pages.ts';
+import { getFile, saveImage } from '#lib/server/files.ts';
 import { contentLabels } from '#lib/server/pageForm.ts';
 import { categoryPath } from '#lib/server/taxonomy.ts';
 import { mapsForPage } from '#lib/server/maps.ts';
 import { eventsForPage } from '#lib/server/timeline.ts';
 import { getCalendar } from '#lib/server/settings.ts';
 import { formatDate } from '#lib/calendar.ts';
+
+function pageImage(id: string | null) {
+	const f = id ? getFile(id) : undefined;
+	return f ? { url: `/files/${f.id}`, width: f.width, height: f.height } : null;
+}
 
 export const load: PageServerLoad = ({ params, locals }) => {
 	const page = getPageBySlug(params.slug);
@@ -27,6 +33,7 @@ export const load: PageServerLoad = ({ params, locals }) => {
 			// Chi non è Master non deve sapere nemmeno che ci sono segreti.
 			hasSecret: isMaster(locals.user) && page.hasSecret
 		},
+		image: pageImage(page.imageId),
 		html: rendered.html,
 		fields: rendered.fields,
 		session: page.session
@@ -45,4 +52,28 @@ export const load: PageServerLoad = ({ params, locals }) => {
 		backlinks: backlinks(page.slug, locals.user),
 		canEdit: canEdit(page, locals.user)
 	};
+};
+
+/** Le azioni sull'immagine della pagina: solo chi può modificare la pagina. */
+function editable(slug: string, u: App.Locals['user']) {
+	const page = getPageBySlug(slug);
+	if (!page || !canEdit(page, u)) error(404, 'Not found');
+	return { page, user: u! };
+}
+
+export const actions: Actions = {
+	image: async ({ params, request, locals }) => {
+		const { page, user } = editable(params.slug, locals.user);
+		const file = (await request.formData()).get('file');
+		if (!(file instanceof File) || file.size === 0) return fail(400, { imageError: 'files.empty' });
+		const r = saveImage(Buffer.from(await file.arrayBuffer()), file.name, user.id);
+		if (!r.ok) return fail(400, { imageError: r.error });
+		setPageImage(page.id, r.file.id);
+		return { imageOk: 'pageImage.saved' };
+	},
+	removeImage: async ({ params, locals }) => {
+		const { page } = editable(params.slug, locals.user);
+		setPageImage(page.id, null);
+		return { imageOk: 'pageImage.removed' };
+	}
 };

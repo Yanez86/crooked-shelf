@@ -15,9 +15,16 @@
 		"logout": "Esci",
 		"login": "Accedi",
 		"maps": "Mappe",
+		"gallery": "Galleria",
 		"timeline": "Cronologia",
 		"rules": "Regole",
 		"boards": "Bacheche"
+	},
+	"tree": {
+		"label": "Albero delle cartelle e delle pagine",
+		"title": "Cartelle e pagine",
+		"empty": "Ancora nessuna pagina.",
+		"emptyFolder": "Cartella vuota"
 	},
 	"footer": {
 		"source": "Codice sorgente"
@@ -185,6 +192,10 @@
 		"auto": "Come il sistema",
 		"reduce": "Riduci movimento"
 	},
+	"treePref": {
+		"show": "Mostra",
+		"hide": "Nascondi"
+	},
 	"colors": {
 		"gray": "Grigio",
 		"red": "Rosso",
@@ -251,6 +262,19 @@
 		"deleted": "Pagina eliminata.",
 		"newFromTemplate": "Nuova pagina: {name}",
 		"related": "Collegamenti"
+	},
+	"pageImage": {
+		"label": "Immagine della pagina",
+		"none": "Nessuna immagine",
+		"drop": "Trascina qui un'immagine, oppure sceglila dal pulsante.",
+		"choose": "Scegli un'immagine",
+		"change": "Cambia immagine",
+		"remove": "Rimuovi",
+		"file": "File dell'immagine della pagina",
+		"confirmRemove": "Togliere l'immagine da questa pagina?",
+		"uploading": "Caricamento…",
+		"saved": "Immagine salvata.",
+		"removed": "Immagine rimossa."
 	},
 	"editor": {
 		"toolbar": "Formattazione",
@@ -327,6 +351,8 @@
 		"fontHint": "Atkinson e OpenDyslexic aiutano chi ha difficoltà di lettura.",
 		"spacing": "Spaziatura",
 		"motion": "Animazioni",
+		"tree": "Albero delle pagine a sinistra",
+		"treeHint": "A sinistra, con le categorie come cartelle da aprire e chiudere.",
 		"locale": "Lingua",
 		"localeDefault": "Lingua della wiki",
 		"saved": "Preferenze salvate.",
@@ -374,6 +400,27 @@
 		"empty": "Scegli un file da caricare.",
 		"tooBig": "Il file è troppo grande (massimo 25 MB).",
 		"badType": "Formato non supportato: usa PNG, JPEG, WebP o GIF."
+	},
+	"gallery": {
+		"title": "Galleria",
+		"intro": "Tutte le immagini della campagna: quelle delle pagine, quelle nel testo e le mappe.",
+		"filter": "Quali immagini",
+		"show": {
+			"all": "Tutte",
+			"pages": "Pagine",
+			"maps": "Mappe"
+		},
+		"count": "{n} immagini",
+		"empty": "Ancora nessuna immagine. Trascinane una nel riquadro in alto a destra di una pagina, inseriscila nel testo o crea una mappa.",
+		"kind": {
+			"cover": "Immagine della pagina",
+			"content": "Nel testo di",
+			"map": "Mappa"
+		},
+		"viewer": "Immagine {n} di {total}",
+		"prev": "Precedente",
+		"next": "Successiva",
+		"original": "Apri l'originale"
 	},
 	"fields": {
 		"title": "Scheda",

@@ -8,6 +8,7 @@
 	import { untrack } from 'svelte';
 	import { registerLocale, setI18n, translate } from '#lib/i18n/index.ts';
 	import RulePopover from '#lib/components/RulePopover.svelte';
+	import PageTree from '#lib/components/PageTree.svelte';
 	import type { LayoutProps } from './$types';
 
 	let { data, children }: LayoutProps = $props();
@@ -38,6 +39,7 @@
 		href === '/' ? path === '/' : path === href || path.startsWith(href + '/') ? 'page' : undefined;
 	const isAdmin = $derived(data.user?.role === 'admin');
 	const bare = $derived(path.startsWith('/setup') || path.startsWith('/login') || path.startsWith('/invite/'));
+	const tree = $derived(bare ? null : data.tree);
 </script>
 
 <svelte:head>
@@ -48,7 +50,7 @@
 <a class="skip-link" href="#main">{t('nav.skip')}</a>
 
 <header class="site-header">
-	<div class="container header-inner">
+	<div class="container header-inner" class:wide={!!tree}>
 		<a class="brand" href="/">
 			<img src="/favicon.svg" alt="" width="32" height="32" />
 			<span>{data.siteName}</span>
@@ -70,13 +72,14 @@
 	</div>
 
 	{#if !bare}
-		<nav class="container main-nav" aria-label={t('nav.main')}>
+		<nav class="container main-nav" class:wide={!!tree} aria-label={t('nav.main')}>
 			<ul class="list-plain">
 				<li><a href="/" aria-current={current('/')}>{t('nav.home')}</a></li>
 				<li><a href="/wiki" aria-current={current('/wiki')}>{t('nav.pages')}</a></li>
 				<li><a href="/categories" aria-current={current('/categories')}>{t('nav.categories')}</a></li>
 				<li><a href="/tags" aria-current={current('/tags')}>{t('nav.tags')}</a></li>
 				<li><a href="/maps" aria-current={current('/maps')}>{t('nav.maps')}</a></li>
+				<li><a href="/gallery" aria-current={current('/gallery')}>{t('nav.gallery')}</a></li>
 				<li><a href="/timeline/world" aria-current={current('/timeline')}>{t('nav.timeline')}</a></li>
 				<li><a href="/rules" aria-current={current('/rules')}>{t('nav.rules')}</a></li>
 				{#if data.user}<li><a href="/boards" aria-current={current('/boards')}>{t('nav.boards')}</a></li>{/if}
@@ -106,14 +109,17 @@
 	{/if}
 </header>
 
-<main id="main" tabindex="-1" class="container">
-	{@render children()}
-</main>
+<div class="container shell" class:wide={!!tree}>
+	{#if tree}<PageTree {tree} />{/if}
+	<main id="main" tabindex="-1">
+		{@render children()}
+	</main>
+</div>
 
 <RulePopover />
 
 <footer class="site-footer">
-	<div class="container">
+	<div class="container" class:wide={!!tree}>
 		<p>
 			Crooked Shelf {data.version} ·
 			<a href={REPO} rel="noopener noreferrer">{t('footer.source')}</a> ·
@@ -197,9 +203,25 @@
 		color: var(--c-primary) !important;
 		font-weight: 700;
 	}
+	/* Albero a sinistra, pagina a destra. */
+	.shell.wide {
+		display: grid;
+		grid-template-columns: 17rem minmax(0, 1fr);
+		align-items: start;
+		gap: 0 2rem;
+	}
+	@media (max-width: 60rem) {
+		.shell.wide {
+			grid-template-columns: minmax(0, 1fr);
+			gap: 1rem;
+		}
+	}
 	main {
+		min-width: 0;
 		min-height: 60vh;
 		padding-bottom: 3rem;
+		/* Le pagine si adattano allo spazio che resta accanto all'albero. */
+		container-type: inline-size;
 	}
 	main:focus {
 		outline: none;
