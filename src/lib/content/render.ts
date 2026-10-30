@@ -7,6 +7,9 @@ export interface LinkTarget {
 	title: string;
 	/** false = la pagina esiste ma chi legge non può vederla. */
 	visible: boolean;
+	/** Inizio del testo e immagine della pagina, per l'anteprima (LinkPreview). */
+	excerpt?: string;
+	image?: string;
 }
 
 export interface RenderOptions {
@@ -171,7 +174,13 @@ function ruleRefHtml(kind: RuleKind, name: string, label: string | null, opt: Li
 function wikiLinkHtml(target: string, fallback: string, label: string | null, opt: LinkOpts): string {
 	const page = target ? opt.resolve(target) : undefined;
 	if (page?.visible) {
-		return `<a class="wikilink" href="/wiki/${encodeURIComponent(target)}">${esc(label ?? page.title)}</a>`;
+		const tip =
+			page.excerpt || page.image
+				? ` data-title="${esc(page.title)}"` +
+					(page.excerpt ? ` data-excerpt="${esc(page.excerpt)}"` : '') +
+					(page.image ? ` data-image="${esc(page.image)}"` : '')
+				: '';
+		return `<a class="wikilink" href="/wiki/${encodeURIComponent(target)}"${tip}>${esc(label ?? page.title)}</a>`;
 	}
 	if (page) return `<span class="wikilink-hidden">${esc(label ?? fallback)}</span>`;
 	const q = new URLSearchParams({ title: fallback, slug: target });

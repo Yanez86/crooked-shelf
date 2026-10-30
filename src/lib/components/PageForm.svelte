@@ -4,6 +4,7 @@
 	import WorldDateInput from './WorldDateInput.svelte';
 	import type { CalMonth } from '../calendar.ts';
 	import { getT } from '../i18n/index.ts';
+	import { PAGE_ICONS } from '../pageIcons.ts';
 	import type { DocNode, PageField, SessionInfo } from '../content/types.ts';
 
 	interface Category {
@@ -34,6 +35,7 @@
 			fields: PageField[];
 			template?: string | null;
 			session: SessionInfo | null;
+			icon?: string | null;
 		};
 		categories: Category[];
 		visibilities: string[];
@@ -58,6 +60,20 @@
 		<label for="title">{t('page.title')}</label>
 		<input id="title" name="title" type="text" required maxlength="200" value={values.title} class="title-input" />
 	</div>
+
+	<fieldset class="icons">
+		<legend>{t('page.icon')}</legend>
+		<label class="icon-choice" title={t('page.noIcon')}>
+			<input type="radio" name="icon" value="" checked={!values.icon} />
+			<span aria-hidden="true">∅</span><span class="visually-hidden">{t('page.noIcon')}</span>
+		</label>
+		{#each PAGE_ICONS as icon (icon)}
+			<label class="icon-choice">
+				<input type="radio" name="icon" value={icon} checked={values.icon === icon} />
+				<span>{icon}</span>
+			</label>
+		{/each}
+	</fieldset>
 
 	{#if values.session}
 		<fieldset>
@@ -138,6 +154,41 @@
 	}
 	.label {
 		font-weight: 600;
+	}
+	.icons {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.25rem;
+	}
+	.icon-choice {
+		position: relative;
+		display: inline-grid;
+		place-items: center;
+		width: 2.25rem;
+		height: 2.25rem;
+		font-size: 1.15rem;
+		border: 1px solid var(--c-border);
+		border-radius: var(--radius);
+		cursor: pointer;
+	}
+	.icon-choice input {
+		position: absolute;
+		opacity: 0;
+		inset: 0;
+		margin: 0;
+		cursor: pointer;
+	}
+	.icon-choice:hover {
+		background: var(--c-surface2);
+	}
+	.icon-choice:has(input:checked) {
+		border-color: var(--c-primary);
+		box-shadow: inset 0 0 0 1px var(--c-primary);
+		background: var(--c-surface2);
+	}
+	.icon-choice:has(input:focus-visible) {
+		outline: 2px solid var(--c-primary);
+		outline-offset: 2px;
 	}
 	.cols {
 		display: grid;

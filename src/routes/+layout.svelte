@@ -8,6 +8,7 @@
 	import { untrack } from 'svelte';
 	import { registerLocale, setI18n, translate } from '#lib/i18n/index.ts';
 	import RulePopover from '#lib/components/RulePopover.svelte';
+	import LinkPreview from '#lib/components/LinkPreview.svelte';
 	import PageTree from '#lib/components/PageTree.svelte';
 	import type { LayoutProps } from './$types';
 
@@ -128,11 +129,12 @@
 </div>
 
 <RulePopover />
+<LinkPreview />
 
 <footer class="site-footer">
 	<div class="container" class:wide={!!tree} class:bare>
 		<p>
-			Crooked Shelf {data.version} ·
+			<a href="/changelog" title={t('footer.changelog', { v: data.version })}>Crooked Shelf {data.version}</a> ·
 			<a href={REPO} rel="noopener noreferrer">{t('footer.source')}</a> ·
 			<a href="{REPO}/blob/main/LICENSE" rel="noopener noreferrer" hreflang="en">AGPL-3.0</a>
 		</p>

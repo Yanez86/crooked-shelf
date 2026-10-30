@@ -8,6 +8,7 @@ import { translate } from '../i18n/index.ts';
 import type { PageField, SessionInfo, WorldDate } from '../content/types.ts';
 import { validDate, type Calendar } from '../calendar.ts';
 import { REAL_DATE } from './timeline.ts';
+import { pageIcon } from '../pageIcons.ts';
 
 const CONTENT_MAX = 2_000_000;
 
@@ -22,6 +23,7 @@ export interface PageFormValues {
 	fields: PageField[];
 	template: string | null;
 	session: SessionInfo | null;
+	icon: string | null;
 }
 
 function parseFields(raw: string): PageField[] {
@@ -77,7 +79,8 @@ export function readPageForm(
 		slug: str(f, 'slug', 100),
 		fields: parseFields(String(f.get('fields') ?? '')),
 		template: str(f, 'template', 20) || null,
-		session: null
+		session: null,
+		icon: pageIcon(f.get('icon'))
 	};
 	let badDate = false;
 	if (f.get('isSession') === '1') {
@@ -109,7 +112,8 @@ export function readPageForm(
 			slug: values.slug || undefined,
 			fields: values.fields,
 			template: values.template,
-			session: values.session
+			session: values.session,
+			icon: values.icon
 		}
 	};
 }

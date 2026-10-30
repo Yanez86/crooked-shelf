@@ -44,6 +44,13 @@ Regole importanti:
 - **Database**: per cambiarlo aggiungi una migrazione in fondo a `src/lib/server/db/migrations.ts`; non modificare quelle già pubblicate.
 - **Testi**: ogni testo dell'interfaccia passa dalle traduzioni (`t('chiave')`), con la stessa chiave in `it.json` e `en.json` (un test lo controlla).
 
+## Versioni
+
+Versionamento semantico (MAGGIORE.MINORE.CORRETTIVA). Per una nuova versione:
+
+1. aggiungi in cima a `CHANGELOG.md` la sezione `## X.Y.Z — AAAA-MM-GG` con le voci (`### Aggiunte`, `### Modifiche`, `### Correzioni`); è anche la pagina `/changelog`;
+2. `npm version X.Y.Z` aggiorna `package.json` e crea il commit e il tag `vX.Y.Z` (un test controlla che le due versioni coincidano).
+
 ## Traduzioni
 
 Copia `src/lib/i18n/locales/en.json` in un nuovo file (es. `es.json`), cambia `_meta.name` e traduci. Le chiavi mancanti ricadono sull'inglese. In alternativa si può distribuire come plugin (vedi `docs/plugin.md`).

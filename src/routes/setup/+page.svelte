@@ -20,7 +20,7 @@
 		<h2>{t('setup.site')}</h2>
 		<div class="field">
 			<label for="siteName">{t('setup.siteName')}</label>
-			<input id="siteName" name="siteName" type="text" required maxlength="80" value={v?.siteName ?? 'Crooked Shelf'} />
+			<input id="siteName" name="siteName" type="text" required maxlength="80" value={v?.siteName ?? ''} />
 		</div>
 		<div class="field">
 			<label for="locale">{t('setup.locale')}</label>

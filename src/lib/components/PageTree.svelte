@@ -3,10 +3,12 @@
 	import { SvelteSet } from 'svelte/reactivity';
 	import { page } from '$app/state';
 	import { getT } from '../i18n/index.ts';
+	import { isMaster } from '../access.ts';
 	import { treePaths, type Tree, type TreeFolder, type TreePage } from '../tree.ts';
 
 	let { tree }: { tree: Tree } = $props();
 	const t = getT();
+	const canManage = $derived(isMaster(page.data.user));
 
 	// Cartelle aperte: quelle che portano alla pagina che stai leggendo, più quelle che hai aperto tu
 	// (ricordate in questo browser).
@@ -45,6 +47,16 @@
 		if (isOpen === open.has(id)) return;
 		if (isOpen) open.add(id);
 		else open.delete(id);
+		save();
+	}
+
+	function setAll(isOpen: boolean) {
+		open.clear();
+		if (isOpen) for (const p of paths.folders.values()) open.add(p[p.length - 1]);
+		save();
+	}
+
+	function save() {
 		try {
 			localStorage.setItem(STORE, JSON.stringify([...open]));
 		} catch {
@@ -73,10 +85,14 @@
 {#snippet leaf(p: TreePage)}
 	<li>
 		<a href="/wiki/{p.slug}" aria-current={current === p.slug ? 'page' : undefined}>
-			<svg class="ico doc" viewBox="0 0 24 24" aria-hidden="true">
-				<path d="M6 2.75h8.25L19 7.5v13.75H6z" />
-				<path d="M14 2.75V7.5h5M9 12h7M9 15.5h7" />
-			</svg>
+			{#if p.icon}
+				<span class="ico emoji" aria-hidden="true">{p.icon}</span>
+			{:else}
+				<svg class="ico doc" viewBox="0 0 24 24" aria-hidden="true">
+					<path d="M6 2.75h8.25L19 7.5v13.75H6z" />
+					<path d="M14 2.75V7.5h5M9 12h7M9 15.5h7" />
+				</svg>
+			{/if}
 			<span>{p.title}</span>
 		</a>
 	</li>
@@ -100,12 +116,29 @@
 {/snippet}
 
 <nav class="explorer" aria-label={t('tree.label')}>
-	<p class="explorer-title" aria-hidden="true">{t('tree.title')}</p>
 	<button type="button" class="btn explorer-toggle" aria-expanded={shown} aria-controls="explorer-body" onclick={() => (shown = !shown)}>
 		<span class="chevron" aria-hidden="true"></span>
 		{t('tree.title')}
 	</button>
 	<div id="explorer-body" class="explorer-body" class:shown>
+		<div class="explorer-head">
+			<p class="explorer-title" aria-hidden="true">{t('tree.title')}</p>
+			{#if tree.folders.length}
+				<button type="button" class="tool" title={t('tree.expandAll')} aria-label={t('tree.expandAll')} onclick={() => setAll(true)}>
+					<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 9l5-5 5 5M7 15l5 5 5-5" /></svg>
+				</button>
+				<button type="button" class="tool" title={t('tree.collapseAll')} aria-label={t('tree.collapseAll')} onclick={() => setAll(false)}>
+					<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4l5 5 5-5M7 20l5-5 5 5" /></svg>
+				</button>
+			{/if}
+			{#if canManage}
+				<a class="tool" href="/categories#new-cat" title={t('tree.newFolder')} aria-label={t('tree.newFolder')}>
+					<svg viewBox="0 0 24 24" aria-hidden="true">
+						<path d="M2.5 6.5A1.5 1.5 0 0 1 4 5h5l2 2h9a1.5 1.5 0 0 1 1.5 1.5v9A1.5 1.5 0 0 1 20 19H4a1.5 1.5 0 0 1-1.5-1.5zM12 10v6M9 13h6" />
+					</svg>
+				</a>
+			{/if}
+		</div>
 		{#if tree.folders.length || tree.pages.length}
 			<ul class="list-plain level root">
 				{#each tree.folders as f (f.id)}{@render folder(f)}{/each}
@@ -130,12 +163,45 @@
 		border-radius: var(--radius);
 		padding: 0.5rem 0.4rem 0.75rem;
 	}
-	.explorer-title {
+	.explorer-head {
+		display: flex;
+		align-items: center;
+		gap: 0.1rem;
 		margin: 0 0 0.35rem;
-		padding: 0 0.4rem 0.35rem;
+		padding: 0 0 0.35rem 0.4rem;
 		border-bottom: 1px solid var(--c-border);
+	}
+	.explorer-title {
+		flex: 1;
+		margin: 0;
 		font-family: var(--font-head);
 		font-weight: 700;
+	}
+	.tool {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 2rem;
+		height: 2rem;
+		padding: 0;
+		border: 0;
+		border-radius: var(--radius);
+		background: none;
+		color: var(--c-muted);
+		cursor: pointer;
+	}
+	.tool:hover {
+		background: var(--c-surface2);
+		color: var(--c-text);
+	}
+	.tool svg {
+		width: 1.15rem;
+		height: 1.15rem;
+		fill: none;
+		stroke: currentColor;
+		stroke-width: 1.75;
+		stroke-linecap: round;
+		stroke-linejoin: round;
 	}
 	.explorer-toggle {
 		display: none;
@@ -213,6 +279,16 @@
 		stroke: var(--c-muted);
 		stroke-width: 1.5;
 		stroke-linejoin: round;
+	}
+	.emoji {
+		margin-left: 0.25rem;
+		margin-top: 0;
+		font-size: 0.95rem;
+		line-height: 1.15rem;
+		text-align: center;
+	}
+	a:hover .emoji {
+		text-decoration: none;
 	}
 	.folder.opened,
 	details[open] > summary > .folder.closed {

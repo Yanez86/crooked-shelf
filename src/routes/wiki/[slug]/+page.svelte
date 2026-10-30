@@ -28,7 +28,7 @@
 	<header class="page-head">
 		<h1>{data.page.title}</h1>
 		{#if data.canEdit}
-			<a class="btn" href="/wiki/{data.page.slug}/edit">✎ {t('page.edit')}<span class="visually-hidden">: {data.page.title}</span></a>
+			<a class="edit-pencil" href="/wiki/{data.page.slug}/edit" title={t('page.edit')}><span aria-hidden="true">✎</span><span class="visually-hidden">{t('page.edit')}: {data.page.title}</span></a>
 		{/if}
 	</header>
 
@@ -132,13 +132,30 @@
 	}
 	.page-head {
 		display: flex;
-		flex-wrap: wrap;
-		align-items: center;
+		align-items: flex-start;
 		justify-content: space-between;
 		gap: 0.5rem 1rem;
 	}
 	.page-head h1 {
 		margin-bottom: 0.25rem;
+	}
+	.edit-pencil {
+		display: inline-grid;
+		place-items: center;
+		width: 2rem;
+		height: 2rem;
+		border-radius: var(--radius);
+		color: var(--c-muted);
+		text-decoration: none;
+		font-size: 1.1rem;
+		opacity: 0.6;
+		flex-shrink: 0;
+	}
+	.edit-pencil:hover,
+	.edit-pencil:focus-visible {
+		opacity: 1;
+		color: var(--c-primary);
+		background: var(--c-surface);
 	}
 	.meta {
 		display: flex;
@@ -175,15 +192,18 @@
 		max-width: 100%;
 	}
 	/* Senza immagine né scheda resta solo il pulsante: la colonna non ruba spazio al testo. */
+	/* Con immagine o scheda la colonna diventa un riquadro a sé, staccato dal testo. */
 	.side:has(:global(.page-image:not(.bare)), .infobox) {
 		width: 20rem;
-	}
-	.infobox {
 		background: var(--c-surface);
 		border: 1px solid var(--c-border);
 		border-top: 4px solid var(--c-primary);
 		border-radius: var(--radius);
-		padding: 0.5rem 1rem;
+		padding: 1rem;
+	}
+	.infobox:not(:first-child) {
+		border-top: 1px solid var(--c-border);
+		padding-top: 1rem;
 	}
 	/* Nello spazio stretto (telefono) immagine e scheda vanno in cima, prima del testo. */
 	@container (max-width: 44rem) {

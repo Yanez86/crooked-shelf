@@ -8,6 +8,7 @@ import { getCalendar, saveSettings, customThemes } from './settings.ts';
 import { recomputeSortKeys, saveEvent } from './timeline.ts';
 import { createMap, deleteMap, getMapBySlug, saveLayer, savePin } from './maps.ts';
 import { saveTemplate } from './templates.ts';
+import { pageIcon } from '../pageIcons.ts';
 import { storeTheme } from './themesAdmin.ts';
 import { stripSecrets } from '../content/extract.ts';
 import { frontMatter, toMarkdown } from '../content/markdown.ts';
@@ -46,6 +47,7 @@ interface PackPage {
 	template: string | null;
 	/** Immagine della pagina (riquadro in alto a destra): nome del file in files/. */
 	image?: string | null;
+	icon?: string | null;
 }
 
 const { pages, pageTags, maps, mapLayers, mapPins, timelineEvents, templates } = schema;
@@ -128,7 +130,8 @@ export function exportWorld(o: ExportOptions, u: Viewer): Uint8Array {
 			category: p.categoryId ? (catSlug.get(p.categoryId) ?? null) : null,
 			tags: meta.tags.map((t) => t.name),
 			template: p.template,
-			image: p.imageId
+			image: p.imageId,
+			icon: p.icon
 		};
 	});
 	out['pages.json'] = json(packPages);
@@ -347,6 +350,8 @@ export function importPack(pack: Pack, opts: { conflict: Conflict; calendar: boo
 			fields: (Array.isArray(p.fields) ? p.fields : []).map((f) => ({ label: String(f.label ?? '').slice(0, 60), value: String(f.value ?? '').slice(0, 500) })),
 			template: p.template ?? null,
 			session: null,
+			// I pacchetti di prima non hanno l'icona: in quel caso resta quella che c'è.
+			icon: p.icon === undefined ? undefined : pageIcon(p.icon),
 			slug
 		};
 		let id: number;

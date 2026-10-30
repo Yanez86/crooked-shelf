@@ -2,7 +2,8 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { useMemoryDb, schema } from './db/index.ts';
 import { backlinks, createPage, getPageBySlug, listPages, renderPage, suggestPages, updatePage } from './pages.ts';
 import { searchPages } from './search.ts';
-import { categoryTree, createCategory, listTags } from './taxonomy.ts';
+import { categoryTree, createCategory, listTags, pageTree } from './taxonomy.ts';
+import { readPageForm } from './pageForm.ts';
 import type { DocNode } from '../content/types.ts';
 
 const master = { id: 1, role: 'master' as const };
@@ -30,12 +31,43 @@ beforeEach(() => {
 const base = { visibility: 'players' as const, playersCanEdit: false, categoryId: null, tags: [], fields: [], session: null };
 
 describe('pagine', () => {
+	it("l'icona scelta arriva nell'albero; una modifica senza icona la lascia", () => {
+		const form = (icon: string) => {
+			const f = new FormData();
+			f.set('title', 'Drago');
+			f.set('content', JSON.stringify(doc(p('x'))));
+			f.set('visibility', 'players');
+			f.set('icon', icon);
+			return f;
+		};
+		const cal = { months: [] } as never;
+		const bad = readPageForm(form('<b>'), master, cal);
+		expect(bad.ok && bad.input.icon).toBeNull();
+		const r = readPageForm(form('🐉'), master, cal);
+		if (!r.ok) throw new Error(r.error);
+		const row = createPage(r.input, master);
+		expect(pageTree(alice).pages).toEqual([{ slug: 'drago', title: 'Drago', icon: '🐉' }]);
+		updatePage(row, { ...base, title: 'Drago', content: doc(p('y')) }, master, true);
+		expect(getPageBySlug('drago')!.icon).toBe('🐉');
+	});
+
 	it('crea, collega e trova i backlink', () => {
 		createPage({ ...base, title: 'Bartolo', content: doc(p('Il locandiere')) }, master);
 		createPage({ ...base, title: 'Locanda del Grifone', content: doc(link('bartolo')) }, master);
 		expect(backlinks('bartolo', alice).map((b) => b.title)).toEqual(['Locanda del Grifone']);
 		const html = renderPage(getPageBySlug('locanda-del-grifone')!, alice, labels).html;
-		expect(html).toContain('href="/wiki/bartolo">Bartolo</a>');
+		expect(html).toContain('href="/wiki/bartolo" data-title="Bartolo" data-excerpt="Il locandiere">Bartolo</a>');
+	});
+
+	it("l'anteprima del collegamento non mostra i segreti", () => {
+		createPage(
+			{ ...base, title: 'Bartolo', content: doc(p('Il locandiere'), { type: 'secret', content: [p('è una spia')] }) },
+			master
+		);
+		createPage({ ...base, title: 'Locanda', content: doc(link('bartolo')) }, master);
+		const html = renderPage(getPageBySlug('locanda')!, master, labels).html;
+		expect(html).toContain('data-excerpt="Il locandiere"');
+		expect(html).not.toContain('spia');
 	});
 
 	it('indirizzi unici', () => {

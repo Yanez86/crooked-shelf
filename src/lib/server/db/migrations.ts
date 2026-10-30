@@ -212,5 +212,9 @@ export const MIGRATIONS: string[] = [
 	// Immagine della pagina (riquadro in alto a destra).
 	`
 	ALTER TABLE pages ADD COLUMN image_id TEXT REFERENCES files(id) ON DELETE SET NULL;
+	`,
+	// Icona della pagina (nell'albero a sinistra).
+	`
+	ALTER TABLE pages ADD COLUMN icon TEXT;
 	`
 ];

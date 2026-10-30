@@ -51,6 +51,8 @@ export interface PageInput {
 	template?: string | null;
 	/** Dati del resoconto di sessione, se la pagina lo è. */
 	session: SessionInfo | null;
+	/** Icona nell'albero; undefined = lascia quella che c'è. */
+	icon?: string | null;
 }
 
 function normalizeContent(raw: unknown, u: Viewer): DocNode {
@@ -122,6 +124,7 @@ export function createPage(input: PageInput, u: Viewer): PageRow {
 				fields: input.fields,
 				template: input.template ?? null,
 				session: input.session,
+				icon: input.icon ?? null,
 				authorId: u.id,
 				updatedBy: u.id,
 				createdAt: now,
@@ -150,6 +153,7 @@ export function updatePage(page: PageRow, input: PageInput, u: Viewer, manage: b
 				categoryId: input.categoryId,
 				fields: input.fields,
 				session: input.session,
+				...(input.icon !== undefined ? { icon: input.icon } : {}),
 				updatedBy: u.id,
 				updatedAt: Math.max(Date.now(), page.updatedAt + 1),
 				...(manage ? { visibility: input.visibility, playersCanEdit: input.playersCanEdit } : {})
@@ -186,6 +190,13 @@ export function linkResolver(doc: DocNode, u: Viewer | null, fields: PageField[]
 	);
 }
 
+/** Primi ~200 caratteri, tagliati a fine parola. */
+export function excerptOf(body: string | null): string | undefined {
+	const t = (body ?? '').replace(/\s+/g, ' ').trim();
+	if (t.length <= 200) return t || undefined;
+	return t.slice(0, 200).replace(/\s+\S*$/, '') + '…';
+}
+
 /** Come linkResolver, partendo da un elenco di indirizzi. */
 export function resolverFor(slugs: string[], u: Viewer | null): (slug: string) => LinkTarget | undefined {
 	const map = new Map<string, LinkTarget>();
@@ -195,16 +206,18 @@ export function resolverFor(slugs: string[], u: Viewer | null): (slug: string) =
 				slug: pages.slug,
 				title: pages.title,
 				visibility: pages.visibility,
-				authorId: pages.authorId
+				authorId: pages.authorId,
+				imageId: pages.imageId,
+				// Testo pubblico dall'indice di ricerca: i segreti non ci sono.
+				body: sql<string | null>`(SELECT substr(body, 1, 400) FROM pages_fts WHERE rowid = ${pages.id})`
 			})
 			.from(pages)
 			.where(and(inArray(pages.slug, slugs), sql`${pages.deletedAt} IS NULL`))
 			.all();
-		for (const r of rows)
-			map.set(r.slug, {
-				title: r.title,
-				visible: canView({ ...r, playersCanEdit: false, hasSecret: false }, u)
-			});
+		for (const r of rows) {
+			const visible = canView({ ...r, playersCanEdit: false, hasSecret: false }, u);
+			map.set(r.slug, { title: r.title, visible, ...(visible ? { excerpt: excerptOf(r.body), image: r.imageId ?? undefined } : {}) });
+		}
 	}
 	return (slug) => map.get(slug);
 }

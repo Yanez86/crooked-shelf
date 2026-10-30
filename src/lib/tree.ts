@@ -2,6 +2,7 @@
 export interface TreePage {
 	slug: string;
 	title: string;
+	icon?: string | null;
 }
 
 export interface TreeFolder {
@@ -23,7 +24,7 @@ const collator = new Intl.Collator(undefined, { sensitivity: 'base', numeric: tr
 /** `keepEmpty` = mostra anche le cartelle senza pagine visibili (per chi gestisce le categorie). */
 export function buildTree(
 	cats: { id: number; name: string; slug: string; parentId: number | null }[],
-	pages: { slug: string; title: string; categoryId: number | null }[],
+	pages: { slug: string; title: string; categoryId: number | null; icon?: string | null }[],
 	keepEmpty: boolean
 ): Tree {
 	const byId = new Map(cats.map((c) => [c.id, c]));
@@ -45,7 +46,7 @@ export function buildTree(
 	}
 	for (const p of pages) {
 		const folder = p.categoryId !== null ? nodes.get(p.categoryId) : undefined;
-		(folder ?? root).pages.push({ slug: p.slug, title: p.title });
+		(folder ?? root).pages.push({ slug: p.slug, title: p.title, icon: p.icon ?? null });
 	}
 
 	const tidy = (list: TreeFolder[]): TreeFolder[] => {

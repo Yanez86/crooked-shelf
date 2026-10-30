@@ -4,6 +4,7 @@ import { defineConfig } from 'vitest/config';
 import { readFileSync } from 'node:fs';
 
 const pkg = JSON.parse(readFileSync('./package.json', 'utf8'));
+const noTsconfig = { rolldownOptions: { tsconfig: false as const } };
 
 export default defineConfig({
 	plugins: [
@@ -34,9 +35,11 @@ export default defineConfig({
 	define: {
 		__APP_VERSION__: JSON.stringify(pkg.version)
 	},
-	// Ambiente interno di Vitest: le dipendenze pre-raggruppate non usano il tsconfig del progetto,
-	// e rolldown non sa risolvere "$app/tsconfig" (Tsconfig not found all'avvio dei test).
-	environments: { __vitest__: { optimizeDeps: { rolldownOptions: { tsconfig: false } } } },
+	// Le dipendenze pre-raggruppate (dev server e Vitest) non usano il tsconfig del progetto,
+	// e rolldown non sa risolvere "$app/tsconfig" (Tsconfig not found all'avvio).
+	// "ssr" e "__vitest__" non ereditano optimizeDeps di primo livello: va ripetuto.
+	optimizeDeps: noTsconfig,
+	environments: { ssr: { optimizeDeps: noTsconfig }, __vitest__: { optimizeDeps: noTsconfig } },
 	test: {
 		include: ['src/**/*.test.ts']
 	}

@@ -25,10 +25,18 @@
 		"label": "Folder and page tree",
 		"title": "Folders and pages",
 		"empty": "No pages yet.",
-		"emptyFolder": "Empty folder"
+		"emptyFolder": "Empty folder",
+		"expandAll": "Open all folders",
+		"collapseAll": "Close all folders",
+		"newFolder": "New folder"
 	},
 	"footer": {
-		"source": "Source code"
+		"source": "Source code",
+		"changelog": "What's new in version {v}"
+	},
+	"changelog": {
+		"title": "What's new",
+		"current": "Running version: {v}."
 	},
 	"search": {
 		"label": "Search the wiki",
@@ -87,9 +95,9 @@
 	},
 	"setup": {
 		"title": "Welcome to Crooked Shelf",
-		"intro": "First setup: name your wiki and create the administrator account. You can invite the other players later.",
+		"intro": "First setup: enter the campaign name and create the administrator account. You can invite the other players later.",
 		"site": "The wiki",
-		"siteName": "Wiki name",
+		"siteName": "Campaign name",
 		"locale": "Default language",
 		"admin": "Administrator account",
 		"submit": "Create the wiki"
@@ -242,6 +250,8 @@
 		"content": "Content",
 		"category": "Category",
 		"noCategory": "No category",
+		"icon": "Icon",
+		"noIcon": "No icon",
 		"tags": "Tags",
 		"tagsHint": "Comma separated, for example: North, Tavern, Quest",
 		"visibility": "Who can see this page",

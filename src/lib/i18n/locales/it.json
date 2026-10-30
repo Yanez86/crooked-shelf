@@ -25,10 +25,18 @@
 		"label": "Albero delle cartelle e delle pagine",
 		"title": "Cartelle e pagine",
 		"empty": "Ancora nessuna pagina.",
-		"emptyFolder": "Cartella vuota"
+		"emptyFolder": "Cartella vuota",
+		"expandAll": "Apri tutte le cartelle",
+		"collapseAll": "Chiudi tutte le cartelle",
+		"newFolder": "Nuova cartella"
 	},
 	"footer": {
-		"source": "Codice sorgente"
+		"source": "Codice sorgente",
+		"changelog": "Novità della versione {v}"
+	},
+	"changelog": {
+		"title": "Novità",
+		"current": "Versione in uso: {v}."
 	},
 	"search": {
 		"label": "Cerca nella wiki",
@@ -87,9 +95,9 @@
 	},
 	"setup": {
 		"title": "Benvenuto in Crooked Shelf",
-		"intro": "Prima configurazione: dai un nome alla wiki e crea l'account amministratore. Gli altri giocatori potrai invitarli dopo.",
+		"intro": "Prima configurazione: dai il nome della campagna e crea l'account amministratore. Gli altri giocatori potrai invitarli dopo.",
 		"site": "La wiki",
-		"siteName": "Nome della wiki",
+		"siteName": "Nome della campagna",
 		"locale": "Lingua predefinita",
 		"admin": "Account amministratore",
 		"submit": "Crea la wiki"
@@ -242,6 +250,8 @@
 		"content": "Contenuto",
 		"category": "Categoria",
 		"noCategory": "Nessuna categoria",
+		"icon": "Icona",
+		"noIcon": "Nessuna icona",
 		"tags": "Tag",
 		"tagsHint": "Separati da virgola, ad esempio: Nord, Taverna, Missione",
 		"visibility": "Chi può vedere questa pagina",

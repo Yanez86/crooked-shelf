@@ -72,7 +72,8 @@ export const pages = sqliteTable(
 		fields: text('fields', { mode: 'json' }).$type<PageField[]>().notNull().default([]),
 		template: text('template'),
 		session: text('session', { mode: 'json' }).$type<SessionInfo | null>(),
-		imageId: text('image_id').references(() => files.id, { onDelete: 'set null' })
+		imageId: text('image_id').references(() => files.id, { onDelete: 'set null' }),
+		icon: text('icon')
 	},
 	(t) => [index('pages_category').on(t.categoryId), index('pages_updated').on(t.updatedAt)]
 );

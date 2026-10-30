@@ -22,7 +22,8 @@
 					tags: '',
 					fields: data.template?.fields ?? [],
 					template: data.template?.key ?? null,
-					session: data.template?.session ? { number: null, realDate: data.today, world: null } : null
+					session: data.template?.session ? { number: null, realDate: data.today, world: null } : null,
+					icon: null
 				}
 	);
 

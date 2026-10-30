@@ -27,7 +27,8 @@ export const load: PageServerLoad = ({ params, locals, url }) => {
 			tags: pageMeta(page).tags.map((t) => t.name).join(', '),
 			fields: page.fields ?? [],
 			template: page.template,
-			session: page.session ?? null
+			session: page.session ?? null,
+			icon: page.icon
 		},
 		months: getCalendar().months,
 		categories: categoryTree(locals.user).flat.map(({ id, label }) => ({ id, label })),
