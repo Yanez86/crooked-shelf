@@ -265,5 +265,9 @@ export const MIGRATIONS: string[] = [
 		created_at INTEGER NOT NULL,
 		updated_at INTEGER NOT NULL
 	);
+	`,
+	// Icona dell'utente (nel profilo in alto a destra): il nome di un'icona delle pagine.
+	`
+	ALTER TABLE users ADD COLUMN icon TEXT;
 	`
 ];

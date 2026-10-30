@@ -13,7 +13,7 @@ Le persone entrano con un **invito**: Amministrazione › Inviti › «Crea invi
 
 ## Pagine
 
-- **Albero a sinistra**: le categorie sono cartelle che si aprono e si chiudono con un clic (o con Invio da tastiera); dentro ci sono le sottocartelle e le pagine. Le pagine senza categoria stanno in fondo, alla radice. La cartella della pagina che stai leggendo si apre da sola. In alto ci sono due linguette: **Pagine** (cartelle e pagine) e **Risorse** (immagini, audio e altri file, vedi sotto). Sul telefono l'albero è nel pulsante «Pagine e risorse»; chi non lo vuole lo nasconde in Preferenze.
+- **Albero a sinistra**: le categorie sono cartelle che si aprono e si chiudono con un clic (o con Invio da tastiera); dentro ci sono le sottocartelle e le pagine. Le pagine senza categoria stanno in fondo, alla radice. La cartella della pagina che stai leggendo si apre da sola. In alto ci sono due linguette: **Pagine** (cartelle e pagine) e **Risorse** (immagini, audio e altri file, vedi sotto). Sul telefono l'albero è nel pulsante «Pagine e risorse»; chi non lo vuole lo nasconde dal Profilo.
 - **Immagine della pagina**: ogni pagina ha un riquadro in alto a destra. Con la pagina in modifica (la matita ✎) trascinaci sopra un'immagine dal computer, oppure usa «Aggiungi un'immagine»: si salva subito, anche senza premere Salva. Sull'immagine stessa ci sono la matita ✎, per sostituirla, e la ×, per toglierla.
 - **Nuova pagina** parte da un **template** (PNG, Luogo, Fazione, Resoconto di sessione…) o da una pagina vuota.
 - **Chi la vede**: pubblica, giocatori, solo Master, oppure personale (solo tu: va bene per gli appunti privati).
@@ -76,9 +76,15 @@ Pagina **Regole**: 999 voci dell'SRD 5.2 (in inglese) da cercare e citare. Nelle
 
 Schede di appunti in colonne: personali (solo tu) o del gruppo. Le schede si spostano con le frecce o trascinandole; nel testo vanno bene `[[Pagina]]` e `@regole`.
 
+## Profilo
+
+In alto a destra c'è il tuo profilo: la tua icona, il tuo nome e il tuo grado (Admin, Master o Giocatore). Cliccandoci si apre il menu con **Profilo**, **Amministrazione** (solo per l'Admin) ed **Esci**; sul telefono in alto resta solo l'icona, e nome e grado si leggono nel menu.
+
+Nella pagina **Profilo** ci sono le preferenze di lettura (sotto), l'icona da scegliere tra quelle delle pagine (una corona, un cappello da mago, delle spade…), il nome visualizzato e la password. Chi non ha fatto l'accesso trova solo le preferenze, salvate nel browser.
+
 ## Lettura e accessibilità
 
-In **Preferenze** ognuno sceglie:
+Nel **Profilo** ognuno sceglie:
 
 - tema: chiaro, scuro, pergamena, alto contrasto (o quelli creati dall'Admin);
 - dimensione del testo fino al 200%;

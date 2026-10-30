@@ -10,6 +10,7 @@
 	import RulePopover from '#lib/components/RulePopover.svelte';
 	import LinkPreview from '#lib/components/LinkPreview.svelte';
 	import PageTree from '#lib/components/PageTree.svelte';
+	import UserMenu from '#lib/components/UserMenu.svelte';
 	import type { LayoutProps } from './$types';
 
 	let { data, children }: LayoutProps = $props();
@@ -38,7 +39,6 @@
 	const path = $derived(page.url.pathname);
 	const current = (href: string) =>
 		href === '/' ? path === '/' : path === href || path.startsWith(href + '/') ? 'page' : undefined;
-	const isAdmin = $derived(data.user?.role === 'admin');
 	const bare = $derived(path.startsWith('/setup') || path.startsWith('/login') || path.startsWith('/invite/'));
 	const tree = $derived(bare ? null : data.tree);
 
@@ -109,6 +109,8 @@
 				<span aria-hidden="true">{menuOpen ? '✕' : '☰'}</span>
 				{t('nav.menu')}
 			</button>
+			<!-- Profilo in alto a destra: icona, nome e grado. -->
+			<UserMenu user={data.user} />
 		{/if}
 	</div>
 
@@ -127,24 +129,6 @@
 				{#if data.user}<li><a href="/boards" aria-current={current('/boards')}>{t('nav.boards')}</a></li>{/if}
 				{#if data.user}
 					<li><a class="nav-new" href="/wiki/new" aria-current={current('/wiki/new')}>+ {t('nav.newPage')}</a></li>
-				{/if}
-			</ul>
-			<ul class="list-plain user-nav">
-				{#if data.user}
-					<li><a href="/preferences" aria-current={current('/preferences')}>{t('nav.preferences')}</a></li>
-					{#if isAdmin}
-						<li><a href="/admin" aria-current={current('/admin')}>{t('nav.admin')}</a></li>
-					{/if}
-					<li>
-						<form method="post" action="/logout">
-							<button class="linklike" type="submit">
-								{t('nav.logout')}<span class="visually-hidden"> ({data.user.displayName})</span>
-							</button>
-						</form>
-					</li>
-				{:else}
-					<li><a href="/preferences" aria-current={current('/preferences')}>{t('nav.preferences')}</a></li>
-					<li><a href="/login">{t('nav.login')}</a></li>
 				{/if}
 			</ul>
 		</nav>
@@ -201,6 +185,7 @@
 		gap: 0.4rem;
 		flex: 1 1 18rem;
 		max-width: 32rem;
+		margin-left: auto;
 	}
 	.search input {
 		flex: 1;
@@ -218,8 +203,7 @@
 		flex-wrap: wrap;
 		gap: 0.1rem 0.25rem;
 	}
-	.main-nav a,
-	.linklike {
+	.main-nav a {
 		display: inline-flex;
 		align-items: center;
 		min-height: 2.75rem;
@@ -227,15 +211,8 @@
 		color: var(--c-text);
 		text-decoration: none;
 		border-bottom: 3px solid transparent;
-		font: inherit;
-		background: none;
-		border-top: 0;
-		border-left: 0;
-		border-right: 0;
-		cursor: pointer;
 	}
-	.main-nav a:hover,
-	.linklike:hover {
+	.main-nav a:hover {
 		border-bottom-color: var(--c-control);
 	}
 	.main-nav a[aria-current='page'] {
@@ -303,18 +280,13 @@
 		.main-nav ul {
 			flex-direction: column;
 		}
-		.main-nav a,
-		.linklike {
+		.main-nav a {
 			width: 100%;
 			border-bottom: 0;
 			border-left: 3px solid transparent;
 		}
 		.main-nav a[aria-current='page'] {
 			border-left-color: var(--c-primary);
-		}
-		.user-nav {
-			border-top: 1px solid var(--c-border);
-			padding-top: 0.25rem;
 		}
 	}
 	/* Albero a sinistra, pagina a destra. */

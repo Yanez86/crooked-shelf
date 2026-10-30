@@ -20,6 +20,8 @@ export interface SessionUser {
 	displayName: string;
 	role: Role;
 	prefs: Record<string, string>;
+	/** Nome di un'icona delle pagine; senza, la sagoma di una persona. */
+	icon: string | null;
 }
 
 const sha256 = (s: string) => createHash('sha256').update(s).digest('hex');
@@ -116,8 +118,8 @@ export function validateSession(token: string): { user: SessionUser; expires?: D
 		db.update(sessions).set({ expiresAt }).where(eq(sessions.id, id)).run();
 		expires = new Date(expiresAt);
 	}
-	const { id: uid, username, displayName, role, prefs } = row.u;
-	return { user: { id: uid, username, displayName, role, prefs: prefs ?? {} }, expires };
+	const { id: uid, username, displayName, role, prefs, icon } = row.u;
+	return { user: { id: uid, username, displayName, role, prefs: prefs ?? {}, icon }, expires };
 }
 
 export function deleteSession(token: string) {

@@ -12,7 +12,7 @@ export const load: LayoutServerLoad = ({ locals }) => {
 	// Albero a sinistra: niente titoli a chi non può ancora leggere la wiki (es. nella pagina di accesso).
 	const tree = locals.prefs.tree === 'show' && (u || s.allowVisitors);
 	return {
-		user: u ? { id: u.id, username: u.username, displayName: u.displayName, role: u.role } : null,
+		user: u ? { id: u.id, username: u.username, displayName: u.displayName, role: u.role, icon: u.icon } : null,
 		prefs: locals.prefs,
 		locale: locals.locale,
 		siteName: s.siteName,

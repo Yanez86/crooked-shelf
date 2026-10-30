@@ -7,6 +7,7 @@ import { getDb, schema } from '#lib/server/db/index.ts';
 import { PASSWORD_MIN, deleteUserSessions, createSession, hashPassword, setSessionCookie, verifyPassword } from '#lib/server/auth.ts';
 import { str } from '#lib/server/forms.ts';
 import { extraThemes } from '#lib/server/plugins.ts';
+import { PAGE_ICONS } from '#lib/pageIcons.ts';
 
 export const load: PageServerLoad = ({ locals }) => ({
 	options: PREF_OPTIONS,
@@ -40,9 +41,16 @@ export const actions: Actions = {
 	},
 	profile: async ({ request, locals }) => {
 		if (!locals.user) return fail(401, { error: 'errors.forbidden', section: 'profile' });
-		const displayName = str(await request.formData(), 'displayName', 60);
+		const f = await request.formData();
+		const displayName = str(f, 'displayName', 60);
 		if (!displayName) return fail(400, { error: 'errors.nameRequired', section: 'profile' });
-		getDb().update(schema.users).set({ displayName }).where(eq(schema.users.id, locals.user.id)).run();
+		// Solo le icone che conosciamo; le altre tornano alla sagoma di una persona.
+		const icon = String(f.get('icon') ?? '');
+		getDb()
+			.update(schema.users)
+			.set({ displayName, icon: Object.hasOwn(PAGE_ICONS, icon) ? icon : null })
+			.where(eq(schema.users.id, locals.user.id))
+			.run();
 		return { ok: 'common.saved', section: 'profile' };
 	},
 	password: async ({ request, locals, cookies, url }) => {

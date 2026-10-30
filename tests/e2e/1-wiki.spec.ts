@@ -292,7 +292,7 @@ test('il giocatore non vede i segreti', async ({ browser }) => {
 	await p.goto('/preferences');
 	await p.getByLabel('Lingua', { exact: true }).selectOption('en');
 	await p.getByRole('button', { name: 'Salva' }).first().click();
-	await expect(p.getByRole('heading', { level: 1, name: 'Preferences' })).toBeVisible();
+	await expect(p.getByRole('heading', { level: 1, name: 'Profile' })).toBeVisible();
 	await expect(html).toHaveAttribute('lang', 'en');
 	await p.context().close();
 });
@@ -312,7 +312,8 @@ test('visitatori: spenti di default', async ({ browser }) => {
 test('temi: contrasti e accessibilità', async () => {
 	for (const theme of ['Chiaro', 'Scuro', 'Pergamena', 'Alto contrasto']) {
 		await admin.goto('/preferences');
-		await admin.getByRole('radio', { name: theme, exact: true }).check();
+		// «Pergamena» è anche un'icona del profilo.
+		await admin.getByRole('region', { name: 'Lettura e accessibilità' }).getByRole('radio', { name: theme, exact: true }).check();
 		await admin.getByRole('button', { name: 'Salva' }).first().click();
 		await expect(admin.getByRole('status').first()).toContainText('Preferenze salvate');
 		for (const url of ['/', '/wiki', '/wiki/locanda-del-grifone', '/tags']) {
