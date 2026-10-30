@@ -297,6 +297,32 @@ export function suggestPages(q: string, u: Viewer | null, limit = 8) {
 		.all();
 }
 
+/**
+ * Le pagine da scegliere nei campi «Pagina collegata» (pin, eventi), per titolo. Se due pagine si chiamano
+ * uguale, ad esempio dopo aver importato un pacchetto mondo, si aggiunge l'indirizzo: «Elminster (elminster-2)».
+ */
+export function pageChoices(u: Viewer | null) {
+	const rows = getDb()
+		.select({ id: pages.id, slug: pages.slug, title: pages.title })
+		.from(pages)
+		.where(visibleTo(u))
+		.orderBy(sql`${pages.title} COLLATE NOCASE`, pages.id)
+		.all();
+	const count = new Map<string, number>();
+	for (const r of rows) count.set(r.title.toLowerCase(), (count.get(r.title.toLowerCase()) ?? 0) + 1);
+	return rows.map((r) => ({ id: r.id, slug: r.slug, label: count.get(r.title.toLowerCase())! > 1 ? `${r.title} (${r.slug})` : r.title }));
+}
+
+/** La pagina scritta in un campo «Pagina collegata»: un nome dell'elenco, oppure un titolo o un indirizzo. */
+export function findPageChoice(text: string, u: Viewer | null) {
+	if (!text) return undefined;
+	const choices = pageChoices(u);
+	const key = text.toLowerCase();
+	const slug = slugify(text);
+	// Col solo titolo, tra due pagine omonime vince la prima (quella che ha l'indirizzo senza numero).
+	return choices.find((c) => c.label.toLowerCase() === key) ?? choices.find((c) => c.slug === slug);
+}
+
 export function pageMeta(page: PageRow) {
 	const db = getDb();
 	const name = (id: number | null) =>

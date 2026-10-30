@@ -133,3 +133,45 @@ test('pacchetto mondo: esporta e reimporta', async () => {
 	await admin.goto('/maps');
 	await expect(admin.getByRole('link', { name: 'Costa della Spada' })).toHaveCount(2);
 });
+
+test('pagine con lo stesso titolo: si sceglie quale collegare, e mappa e cronologie si aprono', async ({ browser }) => {
+	// Dopo l'importazione ci sono due «Elminster». Prima i suggerimenti doppi bloccavano mappa e cronologie.
+	const errors: string[] = [];
+	admin.on('pageerror', (e) => errors.push(e.message));
+
+	await admin.goto('/maps/costa-della-spada');
+	await expect(admin.locator('.leaflet-marker-icon').first()).toBeVisible();
+	await admin.getByRole('button', { name: 'Pin al centro della vista' }).click();
+	const pinForm = admin.getByRole('region', { name: 'Nuovo pin' });
+	await expect(pinForm.locator('#pin-pages option[value="Elminster (elminster-2)"]')).toHaveCount(1);
+	await pinForm.getByLabel('Nome', { exact: true }).fill('Torre del mago');
+	await pinForm.getByLabel('Pagina collegata').fill('Elminster (elminster-2)');
+	await pinForm.getByRole('button', { name: 'Salva' }).click();
+	await expect(admin.getByRole('status').first()).toContainText('Pin aggiunto');
+	await expect(admin.getByRole('row', { name: /Torre del mago/ }).getByRole('link', { name: 'Elminster' })).toHaveAttribute('href', '/wiki/elminster-2');
+	// Riaprendo il pin la scelta è ancora quella.
+	await admin.getByRole('button', { name: /^Modifica ?: Torre del mago$/ }).click();
+	await expect(admin.getByRole('region', { name: 'Modifica pin' }).getByLabel('Pagina collegata')).toHaveValue('Elminster (elminster-2)');
+
+	// Lo stesso per gli eventi.
+	await admin.goto('/timeline/campaign');
+	await admin.getByText('Aggiungi un evento').click();
+	await admin.getByLabel('Titolo').fill('Visita alla torre');
+	await admin.getByLabel('Pagina collegata').fill('Elminster (elminster-2)');
+	await admin.getByRole('button', { name: 'Aggiungi', exact: true }).click();
+	await expect(admin.getByRole('status').first()).toContainText('Evento aggiunto');
+	await expect(admin.getByRole('link', { name: 'Visita alla torre', exact: true })).toHaveAttribute('href', '/wiki/elminster-2');
+	await admin.goto('/timeline/world');
+	await admin.getByText('Aggiungi un evento').click();
+	await expect(admin.getByLabel('Pagina collegata')).toBeVisible();
+	admin.removeAllListeners('pageerror');
+
+	const p = await login(browser, PLAYER);
+	p.on('pageerror', (e) => errors.push(e.message));
+	await p.goto('/timeline/campaign');
+	await p.getByText('Aggiungi un evento').click();
+	await expect(p.getByLabel('Pagina collegata')).toBeVisible();
+	await p.waitForLoadState('networkidle');
+	await p.context().close();
+	expect(errors).toEqual([]);
+});
