@@ -62,7 +62,7 @@
 		<input id="ev-page" name="page" type="text" list="ev-pages" autocomplete="off" value={values.page} aria-describedby="ev-page-hint" />
 		<span id="ev-page-hint" class="hint">{t('timeline.pageHint')}</span>
 		<datalist id="ev-pages">
-			{#each pageTitles as p (p)}<option value={p}></option>{/each}
+			{#each pageTitles as p, i (i)}<option value={p}></option>{/each}
 		</datalist>
 	</div>
 	<fieldset>

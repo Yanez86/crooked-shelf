@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { useMemoryDb, schema } from './db/index.ts';
-import { backlinks, createPage, getPageBySlug, listPages, pageMeta, renderPage, suggestPages, updatePage } from './pages.ts';
+import { backlinks, createPage, findPageChoice, getPageBySlug, listPages, pageChoices, pageMeta, renderPage, suggestPages, updatePage } from './pages.ts';
 import { searchPages } from './search.ts';
 import { categoryTree, createCategory, listTags, pageTree } from './taxonomy.ts';
 import { readPageForm } from './pageForm.ts';
@@ -108,6 +108,27 @@ describe('pagine', () => {
 		expect(pg.hasSecret).toBe(false);
 		updatePage(pg, { ...base, visibility: 'master', title: 'Diario', content: doc(p('ok')) }, alice, false);
 		expect(getPageBySlug('diario')!.visibility).toBe('players');
+	});
+
+	it('pagine con lo stesso titolo: nei suggerimenti hanno anche l’indirizzo e si possono scegliere', () => {
+		createPage({ ...base, title: 'Elminster', content: doc(p('a')) }, master);
+		expect(createPage({ ...base, title: 'Elminster', content: doc(p('b')) }, master).slug).toBe('elminster-2');
+		createPage({ ...base, visibility: 'master', title: 'Torre', content: doc(p('c')) }, master);
+		expect(pageChoices(master).map((c) => c.label)).toEqual(['Elminster (elminster)', 'Elminster (elminster-2)', 'Torre']);
+		expect(findPageChoice('Elminster (elminster-2)', master)?.slug).toBe('elminster-2');
+		expect(findPageChoice('elminster (elminster-2)', master)?.slug).toBe('elminster-2');
+		// Col solo titolo vince la prima, come prima.
+		expect(findPageChoice('Elminster', master)?.slug).toBe('elminster');
+		// Il giocatore non sceglie (e non vede) le pagine del Master.
+		expect(pageChoices(alice).map((c) => c.label)).toEqual(['Elminster (elminster)', 'Elminster (elminster-2)']);
+		expect(findPageChoice('Torre', alice)).toBeUndefined();
+	});
+
+	it('una pagina rinominata si collega col titolo nuovo', () => {
+		const pg = createPage({ ...base, title: 'Locanda del Grifone', content: doc(p('x')) }, master);
+		updatePage(pg, { ...base, title: 'Locanda', content: doc(p('x')) }, master, true);
+		expect(findPageChoice('Locanda', master)?.slug).toBe('locanda-del-grifone');
+		expect(findPageChoice('Taverna nuova', master)).toBeUndefined();
 	});
 
 	it("chi l'ha creata resta, l'ultima modifica cambia con chi salva", () => {

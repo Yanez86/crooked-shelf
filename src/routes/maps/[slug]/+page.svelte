@@ -180,7 +180,7 @@
 					<label for="pin-page">{t('maps.linkedPage')}</label>
 					<input id="pin-page" name="page" type="text" list="pin-pages" autocomplete="off" bind:value={draft.page} aria-describedby="pin-page-hint" />
 					<span id="pin-page-hint" class="hint">{t('maps.linkedPageHint')}</span>
-					<datalist id="pin-pages">{#each data.editData.pageTitles as p (p)}<option value={p}></option>{/each}</datalist>
+					<datalist id="pin-pages">{#each data.editData.pageTitles as p, i (i)}<option value={p}></option>{/each}</datalist>
 				</div>
 			</div>
 			<div class="field">

@@ -9,7 +9,7 @@ import { inlineLinks } from '#lib/content/extract.ts';
 import { contentLabels } from '#lib/server/pageForm.ts';
 import { canView } from '#lib/access.ts';
 import { formatDate, weekday } from '#lib/calendar.ts';
-import { listPages } from '#lib/server/pages.ts';
+import { pageChoices } from '#lib/server/pages.ts';
 import { hasRule } from '#lib/server/rules/index.ts';
 
 function which(p: string): Timeline {
@@ -52,7 +52,7 @@ export const load: PageServerLoad = ({ params, locals, url }) => {
 		today: cal.today ? formatDate(cal, cal.today) : null,
 		canAdd: canAdd(tl, locals.user),
 		visibilities: eventVisibilities(locals.user),
-		pageTitles: locals.user ? listPages(locals.user, { limit: 500, sort: 'title' }).rows.map((r) => r.title) : []
+		pageTitles: locals.user ? pageChoices(locals.user).slice(0, 500).map((c) => c.label) : []
 	};
 };
 

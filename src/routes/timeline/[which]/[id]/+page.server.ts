@@ -4,7 +4,7 @@ import { canEditEvent, deleteEvent, getEvent, saveEvent, TIMELINES, type Timelin
 import { getCalendar } from '#lib/server/settings.ts';
 import { eventVisibilities, readEventForm } from '#lib/server/eventForm.ts';
 import { getDb, schema } from '#lib/server/db/index.ts';
-import { listPages } from '#lib/server/pages.ts';
+import { pageChoices } from '#lib/server/pages.ts';
 import { eq } from 'drizzle-orm';
 
 function editable(params: { which: string; id: string }, u: App.Locals['user']) {
@@ -16,6 +16,7 @@ function editable(params: { which: string; id: string }, u: App.Locals['user']) 
 export const load: PageServerLoad = ({ params, locals }) => {
 	const e = editable(params, locals.user);
 	const page = e.pageId ? getDb().select({ title: schema.pages.title }).from(schema.pages).where(eq(schema.pages.id, e.pageId)).get() : null;
+	const choices = pageChoices(locals.user);
 	return {
 		timeline: e.timeline as Timeline,
 		values: {
@@ -24,12 +25,12 @@ export const load: PageServerLoad = ({ params, locals }) => {
 			date: e.year !== null ? { year: e.year, month: e.month, day: e.day } : null,
 			approx: e.approx,
 			realDate: e.realDate,
-			page: page?.title ?? '',
+			page: choices.find((c) => c.id === e.pageId)?.label ?? page?.title ?? '',
 			visibility: e.visibility
 		},
 		months: getCalendar().months,
 		visibilities: eventVisibilities(locals.user),
-		pageTitles: listPages(locals.user, { limit: 500, sort: 'title' }).rows.map((r) => r.title)
+		pageTitles: choices.slice(0, 500).map((c) => c.label)
 	};
 };
 

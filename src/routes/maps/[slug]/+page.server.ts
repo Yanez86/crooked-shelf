@@ -17,15 +17,13 @@ import {
 	savePin,
 	type PinInput
 } from '#lib/server/maps.ts';
-import { listPages, resolverFor } from '#lib/server/pages.ts';
+import { findPageChoice, pageChoices, resolverFor } from '#lib/server/pages.ts';
 import { renderInline } from '#lib/content/render.ts';
 import { inlineLinks } from '#lib/content/extract.ts';
 import { contentLabels } from '#lib/server/pageForm.ts';
 import { str } from '#lib/server/forms.ts';
 import { slugify } from '#lib/slug.ts';
 import { hasRule } from '#lib/server/rules/index.ts';
-import { getDb, schema } from '#lib/server/db/index.ts';
-import { eq } from 'drizzle-orm';
 
 function visibleMap(slug: string, u: App.Locals['user']) {
 	const m = getMapBySlug(slug);
@@ -50,8 +48,9 @@ export const load: PageServerLoad = ({ params, locals }) => {
 	}
 	const all = listMaps(u);
 	const master = isMaster(u);
-	const pageTitleOf = (slug: string) =>
-		getDb().select({ title: schema.pages.title }).from(schema.pages).where(eq(schema.pages.slug, slug)).get()?.title ?? '';
+	// Nel modulo del pin la pagina si sceglie per nome; due pagine omonime hanno anche l'indirizzo.
+	const choices = master ? pageChoices(u) : [];
+	const choiceOf = new Map(choices.map((c) => [c.slug, c.label]));
 
 	return {
 		map: {
@@ -85,7 +84,7 @@ export const load: PageServerLoad = ({ params, locals }) => {
 				pageSlug: p.pageSlug,
 				// La pagina collegata: visibile, da creare, oppure nascosta (niente collegamento).
 				page: p.pageSlug ? (page?.visible ? { slug: p.pageSlug, title: page.title } : page ? null : { slug: p.pageSlug, title: '', missing: true }) : null,
-				pageTitle: master && p.pageSlug ? pageTitleOf(p.pageSlug) || p.pageSlug : '',
+				pageTitle: master && p.pageSlug ? (choiceOf.get(p.pageSlug) ?? p.pageSlug) : '',
 				targetMapId: p.targetMapId,
 				target: p.target
 			};
@@ -96,13 +95,13 @@ export const load: PageServerLoad = ({ params, locals }) => {
 					icons: [...PIN_ICONS],
 					colors: [...PIN_COLORS],
 					maps: all.filter((m) => m.id !== map.id).map(({ id, title }) => ({ id, title })),
-					pageTitles: listPages(u, { limit: 1000, sort: 'title' }).rows.map((r) => r.title)
+					pageTitles: choices.slice(0, 1000).map((c) => c.label)
 				}
 			: null
 	};
 };
 
-function readPin(f: FormData, map: { id: number; width: number; height: number }): { input: PinInput } | { error: string } {
+function readPin(f: FormData, map: { id: number; width: number; height: number }, u: App.Locals['user']): { input: PinInput } | { error: string } {
 	const x = Number(f.get('x'));
 	const y = Number(f.get('y'));
 	const label = str(f, 'label', 120);
@@ -123,7 +122,8 @@ function readPin(f: FormData, map: { id: number; width: number; height: number }
 			description: str(f, 'description', 1000),
 			icon: (PIN_ICONS as readonly string[]).includes(icon) ? icon : 'pin',
 			color: (PIN_COLORS as readonly string[]).includes(color) ? color : 'red',
-			pageSlug: pageTitle ? slugify(pageTitle) : null,
+			// Una pagina che non c'è ancora resta un collegamento da creare con quel titolo.
+			pageSlug: pageTitle ? (findPageChoice(pageTitle, u)?.slug ?? slugify(pageTitle)) : null,
 			targetMapId: targetOk ? target : null,
 			layerId: layerOk ? layer : null,
 			visibility: str(f, 'visibility') === 'master' ? 'master' : 'players'
@@ -140,7 +140,7 @@ export const actions: Actions = {
 	pin: async ({ params, request, locals }) => {
 		const map = masterMap(params.slug, locals.user);
 		const f = await request.formData();
-		const r = readPin(f, map);
+		const r = readPin(f, map, locals.user);
 		if ('error' in r) return fail(400, { error: r.error });
 		const id = Number(f.get('id'));
 		const existing = id ? getPin(id) : undefined;
