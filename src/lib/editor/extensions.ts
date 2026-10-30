@@ -1,5 +1,6 @@
 import { Extension, InputRule, Node, mergeAttributes, type Editor } from '@tiptap/core';
 import StarterKit from '@tiptap/starter-kit';
+import { Focus } from '@tiptap/extensions';
 import { Table, TableCell, TableHeader, TableRow } from '@tiptap/extension-table';
 import Image from '@tiptap/extension-image';
 import Suggestion, { type SuggestionProps, type SuggestionKeyDownProps } from '@tiptap/suggestion';
@@ -424,6 +425,8 @@ export function buildExtensions(opts: {
 		...(opts.canSecret ? [Secret.configure({ labels: opts.labels })] : []),
 		WikiLink.configure({ labels: opts.labels, suggest: opts.suggest }),
 		RuleRef.configure({ labels: opts.labels, search: opts.searchRules }),
+		// Il blocco in cui si sta scrivendo: nella modifica sul posto è evidenziato.
+		Focus.configure({ mode: 'shallowest' }),
 		EscapeLeaves
 	];
 }

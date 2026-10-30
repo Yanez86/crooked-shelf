@@ -5,6 +5,7 @@ import { deletePage, getPageBySlug, pageMeta, updatePage } from '#lib/server/pag
 import { readPageForm } from '#lib/server/pageForm.ts';
 import { categoryTree, listTags } from '#lib/server/taxonomy.ts';
 import { getCalendar } from '#lib/server/settings.ts';
+import { getFile } from '#lib/server/files.ts';
 
 function editable(slug: string, u: App.Locals['user']) {
 	const page = getPageBySlug(slug);
@@ -15,6 +16,7 @@ function editable(slug: string, u: App.Locals['user']) {
 export const load: PageServerLoad = ({ params, locals, url }) => {
 	if (!locals.user) redirect(303, `/login?next=${encodeURIComponent(url.pathname)}`);
 	const page = editable(params.slug, locals.user);
+	const img = page.imageId ? getFile(page.imageId) : undefined;
 	return {
 		page: {
 			slug: page.slug,
@@ -30,6 +32,7 @@ export const load: PageServerLoad = ({ params, locals, url }) => {
 			session: page.session ?? null,
 			icon: page.icon
 		},
+		image: img ? { url: `/files/${img.id}`, width: img.width, height: img.height } : null,
 		months: getCalendar().months,
 		categories: categoryTree(locals.user).flat.map(({ id, label }) => ({ id, label })),
 		visibilities: allowedVisibilities(locals.user),

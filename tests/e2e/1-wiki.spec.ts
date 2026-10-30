@@ -53,7 +53,7 @@ test('prima configurazione', async ({ browser }) => {
 	await axe(admin, 'setup');
 	await shot(admin, '01-setup');
 
-	await admin.getByLabel('Nome della wiki').fill('Le Cronache di Faerûn');
+	await admin.getByLabel('Nome della campagna').fill('Le Cronache di Faerûn');
 	await admin.getByLabel('Lingua predefinita').selectOption('it');
 	await admin.getByLabel('Nome utente').fill(ADMIN.user);
 	await admin.getByLabel('Nome visualizzato').fill('Davide');

@@ -11,13 +11,16 @@
 		canSecret = false,
 		name = 'content',
 		labelId,
-		describedBy
+		describedBy,
+		inline = false
 	}: {
 		content: DocNode;
 		canSecret?: boolean;
 		name?: string;
 		labelId: string;
 		describedBy?: string;
+		/** Modifica sul posto: niente riquadro, il testo resta com'è nella pagina e i blocchi si illuminano. */
+		inline?: boolean;
 	} = $props();
 
 	const t = getT();
@@ -118,6 +121,27 @@
 		else chain().extendMarkRange('link').setLink({ href: url.trim() }).run();
 	}
 
+	let showTips = $state(false);
+	// Scorciatoie che l'editor trasforma mentre si scrive: cosa scrivere → risultato.
+	const tips = $derived.by(() => {
+		const x = t('editor.tipSample');
+		return [
+			['## ', t('editor.heading', { n: 2 })],
+			['### ', t('editor.heading', { n: 3 })],
+			[`**${x}**`, t('editor.bold')],
+			[`*${x}*`, t('editor.italic')],
+			[`~~${x}~~`, t('editor.strike')],
+			[`\`${x}\``, t('editor.code')],
+			['- ', t('editor.bulletList')],
+			['1. ', t('editor.orderedList')],
+			['> ', t('editor.quote')],
+			['```', t('editor.codeBlock')],
+			['---', t('editor.rule')],
+			['[[', t('editor.wikiLinkHint')],
+			['@', t('editor.ruleHint')]
+		];
+	});
+
 	let fileInput: HTMLInputElement;
 	let status = $state('');
 
@@ -178,58 +202,71 @@
 	});
 </script>
 
-<div class="editor">
+<!-- Pulsante della barra: solo il simbolo, il nome nel suggerimento e per chi usa un lettore di schermo. -->
+{#snippet btn(icon: string, label: string, onclick: () => void, pressed?: boolean, disabled = false)}
+	<button type="button" aria-pressed={pressed} title={label} {onclick} {disabled}>
+		<span aria-hidden="true">{icon}</span><span class="visually-hidden">{label}</span>
+	</button>
+{/snippet}
+
+<div class="editor" class:inline>
 	<!-- svelte-ignore a11y_interactive_supports_focus -->
 	<div class="toolbar" role="toolbar" aria-label={t('editor.toolbar')} aria-controls="{labelId}-area" bind:this={toolbar} onkeydown={toolbarKeys} onmousedown={keepFocus}>
-		<select aria-label={t('editor.blockType')} value={blockType} onchange={(e) => setBlock(e.currentTarget.value)} disabled={!editor}>
-			<option value="paragraph">{t('editor.paragraph')}</option>
-			<option value="h2">{t('editor.heading', { n: 2 })}</option>
-			<option value="h3">{t('editor.heading', { n: 3 })}</option>
-			<option value="h4">{t('editor.heading', { n: 4 })}</option>
-			<option value="code">{t('editor.codeBlock')}</option>
+		<select aria-label={t('editor.blockType')} title={t('editor.blockType')} value={blockType} onchange={(e) => setBlock(e.currentTarget.value)} disabled={!editor}>
+			<option value="paragraph">¶</option>
+			<option value="h2">H2</option>
+			<option value="h3">H3</option>
+			<option value="h4">H4</option>
+			<option value="code">{'{ }'}</option>
 		</select>
 		<span class="sep" aria-hidden="true"></span>
-		<button type="button" aria-pressed={active('bold')} title="{t('editor.bold')} (Ctrl+B)" onclick={() => chain().toggleBold().run()}>
-			<b aria-hidden="true">B</b><span class="visually-hidden">{t('editor.bold')}</span>
-		</button>
-		<button type="button" aria-pressed={active('italic')} title="{t('editor.italic')} (Ctrl+I)" onclick={() => chain().toggleItalic().run()}>
-			<i aria-hidden="true">I</i><span class="visually-hidden">{t('editor.italic')}</span>
-		</button>
-		<button type="button" aria-pressed={active('underline')} title="{t('editor.underline')} (Ctrl+U)" onclick={() => chain().toggleUnderline().run()}>
-			<u aria-hidden="true">U</u><span class="visually-hidden">{t('editor.underline')}</span>
-		</button>
-		<button type="button" aria-pressed={active('strike')} title={t('editor.strike')} onclick={() => chain().toggleStrike().run()}>
-			<s aria-hidden="true">S</s><span class="visually-hidden">{t('editor.strike')}</span>
-		</button>
-		<button type="button" aria-pressed={active('code')} title={t('editor.code')} onclick={() => chain().toggleCode().run()}>
-			<code aria-hidden="true">&lt;/&gt;</code><span class="visually-hidden">{t('editor.code')}</span>
-		</button>
+		{@render btn('B', t('editor.bold') + ' (Ctrl+B)', () => chain().toggleBold().run(), active('bold'))}
+		{@render btn('I', t('editor.italic') + ' (Ctrl+I)', () => chain().toggleItalic().run(), active('italic'))}
+		{@render btn('U', t('editor.underline') + ' (Ctrl+U)', () => chain().toggleUnderline().run(), active('underline'))}
+		{@render btn('S', t('editor.strike'), () => chain().toggleStrike().run(), active('strike'))}
+		{@render btn('</>', t('editor.code'), () => chain().toggleCode().run(), active('code'))}
 		<span class="sep" aria-hidden="true"></span>
-		<button type="button" aria-pressed={active('link')} onclick={setLink}>{t('editor.link')}</button>
-		<button type="button" onclick={wikiLink} title={t('editor.wikiLinkHint')}>[[ {t('editor.wikiLink')} ]]</button>
-		<button type="button" onclick={ruleRef} title={t('editor.ruleHint')}>📖 {t('editor.ruleRef')}</button>
+		{@render btn('🔗', t('editor.link'), setLink, active('link'))}
+		{@render btn('[[ ]]', t('editor.wikiLinkHint'), wikiLink)}
+		{@render btn('📖', t('editor.ruleHint'), ruleRef)}
 		<span class="sep" aria-hidden="true"></span>
-		<button type="button" aria-pressed={active('bulletList')} onclick={() => chain().toggleBulletList().run()}>• {t('editor.bulletList')}</button>
-		<button type="button" aria-pressed={active('orderedList')} onclick={() => chain().toggleOrderedList().run()}>1. {t('editor.orderedList')}</button>
-		<button type="button" aria-pressed={active('blockquote')} onclick={() => chain().toggleBlockquote().run()}>❝ {t('editor.quote')}</button>
+		{@render btn('•', t('editor.bulletList'), () => chain().toggleBulletList().run(), active('bulletList'))}
+		{@render btn('1.', t('editor.orderedList'), () => chain().toggleOrderedList().run(), active('orderedList'))}
+		{@render btn('❝', t('editor.quote'), () => chain().toggleBlockquote().run(), active('blockquote'))}
 		<span class="sep" aria-hidden="true"></span>
-		<button type="button" aria-pressed={active('callout', { kind: 'note' })} onclick={() => chain().toggleWrap('callout', { kind: 'note' }).run()}>{t('editor.note')}</button>
-		<button type="button" aria-pressed={active('callout', { kind: 'tip' })} onclick={() => chain().toggleWrap('callout', { kind: 'tip' }).run()}>{t('editor.tip')}</button>
-		<button type="button" aria-pressed={active('callout', { kind: 'warning' })} onclick={() => chain().toggleWrap('callout', { kind: 'warning' }).run()}>{t('editor.warning')}</button>
+		{@render btn('ℹ︎', t('editor.note'), () => chain().toggleWrap('callout', { kind: 'note' }).run(), active('callout', { kind: 'note' }))}
+		{@render btn('💡', t('editor.tip'), () => chain().toggleWrap('callout', { kind: 'tip' }).run(), active('callout', { kind: 'tip' }))}
+		{@render btn('⚠︎', t('editor.warning'), () => chain().toggleWrap('callout', { kind: 'warning' }).run(), active('callout', { kind: 'warning' }))}
 		{#if canSecret}
-			<button type="button" class="secret-btn" aria-pressed={active('secret')} onclick={() => chain().toggleWrap('secret').run()}>🔒 {t('editor.secret')}</button>
+			{@render btn('🔒', t('editor.secret'), () => chain().toggleWrap('secret').run(), active('secret'))}
 		{/if}
 		<span class="sep" aria-hidden="true"></span>
-		<button type="button" onclick={() => chain().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()} disabled={active('table')}>{t('editor.table')}</button>
-		<button type="button" onclick={() => chain().setHorizontalRule().run()}>― {t('editor.rule')}</button>
-		<button type="button" onclick={() => fileInput.click()}>🖼 {t('editor.image')}</button>
+		{@render btn('▦', t('editor.table'), () => chain().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run(), undefined, active('table'))}
+		{@render btn('―', t('editor.rule'), () => chain().setHorizontalRule().run())}
+		{@render btn('🖼', t('editor.image'), () => fileInput.click())}
 		{#if active('image')}
-			<button type="button" onclick={editAlt}>{t('editor.altEdit')}</button>
+			{@render btn('Alt', t('editor.altEdit'), editAlt)}
 		{/if}
 		<span class="sep" aria-hidden="true"></span>
-		<button type="button" onclick={() => chain().undo().run()} disabled={!can((e) => e.can().undo())}>↶ {t('editor.undo')}</button>
-		<button type="button" onclick={() => chain().redo().run()} disabled={!can((e) => e.can().redo())}>↷ {t('editor.redo')}</button>
+		{@render btn('↶', t('editor.undo'), () => chain().undo().run(), undefined, !can((e) => e.can().undo()))}
+		{@render btn('↷', t('editor.redo'), () => chain().redo().run(), undefined, !can((e) => e.can().redo()))}
+		<span class="sep" aria-hidden="true"></span>
+		<button type="button" title={t('editor.tips')} aria-expanded={showTips} aria-controls="{labelId}-tips" onclick={() => (showTips = !showTips)}>
+			<span aria-hidden="true">M↓</span><span class="visually-hidden">{t('editor.tips')}</span>
+		</button>
 	</div>
+
+	{#if showTips}
+		<section class="tips" id="{labelId}-tips" aria-label={t('editor.tips')}>
+			<p class="hint">{t('editor.tipsIntro')}</p>
+			<dl>
+				{#each tips as [code, what] (code)}
+					<dt><code>{code}</code></dt>
+					<dd>{what}</dd>
+				{/each}
+			</dl>
+		</section>
+	{/if}
 
 	{#if active('table')}
 		<!-- svelte-ignore a11y_no_noninteractive_element_interactions (mousedown solo per non togliere il focus all'editor; i comandi sono i pulsanti) -->
@@ -335,6 +372,24 @@
 		background: var(--c-border);
 		margin: 0 0.2rem;
 	}
+	.tips {
+		padding: 0.75rem 1rem;
+		border-bottom: 1px solid var(--c-border);
+		background: var(--c-surface2);
+		font-size: var(--fs-sm);
+	}
+	.tips p {
+		margin: 0 0 0.5rem;
+	}
+	.tips dl {
+		display: grid;
+		grid-template-columns: max-content 1fr;
+		gap: 0.25rem 1rem;
+		margin: 0;
+	}
+	.tips dd {
+		margin: 0;
+	}
 	.area :global(.editor-content) {
 		min-height: 18rem;
 		padding: 1rem 1.25rem;
@@ -412,5 +467,61 @@
 	:global(.suggest-popup li.empty) {
 		color: var(--c-muted);
 		cursor: default;
+	}
+
+	/* --- Modifica sul posto --- */
+	.inline {
+		border: 0;
+		background: none;
+	}
+	.inline:focus-within {
+		outline: none;
+	}
+	/* Una riga sola: quello che non ci sta si raggiunge scorrendo. */
+	.inline .toolbar {
+		flex-wrap: nowrap;
+		overflow-x: auto;
+		scrollbar-width: thin;
+		white-space: nowrap;
+		gap: 0.1rem;
+		padding: 0.2rem;
+		margin-bottom: 1rem;
+		border: 1px solid var(--c-border);
+		border-radius: var(--radius);
+		box-shadow: 0 2px 8px rgb(0 0 0 / 0.08);
+	}
+	.inline .toolbar > * {
+		flex-shrink: 0;
+	}
+	.inline .toolbar button,
+	.inline .toolbar select {
+		min-height: 2rem;
+		min-width: 2rem;
+		padding: 0.1rem 0.4rem;
+	}
+	.inline .tips {
+		border: 1px solid var(--c-border);
+		border-radius: var(--radius);
+		margin-bottom: 1rem;
+	}
+	.inline .area :global(.editor-content) {
+		min-height: 12rem;
+		padding: 0;
+		max-width: var(--measure);
+	}
+	/* Ogni blocco si illumina: si vede cosa si può toccare. Quello in cui si scrive di più. */
+	.inline .area :global(.editor-content > *) {
+		border-radius: var(--radius);
+		outline: 1px dashed var(--c-border);
+		outline-offset: 0.35rem;
+		transition: background-color 0.15s, outline-color 0.15s;
+	}
+	.inline .area :global(.editor-content > *:hover) {
+		outline-color: var(--c-control);
+		background: var(--c-surface);
+	}
+	.inline .area :global(.editor-content.ProseMirror-focused > .has-focus) {
+		outline: 2px solid var(--c-primary);
+		background: var(--c-surface);
 	}
 </style>

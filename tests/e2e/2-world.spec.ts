@@ -67,7 +67,7 @@ test('template PNG con scheda, segreto e immagine', async () => {
 	await expect(admin.getByLabel('Nome del campo 3')).toHaveValue('Allineamento');
 	await admin.getByLabel('Valore del campo 3').fill('Caotico buono');
 	await admin.getByLabel('Valore del campo 4').fill('[[Locanda del Grifone]]');
-	await admin.getByRole('button', { name: 'Aggiungi campo' }).click();
+	await admin.getByRole('button', { name: 'Aggiungi riquadro' }).click();
 	await expect(admin.getByLabel('Nome del campo 6')).toBeFocused();
 	await admin.getByLabel('Nome del campo 6').fill('Età');
 	await admin.getByLabel('Valore del campo 6').fill('Più di mille anni');

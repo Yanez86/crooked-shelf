@@ -17,7 +17,7 @@
 
 <svelte:head><title>{t('page.editTitle', { title: data.page.title })}</title></svelte:head>
 
-<h1>{t('page.editTitle', { title: data.page.title })}</h1>
+<h1 class="visually-hidden">{t('page.editTitle', { title: data.page.title })}</h1>
 <FormError error={form?.error} />
 
 {#key form}
@@ -30,6 +30,7 @@
 		knownTags={data.knownTags}
 		updatedAt={data.page.updatedAt}
 		months={data.months}
+		image={data.image}
 		submitLabel={t('common.save')}
 		cancelHref="/wiki/{data.page.slug}"
 	/>

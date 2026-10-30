@@ -37,9 +37,8 @@
 
 <svelte:head><title>{t('page.newTitle')}</title></svelte:head>
 
-<h1>{data.template ? t('page.newFromTemplate', { name: data.template.name }) : t('page.newTitle')}</h1>
-
 {#if !data.chosen}
+	<h1>{t('page.newTitle')}</h1>
 	<p>{t('templates.choose')}</p>
 	<ul class="list-plain template-grid">
 		<li>
@@ -59,6 +58,7 @@
 	</ul>
 	<p><a href="/templates">{t('templates.manage')}</a></p>
 {:else}
+	<h1 class="visually-hidden">{data.template ? t('page.newFromTemplate', { name: data.template.name }) : t('page.newTitle')}</h1>
 	<FormError error={form?.error} />
 	{#key form}
 		<PageForm

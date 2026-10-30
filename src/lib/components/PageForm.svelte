@@ -1,6 +1,8 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import Editor from '../editor/Editor.svelte';
 	import FieldsEditor from './FieldsEditor.svelte';
+	import PageImage from './PageImage.svelte';
 	import WorldDateInput from './WorldDateInput.svelte';
 	import type { CalMonth } from '../calendar.ts';
 	import { getT } from '../i18n/index.ts';
@@ -22,7 +24,8 @@
 		updatedAt = null,
 		submitLabel,
 		cancelHref,
-		months
+		months,
+		image = null
 	}: {
 		values: {
 			title: string;
@@ -46,119 +49,189 @@
 		submitLabel: string;
 		cancelHref: string;
 		months: CalMonth[];
+		/** Immagine della pagina: qui si vede soltanto, si cambia dalla pagina stessa. */
+		image?: { url: string; width: number; height: number } | null;
 	} = $props();
 
 	const t = getT();
+	let icon = $state(untrack(() => values.icon ?? ''));
 </script>
 
+<!-- Stesso aspetto della pagina: si scrive dove si legge. -->
 <form method="post" action="?/save" class="page-form">
 	{#if updatedAt}<input type="hidden" name="updatedAt" value={updatedAt} />{/if}
 	{#if values.slug}<input type="hidden" name="slug" value={values.slug} />{/if}
 	{#if values.template}<input type="hidden" name="template" value={values.template} />{/if}
 
-	<div class="field">
-		<label for="title">{t('page.title')}</label>
-		<input id="title" name="title" type="text" required maxlength="200" value={values.title} class="title-input" />
-	</div>
+	<header class="page-head">
+		<details class="icon-pick">
+			<summary title={t('page.icon')}>
+				{#if PAGE_ICONS[icon]}
+					<svg viewBox="0 0 24 24" aria-hidden="true"><path d={PAGE_ICONS[icon]} /></svg>
+				{:else}
+					<span aria-hidden="true">∅</span>
+				{/if}
+				<span class="visually-hidden">{t('page.icon')}</span>
+			</summary>
+			<fieldset class="icons">
+				<legend class="visually-hidden">{t('page.icon')}</legend>
+				<label class="icon-choice" title={t('page.noIcon')}>
+					<input type="radio" name="icon" value="" bind:group={icon} />
+					<span aria-hidden="true">∅</span><span class="visually-hidden">{t('page.noIcon')}</span>
+				</label>
+				{#each Object.entries(PAGE_ICONS) as [name, d] (name)}
+					<label class="icon-choice" title={t(`page.icons.${name}`)}>
+						<input type="radio" name="icon" value={name} bind:group={icon} />
+						<svg viewBox="0 0 24 24" aria-hidden="true"><path {d} /></svg><span class="visually-hidden">{t(`page.icons.${name}`)}</span>
+					</label>
+				{/each}
+			</fieldset>
+		</details>
+		<label class="visually-hidden" for="title">{t('page.title')}</label>
+		<input id="title" name="title" type="text" required maxlength="200" value={values.title} placeholder={t('page.title')} class="title-input editable" />
+		<!-- Dove in lettura c'è la matita. -->
+		<div class="head-actions">
+			<a class="btn" href={cancelHref}>{t('common.cancel')}</a>
+			<button class="btn btn-primary" type="submit">{submitLabel}</button>
+		</div>
+	</header>
 
-	<fieldset class="icons">
-		<legend>{t('page.icon')}</legend>
-		<label class="icon-choice" title={t('page.noIcon')}>
-			<input type="radio" name="icon" value="" checked={!values.icon} />
-			<span aria-hidden="true">∅</span><span class="visually-hidden">{t('page.noIcon')}</span>
-		</label>
-		{#each PAGE_ICONS as icon (icon)}
-			<label class="icon-choice">
-				<input type="radio" name="icon" value={icon} checked={values.icon === icon} />
-				<span>{icon}</span>
-			</label>
-		{/each}
-	</fieldset>
-
-	{#if values.session}
-		<fieldset>
-			<legend>{t('session.title')}</legend>
-			<input type="hidden" name="isSession" value="1" />
-			<div class="cols">
-				<div class="field">
-					<label for="sessionNumber">{t('session.number')}</label>
-					<input id="sessionNumber" name="sessionNumber" type="number" min="1" step="1" value={values.session.number ?? ''} />
-				</div>
-				<div class="field">
-					<label for="sessionDate">{t('session.realDate')}</label>
-					<input id="sessionDate" name="sessionDate" type="date" value={values.session.realDate ?? ''} />
-				</div>
-			</div>
-			<WorldDateInput prefix="sessionWorld" {months} value={values.session.world} legend={t('session.worldDate')} />
-			<p class="hint">{t('session.hint')}</p>
-		</fieldset>
-	{/if}
-
-	<FieldsEditor fields={values.fields} />
-
-	<div class="field">
-		<span class="label" id="content-label">{t('page.content')}</span>
-		<span id="content-hint" class="hint">{t('editor.hint')}</span>
-		<Editor content={values.content} {canSecret} labelId="content-label" describedBy="content-hint" />
-	</div>
-
-	<div class="cols">
-		<div class="field">
-			<label for="categoryId">{t('page.category')}</label>
-			<select id="categoryId" name="categoryId">
+	<div class="meta">
+		<label class="chip">
+			<span>{t('page.category')}</span>
+			<select name="categoryId">
 				<option value="">{t('page.noCategory')}</option>
 				{#each categories as c (c.id)}
 					<option value={c.id} selected={values.categoryId === c.id}>{c.label}</option>
 				{/each}
 			</select>
-		</div>
-		<div class="field">
-			<label for="tags">{t('page.tags')}</label>
-			<input id="tags" name="tags" type="text" value={values.tags} aria-describedby="tags-hint" list="known-tags" autocomplete="off" />
-			<span id="tags-hint" class="hint">{t('page.tagsHint')}</span>
-			<datalist id="known-tags">
-				{#each knownTags as tag (tag)}<option value={tag}></option>{/each}
-			</datalist>
-		</div>
+		</label>
+		<label class="chip grow">
+			<span>{t('page.tags')}</span>
+			<input name="tags" type="text" value={values.tags} title={t('page.tagsHint')} placeholder={t('page.tagsHint')} list="known-tags" autocomplete="off" />
+		</label>
+		<datalist id="known-tags">
+			{#each knownTags as tag (tag)}<option value={tag}></option>{/each}
+		</datalist>
+		{#if canManage}
+			<fieldset class="chip visibility">
+				<legend class="visually-hidden">{t('page.visibility')}</legend>
+				{#each visibilities as v (v)}
+					<label title={t('visibility.' + v + 'Hint')}>
+						<input type="radio" name="visibility" value={v} checked={values.visibility === v} />
+						<span>{t('visibility.' + v)}</span>
+					</label>
+				{/each}
+			</fieldset>
+			<label class="chip">
+				<input type="checkbox" name="playersCanEdit" checked={values.playersCanEdit} />
+				<span>{t('page.playersCanEdit')}</span>
+			</label>
+		{:else}
+			<input type="hidden" name="visibility" value={values.visibility} />
+			{#if values.playersCanEdit}<input type="hidden" name="playersCanEdit" value="on" />{/if}
+		{/if}
 	</div>
 
-	{#if canManage}
-		<fieldset>
-			<legend>{t('page.visibility')}</legend>
-			{#each visibilities as v (v)}
-				<label class="choice">
-					<input type="radio" name="visibility" value={v} checked={values.visibility === v} />
-					<span><strong>{t('visibility.' + v)}</strong> <span class="hint">— {t('visibility.' + v + 'Hint')}</span></span>
-				</label>
-			{/each}
-		</fieldset>
-		<label class="choice">
-			<input type="checkbox" name="playersCanEdit" checked={values.playersCanEdit} />
-			<span>{t('page.playersCanEdit')}</span>
-		</label>
-	{:else}
-		<input type="hidden" name="visibility" value={values.visibility} />
-		{#if values.playersCanEdit}<input type="hidden" name="playersCanEdit" value="on" />{/if}
-	{/if}
+	<div class="body">
+		<div class="side">
+			{#if image}<PageImage {image} title={values.title} canEdit={false} />{/if}
+			{#if values.session}
+				<fieldset class="session">
+					<legend>{t('session.title')}</legend>
+					<input type="hidden" name="isSession" value="1" />
+					<div class="field">
+						<label for="sessionNumber">{t('session.number')}</label>
+						<input id="sessionNumber" name="sessionNumber" type="number" min="1" step="1" value={values.session.number ?? ''} />
+					</div>
+					<div class="field">
+						<label for="sessionDate">{t('session.realDate')}</label>
+						<input id="sessionDate" name="sessionDate" type="date" value={values.session.realDate ?? ''} />
+					</div>
+					<WorldDateInput prefix="sessionWorld" {months} value={values.session.world} legend={t('session.worldDate')} />
+					<p class="hint">{t('session.hint')}</p>
+				</fieldset>
+			{/if}
+			<FieldsEditor fields={values.fields} />
+		</div>
 
-	<div class="actions">
-		<button class="btn btn-primary" type="submit">{submitLabel}</button>
-		<a class="btn" href={cancelHref}>{t('common.cancel')}</a>
+		<div class="content">
+			<span class="visually-hidden" id="content-label">{t('page.content')}</span>
+			<span class="visually-hidden" id="content-hint">{t('editor.hint')}</span>
+			<Editor content={values.content} {canSecret} labelId="content-label" describedBy="content-hint" inline />
+		</div>
 	</div>
 </form>
 
 <style>
-	.title-input {
-		font-size: var(--fs-lg);
-		font-family: var(--font-head);
-	}
-	.label {
-		font-weight: 600;
-	}
-	.icons {
+	.page-head {
 		display: flex;
 		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.5rem;
+		margin: 0.5rem 0 0.75rem;
+	}
+	.head-actions {
+		display: flex;
+		gap: 0.5rem;
+		margin-left: auto;
+	}
+	/* Titolo, blocchi e riquadri: tratteggiati finché non ci si scrive dentro. */
+	.title-input {
+		flex: 1 1 16rem;
+		min-width: 0;
+		font-family: var(--font-head);
+		font-size: var(--fs-2xl);
+		font-weight: 700;
+		letter-spacing: -0.015em;
+		border: 0;
+		background: none;
+		padding: 0.1rem 0.35rem;
+		outline: 1px dashed var(--c-border);
+	}
+	.title-input:hover {
+		background: var(--c-surface);
+	}
+	.title-input:focus {
+		outline: 2px solid var(--c-primary);
+		background: var(--c-surface);
+	}
+	.icon-pick {
+		position: relative;
+	}
+	.icon-pick summary {
+		list-style: none;
+		display: grid;
+		place-items: center;
+		width: 2.75rem;
+		height: 2.75rem;
+		font-size: 1.4rem;
+		border: 1px dashed var(--c-border);
+		border-radius: var(--radius);
+		cursor: pointer;
+	}
+	.icon-pick summary::-webkit-details-marker {
+		display: none;
+	}
+	.icon-pick[open] summary,
+	.icon-pick summary:hover {
+		border-color: var(--c-primary);
+		background: var(--c-surface);
+	}
+	.icons {
+		position: absolute;
+		z-index: 10;
+		top: calc(100% + 0.25rem);
+		left: 0;
+		display: grid;
+		grid-template-columns: repeat(8, 2.25rem);
 		gap: 0.25rem;
+		margin: 0;
+		padding: 0.5rem;
+		background: var(--c-surface);
+		border: 1px solid var(--c-border);
+		border-radius: var(--radius);
+		box-shadow: 0 6px 18px rgb(0 0 0 / 0.2);
 	}
 	.icon-choice {
 		position: relative;
@@ -170,6 +243,19 @@
 		border: 1px solid var(--c-border);
 		border-radius: var(--radius);
 		cursor: pointer;
+	}
+	.icon-pick svg {
+		width: 1.25rem;
+		height: 1.25rem;
+		fill: none;
+		stroke: currentColor;
+		stroke-width: 1.75;
+		stroke-linecap: round;
+		stroke-linejoin: round;
+	}
+	.icon-pick summary svg {
+		width: 1.5rem;
+		height: 1.5rem;
 	}
 	.icon-choice input {
 		position: absolute;
@@ -190,9 +276,100 @@
 		outline: 2px solid var(--c-primary);
 		outline-offset: 2px;
 	}
-	.cols {
+	.meta {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem;
+		align-items: center;
+		font-size: var(--fs-sm);
+	}
+	.chip {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.4rem;
+		margin: 0;
+		padding: 0.15rem 0.5rem;
+		border: 1px dashed var(--c-border);
+		border-radius: var(--radius);
+		font-weight: 400;
+		color: var(--c-muted);
+	}
+	.chip:focus-within {
+		border: 1px solid var(--c-primary);
+	}
+	.chip.grow {
+		flex: 1 1 14rem;
+	}
+	.chip select,
+	.chip input[type='text'] {
+		font-size: var(--fs-sm);
+		min-height: 2rem;
+		padding: 0.15rem 0.3rem;
+		border: 0;
+		background: none;
+		color: var(--c-text);
+	}
+	.chip input[type='text'] {
+		flex: 1;
+		min-width: 0;
+	}
+	/* I fieldset non vanno a capo da soli: senza questo escono dallo schermo del telefono. */
+	.visibility {
+		flex-wrap: wrap;
+		min-width: 0;
+		max-width: 100%;
+	}
+	.visibility label {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.25rem;
+		font-weight: 400;
+		color: var(--c-text);
+		padding: 0.15rem 0.4rem;
+		border-radius: var(--radius);
+		cursor: pointer;
+	}
+	.visibility label:has(input:checked) {
+		background: var(--c-surface2);
+		font-weight: 700;
+	}
+	/* Come la pagina: testo a sinistra, colonna a destra. */
+	.body {
 		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
-		gap: 0 1.5rem;
+		grid-template-columns: minmax(0, 1fr) 20rem;
+		align-items: start;
+		gap: 1.5rem 2rem;
+		margin: 1.5rem 0 2rem;
+	}
+	.content {
+		grid-column: 1;
+		grid-row: 1;
+		min-width: 0;
+	}
+	.side {
+		grid-column: 2;
+		grid-row: 1;
+		display: flex;
+		flex-direction: column;
+		gap: 1rem;
+		background: var(--c-surface);
+		border: 1px solid var(--c-border);
+		border-top: 4px solid var(--c-primary);
+		border-radius: var(--radius);
+		padding: 1rem;
+	}
+	.session {
+		margin: 0;
+	}
+	@container (max-width: 44rem) {
+		.body {
+			grid-template-columns: minmax(0, 1fr);
+		}
+		.side {
+			grid-column: 1;
+		}
+		.content {
+			grid-row: 2;
+		}
 	}
 </style>
