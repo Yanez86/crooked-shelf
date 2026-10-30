@@ -6,8 +6,9 @@
 	import { isMaster } from '../access.ts';
 	import { PAGE_ICONS } from '../pageIcons.ts';
 	import { treePaths, type Tree, type TreeFolder, type TreePage } from '../tree.ts';
+	import { RESOURCE_KINDS, type ResourceItem, type ResourceKind } from '../resources.ts';
 
-	let { tree }: { tree: Tree } = $props();
+	let { tree, resources }: { tree: Tree; resources: ResourceItem[] } = $props();
 	const t = getT();
 	const canManage = $derived(isMaster(page.data.user));
 
@@ -35,14 +36,55 @@
 		untrack(() => ids.forEach((id) => open.add(id)));
 	});
 
+	// Due linguette: le pagine con le loro cartelle, e le risorse (immagini, audio, altri file).
+	// Si apre quella di ciò che stai guardando; altrove resta l'ultima scelta, ricordata in questo browser.
+	type Tab = 'pages' | 'resources';
+	const TABS: Tab[] = ['pages', 'resources'];
+	const TAB_STORE = 'cs-tree-tab';
+	const tabFor = (p: string): Tab | null => (p.startsWith('/resources') ? 'resources' : p.startsWith('/wiki') ? 'pages' : null);
+	let tab = $state<Tab>(untrack(() => tabFor(page.url.pathname)) ?? 'pages');
+	$effect(() => {
+		const want = tabFor(path);
+		if (want) tab = want;
+	});
+
+	// Risorse divise per tipo; i gruppi sono aperti finché non li chiudi.
+	const RES_STORE = 'cs-tree-res-closed';
+	const groups = $derived(
+		RESOURCE_KINDS.map((kind) => ({ kind, items: resources.filter((r) => r.kind === kind) })).filter((g) => g.items.length)
+	);
+	const closed = new SvelteSet<string>();
+	const currentRes = $derived(Number(/^\/resources\/(\d+)(?:\/|$)/.exec(path)?.[1]));
+
 	onMount(() => {
 		try {
 			const saved = JSON.parse(localStorage.getItem(STORE) ?? '[]');
 			if (Array.isArray(saved)) for (const id of saved) if (Number.isInteger(id)) open.add(id);
+			const shut = JSON.parse(localStorage.getItem(RES_STORE) ?? '[]');
+			if (Array.isArray(shut)) for (const k of shut) if (RESOURCE_KINDS.includes(k)) closed.add(k);
+			const last = localStorage.getItem(TAB_STORE);
+			if (!tabFor(path) && (last === 'pages' || last === 'resources')) tab = last;
 		} catch {
 			/* memoria del browser non disponibile */
 		}
 	});
+
+	function selectTab(id: Tab, focus = false) {
+		tab = id;
+		if (focus) document.getElementById(`tree-tab-${id}`)?.focus();
+		remember(TAB_STORE, id);
+	}
+
+	// Frecce, Inizio e Fine passano da una linguetta all'altra.
+	function tabKeys(e: KeyboardEvent) {
+		const i = TABS.indexOf(tab);
+		const n = TABS.length;
+		const moves: Record<string, number> = { ArrowRight: (i + 1) % n, ArrowLeft: (i - 1 + n) % n, Home: 0, End: n - 1 };
+		const to = moves[e.key];
+		if (to === undefined) return;
+		e.preventDefault();
+		selectTab(TABS[to], true);
+	}
 
 	function toggled(id: number, isOpen: boolean) {
 		if (isOpen === open.has(id)) return;
@@ -51,15 +93,32 @@
 		save();
 	}
 
+	function toggledKind(kind: ResourceKind, isOpen: boolean) {
+		if (isOpen !== closed.has(kind)) return;
+		if (isOpen) closed.delete(kind);
+		else closed.add(kind);
+		remember(RES_STORE, JSON.stringify([...closed]));
+	}
+
 	function setAll(isOpen: boolean) {
+		if (tab === 'resources') {
+			closed.clear();
+			if (!isOpen) for (const g of groups) closed.add(g.kind);
+			remember(RES_STORE, JSON.stringify([...closed]));
+			return;
+		}
 		open.clear();
 		if (isOpen) for (const p of paths.folders.values()) open.add(p[p.length - 1]);
 		save();
 	}
 
 	function save() {
+		remember(STORE, JSON.stringify([...open]));
+	}
+
+	function remember(key: string, value: string) {
 		try {
-			localStorage.setItem(STORE, JSON.stringify([...open]));
+			localStorage.setItem(key, value);
 		} catch {
 			/* memoria del browser non disponibile */
 		}
@@ -99,6 +158,26 @@
 	</li>
 {/snippet}
 
+{#snippet resourceLeaf(r: ResourceItem)}
+	<li>
+		<a href="/resources/{r.id}" aria-current={currentRes === r.id ? 'page' : undefined}>
+			<svg class="ico doc" viewBox="0 0 24 24" aria-hidden="true">
+				{#if r.kind === 'image'}
+					<path d="M3.75 4.75h16.5v14.5H3.75zM3.75 16l5-5 4 4 2.5-2.5 5 5" />
+					<path d="M17 8.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z" />
+				{:else if r.kind === 'audio'}
+					<path d="M9 18V5.5l11-2.5v12.5" />
+					<path d="M9 18a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0zM20 15.5a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z" />
+				{:else}
+					<path d="M6 2.75h8.25L19 7.5v13.75H6z" />
+					<path d="M14 2.75V7.5h5" />
+				{/if}
+			</svg>
+			<span>{r.title}</span>
+		</a>
+	</li>
+{/snippet}
+
 {#snippet folder(f: TreeFolder)}
 	<li>
 		<details open={open.has(f.id)} ontoggle={(e) => toggled(f.id, e.currentTarget.open)}>
@@ -123,8 +202,23 @@
 	</button>
 	<div id="explorer-body" class="explorer-body" class:shown>
 		<div class="explorer-head">
-			<p class="explorer-title" aria-hidden="true">{t('tree.title')}</p>
-			{#if tree.folders.length}
+			<div class="tabs" role="tablist" aria-label={t('tree.tabs')}>
+				{#each TABS as id (id)}
+					<button
+						type="button"
+						role="tab"
+						id="tree-tab-{id}"
+						aria-selected={tab === id}
+						aria-controls="tree-panel-{id}"
+						tabindex={tab === id ? 0 : -1}
+						onclick={() => selectTab(id)}
+						onkeydown={tabKeys}
+					>
+						{t('tree.tab.' + id)}
+					</button>
+				{/each}
+			</div>
+			{#if tab === 'pages' ? tree.folders.length : groups.length}
 				<button type="button" class="tool" title={t('tree.expandAll')} aria-label={t('tree.expandAll')} onclick={() => setAll(true)}>
 					<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 9l5-5 5 5M7 15l5 5 5-5" /></svg>
 				</button>
@@ -132,22 +226,50 @@
 					<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4l5 5 5-5M7 20l5-5 5 5" /></svg>
 				</button>
 			{/if}
-			{#if canManage}
+			{#if canManage && tab === 'pages'}
 				<a class="tool" href="/categories#new-cat" title={t('tree.newFolder')} aria-label={t('tree.newFolder')}>
 					<svg viewBox="0 0 24 24" aria-hidden="true">
 						<path d="M2.5 6.5A1.5 1.5 0 0 1 4 5h5l2 2h9a1.5 1.5 0 0 1 1.5 1.5v9A1.5 1.5 0 0 1 20 19H4a1.5 1.5 0 0 1-1.5-1.5zM12 10v6M9 13h6" />
 					</svg>
 				</a>
+			{:else if canManage}
+				<a class="tool" href="/resources/new" title={t('resources.new')} aria-label={t('resources.new')}>
+					<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V4M7.5 8.5 12 4l4.5 4.5M4.5 14.5v4.75h15V14.5" /></svg>
+				</a>
 			{/if}
 		</div>
-		{#if tree.folders.length || tree.pages.length}
-			<ul class="list-plain level root">
-				{#each tree.folders as f (f.id)}{@render folder(f)}{/each}
-				{#each tree.pages as p (p.slug)}{@render leaf(p)}{/each}
-			</ul>
-		{:else}
-			<p class="muted none">{t('tree.empty')}</p>
-		{/if}
+		<div role="tabpanel" id="tree-panel-pages" aria-labelledby="tree-tab-pages" hidden={tab !== 'pages'}>
+			{#if tree.folders.length || tree.pages.length}
+				<ul class="list-plain level root">
+					{#each tree.folders as f (f.id)}{@render folder(f)}{/each}
+					{#each tree.pages as p (p.slug)}{@render leaf(p)}{/each}
+				</ul>
+			{:else}
+				<p class="muted none">{t('tree.empty')}</p>
+			{/if}
+		</div>
+		<div role="tabpanel" id="tree-panel-resources" aria-labelledby="tree-tab-resources" hidden={tab !== 'resources'}>
+			{#if groups.length}
+				<ul class="list-plain level root">
+					{#each groups as g (g.kind)}
+						<li>
+							<details open={!closed.has(g.kind)} ontoggle={(e) => toggledKind(g.kind, e.currentTarget.open)}>
+								<summary>
+									<span class="chevron" aria-hidden="true"></span>
+									{@render folderIcon()}
+									<span>{t('resources.kinds.' + g.kind)}</span>
+								</summary>
+								<ul class="list-plain level">
+									{#each g.items as r (r.id)}{@render resourceLeaf(r)}{/each}
+								</ul>
+							</details>
+						</li>
+					{/each}
+				</ul>
+			{:else}
+				<p class="muted none">{t('resources.empty')}</p>
+			{/if}
+		</div>
 	</div>
 </nav>
 
@@ -169,14 +291,37 @@
 		align-items: center;
 		gap: 0.1rem;
 		margin: 0 0 0.35rem;
-		padding: 0 0 0.35rem 0.4rem;
+		padding: 0 0 0.2rem;
 		border-bottom: 1px solid var(--c-border);
 	}
-	.explorer-title {
+	.tabs {
 		flex: 1;
-		margin: 0;
+		display: flex;
+		align-self: stretch;
+		min-width: 0;
+	}
+	/* Linguette: quella aperta è sottolineata, come la voce del menu in alto. */
+	[role='tab'] {
+		min-height: 2rem;
+		margin-bottom: -0.2rem;
+		padding: 0 0.5rem;
+		border: 0;
+		border-bottom: 3px solid transparent;
+		background: none;
+		color: var(--c-muted);
+		font: inherit;
 		font-family: var(--font-head);
+		font-weight: 600;
+		cursor: pointer;
+	}
+	[role='tab']:hover {
+		color: var(--c-text);
+		border-bottom-color: var(--c-control);
+	}
+	[role='tab'][aria-selected='true'] {
+		color: var(--c-text);
 		font-weight: 700;
+		border-bottom-color: var(--c-primary);
 	}
 	.tool {
 		display: inline-flex;
@@ -298,7 +443,8 @@
 		.folder {
 			fill: CanvasText;
 		}
-		a[aria-current='page'] {
+		a[aria-current='page'],
+		[role='tab'][aria-selected='true'] {
 			outline: 2px solid CanvasText;
 		}
 	}
@@ -311,9 +457,6 @@
 			padding: 0;
 			border: 0;
 			background: none;
-		}
-		.explorer-title {
-			display: none;
 		}
 		.explorer-toggle {
 			display: inline-flex;

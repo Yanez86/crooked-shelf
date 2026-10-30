@@ -17,18 +17,24 @@
 		"login": "Log in",
 		"maps": "Maps",
 		"gallery": "Gallery",
+		"resources": "Resources",
 		"timeline": "Timeline",
 		"rules": "Rules",
 		"boards": "Boards"
 	},
 	"tree": {
-		"label": "Folder and page tree",
-		"title": "Folders and pages",
+		"label": "Pages and resources",
+		"title": "Pages and resources",
 		"empty": "No pages yet.",
 		"emptyFolder": "Empty folder",
 		"expandAll": "Open all folders",
 		"collapseAll": "Close all folders",
-		"newFolder": "New folder"
+		"newFolder": "New folder",
+		"tabs": "What to show",
+		"tab": {
+			"pages": "Pages",
+			"resources": "Resources"
+		}
 	},
 	"footer": {
 		"source": "Source code",
@@ -449,24 +455,50 @@
 	},
 	"gallery": {
 		"title": "Gallery",
-		"intro": "All of the campaign's images: page images, images in the text and maps.",
+		"intro": "All of the campaign's images: page images, images in the text, maps and resources.",
 		"filter": "Which images",
 		"show": {
 			"all": "All",
 			"pages": "Pages",
-			"maps": "Maps"
+			"maps": "Maps",
+			"resources": "Resources"
 		},
 		"count": "{n} images",
 		"empty": "No images yet. Drop one in the box at the top right of a page, add one to the text or create a map.",
 		"kind": {
 			"cover": "Image of the page",
 			"content": "In the text of",
-			"map": "Map"
+			"map": "Map",
+			"resource": "Resource"
 		},
 		"viewer": "Image {n} of {total}",
 		"prev": "Previous",
 		"next": "Next",
 		"original": "Open the original"
+	},
+	"resources": {
+		"title": "Resources",
+		"intro": "Images, music and other files for the campaign: handouts, portraits, background music for sessions.",
+		"new": "Upload a resource",
+		"upload": "Upload",
+		"edit": "Edit the resource",
+		"delete": "Delete the resource",
+		"deleteConfirm": "Yes, I want to delete “{title}” and its file",
+		"deleted": "Resource deleted.",
+		"empty": "No resources yet.",
+		"file": "File",
+		"replaceFile": "Replace the file (optional)",
+		"fileHint": "Images (PNG, JPEG, WebP or GIF, max 25 MB), audio (MP3, OGG, WAV, FLAC or M4A) or any other file, max 90 MB. Images and audio can be viewed and played here; other files are downloaded.",
+		"titleHint": "Leave it empty to use the file name.",
+		"tooBig": "The file is too big (max 90 MB).",
+		"play": "Play “{title}”",
+		"download": "Download",
+		"path": "Path",
+		"kinds": {
+			"image": "Images",
+			"audio": "Audio",
+			"other": "Other files"
+		}
 	},
 	"fields": {
 		"title": "Infobox",

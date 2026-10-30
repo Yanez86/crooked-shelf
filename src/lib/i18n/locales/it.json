@@ -17,18 +17,24 @@
 		"login": "Accedi",
 		"maps": "Mappe",
 		"gallery": "Galleria",
+		"resources": "Risorse",
 		"timeline": "Cronologia",
 		"rules": "Regole",
 		"boards": "Bacheche"
 	},
 	"tree": {
-		"label": "Albero delle cartelle e delle pagine",
-		"title": "Cartelle e pagine",
+		"label": "Pagine e risorse",
+		"title": "Pagine e risorse",
 		"empty": "Ancora nessuna pagina.",
 		"emptyFolder": "Cartella vuota",
 		"expandAll": "Apri tutte le cartelle",
 		"collapseAll": "Chiudi tutte le cartelle",
-		"newFolder": "Nuova cartella"
+		"newFolder": "Nuova cartella",
+		"tabs": "Cosa mostrare",
+		"tab": {
+			"pages": "Pagine",
+			"resources": "Risorse"
+		}
 	},
 	"footer": {
 		"source": "Codice sorgente",
@@ -449,24 +455,50 @@
 	},
 	"gallery": {
 		"title": "Galleria",
-		"intro": "Tutte le immagini della campagna: quelle delle pagine, quelle nel testo e le mappe.",
+		"intro": "Tutte le immagini della campagna: quelle delle pagine, quelle nel testo, le mappe e le risorse.",
 		"filter": "Quali immagini",
 		"show": {
 			"all": "Tutte",
 			"pages": "Pagine",
-			"maps": "Mappe"
+			"maps": "Mappe",
+			"resources": "Risorse"
 		},
 		"count": "{n} immagini",
 		"empty": "Ancora nessuna immagine. Trascinane una nel riquadro in alto a destra di una pagina, inseriscila nel testo o crea una mappa.",
 		"kind": {
 			"cover": "Immagine della pagina",
 			"content": "Nel testo di",
-			"map": "Mappa"
+			"map": "Mappa",
+			"resource": "Risorsa"
 		},
 		"viewer": "Immagine {n} di {total}",
 		"prev": "Precedente",
 		"next": "Successiva",
 		"original": "Apri l'originale"
+	},
+	"resources": {
+		"title": "Risorse",
+		"intro": "Immagini, musica e altri file della campagna: dispense, ritratti, sottofondi per le sessioni.",
+		"new": "Carica una risorsa",
+		"upload": "Carica",
+		"edit": "Modifica la risorsa",
+		"delete": "Elimina la risorsa",
+		"deleteConfirm": "Sì, voglio eliminare «{title}» e il suo file",
+		"deleted": "Risorsa eliminata.",
+		"empty": "Ancora nessuna risorsa.",
+		"file": "File",
+		"replaceFile": "Sostituisci il file (facoltativo)",
+		"fileHint": "Immagini (PNG, JPEG, WebP o GIF, al massimo 25 MB), audio (MP3, OGG, WAV, FLAC o M4A) o qualsiasi altro file, al massimo 90 MB. Immagini e audio si guardano e si ascoltano qui; gli altri file si scaricano.",
+		"titleHint": "Se lo lasci vuoto si usa il nome del file.",
+		"tooBig": "Il file è troppo grande (massimo 90 MB).",
+		"play": "Ascolta «{title}»",
+		"download": "Scarica",
+		"path": "Percorso",
+		"kinds": {
+			"image": "Immagini",
+			"audio": "Audio",
+			"other": "Altri file"
+		}
 	},
 	"fields": {
 		"title": "Scheda",

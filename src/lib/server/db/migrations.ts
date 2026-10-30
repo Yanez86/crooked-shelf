@@ -252,5 +252,18 @@ export const MIGRATIONS: string[] = [
 		WHEN '⚙️' THEN 'cog'
 	END
 	WHERE icon IS NOT NULL;
+	`,
+	// Risorse: immagini, audio e altri file della campagna, nella seconda linguetta dell'albero.
+	`
+	CREATE TABLE resources (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		title TEXT NOT NULL,
+		description TEXT NOT NULL DEFAULT '',
+		file_id TEXT NOT NULL REFERENCES files(id),
+		visibility TEXT NOT NULL CHECK (visibility IN ('public','players','master')),
+		created_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
+		created_at INTEGER NOT NULL,
+		updated_at INTEGER NOT NULL
+	);
 	`
 ];

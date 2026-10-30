@@ -2,14 +2,15 @@ import { inArray, sql } from 'drizzle-orm';
 import { getDb, schema } from './db/index.ts';
 import { visibleTo } from './visibility.ts';
 import { listMaps } from './maps.ts';
+import { listResources } from './resources.ts';
 import { stripSecrets, uploadedImages } from '../content/extract.ts';
 import { EMPTY_DOC, isDoc } from '../content/types.ts';
 import { isMaster, type Viewer } from '../access.ts';
 
 const { pages, files } = schema;
 
-/** Dove compare un'immagine: immagine della pagina, nel testo di una pagina, mappa. */
-export const GALLERY_KINDS = ['cover', 'content', 'map'] as const;
+/** Dove compare un'immagine: immagine della pagina, nel testo di una pagina, mappa, risorsa. */
+export const GALLERY_KINDS = ['cover', 'content', 'map', 'resource'] as const;
 export type GalleryKind = (typeof GALLERY_KINDS)[number];
 
 export interface GallerySource {
@@ -30,7 +31,7 @@ export interface GalleryImage {
 
 /**
  * Le immagini della campagna che chi guarda può vedere: l'immagine di ogni pagina, quelle nel testo
- * (dentro i segreti solo per il Master) e le mappe. Le più recenti prima.
+ * (dentro i segreti solo per il Master), le mappe e le risorse. Le più recenti prima.
  */
 export function galleryImages(u: Viewer | null): GalleryImage[] {
 	const uses = new Map<string, { alt: string; fallback: string; sources: GallerySource[] }>();
@@ -55,6 +56,7 @@ export function galleryImages(u: Viewer | null): GalleryImage[] {
 		for (const img of uploadedImages(secrets ? doc : stripSecrets(doc))) add(img.id, { kind: 'content', title: p.title, href }, img.alt);
 	}
 	for (const m of listMaps(u)) add(m.fileId, { kind: 'map', title: m.title, href: `/maps/${m.slug}` });
+	for (const r of listResources(u)) if (r.kind === 'image') add(r.file.id, { kind: 'resource', title: r.title, href: `/resources/${r.id}` });
 
 	if (!uses.size) return [];
 	return getDb()
