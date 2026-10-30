@@ -98,7 +98,8 @@
 	{:else}
 		<form method="post" action="?/preview" enctype="multipart/form-data" class="inline">
 			<label for="pack-file">{t('world.file')}</label>
-			<input id="pack-file" name="file" type="file" accept=".shelf,application/zip" required />
+			<!-- Senza "accept": su iPhone e iPad un file .shelf risulterebbe non selezionabile. Il contenuto lo controlla il server. -->
+			<input id="pack-file" name="file" type="file" required />
 			<button class="btn" type="submit">{t('world.check')}</button>
 		</form>
 		<p class="hint">{t('world.importHint')}</p>
