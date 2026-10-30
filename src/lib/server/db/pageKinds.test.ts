@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { getSqlite, migrate, useMemoryDb } from './index.ts';
 import { MIGRATIONS } from './migrations.ts';
-import { pageKindsMigration } from './pageKinds.ts';
+import { boardPagesMigration, pageKindsMigration } from './pageKinds.ts';
+import { boardContent, boardOfPage } from '../boards.ts';
+import { usableBoard } from '../boardPage.ts';
 import { resetSettingsCache } from '../settings.ts';
 import { getPageBySlug } from '../pages.ts';
 import { getMapOfPage, listMaps, pinsOf } from '../maps.ts';
@@ -70,5 +72,35 @@ describe('migrazione dopo la 0.10: template, mappe e cronologie diventano pagine
 		useMemoryDb();
 		resetSettingsCache();
 		expect(getSqlite().prepare('SELECT count(*) AS n FROM pages').get()).toEqual({ n: 0 });
+	});
+});
+
+describe('migrazione dopo la 0.10.0: le bacheche diventano pagine', () => {
+	it('personali restano personali, condivise tengono la visibilità, schede comprese', () => {
+		useMemoryDb(MIGRATIONS.indexOf(boardPagesMigration));
+		resetSettingsCache();
+		const db = getSqlite();
+		const run = (q: string, ...p: unknown[]) => db.prepare(q).run(...p);
+		run(`INSERT INTO settings (key, value) VALUES ('defaultLocale', '"it"')`);
+		run(`INSERT INTO users (id, username, display_name, password_hash, role, created_at) VALUES (1, 'a', 'A', 'x', 'admin', 0), (2, 'b', 'B', 'x', 'player', 0)`);
+		run(`INSERT INTO pages (slug, title, content, visibility, created_at, updated_at, fields, kind) VALUES ('costa', 'Costa', '{"type":"doc"}', 'players', 0, 0, '[]', 'timeline')`);
+		run(`INSERT INTO boards (id, title, owner_id, visibility, created_by, created_at) VALUES (1, 'Appunti di B', 2, 'players', 2, 5), (2, 'Missioni', NULL, 'players', 1, 6), (3, 'Trama', NULL, 'master', 1, 7)`);
+		run(`INSERT INTO board_columns (id, board_id, title, sort) VALUES (1, 2, 'Da fare', 0)`);
+		run(`INSERT INTO board_cards (column_id, title, created_at, updated_at) VALUES (1, 'Trovare il drago', 0, 0)`);
+		migrate(db);
+
+		// Il tipo delle pagine che c'erano non cambia.
+		expect(getPageBySlug('costa')!.kind).toBe('timeline');
+		const mine = getPageBySlug('appunti-di-b')!;
+		expect(mine).toMatchObject({ kind: 'board', visibility: 'personal', authorId: 2 });
+		const shared = getPageBySlug('missioni')!;
+		expect(shared).toMatchObject({ kind: 'board', visibility: 'players', authorId: 1 });
+		expect(getPageBySlug('trama')!).toMatchObject({ kind: 'board', visibility: 'master' });
+		expect(boardContent(boardOfPage(shared.id)!.id)[0].cards.map((c) => c.title)).toEqual(['Trovare il drago']);
+		expect(() => usableBoard(mine, admin)).toThrow();
+		expect(() => usableBoard(shared, alice)).not.toThrow();
+		// Stanno tutte nella cartella Bacheche.
+		const folder = db.prepare(`SELECT id FROM categories WHERE name = 'Bacheche'`).get() as { id: number };
+		expect(new Set([mine.categoryId, shared.categoryId])).toEqual(new Set([folder.id]));
 	});
 });

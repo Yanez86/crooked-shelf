@@ -17,7 +17,8 @@
 		"gallery": "Galleria",
 		"resources": "Risorse",
 		"rules": "Regole",
-		"boards": "Bacheche"
+		"boards": "Bacheche",
+		"folders": "Cartelle"
 	},
 	"tree": {
 		"label": "Pagine e risorse",
@@ -27,6 +28,8 @@
 		"expandAll": "Apri tutte le cartelle",
 		"collapseAll": "Chiudi tutte le cartelle",
 		"newFolder": "Nuova cartella",
+		"folderName": "Nome della nuova cartella",
+		"folderError": "Non sono riuscito a creare la cartella. Riprova.",
 		"tabs": "Cosa mostrare",
 		"tab": {
 			"pages": "Pagine",
@@ -885,7 +888,8 @@
 		"manage": "Gestisci la bacheca",
 		"newColumn": "Nuova colonna",
 		"delete": "Elimina la bacheca",
-		"deleteConfirm": "Sì, voglio eliminare «{title}» con tutte le schede"
+		"deleteConfirm": "Sì, voglio eliminare «{title}» con tutte le schede",
+		"noColumns": "Questa bacheca non ha ancora colonne."
 	},
 	"plugins": {
 		"intro": "I plugin aggiungono temi, template, calendari, lingue e regole. Contengono solo dati, non programmi: installarli non mette a rischio il server. Sono spenti finché non li accendi.",
@@ -974,32 +978,39 @@
 		"template": "Template",
 		"map": "Mappa",
 		"timeline": "Cronologia",
+		"board": "Bacheca",
 		"folder": {
 			"map": "Mappe",
 			"template": "Template",
-			"timeline": "Cronologie"
+			"timeline": "Cronologie",
+			"board": "Bacheche"
 		},
 		"list": {
 			"page": "Pagine",
 			"template": "Template",
 			"map": "Mappe",
-			"timeline": "Cronologie"
+			"timeline": "Cronologie",
+			"board": "Bacheche"
 		},
 		"new": {
 			"template": "Nuovo template",
 			"map": "Nuova mappa",
-			"timeline": "Nuova cronologia"
+			"timeline": "Nuova cronologia",
+			"board": "Nuova bacheca"
 		},
 		"hint": {
 			"template": "Blocchi, colonna a lato e icona da fotocopiare per fare pagine nuove.",
 			"map": "Un'immagine con pin, livelli e mappe annidate.",
-			"timeline": "Eventi in ordine di data, nel mondo o al tavolo."
+			"timeline": "Eventi in ordine di data, nel mondo o al tavolo.",
+			"board": "Schede di appunti in colonne da spostare: indizi, missioni, domande."
 		},
 		"other": "Altri tipi di pagina",
 		"templateNote": "Questo è un template: ogni pagina fatta con lui parte con i suoi blocchi, la sua colonna a lato e la sua icona.",
 		"useTemplate": "Usa questo template",
 		"asTemplate": "È un template",
 		"asTemplateHint": "Si può fotocopiare per fare pagine nuove",
-		"sessionTemplate": "Le copie sono resoconti di sessione"
+		"sessionTemplate": "Le copie sono resoconti di sessione",
+		"fromTemplate": "Parti da un template",
+		"choose": "Che pagina vuoi fare?"
 	}
 }

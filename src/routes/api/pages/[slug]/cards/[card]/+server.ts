@@ -1,11 +1,12 @@
 import { error, json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { canSeeBoard, cardInBoard, columnInBoard, getBoard, placeCard } from '#lib/server/boards.ts';
+import { getPageBySlug } from '#lib/server/pages.ts';
+import { usableBoard } from '#lib/server/boardPage.ts';
+import { cardInBoard, columnInBoard, placeCard } from '#lib/server/boards.ts';
 
-/** Trascinamento di una scheda in un'altra posizione. */
+/** Trascinamento di una scheda della bacheca in un'altra posizione. */
 export const PATCH: RequestHandler = async ({ params, request, locals }) => {
-	const b = getBoard(Number(params.id));
-	if (!b || !canSeeBoard(b, locals.user)) error(404, 'Not found');
+	const b = usableBoard(getPageBySlug(params.slug), locals.user);
 	const card = cardInBoard(Number(params.card), b.id);
 	const body = await request.json().catch(() => ({}));
 	const column = Number(body.columnId);

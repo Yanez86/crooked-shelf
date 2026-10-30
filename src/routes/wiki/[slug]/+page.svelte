@@ -10,6 +10,7 @@
 	import { COVER_COLORS } from '#lib/covers.ts';
 	import MapBoard from '#lib/components/MapBoard.svelte';
 	import TimelineBoard from '#lib/components/TimelineBoard.svelte';
+	import BoardView from '#lib/components/BoardView.svelte';
 	import type { PageProps } from './$types';
 
 	let { data, form }: PageProps = $props();
@@ -17,7 +18,7 @@
 	const locale = $derived(appPage.data.locale as string);
 	// Esito dei moduli di pin, livelli ed eventi (azioni di questa pagina).
 	const result = $derived(form as { ok?: string | null; error?: string | null; values?: Record<string, unknown> | null } | null);
-	// Nelle mappe e nelle cronologie il testo è facoltativo: se non c'è, niente «pagina vuota».
+	// Nelle mappe, nelle cronologie e nelle bacheche il testo è facoltativo: se non c'è, niente «pagina vuota».
 	const showBody = $derived(data.page.kind === 'page' || data.page.kind === 'template' || !data.blank || data.fields.length > 0);
 </script>
 
@@ -51,7 +52,7 @@
 		{/if}
 	</header>
 
-	<!-- Anche l'esito dei moduli della mappa e della cronologia (pin, livelli, eventi). -->
+	<!-- Anche l'esito dei moduli della mappa, della cronologia e della bacheca (pin, livelli, eventi, schede). -->
 	<FormOk message={appPage.url.searchParams.has('restored') ? 'history.restored' : (result?.ok ?? null)} />
 
 	<p class="meta muted">
@@ -86,6 +87,10 @@
 	{:else if data.timelineData}
 		<section class="board" aria-label={t('kinds.timeline')}>
 			<TimelineBoard data={data.timelineData} slug={data.page.slug} form={result} />
+		</section>
+	{:else if data.boardData}
+		<section class="board" aria-label={t('kinds.board')}>
+			<BoardView data={data.boardData} slug={data.page.slug} form={result} />
 		</section>
 	{/if}
 

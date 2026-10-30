@@ -229,7 +229,9 @@ export const boards = sqliteTable('boards', {
 	ownerId: integer('owner_id').references(() => users.id, { onDelete: 'cascade' }),
 	visibility: text('visibility', { enum: ['players', 'master'] }).notNull(),
 	createdBy: integer('created_by').references(() => users.id, { onDelete: 'set null' }),
-	createdAt: integer('created_at').notNull()
+	createdAt: integer('created_at').notNull(),
+	/** La pagina «bacheca» (dalla 0.11): visibilità e permessi sono quelli della pagina. */
+	pageId: integer('page_id').references(() => pages.id, { onDelete: 'cascade' })
 });
 
 export const boardColumns = sqliteTable('board_columns', {

@@ -68,6 +68,7 @@
 	let icon = $state(untrack(() => values.icon ?? ''));
 	let cover = $state(untrack(() => values.cover ?? null));
 	let pickingCover = $state(false);
+	let coverEdit = $state<ReturnType<typeof CoverEdit>>();
 	const kind = $derived(values.kind ?? 'page');
 	let asTemplate = $state(untrack(() => values.kind === 'template'));
 </script>
@@ -80,7 +81,7 @@
 	{#if values.template}<input type="hidden" name="template" value={values.template} />{/if}
 
 	<!-- Copertina e icona come in lettura: l'icona sta a cavallo del bordo della copertina. -->
-	<CoverEdit bind:cover bind:picking={pickingCover} />
+	<CoverEdit bind:this={coverEdit} bind:cover bind:picking={pickingCover} />
 	<details class="icon-pick">
 		<summary class="page-icon" class:on-cover={!!cover && !pickingCover} title={t('page.icon')}>
 			{#if PAGE_ICONS[icon]}
@@ -108,8 +109,21 @@
 	<header class="page-head">
 		<label class="visually-hidden" for="title">{t('page.title')}</label>
 		<input id="title" name="title" type="text" required maxlength="200" value={values.title} placeholder={t('page.title')} class="title-input editable" />
-		<!-- Dove in lettura c'è la matita, e come la matita: solo un segno. -->
+		<!-- Dove in lettura c'è la matita, e come la matita: solo un segno. Senza copertina, accanto c'è l'icona per aggiungerla. -->
 		<div class="head-actions">
+			{#if !cover}
+				<button
+					id="cover-add"
+					class="icon-action"
+					type="button"
+					title={t('cover.add')}
+					aria-expanded={pickingCover}
+					aria-controls="cover-picker"
+					onclick={(e) => coverEdit?.openPicker(e)}
+				>
+					<Icon name="image" /><span class="visually-hidden">{t('cover.add')}</span>
+				</button>
+			{/if}
 			<a class="icon-action" href={cancelHref} title={t('common.cancel')}><Icon name="close" /><span class="visually-hidden">{t('common.cancel')}</span></a>
 			<button class="icon-action save" type="submit" title={submitLabel}><Icon name="check" /><span class="visually-hidden">{submitLabel}</span></button>
 		</div>
@@ -234,7 +248,8 @@
 		font-weight: 700;
 	}
 	.icon-action:hover,
-	.icon-action:focus-visible {
+	.icon-action:focus-visible,
+	.icon-action[aria-expanded='true'] {
 		color: var(--c-primary);
 		background: var(--c-surface);
 	}

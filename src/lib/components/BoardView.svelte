@@ -1,14 +1,24 @@
 <script lang="ts">
-	import { page } from '$app/state';
 	import { enhance } from '$app/forms';
 	import { refreshAll } from '$app/navigation';
 	import { tick } from 'svelte';
-	import { getT } from '#lib/i18n/index.ts';
-	import FormError from '#lib/components/FormError.svelte';
-	import Icon from '#lib/components/Icon.svelte';
-	import type { PageProps } from './$types';
+	import { getT } from '../i18n/index.ts';
+	import FormError from './FormError.svelte';
+	import Icon from './Icon.svelte';
 
-	let { data, form }: PageProps = $props();
+	type Card = { id: number; title: string; body: string; html: string; color: string; author: string | null };
+	type Column = { id: number; title: string; cards: Card[] };
+
+	/** La bacheca di una pagina «bacheca»: colonne di schede da spostare con le frecce o trascinandole. */
+	let {
+		data,
+		slug,
+		form
+	}: {
+		data: { id: number; canUse: boolean; canManage: boolean; colors: string[]; columns: Column[] };
+		slug: string;
+		form: { error?: string | null } | null;
+	} = $props();
 	const t = getT();
 	let announce = $state('');
 	let editing = $state<number | null>(null);
@@ -38,7 +48,7 @@
 		if (dragId === null) return;
 		const id = dragId;
 		dragId = null;
-		const r = await fetch(`/api/boards/${data.board.id}/cards/${id}`, {
+		const r = await fetch(`/api/pages/${encodeURIComponent(slug)}/cards/${id}`, {
 			method: 'PATCH',
 			headers: { 'content-type': 'application/json' },
 			body: JSON.stringify({ columnId, index })
@@ -48,19 +58,11 @@
 	}
 </script>
 
-<svelte:head><title>{data.board.title} · {page.data.siteName}</title></svelte:head>
-
-<p><a class="back" href="/boards"><Icon name="arrowLeft" />{t('nav.boards')}</a></p>
-<h1>{data.board.title}</h1>
-<p class="muted">
-	{data.board.personal ? t('boards.kindMine') : t('boards.kindShared')}
-	{#if data.board.visibility === 'master'} · {t('visibility.master')}{/if}
-	· {t('boards.howTo')}
-</p>
-<FormError error={form && 'error' in form ? form.error : null} />
+{#if data.canUse}<p class="muted how">{t('boards.howTo')}</p>{/if}
+<FormError error={form?.error ?? null} />
 <p class="visually-hidden" aria-live="polite">{announce}</p>
 
-<div class="board" role="list" aria-label={t('boards.columnsLabel')}>
+<div class="board" role="list" hidden={!data.columns.length} aria-label={t('boards.columnsLabel')}>
 	{#each data.columns as col, ci (col.id)}
 		<section
 			class="column"
@@ -74,7 +76,7 @@
 				{#each col.cards as card, i (card.id)}
 					<li
 						class="card-item color-{card.color}"
-						draggable="true"
+						draggable={data.canUse}
 						ondragstart={() => (dragId = card.id)}
 						ondragend={() => (dragId = null)}
 						ondragover={(e) => { if (dragId !== null) e.preventDefault(); }}
@@ -84,6 +86,7 @@
 							<h3 id="card-{card.id}" tabindex="-1">{card.title}</h3>
 							{#if card.html}<p class="body">{@html card.html}</p>{/if}
 							{#if card.author}<p class="by">{card.author}</p>{/if}
+							{#if data.canUse}
 							<div class="tools">
 								{#each DIRS as d (d.dir)}
 									{@const disabled =
@@ -127,11 +130,13 @@
 									<button class="btn btn-small btn-danger" type="submit">{t('common.delete')}<span class="visually-hidden">: {card.title}</span></button>
 								</form>
 							{/if}
+							{/if}
 						</article>
 					</li>
 				{/each}
 			</ol>
 
+			{#if data.canUse}
 			<details class="add">
 				<summary><Icon name="plus" />{t('boards.addCard')}<span class="visually-hidden">: {col.title}</span></summary>
 				<form method="post" action="?/addCard" use:enhance>
@@ -154,6 +159,7 @@
 					<button class="btn btn-small btn-primary" type="submit">{t('boards.addCard')}</button>
 				</form>
 			</details>
+			{/if}
 
 			{#if data.canManage}
 				<details class="add">
@@ -183,28 +189,14 @@
 		</section>
 	{/each}
 </div>
+{#if !data.columns.length}<p class="muted">{t('boards.noColumns')}</p>{/if}
 
 {#if data.canManage}
-	<section class="manage" aria-labelledby="manage-title">
-		<h2 id="manage-title">{t('boards.manage')}</h2>
-		<form method="post" action="?/addColumn" use:enhance class="inline card">
-			<label for="new-col">{t('boards.newColumn')}</label>
-			<input id="new-col" name="title" type="text" required maxlength="60" />
-			<button class="btn btn-small" type="submit">{t('categories.add')}</button>
-		</form>
-		<form method="post" action="?/updateBoard" use:enhance class="inline card">
-			<label for="board-title">{t('page.title')}</label>
-			<input id="board-title" name="title" type="text" required maxlength="80" value={data.board.title} />
-			{#if !data.board.personal}
-				<label class="choice"><input type="checkbox" name="visibility" value="master" checked={data.board.visibility === 'master'} /><span>{t('boards.masterOnly')}</span></label>
-			{/if}
-			<button class="btn btn-small" type="submit">{t('common.save')}</button>
-		</form>
-		<form method="post" action="?/deleteBoard" class="inline">
-			<label class="choice"><input type="checkbox" name="confirm" required /><span>{t('boards.deleteConfirm', { title: data.board.title })}</span></label>
-			<button class="btn btn-small btn-danger" type="submit">{t('boards.delete')}</button>
-		</form>
-	</section>
+	<form method="post" action="?/addColumn" use:enhance class="inline new-col">
+		<label for="new-col">{t('boards.newColumn')}</label>
+		<input id="new-col" name="title" type="text" required maxlength="60" />
+		<button class="btn btn-small" type="submit"><Icon name="plus" />{t('categories.add')}</button>
+	</form>
 {/if}
 
 <style>
@@ -235,6 +227,9 @@
 		display: grid;
 		gap: 0.6rem;
 		min-height: 2rem;
+	}
+	.card-item[draggable='false'] {
+		cursor: auto;
 	}
 	.card-item {
 		background: var(--c-surface);
@@ -304,8 +299,10 @@
 		align-items: center;
 		margin: 0.5rem 0;
 	}
-	.manage {
-		margin-top: 2rem;
-		max-width: 48rem;
+	.how {
+		margin: 0 0 0.75rem;
+	}
+	.new-col {
+		max-width: 32rem;
 	}
 </style>

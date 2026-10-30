@@ -1,11 +1,12 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { allowedVisibilities, isMaster } from '#lib/access.ts';
-import { createPage } from '#lib/server/pages.ts';
+import { createPage, type PageRow } from '#lib/server/pages.ts';
 import { readPageForm } from '#lib/server/pageForm.ts';
 import { readMapForm } from '#lib/server/mapForm.ts';
 import { createMap, listMaps } from '#lib/server/maps.ts';
 import { setTimelineMode } from '#lib/server/timeline.ts';
+import { createBoard, readColumns } from '#lib/server/boards.ts';
 import { saveImage } from '#lib/server/files.ts';
 import { categoryTree, listTags } from '#lib/server/taxonomy.ts';
 import { getTemplatePage, listTemplates, templateCopy } from '#lib/server/templates.ts';
@@ -13,7 +14,8 @@ import { getCalendar } from '#lib/server/settings.ts';
 import { slugify } from '#lib/slug.ts';
 import { canCreateKind, isPageKind, TIMELINE_MODES, type PageKind, type TimelineMode } from '#lib/pageKinds.ts';
 
-const OTHER_KINDS = ['template', 'map', 'timeline'] as const;
+// Nell'ordine in cui si scelgono, dopo la pagina vuota.
+const OTHER_KINDS = ['board', 'timeline', 'template', 'map'] as const;
 
 export const load: PageServerLoad = ({ locals, url }) => {
 	if (!locals.user) redirect(303, `/login?next=${encodeURIComponent(url.pathname + url.search)}`);
@@ -60,7 +62,8 @@ export const actions: Actions = {
 		const mode: TimelineMode = TIMELINE_MODES.includes(f.get('mode') as TimelineMode) ? (f.get('mode') as TimelineMode) : 'world';
 		const probe = readMapForm(f, null);
 		// In caso di errore tornano anche le impostazioni della mappa o della cronologia, per non perderle.
-		const extra = { map: probe.values, mode };
+		const columns = String(f.get('columns') ?? '').slice(0, 2000);
+		const extra = { map: probe.values, mode, columns };
 		if (!r.ok) return fail(400, { error: r.error, values: r.values, extra });
 		const kind = r.input.kind ?? 'page';
 		if (!canCreateKind(kind, u)) return fail(403, { error: 'errors.forbidden', values: r.values, extra });
@@ -74,7 +77,13 @@ export const actions: Actions = {
 			const page = createPage(r.input, u, (p) => createMap(p, input, saved.file, u.id));
 			redirect(303, `/wiki/${page.slug}`);
 		}
-		const page = createPage(r.input, u, kind === 'timeline' ? (p) => setTimelineMode(p.id, mode) : undefined);
+		const after =
+			kind === 'timeline'
+				? (p: PageRow) => setTimelineMode(p.id, mode)
+				: kind === 'board'
+					? (p: PageRow) => createBoard(p.id, p.title, readColumns(columns), u.id)
+					: undefined;
+		const page = createPage(r.input, u, after);
 		redirect(303, `/wiki/${page.slug}`);
 	}
 };

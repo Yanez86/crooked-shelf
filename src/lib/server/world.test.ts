@@ -236,18 +236,30 @@ describe('versioni e cestino', () => {
 	});
 });
 
-import { boardContent, canSeeBoard, createBoard, listBoards, moveCard, addCard, placeCard } from './boards.ts';
+import { boardContent, boardOfPage, createBoard, moveCard, addCard, placeCard } from './boards.ts';
+import { boardView, usableBoard } from './boardPage.ts';
+import { EMPTY_DOC } from '../content/types.ts';
 
 describe('bacheche', () => {
-	it('personali, condivise e spostamenti', () => {
-		const mine = createBoard('Appunti di Alice', true, 'players', ['Indizi'], alice);
-		const shared = createBoard('Missioni', false, 'players', ['Da fare', 'Fatto'], master);
-		const gm = createBoard('Trama', false, 'master', ['Idee'], master);
-		expect(listBoards(alice).map((b) => b.title)).toEqual(['Appunti di Alice', 'Missioni']);
-		expect(listBoards(master).map((b) => b.title)).toEqual(['Missioni', 'Trama']);
-		expect(canSeeBoard({ ownerId: alice.id, visibility: 'players' }, master)).toBe(false);
-		expect(gm).toBeGreaterThan(mine);
+	it('sono pagine: chi vede la pagina usa le schede, chi la modifica cambia le colonne', () => {
+		const board = (title: string, visibility: 'players' | 'master' | 'personal', columns: string[], u: typeof alice | typeof master) =>
+			createPage(
+				{ kind: 'board', title, content: EMPTY_DOC, visibility, playersCanEdit: false, categoryId: null, tags: [], fields: [], session: null },
+				u,
+				(p) => createBoard(p.id, p.title, columns, u.id)
+			);
+		const mine = board('Appunti di Alice', 'personal', ['Indizi'], alice);
+		const sharedPage = board('Missioni', 'players', ['Da fare', 'Fatto'], master);
+		const gm = board('Trama', 'master', ['Idee'], master);
+		expect(() => usableBoard(mine, alice)).not.toThrow();
+		expect(() => usableBoard(mine, master)).toThrow();
+		expect(() => usableBoard(gm, alice)).toThrow();
+		expect(() => usableBoard(sharedPage, alice)).not.toThrow();
+		expect(() => usableBoard(sharedPage, alice, true)).toThrow();
+		expect(boardView(sharedPage, alice, 'it')).toMatchObject({ canUse: true, canManage: false });
+		expect(boardView(sharedPage, null, 'it')).toMatchObject({ canUse: false, canManage: false });
 
+		const shared = boardOfPage(sharedPage.id)!.id;
 		const [todo, done] = boardContent(shared);
 		addCard(todo.id, { title: 'A', body: '', color: 'yellow' }, 2);
 		addCard(todo.id, { title: 'B', body: '', color: 'yellow' }, 2);

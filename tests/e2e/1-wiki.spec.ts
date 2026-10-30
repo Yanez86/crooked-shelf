@@ -74,10 +74,25 @@ test('la configurazione non si può ripetere', async ({ page }) => {
 });
 
 test('categorie', async () => {
+	// Nuova cartella: nasce nell'albero a sinistra col nome da scrivere, senza cambiare pagina.
+	await admin.goto('/');
+	const tree = admin.locator('#explorer');
+	await tree.getByRole('button', { name: 'Nuova cartella' }).click();
+	const name = tree.getByLabel('Nome della nuova cartella');
+	await expect(name).toBeFocused();
+	await expect(name).toHaveValue('Nuova cartella');
+	await axe(admin, 'nuova cartella');
+	// Esc la lascia perdere.
+	await admin.keyboard.press('Escape');
+	await expect(name).toHaveCount(0);
+	await expect(tree.getByRole('button', { name: 'Nuova cartella' })).toBeFocused();
+	await admin.keyboard.press('Enter');
+	await admin.keyboard.type('Luoghi');
+	await admin.keyboard.press('Enter');
+	await expect(tree.locator('summary', { hasText: 'Luoghi' })).toBeFocused();
+	await expect(admin).toHaveURL(/\/$/);
+
 	await admin.goto('/categories');
-	await admin.getByLabel('Nome', { exact: true }).first().fill('Luoghi');
-	await admin.getByRole('button', { name: 'Aggiungi' }).click();
-	await expect(admin.getByRole('status')).toContainText('Categoria creata');
 	await admin.getByLabel('Nome', { exact: true }).first().fill('Città');
 	await admin.getByLabel('Dentro la categoria').first().selectOption({ label: 'Luoghi' });
 	await admin.getByRole('button', { name: 'Aggiungi' }).click();
@@ -162,10 +177,13 @@ test('albero delle cartelle e delle pagine', async () => {
 	await expect(tree.getByRole('link', { name: 'Bartolo Pancia' })).toHaveAttribute('aria-current', 'page');
 	// Le cartelle aperte restano aperte.
 	await expect(locanda).toBeVisible();
-	// Niente barra orizzontale: le sezioni della wiki stanno nella barra a sinistra, sopra l'albero.
-	await expect(admin.locator('header.site-header nav')).toHaveCount(0);
-	const sections = admin.locator('#explorer').getByRole('navigation', { name: 'Navigazione principale' });
+	// Niente barra orizzontale e niente sezioni sopra l'albero: le sezioni della wiki stanno nel menu del profilo.
+	await expect(admin.locator('#explorer').getByRole('navigation', { name: 'Navigazione principale' })).toHaveCount(0);
+	await admin.locator('.user-menu summary').click();
+	const sections = admin.locator('.user-menu').getByRole('navigation', { name: 'Navigazione principale' });
 	await expect(sections.getByRole('link', { name: 'Galleria' })).toBeVisible();
+	await expect(sections.getByRole('link', { name: 'Cartelle' })).toBeVisible();
+	await admin.locator('.user-menu summary').click();
 	await expect(admin.locator('#explorer').getByRole('link', { name: 'Nuova pagina' })).toHaveAttribute('href', '/wiki/new');
 	// Anche le cronologie e i template preparati con la wiki sono pagine dell'albero.
 	await expect(tree.getByRole('link', { name: 'Cronologia del mondo, Cronologia' })).toBeVisible();
@@ -371,7 +389,7 @@ test('la barra a sinistra si può tenere chiusa', async () => {
 		await admin.goto(url);
 		await expect(tree).toBeHidden();
 	}
-	await toggle.click();
+	await admin.locator('.user-menu summary').click();
 	await admin.getByRole('navigation', { name: 'Navigazione principale' }).getByRole('link', { name: 'Pagine', exact: true }).click();
 	await expect(admin).toHaveURL(/\/wiki$/);
 	await expect(tree).toBeVisible();

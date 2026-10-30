@@ -3,6 +3,15 @@
 Le versioni seguono il [versionamento semantico](https://semver.org/lang/it/): MAGGIORE.MINORE.CORRETTIVA.
 Questo file è anche la pagina «Novità» della wiki (`/changelog`).
 
+## 0.11.0 — 2026-10-30
+
+### Modifiche
+- Le bacheche sono pagine: si creano da «Nuova pagina», stanno nell'albero e hanno la visibilità delle pagine (le personali restano visibili solo a te). Quelle che c'erano sono nella cartella Bacheche.
+- «Nuova pagina» propone prima cosa fare (pagina bianca, bacheca, cronologia, template, mappa), poi le fotocopie dei template.
+- «Nuova cartella» crea la cartella direttamente nell'albero a sinistra, col nome da scrivere: Invio la crea, Esc la lascia perdere.
+- Via le sezioni in cima alla barra a sinistra: Pagine, Tag, Galleria, Regole, Calendario, Cartelle e Cestino stanno nel menu del profilo.
+- In modifica, la copertina si aggiunge dall'icona dell'immagine accanto a Salva e Annulla.
+
 ## 0.10.0 — 2026-10-29
 
 ### Aggiunte

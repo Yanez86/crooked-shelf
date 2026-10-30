@@ -144,13 +144,17 @@ test('cestino', async () => {
 	await expect(admin.locator('main')).toContainText('Il cestino è vuoto');
 });
 
-test('bacheche', async ({ browser }) => {
-	await admin.goto('/boards');
-	await axe(admin, 'bacheche');
+test('bacheche: sono pagine', async ({ browser }) => {
+	// Nuova pagina → Nuova bacheca, con le colonne di base.
+	await admin.goto('/wiki/new');
+	await admin.locator('main').getByRole('link', { name: /^Nuova bacheca/ }).click();
+	await expect(admin.getByLabel('Colonne', { exact: true })).toHaveValue('Indizi\nDomande\nRisolto');
+	await axe(admin, 'nuova bacheca');
 	await admin.getByLabel('Titolo').fill('Missioni del gruppo');
-	await admin.getByRole('radio', { name: /Del gruppo/ }).check();
-	await admin.getByRole('button', { name: 'Crea la bacheca' }).click();
+	await admin.getByRole('button', { name: 'Crea la pagina' }).click();
 	await expect(admin.getByRole('heading', { level: 1, name: 'Missioni del gruppo' })).toBeVisible();
+	// Sta nell'albero a sinistra come le altre pagine.
+	await expect(admin.locator('#explorer').getByRole('link', { name: 'Missioni del gruppo, Bacheca' })).toBeVisible();
 
 	const col = (name: string) => admin.getByRole('listitem').filter({ has: admin.getByRole('heading', { level: 2, name: new RegExp(`^${name}`) }) });
 	await col('Indizi').locator('summary', { hasText: 'Aggiungi scheda' }).click();
@@ -184,21 +188,22 @@ test('bacheche', async ({ browser }) => {
 	const boardUrl = admin.url();
 
 	// Bacheca personale dell'Admin: il giocatore non la vede.
-	await admin.goto('/boards');
-	await admin.getByText('Nuova bacheca').click();
+	await admin.goto('/wiki/new?kind=board');
 	await admin.getByLabel('Titolo').fill('Idee segrete');
-	await admin.getByRole('radio', { name: /Personale/ }).check();
-	await admin.getByRole('button', { name: 'Crea la bacheca' }).click();
+	await admin.getByRole('radio', { name: 'Personale' }).check();
+	await admin.getByRole('button', { name: 'Crea la pagina' }).click();
+	await expect(admin.getByRole('heading', { level: 1, name: 'Idee segrete' })).toBeVisible();
 	const personalUrl = admin.url();
 
 	const p = await login(browser, PLAYER);
-	await p.goto('/boards');
-	await expect(p.locator('main')).toContainText('Missioni del gruppo');
-	await expect(p.locator('main')).not.toContainText('Idee segrete');
+	await p.goto('/');
+	await expect(p.locator('#explorer')).toContainText('Missioni del gruppo');
+	await expect(p.locator('#explorer')).not.toContainText('Idee segrete');
 	expect((await p.goto(personalUrl))?.status()).toBe(404);
 	await p.goto(boardUrl);
 	await expect(p.getByRole('article', { name: 'Chi è il cuoco?' })).toBeVisible();
-	await expect(p.getByRole('heading', { name: 'Gestisci la bacheca' })).toHaveCount(0);
+	// Le schede le usa, le colonne no (la pagina non è sua).
+	await expect(p.getByLabel('Nuova colonna')).toHaveCount(0);
 	await p.context().close();
 });
 

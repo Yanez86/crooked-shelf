@@ -6,6 +6,7 @@
 
 	/**
 	 * La copertina in modifica. Sul lato tre icone: cambia, riposiziona (solo le immagini), togli.
+	 * Senza copertina il pannello si apre dall'icona accanto a Salva e Annulla (`openPicker`, chiamata dalla pagina).
 	 * Il pannello sceglie un'immagine della galleria, un colore pieno o un file nuovo.
 	 * `picking`: il pannello è aperto (la pagina non sovrappone l'icona alla copertina).
 	 */
@@ -40,7 +41,7 @@
 		}
 	}
 
-	async function openPicker(e: MouseEvent) {
+	export async function openPicker(e: MouseEvent) {
 		opener = e.currentTarget as HTMLElement;
 		moving = false;
 		picking = true;
@@ -188,10 +189,6 @@
 			</div>
 		{/if}
 	</div>
-{:else}
-	<p class="add-row">
-		<button id="cover-add" class="add" type="button" aria-expanded={picking} aria-controls="cover-picker" onclick={openPicker}><Icon name="image" />{t('cover.add')}</button>
-	</p>
 {/if}
 
 {#if picking}
@@ -264,30 +261,6 @@
 {/if}
 
 <style>
-	.add-row {
-		margin: 0.5rem 0 0;
-	}
-	.add {
-		display: inline-flex;
-		align-items: center;
-		gap: 0.4rem;
-		min-height: 2.5rem;
-		padding: 0 0.7rem;
-		border: 1px dashed var(--c-border);
-		border-radius: var(--radius);
-		background: none;
-		color: var(--c-muted);
-		font: inherit;
-		font-size: var(--fs-sm);
-		font-weight: 600;
-		cursor: pointer;
-	}
-	.add:hover,
-	.add[aria-expanded='true'] {
-		color: var(--c-text);
-		border-color: var(--c-control);
-		background: var(--c-surface);
-	}
 	.tools {
 		position: absolute;
 		top: 0.5rem;

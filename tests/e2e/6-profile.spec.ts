@@ -33,7 +33,8 @@ test('accesso', async ({ browser }) => {
 });
 
 test('in alto a destra: icona, nome e grado', async () => {
-	await admin.goto('/wiki');
+	// Nella home: il menu (con le sezioni della wiki) non copre per metà i comandi dei filtri, come in /wiki.
+	await admin.goto('/');
 	const header = admin.locator('header.site-header');
 	const toggle = header.locator('.user-menu summary');
 	await expect(toggle).toBeVisible();
@@ -44,6 +45,7 @@ test('in alto a destra: icona, nome e grado', async () => {
 	await expect(menu).toBeHidden();
 	await toggle.click();
 	await expect(menu.getByRole('link', { name: 'Profilo' })).toBeVisible();
+	await expect(menu.getByRole('link', { name: 'Galleria' })).toBeVisible();
 	await expect(menu.getByRole('link', { name: 'Amministrazione' })).toBeVisible();
 	await expect(menu.getByRole('button', { name: /Esci/ })).toBeVisible();
 	await axe(admin, 'menu del profilo');
@@ -94,7 +96,7 @@ test('il giocatore vede il suo nome e il suo grado, senza Amministrazione', asyn
 
 	// Sul telefono resta solo l'icona: nome e grado si leggono nel menu.
 	await p.setViewportSize({ width: 390, height: 844 });
-	await p.goto('/wiki');
+	await p.goto('/');
 	const icon = (await toggle.locator('.user-icon').boundingBox())!;
 	expect((await toggle.boundingBox())!.width).toBeLessThan(icon.width * 1.5);
 	await toggle.click();

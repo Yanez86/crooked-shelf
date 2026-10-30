@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { onMount, untrack } from 'svelte';
+	import { onMount, tick, untrack } from 'svelte';
+	import { invalidateAll } from '$app/navigation';
 	import { SvelteSet } from 'svelte/reactivity';
 	import { page } from '$app/state';
 	import { getT } from '../i18n/index.ts';
@@ -11,7 +12,8 @@
 	import { treePaths, type Tree, type TreeFolder, type TreePage } from '../tree.ts';
 	import { RESOURCE_KINDS, type ResourceItem, type ResourceKind } from '../resources.ts';
 
-	// La barra a sinistra: in alto «Nuova pagina» e le sezioni della wiki, sotto l'albero delle pagine (di ogni tipo) e delle risorse.
+	// La barra a sinistra: in alto «Nuova pagina», sotto l'albero delle pagine (di ogni tipo) e delle risorse.
+	// Le sezioni della wiki (galleria, regole, calendario…) stanno nel menu del profilo in alto a destra.
 	// `docked`: sta accanto alla pagina; altrimenti (e sempre sul telefono) è un pannello a scomparsa, aperto dal pulsante in alto.
 	let {
 		tree,
@@ -22,22 +24,6 @@
 	const t = getT();
 	const canManage = $derived(isMaster(page.data.user));
 	const user = $derived(page.data.user);
-
-	// Le sezioni che non sono pagine. Le icone sono disegni a tratto come quelli delle pagine.
-	const SECTIONS = [
-		{ href: '/', key: 'nav.home', icon: 'M3 11l9-7.5 9 7.5M5 9.5V21h14V9.5M10 21v-6h4v6' },
-		{ href: '/wiki', key: 'nav.pages', icon: 'M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01' },
-		{ href: '/categories', key: 'nav.categories', icon: iconPath('folder') },
-		{ href: '/tags', key: 'nav.tags', icon: 'M3 3h8l10 10-8 8L3 11zM7.5 7.5h.01' },
-		{ href: '/gallery', key: 'nav.gallery', icon: 'M3.75 4.75h16.5v14.5H3.75zM3.75 16l5-5 4 4 2.5-2.5 5 5M17 8.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z' },
-		{ href: '/resources', key: 'nav.resources', icon: 'M20.5 11.5l-8.6 8.6a5.25 5.25 0 0 1-7.4-7.4l8.6-8.6a3.5 3.5 0 0 1 4.95 4.95l-8.6 8.6a1.75 1.75 0 0 1-2.48-2.48l7.9-7.9' },
-		{ href: '/rules', key: 'nav.rules', icon: 'M12 6.5C10 5 7 4.5 3 5v13c4-.5 7 0 9 1.5 2-1.5 5-2 9-1.5V5c-4-.5-7 0-9 1.5zM12 6.5v13' },
-		{ href: '/calendar', key: 'calendar.title', icon: 'M4 5.5h16v15H4zM4 10h16M8.5 3v4M15.5 3v4' },
-		{ href: '/boards', key: 'nav.boards', user: true, icon: 'M3.5 4.5h17v15h-17zM7 8h4v4H7zM13.5 8H17M13.5 11h3M7 15.5h10' },
-		{ href: '/trash', key: 'trash.title', user: true, icon: 'M4 6.5h16M9.5 6.5V4h5v2.5M6 6.5l1 14h10l1-14M10 10.5v6M14 10.5v6' }
-	];
-	// Home e l'elenco delle pagine solo al loro indirizzo: dentro una pagina è l'albero a dire dove sei.
-	const here = (href: string) => (path === href || (href !== '/' && href !== '/wiki' && path.startsWith(href + '/')) ? 'page' : undefined);
 
 	// Cartelle aperte: quelle che portano alla pagina che stai leggendo, più quelle che hai aperto tu
 	// (ricordate in questo browser).
@@ -139,6 +125,66 @@
 		save();
 	}
 
+	// Nuova cartella: compare subito in cima all'albero col nome da scrivere, come in Esplora risorse.
+	// Invio (o il fuoco che esce) la crea, Esc la lascia perdere.
+	let naming = $state<string | null>(null);
+	let nameError = $state(false);
+	let nameInput = $state<HTMLInputElement>();
+
+	async function newFolder() {
+		selectTab('pages');
+		nameError = false;
+		naming = t('tree.newFolder');
+		await tick();
+		nameInput?.focus();
+		nameInput?.select();
+	}
+
+	async function cancelFolder() {
+		naming = null;
+		nameError = false;
+		await tick();
+		document.getElementById('tree-new-folder')?.focus();
+	}
+
+	let creating = false;
+	async function createFolder() {
+		if (naming === null || creating) return;
+		const name = naming.trim();
+		if (!name) return cancelFolder();
+		creating = true;
+		try {
+			const r = await fetch('/api/categories', {
+				method: 'POST',
+				headers: { 'content-type': 'application/json' },
+				body: JSON.stringify({ name })
+			});
+			const res = await r.json().catch(() => ({}));
+			if (!r.ok || !res.id) throw new Error(String(r.status));
+			await invalidateAll();
+			naming = null;
+			nameError = false;
+			await tick();
+			document.getElementById(`folder-${res.id}`)?.focus();
+		} catch {
+			nameError = true;
+			nameInput?.focus();
+		} finally {
+			creating = false;
+		}
+	}
+
+	function nameKeys(e: KeyboardEvent) {
+		if (e.key === 'Enter') {
+			e.preventDefault();
+			createFolder();
+		} else if (e.key === 'Escape') {
+			e.preventDefault();
+			e.stopPropagation();
+			cancelFolder();
+		}
+	}
+
 	function save() {
 		remember(STORE, JSON.stringify([...open]));
 	}
@@ -151,7 +197,7 @@
 		}
 	}
 
-	// Pannello aperto: il fuoco entra sul primo collegamento (Nuova pagina, o Home). Esc, il pulsante Chiudi, un tocco fuori
+	// Pannello aperto: il fuoco entra sul primo collegamento (Nuova pagina, o la prima pagina). Esc, il pulsante Chiudi, un tocco fuori
 	// o il fuoco che esce lo richiudono; con Esc e Chiudi il fuoco torna al pulsante che l'ha aperto.
 	$effect(() => {
 		if (shown) untrack(() => document.querySelector<HTMLElement>('#explorer a')?.focus());
@@ -221,7 +267,7 @@
 {#snippet folder(f: TreeFolder)}
 	<li>
 		<details open={open.has(f.id)} ontoggle={(e) => toggled(f.id, e.currentTarget.open)}>
-			<summary>
+			<summary id="folder-{f.id}">
 				<span class="chevron" aria-hidden="true"></span>
 				{@render folderIcon()}
 				<span>{f.name}</span>
@@ -247,18 +293,6 @@
 			<Icon name="close" />
 		</button>
 	</div>
-	<nav class="sections" aria-label={t('nav.main')}>
-		<ul class="list-plain">
-			{#each SECTIONS.filter((x) => !x.user || user) as x (x.href)}
-				<li>
-					<a href={x.href} aria-current={here(x.href)}>
-						<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d={x.icon} /></svg>
-						<span>{t(x.key)}</span>
-					</a>
-				</li>
-			{/each}
-		</ul>
-	</nav>
 	<nav aria-label={t('tree.label')}>
 		<div class="explorer-head">
 			<div class="tabs" role="tablist" aria-label={t('tree.tabs')}>
@@ -286,9 +320,17 @@
 				</button>
 			{/if}
 			{#if canManage && tab === 'pages'}
-				<a class="tool" href="/categories#new-cat" title={t('tree.newFolder')} aria-label={t('tree.newFolder')}>
+				<button
+					type="button"
+					id="tree-new-folder"
+					class="tool"
+					title={t('tree.newFolder')}
+					aria-label={t('tree.newFolder')}
+					disabled={naming !== null}
+					onclick={newFolder}
+				>
 					<Icon name="folderPlus" />
-				</a>
+				</button>
 			{:else if canManage}
 				<a class="tool" href="/resources/new" title={t('resources.new')} aria-label={t('resources.new')}>
 					<Icon name="upload" />
@@ -296,12 +338,29 @@
 			{/if}
 		</div>
 		<div role="tabpanel" id="tree-panel-pages" aria-labelledby="tree-tab-pages" hidden={tab !== 'pages'}>
+			{#if naming !== null}
+				<div class="naming">
+					<svg class="ico folder" viewBox="0 0 24 24" aria-hidden="true"><path d={iconPath('folder')} /></svg>
+					<input
+						type="text"
+						maxlength="80"
+						aria-label={t('tree.folderName')}
+						aria-invalid={nameError || undefined}
+						aria-describedby={nameError ? 'tree-folder-error' : undefined}
+						bind:value={naming}
+						bind:this={nameInput}
+						onkeydown={nameKeys}
+						onblur={createFolder}
+					/>
+				</div>
+				{#if nameError}<p id="tree-folder-error" class="folder-error" role="alert">{t('tree.folderError')}</p>{/if}
+			{/if}
 			{#if tree.folders.length || tree.pages.length}
 				<ul class="list-plain level root">
 					{#each tree.folders as f (f.id)}{@render folder(f)}{/each}
 					{#each tree.pages as p (p.slug)}{@render leaf(p)}{/each}
 				</ul>
-			{:else}
+			{:else if naming === null}
 				<p class="muted none">{t('tree.empty')}</p>
 			{/if}
 		</div>
@@ -363,8 +422,7 @@
 		color: var(--c-primary);
 		font-weight: 700;
 	}
-	.new-page :global(.icon),
-	.sections svg {
+	.new-page :global(.icon) {
 		flex: none;
 		width: 1.15rem;
 		height: 1.15rem;
@@ -382,23 +440,6 @@
 	}
 	.new-page:hover span {
 		text-decoration: none;
-	}
-	/* Le sezioni della wiki: due colonne compatte sopra l'albero. */
-	.sections {
-		margin: 0 0 0.5rem;
-		padding: 0 0 0.4rem;
-		border-bottom: 1px solid var(--c-border);
-	}
-	.sections ul {
-		display: grid;
-		grid-template-columns: repeat(2, minmax(0, 1fr));
-		gap: 0 0.1rem;
-	}
-	.sections a {
-		align-items: center;
-	}
-	.sections svg {
-		color: var(--c-muted);
 	}
 	.explorer-head {
 		display: flex;
@@ -457,6 +498,29 @@
 	.tool :global(.icon) {
 		width: 1.15rem;
 		height: 1.15rem;
+	}
+	.tool:disabled {
+		opacity: 0.5;
+		cursor: default;
+	}
+	/* La cartella che sta nascendo: icona e nome da scrivere, al posto della riga. */
+	.naming {
+		display: flex;
+		align-items: center;
+		gap: 0.35rem;
+		padding: 0.15rem 0.4rem 0.15rem 1.6rem;
+	}
+	.naming input {
+		flex: 1;
+		min-width: 0;
+		min-height: 1.75rem;
+		padding: 0 0.3rem;
+		font: inherit;
+		font-weight: 600;
+	}
+	.folder-error {
+		margin: 0.2rem 0.4rem 0.3rem 1.6rem;
+		color: var(--c-danger);
 	}
 	.close,
 	.backdrop {
