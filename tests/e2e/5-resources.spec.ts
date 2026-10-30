@@ -162,15 +162,39 @@ test('modifica ed elimina una risorsa', async () => {
 	await expect(admin.getByRole('navigation', { name: TREE })).not.toContainText('Piano del drago');
 });
 
-test('sul telefono le linguette stanno nel pulsante dell\'albero', async () => {
+test('sul telefono l\'albero è un pannello a scomparsa', async () => {
 	await admin.setViewportSize({ width: 390, height: 844 });
 	await admin.goto('/resources');
 	const toggle = admin.getByRole('button', { name: 'Pagine e risorse' });
-	await toggle.click();
 	const tree = admin.getByRole('navigation', { name: TREE });
-	await expect(tree.getByRole('tab', { name: 'Risorse' })).toHaveAttribute('aria-selected', 'true');
-	await expect(tree.getByRole('link', { name: 'Tema della locanda' })).toBeVisible();
+	const tema = tree.getByRole('link', { name: 'Tema della locanda' });
+	const title = admin.getByRole('heading', { level: 1, name: 'Risorse' });
+	await expect(tema).toBeHidden();
+	const before = await title.boundingBox();
+
+	// Entra da sinistra sopra la pagina, senza spostarla; il fuoco va sulla linguetta aperta.
+	await toggle.click();
+	await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+	await expect(tree.getByRole('tab', { name: 'Risorse' })).toBeFocused();
+	await expect(tema).toBeVisible();
+	expect((await title.boundingBox())?.y).toBe(before?.y);
 	await axe(admin, 'risorse telefono');
 	await shot(admin, '42-risorse-telefono');
+
+	// Esc lo chiude e riporta il fuoco sul pulsante; anche un tocco fuori lo chiude.
+	await admin.keyboard.press('Escape');
+	await expect(tema).toBeHidden();
+	await expect(toggle).toBeFocused();
+	await toggle.click();
+	await expect(tema).toBeVisible();
+	await admin.mouse.click(370, 600);
+	await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+	await expect(tema).toBeHidden();
+
+	// Aprendo una pagina dal pannello, il pannello si richiude.
+	await toggle.click();
+	await tema.click();
+	await expect(admin.getByRole('heading', { level: 1, name: 'Tema della locanda' })).toBeVisible();
+	await expect(tema).toBeHidden();
 	await admin.setViewportSize({ width: 1280, height: 800 });
 });
