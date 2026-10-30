@@ -330,9 +330,14 @@ test('mappe con pin, livelli e mappe annidate', async () => {
 	await admin.getByRole('button', { name: /Misura/ }).click();
 	await admin.keyboard.press('Escape');
 	mapBox = await box();
-	await admin.mouse.click(mapBox.x + mapBox.width * 0.2, mapBox.y + mapBox.height * 0.5);
-	await admin.mouse.click(mapBox.x + mapBox.width * 0.8, mapBox.y + mapBox.height * 0.5);
-	await expect(admin.getByRole('status').filter({ hasText: 'Distanza' })).toContainText('km');
+	const points = [0.2, 0.8].map((f) => ({ x: mapBox.x + mapBox.width * f, y: mapBox.y + mapBox.height * 0.5 }));
+	// Cosa c'è sotto i due punti: se la misura non riesce, il messaggio dice chi ha preso il clic.
+	const under = await admin.evaluate(
+		(pts) => pts.map((p) => { const e = document.elementFromPoint(p.x, p.y); return e ? `${e.tagName.toLowerCase()}.${e.getAttribute('class') ?? ''}` : '—'; }),
+		points
+	);
+	for (const p of points) await admin.mouse.click(p.x, p.y);
+	await expect(admin.getByRole('status').filter({ hasText: 'Distanza' }), `sotto i clic: ${under.join(' | ')}`).toContainText('km');
 	await admin.getByRole('button', { name: /Misura/ }).click();
 	for (const l of layers) await l.check();
 	await expect(admin.locator('.leaflet-marker-icon')).toHaveCount(2);
