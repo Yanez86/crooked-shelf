@@ -110,12 +110,15 @@ test('template PNG con scheda, segreto e immagine', async () => {
 	await expect(admin.locator('main').getByRole('link', { name: 'Elminster' })).toBeVisible();
 });
 
-test("immagine della pagina: si trascina nel riquadro in alto a destra", async () => {
+test("immagine della pagina: si cambia e si toglie con la pagina in modifica", async () => {
+	// In lettura, senza immagine, il riquadro non c'è: si aggiunge dalla modifica.
 	await admin.goto('/wiki/elminster');
+	await expect(admin.getByRole('group', { name: 'Immagine della pagina' })).toHaveCount(0);
+	await admin.goto('/wiki/elminster/edit');
 	const box = admin.getByRole('group', { name: 'Immagine della pagina' });
 	// Senza immagine resta solo il pulsante; il riquadro compare mentre si trascina un file.
 	await expect(box.getByRole('button', { name: "Aggiungi un'immagine" })).toBeVisible();
-	await axe(admin, 'pagina senza immagine');
+	await axe(admin, 'modifica senza immagine');
 
 	// Un file trascinato dal computer sul riquadro.
 	const png = readFileSync('tests/fixtures/city.png').toString('base64');
@@ -136,10 +139,10 @@ test("immagine della pagina: si trascina nel riquadro in alto a destra", async (
 	await expect(img).toBeVisible();
 	const first = (await img.getAttribute('src'))!;
 	expect((await admin.request.get(first)).headers()['content-type']).toBe('image/png');
-	await axe(admin, 'pagina con immagine');
+	await axe(admin, 'modifica con immagine');
 	await shot(admin, '11c-immagine-della-pagina');
 
-	// Senza mouse: «Cambia immagine» apre la scelta del file.
+	// Senza mouse: la matita sull'immagine apre la scelta del file.
 	await expect(box.getByRole('button', { name: 'Cambia immagine' })).toBeVisible();
 	await box.getByLabel("File dell'immagine della pagina").setInputFiles('tests/fixtures/map.png');
 	await expect(box.getByRole('status')).toContainText('Immagine salvata');
@@ -150,12 +153,24 @@ test("immagine della pagina: si trascina nel riquadro in alto a destra", async (
 	await expect(box.getByRole('status')).toContainText('Formato non supportato');
 
 	admin.once('dialog', (d) => d.accept());
-	await box.getByRole('button', { name: 'Rimuovi' }).click();
+	await box.getByRole('button', { name: "Rimuovi l'immagine" }).click();
 	await expect(box.getByRole('status')).toContainText('Immagine rimossa');
 	await expect(box.getByRole('img')).toHaveCount(0);
 
+	// Il testo non ancora salvato resta, e la pagina si salva senza conflitti.
+	const title = admin.getByLabel('Titolo', { exact: true });
+	await title.fill('Elminster Aumar');
 	await box.getByLabel("File dell'immagine della pagina").setInputFiles('tests/fixtures/city.png');
 	await expect(img).toBeVisible();
+	await expect(title).toHaveValue('Elminster Aumar');
+	await title.fill('Elminster');
+	await admin.getByRole('button', { name: 'Salva' }).click();
+	await admin.waitForURL('/wiki/elminster');
+
+	// In lettura l'immagine si vede soltanto.
+	const view = admin.getByRole('group', { name: 'Immagine della pagina' });
+	await expect(view.getByRole('img', { name: 'Elminster' })).toBeVisible();
+	await expect(view.getByRole('button')).toHaveCount(0);
 });
 
 test('un file che non è un\'immagine viene rifiutato', async () => {
@@ -393,7 +408,7 @@ test('il giocatore non vede pin, livelli ed eventi segreti', async ({ browser })
 	const box = p.getByRole('group', { name: 'Immagine della pagina' });
 	await expect(box.getByRole('img', { name: 'Elminster' })).toBeVisible();
 	await expect(box.getByRole('button')).toHaveCount(0);
-	const up = await p.request.post('/wiki/elminster?/image', {
+	const up = await p.request.post('/wiki/elminster/edit?/image', {
 		multipart: { file: { name: 'x.png', mimeType: 'image/png', buffer: readFileSync('tests/fixtures/city.png') } },
 		headers: { origin: new URL(p.url()).origin }
 	});

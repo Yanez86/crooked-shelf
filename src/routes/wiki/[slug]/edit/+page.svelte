@@ -31,6 +31,7 @@
 		updatedAt={data.page.updatedAt}
 		months={data.months}
 		image={data.image}
+		editImage
 		submitLabel={t('common.save')}
 		cancelHref="/wiki/{data.page.slug}"
 	/>

@@ -1,11 +1,11 @@
 import { error, fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { allowedVisibilities, canEdit, canManage, isMaster } from '#lib/access.ts';
-import { deletePage, getPageBySlug, pageMeta, updatePage } from '#lib/server/pages.ts';
+import { deletePage, getPageBySlug, pageMeta, setPageImage, updatePage } from '#lib/server/pages.ts';
 import { readPageForm } from '#lib/server/pageForm.ts';
 import { categoryTree, listTags } from '#lib/server/taxonomy.ts';
 import { getCalendar } from '#lib/server/settings.ts';
-import { getFile } from '#lib/server/files.ts';
+import { getFile, saveImage } from '#lib/server/files.ts';
 
 function editable(slug: string, u: App.Locals['user']) {
 	const page = getPageBySlug(slug);
@@ -13,10 +13,14 @@ function editable(slug: string, u: App.Locals['user']) {
 	return page;
 }
 
+function pageImage(id: string | null) {
+	const f = id ? getFile(id) : undefined;
+	return f ? { url: `/files/${f.id}`, width: f.width, height: f.height } : null;
+}
+
 export const load: PageServerLoad = ({ params, locals, url }) => {
 	if (!locals.user) redirect(303, `/login?next=${encodeURIComponent(url.pathname)}`);
 	const page = editable(params.slug, locals.user);
-	const img = page.imageId ? getFile(page.imageId) : undefined;
 	return {
 		page: {
 			slug: page.slug,
@@ -32,7 +36,7 @@ export const load: PageServerLoad = ({ params, locals, url }) => {
 			session: page.session ?? null,
 			icon: page.icon
 		},
-		image: img ? { url: `/files/${img.id}`, width: img.width, height: img.height } : null,
+		image: pageImage(page.imageId),
 		months: getCalendar().months,
 		categories: categoryTree(locals.user).flat.map(({ id, label }) => ({ id, label })),
 		visibilities: allowedVisibilities(locals.user),
@@ -63,5 +67,22 @@ export const actions: Actions = {
 		if ((await request.formData()).get('confirm') !== 'on') return fail(400, { error: 'errors.confirm', values: null });
 		deletePage(page.id);
 		redirect(303, '/wiki?deleted=1');
+	},
+	// L'immagine si salva subito, senza versione né data di modifica: non va in conflitto con il testo in modifica.
+	image: async ({ params, request, locals }) => {
+		if (!locals.user) return fail(401, { imageError: 'errors.forbidden' });
+		const page = editable(params.slug, locals.user);
+		const file = (await request.formData()).get('file');
+		if (!(file instanceof File) || file.size === 0) return fail(400, { imageError: 'files.empty' });
+		const r = saveImage(Buffer.from(await file.arrayBuffer()), file.name, locals.user.id);
+		if (!r.ok) return fail(400, { imageError: r.error });
+		setPageImage(page.id, r.file.id);
+		return { imageOk: 'pageImage.saved', image: pageImage(r.file.id) };
+	},
+	removeImage: async ({ params, locals }) => {
+		if (!locals.user) return fail(401, { imageError: 'errors.forbidden' });
+		const page = editable(params.slug, locals.user);
+		setPageImage(page.id, null);
+		return { imageOk: 'pageImage.removed', image: null };
 	}
 };

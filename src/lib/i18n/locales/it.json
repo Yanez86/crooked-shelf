@@ -318,12 +318,13 @@
 		"drop": "Trascina qui un'immagine, oppure sceglila dal pulsante.",
 		"add": "Aggiungi un'immagine",
 		"change": "Cambia immagine",
-		"remove": "Rimuovi",
+		"remove": "Rimuovi l'immagine",
 		"file": "File dell'immagine della pagina",
 		"confirmRemove": "Togliere l'immagine da questa pagina?",
 		"uploading": "Caricamento…",
 		"saved": "Immagine salvata.",
-		"removed": "Immagine rimossa."
+		"removed": "Immagine rimossa.",
+		"failed": "Non è stato possibile salvare l'immagine. Riprova."
 	},
 	"editor": {
 		"toolbar": "Formattazione",

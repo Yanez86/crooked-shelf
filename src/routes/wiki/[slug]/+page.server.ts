@@ -1,8 +1,8 @@
-import { error, fail } from '@sveltejs/kit';
-import type { Actions, PageServerLoad } from './$types';
+import { error } from '@sveltejs/kit';
+import type { PageServerLoad } from './$types';
 import { canEdit, canView, isMaster } from '#lib/access.ts';
-import { backlinks, getPageBySlug, pageMeta, renderPage, setPageImage } from '#lib/server/pages.ts';
-import { getFile, saveImage } from '#lib/server/files.ts';
+import { backlinks, getPageBySlug, pageMeta, renderPage } from '#lib/server/pages.ts';
+import { getFile } from '#lib/server/files.ts';
 import { contentLabels } from '#lib/server/pageForm.ts';
 import { categoryPath } from '#lib/server/taxonomy.ts';
 import { mapsForPage } from '#lib/server/maps.ts';
@@ -52,28 +52,4 @@ export const load: PageServerLoad = ({ params, locals }) => {
 		backlinks: backlinks(page.slug, locals.user),
 		canEdit: canEdit(page, locals.user)
 	};
-};
-
-/** Le azioni sull'immagine della pagina: solo chi può modificare la pagina. */
-function editable(slug: string, u: App.Locals['user']) {
-	const page = getPageBySlug(slug);
-	if (!page || !canEdit(page, u)) error(404, 'Not found');
-	return { page, user: u! };
-}
-
-export const actions: Actions = {
-	image: async ({ params, request, locals }) => {
-		const { page, user } = editable(params.slug, locals.user);
-		const file = (await request.formData()).get('file');
-		if (!(file instanceof File) || file.size === 0) return fail(400, { imageError: 'files.empty' });
-		const r = saveImage(Buffer.from(await file.arrayBuffer()), file.name, user.id);
-		if (!r.ok) return fail(400, { imageError: r.error });
-		setPageImage(page.id, r.file.id);
-		return { imageOk: 'pageImage.saved' };
-	},
-	removeImage: async ({ params, locals }) => {
-		const { page } = editable(params.slug, locals.user);
-		setPageImage(page.id, null);
-		return { imageOk: 'pageImage.removed' };
-	}
 };

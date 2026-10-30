@@ -7,7 +7,7 @@
 	import PageImage from '#lib/components/PageImage.svelte';
 	import type { PageProps } from './$types';
 
-	let { data, form }: PageProps = $props();
+	let { data }: PageProps = $props();
 	const t = getT();
 	const locale = $derived(appPage.data.locale as string);
 </script>
@@ -51,7 +51,8 @@
 
 	<div class="body">
 		<div class="side">
-			<PageImage image={data.image} title={data.page.title} canEdit={data.canEdit} error={form?.imageError} ok={form?.imageOk} />
+			<!-- Qui si vede soltanto: si cambia e si toglie con la pagina in modifica. -->
+			<PageImage image={data.image} title={data.page.title} canEdit={false} />
 			{#if data.fields.length || data.session}
 				<aside class="infobox" aria-label={t('fields.title')}>
 					<dl>
@@ -191,7 +192,7 @@
 		gap: 1rem;
 		max-width: 100%;
 	}
-	/* Senza immagine né scheda resta solo il pulsante: la colonna non ruba spazio al testo. */
+	/* Senza immagine né scheda la colonna resta vuota e non ruba spazio al testo. */
 	/* Con immagine o scheda la colonna diventa un riquadro a sé, staccato dal testo. */
 	.side:has(:global(.page-image:not(.bare)), .infobox) {
 		width: 20rem;

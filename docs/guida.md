@@ -14,7 +14,7 @@ Le persone entrano con un **invito**: Amministrazione › Inviti › «Crea invi
 ## Pagine
 
 - **Albero a sinistra**: le categorie sono cartelle che si aprono e si chiudono con un clic (o con Invio da tastiera); dentro ci sono le sottocartelle e le pagine. Le pagine senza categoria stanno in fondo, alla radice. La cartella della pagina che stai leggendo si apre da sola. In alto ci sono due linguette: **Pagine** (cartelle e pagine) e **Risorse** (immagini, audio e altri file, vedi sotto). Sul telefono l'albero è nel pulsante «Pagine e risorse»; chi non lo vuole lo nasconde in Preferenze.
-- **Immagine della pagina**: ogni pagina ha un riquadro in alto a destra. Se puoi modificare la pagina, trascinaci sopra un'immagine dal computer (oppure usa «Scegli un'immagine»): si salva subito. Con «Cambia immagine» e «Rimuovi» la sostituisci o la togli.
+- **Immagine della pagina**: ogni pagina ha un riquadro in alto a destra. Con la pagina in modifica (la matita ✎) trascinaci sopra un'immagine dal computer, oppure usa «Aggiungi un'immagine»: si salva subito, anche senza premere Salva. Sull'immagine stessa ci sono la matita ✎, per sostituirla, e la ×, per toglierla.
 - **Nuova pagina** parte da un **template** (PNG, Luogo, Fazione, Resoconto di sessione…) o da una pagina vuota.
 - **Chi la vede**: pubblica, giocatori, solo Master, oppure personale (solo tu: va bene per gli appunti privati).
 - **Scheda**: i campi a lato (es. «Allineamento: Caotico buono»). Anche lì si può scrivere `[[Pagina]]`.

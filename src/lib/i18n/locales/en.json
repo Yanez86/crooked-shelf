@@ -318,12 +318,13 @@
 		"drop": "Drop an image here, or pick one with the button.",
 		"add": "Add an image",
 		"change": "Change image",
-		"remove": "Remove",
+		"remove": "Remove image",
 		"file": "Page image file",
 		"confirmRemove": "Remove the image from this page?",
 		"uploading": "Uploading…",
 		"saved": "Image saved.",
-		"removed": "Image removed."
+		"removed": "Image removed.",
+		"failed": "The image could not be saved. Please try again."
 	},
 	"editor": {
 		"toolbar": "Formatting",

@@ -25,7 +25,8 @@
 		submitLabel,
 		cancelHref,
 		months,
-		image = null
+		image = null,
+		editImage = false
 	}: {
 		values: {
 			title: string;
@@ -49,8 +50,9 @@
 		submitLabel: string;
 		cancelHref: string;
 		months: CalMonth[];
-		/** Immagine della pagina: qui si vede soltanto, si cambia dalla pagina stessa. */
 		image?: { url: string; width: number; height: number } | null;
+		/** Solo per una pagina che esiste già: l'immagine si salva da sola, subito. */
+		editImage?: boolean;
 	} = $props();
 
 	const t = getT();
@@ -135,7 +137,7 @@
 
 	<div class="body">
 		<div class="side">
-			{#if image}<PageImage {image} title={values.title} canEdit={false} />{/if}
+			<PageImage {image} title={values.title} canEdit={editImage} />
 			{#if values.session}
 				<fieldset class="session">
 					<legend>{t('session.title')}</legend>
