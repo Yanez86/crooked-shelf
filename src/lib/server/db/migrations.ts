@@ -283,5 +283,11 @@ export const MIGRATIONS: (string | ((db: Database.Database) => void))[] = [
 	ALTER TABLE users ADD COLUMN icon TEXT;
 	`,
 	// Template, mappe e cronologie diventano tipi di pagina.
-	pageKindsMigration
+	pageKindsMigration,
+	// Copertina della pagina (in alto, come in Notion): un'immagine o un colore, e quale parte dell'immagine si vede.
+	`
+	ALTER TABLE pages ADD COLUMN cover_image_id TEXT REFERENCES files(id) ON DELETE SET NULL;
+	ALTER TABLE pages ADD COLUMN cover_color TEXT;
+	ALTER TABLE pages ADD COLUMN cover_y INTEGER NOT NULL DEFAULT 50;
+	`
 ];

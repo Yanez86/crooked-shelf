@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Icon from '#lib/components/Icon.svelte';
 	import { page as appPage } from '$app/state';
 	import { getT } from '#lib/i18n/index.ts';
 	import RelTime from '#lib/components/RelTime.svelte';
@@ -12,7 +13,7 @@
 
 <svelte:head><title>{t('history.title', { title: data.page.title })}</title></svelte:head>
 
-<p><a href="/wiki/{data.page.slug}">← {data.page.title}</a></p>
+<p><a class="back" href="/wiki/{data.page.slug}"><Icon name="arrowLeft" />{data.page.title}</a></p>
 <h1>{t('history.title', { title: data.page.title })}</h1>
 <FormError error={form?.error} />
 

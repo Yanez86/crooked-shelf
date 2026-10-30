@@ -6,7 +6,7 @@
 
 ## Cosa fa
 
-- **Pagine** con editor a blocchi e Markdown, collegamenti `[[Pagina]]`, immagini, categorie, tag e ricerca. Ogni pagina è bianca o la fotocopia di un **template**.
+- **Pagine** con editor a blocchi e Markdown, collegamenti `[[Pagina]]`, copertina e icona come in Notion, immagini, categorie, tag e ricerca. Ogni pagina è bianca o la fotocopia di un **template**.
 - **Tipi di pagina**: pagina, template (la struttura base da fotocopiare, decisa da te), mappa, cronologia.
 - **Barra a sinistra** con tutta la wiki: nuova pagina, sezioni e albero come in Esplora risorse, con le categorie come cartelle da aprire e chiudere e le pagine di ogni tipo dentro.
 - **Colonna a lato** delle pagine, solo se serve: in modifica la aggiungi col «+» e ci metti riquadri di testo o immagini.

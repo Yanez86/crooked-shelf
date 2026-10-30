@@ -1,7 +1,7 @@
 import { error, fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { allowedVisibilities, canEdit, canManage, isMaster } from '#lib/access.ts';
-import { deletePage, getPageBySlug, pageMeta, updatePage } from '#lib/server/pages.ts';
+import { deletePage, getPageBySlug, pageCover, pageMeta, updatePage } from '#lib/server/pages.ts';
 import { readPageForm } from '#lib/server/pageForm.ts';
 import { mapFormValues, readMapForm } from '#lib/server/mapForm.ts';
 import { getMapOfPage, listMaps, updateMap } from '#lib/server/maps.ts';
@@ -37,6 +37,7 @@ export const load: PageServerLoad = ({ params, locals, url }) => {
 			template: page.template,
 			session: page.session ?? null,
 			icon: page.icon,
+			cover: pageCover(page),
 			kind: page.kind
 		},
 		// Le impostazioni proprie della mappa (le cambia il Master) e della cronologia.

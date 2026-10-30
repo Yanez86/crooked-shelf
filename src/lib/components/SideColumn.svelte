@@ -2,6 +2,7 @@
 	import { tick, untrack, type Snippet } from 'svelte';
 	import { getT } from '../i18n/index.ts';
 	import type { PageField } from '../content/types.ts';
+	import Icon from './Icon.svelte';
 
 	/**
 	 * La colonna a lato in modifica. Di base non c'è: il «+» la aggiunge. Dentro, riquadri modificati sul posto:
@@ -114,19 +115,19 @@
 
 {#snippet removeButton(row: Box, i: number, cls: string)}
 	<button class="{cls} remove" type="button" title={t('common.delete')} onclick={() => remove(i)}>
-		<span aria-hidden="true">×</span><span class="visually-hidden">{t('common.delete')}: {boxName(row, i)}</span>
+		<Icon name="close" /><span class="visually-hidden">{t('common.delete')}: {boxName(row, i)}</span>
 	</button>
 {/snippet}
 
-<!-- Con l'immagine, la × sta sull'immagine stessa: qui restano le frecce. -->
+<!-- Con l'immagine, la crocetta sta sull'immagine stessa: qui restano le frecce. -->
 {#snippet tools(row: Box, i: number)}
 	<div class="tools">
 		{#if !row.image}{@render removeButton(row, i, 'tool')}{/if}
 		<button id="field-up-{i}" class="tool" type="button" title={t('fields.moveUp')} disabled={i === 0} onclick={() => move(i, -1)}>
-			<span aria-hidden="true">↑</span><span class="visually-hidden">{t('fields.moveUp')}: {boxName(row, i)}</span>
+			<Icon name="arrowUp" /><span class="visually-hidden">{t('fields.moveUp')}: {boxName(row, i)}</span>
 		</button>
 		<button id="field-down-{i}" class="tool" type="button" title={t('fields.moveDown')} disabled={i === rows.length - 1} onclick={() => move(i, 1)}>
-			<span aria-hidden="true">↓</span><span class="visually-hidden">{t('fields.moveDown')}: {boxName(row, i)}</span>
+			<Icon name="arrowDown" /><span class="visually-hidden">{t('fields.moveDown')}: {boxName(row, i)}</span>
 		</button>
 	</div>
 {/snippet}
@@ -152,7 +153,7 @@
 							<!-- Come la matita della pagina: si cambia e si cancella dall'immagine stessa. -->
 							<div class="on-image">
 								<button id="field-pick-{i}" class="on-tool" type="button" title={t('fields.changeImage')} disabled={row.busy} onclick={() => document.getElementById(`field-file-${i}`)?.click()}>
-									<span aria-hidden="true">✎</span><span class="visually-hidden">{t('fields.changeImage')}: {boxName(row, i)}</span>
+									<Icon name="edit" /><span class="visually-hidden">{t('fields.changeImage')}: {boxName(row, i)}</span>
 								</button>
 								{@render removeButton(row, i, 'on-tool')}
 							</div>
@@ -192,8 +193,8 @@
 		{/each}
 		<div class="adds" role="group" aria-labelledby="side-add-label">
 			<span id="side-add-label" class="adds-label">{t('fields.add')}</span>
-			<button id="side-add-text" class="add" type="button" onclick={addText}><span aria-hidden="true">+</span> {t('fields.text')}</button>
-			<button class="add" type="button" onclick={addImage}><span aria-hidden="true">+</span> {t('fields.imageBox')}</button>
+			<button id="side-add-text" class="add" type="button" onclick={addText}><Icon name="plus" />{t('fields.text')}</button>
+			<button class="add" type="button" onclick={addImage}><Icon name="plus" />{t('fields.imageBox')}</button>
 		</div>
 		{#if !fixed && !rows.length}
 			<button class="close" type="button" onclick={closeColumn}>{t('fields.removeColumn')}</button>
@@ -202,7 +203,7 @@
 	</section>
 {:else}
 	<button id="side-open" class="open" type="button" title={t('fields.addColumn')} onclick={openColumn}>
-		<span aria-hidden="true">+</span><span class="visually-hidden">{t('fields.addColumn')}</span>
+		<Icon name="plus" /><span class="visually-hidden">{t('fields.addColumn')}</span>
 	</button>
 {/if}
 
@@ -407,6 +408,10 @@
 	}
 	.add {
 		flex: 1;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.3rem;
 		font: inherit;
 		font-size: var(--fs-sm);
 		padding: 0.5rem;

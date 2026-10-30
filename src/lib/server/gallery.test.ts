@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import Database from 'better-sqlite3';
 import { useMemoryDb, schema } from './db/index.ts';
 import { MIGRATIONS } from './db/migrations.ts';
-import { createPage, getPageBySlug, renderPage, updatePage } from './pages.ts';
+import { createPage, getPageBySlug, pageCover, renderPage, updatePage } from './pages.ts';
 import { readPageForm } from './pageForm.ts';
 import { createCategory, pageTree } from './taxonomy.ts';
 import { galleryImages } from './gallery.ts';
@@ -73,6 +73,45 @@ describe('colonna a lato', () => {
 		expect(fields('a')).toEqual([pic('coverxxxxxxxx')]);
 		expect(fields('b')).toEqual([pic('coverxxxxxxxx'), { label: 'Razza', value: 'Elfo' }]);
 		expect(fields('c')).toEqual([{ label: 'Razza', value: 'Elfo' }]);
+	});
+});
+
+describe('copertina', () => {
+	const form = (cover: Record<string, string>) => {
+		const f = new FormData();
+		f.set('title', 'Waterdeep');
+		f.set('visibility', 'players');
+		f.set('content', JSON.stringify(doc()));
+		for (const [k, v] of Object.entries(cover)) f.set(k, v);
+		const r = readPageForm(f, alice, { months: [] } as never);
+		if (!r.ok) throw new Error(r.error);
+		return r.input.cover;
+	};
+
+	it('il modulo accetta solo immagini caricate e colori conosciuti', () => {
+		expect(form({ coverImage: 'coverxxxxxxxx', coverColor: '', coverY: '30' })).toEqual({ image: 'coverxxxxxxxx', color: null, y: 30 });
+		expect(form({ coverImage: 'pdfxxxxxxxxxx', coverColor: 'sea', coverY: '30' })).toEqual({ image: null, color: 'sea', y: 50 });
+		expect(form({ coverImage: '', coverColor: 'arcobaleno', coverY: '' })).toBeNull();
+	});
+
+	it('si salva, si cambia e resta quando una modifica non la tocca', () => {
+		const pg = createPage({ ...base, title: 'Waterdeep', cover: { image: 'coverxxxxxxxx', color: null, y: 30 } }, alice);
+		expect(pageCover(pg)).toEqual({ image: 'coverxxxxxxxx', color: null, y: 30 });
+		// Ripristinare una versione non passa la copertina: resta quella che c'è.
+		updatePage(pg, { ...base, title: 'Waterdeep' }, alice, false);
+		expect(pageCover(getPageBySlug('waterdeep')!)).toEqual({ image: 'coverxxxxxxxx', color: null, y: 30 });
+		updatePage(pg, { ...base, title: 'Waterdeep', cover: { image: null, color: 'forest', y: 50 } }, alice, false);
+		expect(pageCover(getPageBySlug('waterdeep')!)).toEqual({ image: null, color: 'forest', y: 50 });
+		updatePage(pg, { ...base, title: 'Waterdeep', cover: null }, alice, false);
+		expect(pageCover(getPageBySlug('waterdeep')!)).toBeNull();
+	});
+
+	it("l'immagine di copertina è nella galleria, per chi può leggere la pagina", () => {
+		createPage({ ...base, title: 'Waterdeep', cover: { image: 'diaryxxxxxxxx', color: null, y: 50 } }, master);
+		createPage({ ...base, visibility: 'master', title: 'Covo', cover: { image: 'gmxxxxxxxx', color: null, y: 50 } }, master);
+		expect(galleryImages(alice).find((i) => i.id.startsWith('diary'))!.sources).toEqual([{ kind: 'cover', title: 'Waterdeep', href: '/wiki/waterdeep' }]);
+		expect(ids(alice)).not.toContain('gm');
+		expect(ids(master)).toContain('gm');
 	});
 });
 

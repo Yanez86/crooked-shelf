@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Icon from '#lib/components/Icon.svelte';
 	import { page } from '$app/state';
 	import { getT } from '#lib/i18n/index.ts';
 	import type { PageProps } from './$types';
@@ -94,7 +95,7 @@
 		<div class="viewer-inner">
 			<div class="viewer-bar">
 				<span>{t('gallery.viewer', { n: index + 1, total })}</span>
-				<button class="btn btn-small" type="button" onclick={() => viewer.close()}>✕ {t('common.close')}</button>
+				<button class="btn btn-small" type="button" onclick={() => viewer.close()}><Icon name="close" />{t('common.close')}</button>
 			</div>
 			<img src={shown.url} alt={shown.alt} width={shown.width} height={shown.height} />
 			<ul class="list-plain viewer-sources">

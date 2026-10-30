@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { getSqlite, migrate, useMemoryDb } from './index.ts';
 import { MIGRATIONS } from './migrations.ts';
+import { pageKindsMigration } from './pageKinds.ts';
 import { resetSettingsCache } from '../settings.ts';
 import { getPageBySlug } from '../pages.ts';
 import { getMapOfPage, listMaps, pinsOf } from '../maps.ts';
@@ -13,7 +14,8 @@ const alice = { id: 2, role: 'player' as const };
 
 describe('migrazione dopo la 0.10: template, mappe e cronologie diventano pagine', () => {
 	it('converte i dati di una wiki che c’è già', () => {
-		useMemoryDb(MIGRATIONS.length - 1);
+		// Ferma prima di questa migrazione (dopo ne possono venire altre).
+		useMemoryDb(MIGRATIONS.indexOf(pageKindsMigration));
 		resetSettingsCache();
 		const db = getSqlite();
 		const run = (q: string, ...p: unknown[]) => db.prepare(q).run(...p);

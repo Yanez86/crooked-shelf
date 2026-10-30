@@ -518,6 +518,35 @@
 		"moveDown": "Sposta giù",
 		"moved": "Riquadro spostato."
 	},
+	"cover": {
+		"title": "Copertina",
+		"add": "Aggiungi copertina",
+		"change": "Cambia copertina",
+		"reposition": "Riposiziona la copertina",
+		"remove": "Togli la copertina",
+		"gallery": "Galleria",
+		"colors": "Tinta unita",
+		"upload": "Carica",
+		"galleryHint": "Le immagini della campagna: pagine, mappe e risorse.",
+		"galleryEmpty": "Nella galleria non ci sono ancora immagini: caricane una.",
+		"galleryLoading": "Caricamento della galleria…",
+		"galleryError": "Non è stato possibile aprire la galleria.",
+		"colorsHint": "Una fascia di colore, senza immagine.",
+		"uploadLabel": "Carica un'immagine",
+		"uploadHint": "PNG, JPEG, WebP o GIF. Meglio se larga almeno 1500 px. Finisce anche nella galleria.",
+		"uploading": "Caricamento…",
+		"position": "Posizione della copertina",
+		"repositionHint": "Trascina l'immagine o usa i tasti freccia.",
+		"done": "Fatto",
+		"colorNames": {
+			"rust": "Ruggine",
+			"night": "Notte",
+			"forest": "Bosco",
+			"sea": "Mare",
+			"stone": "Pietra",
+			"parchment": "Pergamena"
+		}
+	},
 	"session": {
 		"title": "Resoconto di sessione",
 		"number": "Sessione n.",

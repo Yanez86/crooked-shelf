@@ -1,4 +1,5 @@
-/* Crooked Shelf — stile di base. I colori arrivano dai temi (--c-*). */
+/* Crooked Shelf — stile di base. I colori arrivano dai temi (--c-*).
+   Angoli vivi ovunque: ogni arrotondamento passa da --radius, che vale 0. */
 
 *,
 *::before,
@@ -7,11 +8,12 @@
 }
 
 :root {
-	--font-body: system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans', Ubuntu, sans-serif;
-	--font-head: Georgia, 'Iowan Old Style', 'Palatino Linotype', 'Book Antiqua', serif;
+	/* Inter per il testo e l'interfaccia, Archivo per i titoli: entrambi inclusi nella wiki, senza servizi esterni. */
+	--font-body: 'Inter Variable', system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans', sans-serif;
+	--font-head: 'Archivo Variable', 'Inter Variable', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 	--font-mono: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, monospace;
 	--line: 1.6;
-	--radius: 0.375rem;
+	--radius: 0;
 	--space: 1rem;
 	--measure: 72ch;
 	/* Scala dei caratteri (rapporto ~1.2): usare solo questi valori. */
@@ -120,8 +122,40 @@ mark {
 	background: var(--c-surface2);
 	color: var(--c-text);
 	outline: 1px solid var(--c-control);
-	border-radius: 2px;
+	border-radius: var(--radius);
 	font-weight: 700;
+}
+
+/* Icone a tratto (componente Icon): un solo colore, quello del testo. */
+.icon {
+	width: 1.15em;
+	height: 1.15em;
+	flex: none;
+	vertical-align: -0.2em;
+	fill: none;
+	stroke: currentColor;
+	stroke-width: 1.75;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+}
+/* Collegamento per tornare indietro: freccia e nome. */
+.back {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.3rem;
+}
+/* Le stesse icone nei ::before e ::after: una maschera del colore del testo (le variabili --icon-* le scrive il layout). */
+.secret-title::before,
+.disclosure > summary::after {
+	content: '';
+	display: inline-block;
+	width: 1.1em;
+	height: 1.1em;
+	vertical-align: -0.2em;
+	background: currentColor;
+	-webkit-mask: var(--icon) center / contain no-repeat;
+	mask: var(--icon) center / contain no-repeat;
+	forced-color-adjust: none;
 }
 
 .visually-hidden {
@@ -183,6 +217,7 @@ input[type='text'],
 input[type='password'],
 input[type='search'],
 input[type='number'],
+input[type='date'],
 select,
 textarea {
 	font: inherit;
@@ -197,11 +232,87 @@ textarea {
 textarea {
 	min-height: 6rem;
 }
+/* Senza l'aspetto nativo (arrotondato su Safari); la freccia è disegnata con due triangoli. */
+input[type='search'] {
+	appearance: none;
+}
+select:not([multiple]):not([size]) {
+	appearance: none;
+	padding-right: 2.25rem;
+	background-image:
+		linear-gradient(45deg, transparent 50%, var(--c-text) 50%),
+		linear-gradient(135deg, var(--c-text) 50%, transparent 50%);
+	background-position:
+		right 1.15rem center,
+		right 0.8rem center;
+	background-size: 0.35rem 0.35rem;
+	background-repeat: no-repeat;
+}
+input[type='file'] {
+	font: inherit;
+	max-width: 100%;
+}
+input[type='file']::file-selector-button {
+	font: inherit;
+	font-weight: 600;
+	min-height: 2.75rem;
+	margin-right: 0.75rem;
+	padding: 0.45rem 1rem;
+	border: 2px solid var(--c-control);
+	border-radius: var(--radius);
+	background: var(--c-surface);
+	color: var(--c-text);
+	cursor: pointer;
+}
+input[type='file']::file-selector-button:hover {
+	background: var(--c-surface2);
+}
+input[type='color']::-webkit-color-swatch-wrapper {
+	padding: 0;
+}
+input[type='color']::-webkit-color-swatch {
+	border: 0;
+	border-radius: var(--radius);
+}
+input[type='color']::-moz-color-swatch {
+	border: 0;
+	border-radius: var(--radius);
+}
 fieldset {
 	border: 1px solid var(--c-border);
 	border-radius: var(--radius);
 	padding: 0.75rem 1rem;
 	margin: 0 0 1.1rem;
+}
+/* Caselle di spunta disegnate qui: quelle del sistema hanno gli angoli arrotondati. */
+input[type='checkbox'] {
+	appearance: none;
+	display: inline-grid;
+	place-content: center;
+	width: 1rem;
+	height: 1rem;
+	border: 2px solid var(--c-control);
+	border-radius: var(--radius);
+	background: var(--c-surface);
+	vertical-align: middle;
+	cursor: pointer;
+}
+input[type='checkbox']:checked {
+	background: var(--c-primary);
+	border-color: var(--c-primary);
+}
+input[type='checkbox']:checked::before {
+	content: '';
+	width: 0.3rem;
+	height: 0.6rem;
+	margin-top: -0.1rem;
+	border: solid var(--c-on-primary);
+	border-width: 0 0.15rem 0.15rem 0;
+	transform: rotate(45deg);
+}
+input[type='checkbox']:disabled {
+	opacity: 0.6;
+	cursor: not-allowed;
 }
 .choice {
 	display: flex;
@@ -282,11 +393,10 @@ fieldset {
 	display: none;
 }
 .disclosure > summary::after {
-	content: '▾';
-	font-size: 0.8em;
+	--icon: var(--icon-chevron-down);
 }
 .disclosure[open] > summary::after {
-	content: '▴';
+	--icon: var(--icon-chevron-up);
 }
 .disclosure[open] > summary {
 	margin-bottom: 1rem;
@@ -335,9 +445,9 @@ fieldset {
 	display: inline-flex;
 	align-items: center;
 	gap: 0.3rem;
-	padding: 0.05rem 0.55rem;
+	padding: 0.1rem 0.5rem;
 	border: 1px solid var(--c-control);
-	border-radius: 999px;
+	border-radius: var(--radius);
 	font-size: var(--fs-sm);
 	color: var(--c-text);
 	background: var(--c-surface);
@@ -350,7 +460,7 @@ a.badge:hover {
 .tag-dot {
 	width: 0.65rem;
 	height: 0.65rem;
-	border-radius: 50%;
+	border-radius: var(--radius);
 	border: 1px solid var(--c-text);
 	flex: none;
 }
@@ -380,6 +490,60 @@ table.data td {
 	padding: 0.5rem 0.6rem;
 	border-bottom: 1px solid var(--c-border);
 	vertical-align: top;
+}
+
+/* --- Copertina e icona della pagina (uguali in lettura e in modifica) --- */
+
+.page-cover {
+	position: relative;
+	height: clamp(8rem, 26cqi, 14rem);
+	margin: 0.5rem 0 0;
+	overflow: hidden;
+	background: var(--c-surface2);
+}
+.page-cover img {
+	display: block;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+.page-icon {
+	display: grid;
+	place-items: center;
+	width: 4rem;
+	height: 4rem;
+	margin-top: 0.75rem;
+	background: var(--c-surface);
+	border: 1px solid var(--c-border);
+	color: var(--c-primary);
+}
+.page-icon svg {
+	width: 62%;
+	height: 62%;
+	fill: none;
+	stroke: currentColor;
+	stroke-width: 1.5;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+}
+/* Sulla copertina: più grande, a cavallo del bordo in basso, staccata dall'immagine col colore dello sfondo. */
+.page-icon.on-cover {
+	position: relative;
+	width: 5.5rem;
+	height: 5.5rem;
+	margin: -2.75rem 0 0 1.5rem;
+	box-shadow: 0 0 0 4px var(--c-bg);
+}
+/* Sul telefono la copertina va da un bordo all'altro dello schermo. */
+@media (max-width: 48rem) {
+	.page-cover {
+		margin-inline: calc(-1 * var(--space));
+	}
+	.page-icon.on-cover {
+		width: 4.5rem;
+		height: 4.5rem;
+		margin: -2.25rem 0 0;
+	}
 }
 
 /* --- Contenuto delle pagine --- */
@@ -466,7 +630,8 @@ table.data td {
 	color: inherit;
 }
 .secret-title::before {
-	content: '🔒 ';
+	--icon: var(--icon-lock);
+	margin-right: 0.35em;
 }
 
 /* --- Movimento --- */
@@ -495,6 +660,15 @@ table.data td {
 	.secret {
 		border: 2px solid CanvasText;
 	}
+	/* Freccia e segno di spunta disegnati non si vedrebbero: tornano quelli del sistema. */
+	select:not([multiple]):not([size]),
+	input[type='checkbox'] {
+		appearance: auto;
+		background-image: none;
+	}
+	input[type='checkbox']::before {
+		content: none;
+	}
 }
 
 /* --- Riferimenti alle regole --- */
@@ -514,12 +688,16 @@ table.data td {
 	margin-left: 0.2rem;
 	padding: 0;
 	vertical-align: middle;
-	border-radius: 50%;
+	border-radius: var(--radius);
 	border: 2px solid var(--c-control);
 	background: var(--c-surface);
 	color: var(--c-text);
-	font: italic 700 0.9rem/1 Georgia, serif;
+	font-size: 0.9rem;
 	cursor: pointer;
+}
+.rule-info .icon {
+	width: 1.15rem;
+	height: 1.15rem;
 }
 .rule-info[aria-expanded='true'] {
 	background: var(--c-primary);

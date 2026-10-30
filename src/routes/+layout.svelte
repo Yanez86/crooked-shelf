@@ -1,4 +1,6 @@
 <script lang="ts">
+	import '@fontsource-variable/inter';
+	import '@fontsource-variable/archivo/wdth.css';
 	import '@fontsource/atkinson-hyperlegible/400.css';
 	import '@fontsource/atkinson-hyperlegible/700.css';
 	import '@fontsource/opendyslexic/400.css';
@@ -11,6 +13,8 @@
 	import LinkPreview from '#lib/components/LinkPreview.svelte';
 	import PageTree from '#lib/components/PageTree.svelte';
 	import UserMenu from '#lib/components/UserMenu.svelte';
+	import Icon from '#lib/components/Icon.svelte';
+	import { iconCss } from '#lib/icons.ts';
 	import type { LayoutProps } from './$types';
 
 	let { data, children }: LayoutProps = $props();
@@ -54,7 +58,8 @@
 </script>
 
 <svelte:head>
-	{@html `<style>${data.themeCss}</style>`}
+	{@html `<style>${data.themeCss}
+${iconCss()}</style>`}
 	<title>{data.siteName}</title>
 </svelte:head>
 
@@ -74,7 +79,7 @@
 				title={t('tree.title')}
 				onclick={() => (treeOpen = !treeOpen)}
 			>
-				<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.75 4.75h16.5v14.5H3.75zM9.5 4.75v14.5M5.75 8.5h1.75M5.75 11.5h1.75" /></svg>
+				<Icon name="panel" />
 			</button>
 		{/if}
 		<a class="brand" href="/">
@@ -168,14 +173,9 @@
 		padding: 0;
 		justify-content: center;
 	}
-	.tree-toggle svg {
+	.tree-toggle :global(.icon) {
 		width: 1.4rem;
 		height: 1.4rem;
-		fill: none;
-		stroke: currentColor;
-		stroke-width: 1.75;
-		stroke-linecap: round;
-		stroke-linejoin: round;
 	}
 	/* Accesso, prima configurazione e invito: tutto al centro, come il modulo. */
 	.header-inner.bare {

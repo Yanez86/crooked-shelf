@@ -2,7 +2,8 @@
 	import 'leaflet/dist/leaflet.css';
 	import { onDestroy, onMount } from 'svelte';
 	import type * as Leaflet from 'leaflet';
-	import { PIN_HEX, PIN_SYMBOL } from './icons.ts';
+	import { PIN_HEX, PIN_ICON } from './icons.ts';
+	import { iconPath } from '../icons.ts';
 	import { getT } from '../i18n/index.ts';
 
 	export interface ViewPin {
@@ -89,7 +90,7 @@
 			const color = PIN_HEX[p.color] ?? PIN_HEX.red;
 			const icon = L.divIcon({
 				className: 'cs-pin',
-				html: `<span class="cs-pin-dot" style="background:${color}" aria-hidden="true">${PIN_SYMBOL[p.icon] ?? '●'}</span>`,
+				html: `<span class="cs-pin-dot" style="background:${color}" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="${iconPath(PIN_ICON[p.icon] ?? 'dot')}"/></svg></span>`,
 				iconSize: [34, 34],
 				iconAnchor: [17, 17],
 				popupAnchor: [0, -16]
@@ -233,17 +234,25 @@
 		place-items: center;
 		width: 34px;
 		height: 34px;
-		border-radius: 50%;
+		border-radius: var(--radius);
 		border: 3px solid #fff;
 		box-shadow: 0 0 0 2px #000, 0 2px 6px rgb(0 0 0 / 0.5);
 		color: #fff;
-		font-size: 17px;
 		line-height: 1;
+	}
+	.map :global(.cs-pin-dot svg) {
+		width: 20px;
+		height: 20px;
+		fill: none;
+		stroke: currentColor;
+		stroke-width: 2;
+		stroke-linecap: round;
+		stroke-linejoin: round;
 	}
 	.map :global(.leaflet-marker-icon:focus-visible) {
 		outline: 3px solid var(--c-focus);
 		outline-offset: 3px;
-		border-radius: 50%;
+		border-radius: var(--radius);
 	}
 	.map :global(.cs-pin-label) {
 		font-weight: 700;
@@ -275,5 +284,9 @@
 		font-size: var(--fs-lg);
 		background: var(--c-surface);
 		color: var(--c-text);
+	}
+	/* Anche i controlli, i fumetti e le etichette di Leaflet con gli angoli vivi. */
+	.map :global(:is(.leaflet-bar, .leaflet-bar a, .leaflet-control-layers, .leaflet-popup-content-wrapper, .leaflet-tooltip)) {
+		border-radius: var(--radius);
 	}
 </style>

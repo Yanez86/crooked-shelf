@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Icon from '#lib/components/Icon.svelte';
 	import { page } from '$app/state';
 	import { getT } from '#lib/i18n/index.ts';
 	import { RESOURCE_KINDS, formatSize } from '#lib/resources.ts';
@@ -16,7 +17,7 @@
 
 <div class="head">
 	<h1>{t('resources.title')}</h1>
-	{#if data.canCreate}<a class="btn btn-primary" href="/resources/new">+ {t('resources.new')}</a>{/if}
+	{#if data.canCreate}<a class="btn btn-primary" href="/resources/new"><Icon name="plus" />{t('resources.new')}</a>{/if}
 </div>
 <p>{t('resources.intro')}</p>
 <FormOk message={page.url.searchParams.has('deleted') ? 'resources.deleted' : null} />

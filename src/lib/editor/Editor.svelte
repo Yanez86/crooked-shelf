@@ -5,6 +5,7 @@
 	import { RULE_KINDS } from '../rules/index.ts';
 	import { getT } from '../i18n/index.ts';
 	import type { DocNode } from '../content/types.ts';
+	import Icon from '../components/Icon.svelte';
 
 	let {
 		content,
@@ -202,10 +203,10 @@
 	});
 </script>
 
-<!-- Pulsante della barra: solo il simbolo, il nome nel suggerimento e per chi usa un lettore di schermo. -->
+<!-- Pulsante della barra: solo l'icona, il nome nel suggerimento e per chi usa un lettore di schermo. -->
 {#snippet btn(icon: string, label: string, onclick: () => void, pressed?: boolean, disabled = false)}
 	<button type="button" aria-pressed={pressed} title={label} {onclick} {disabled}>
-		<span aria-hidden="true">{icon}</span><span class="visually-hidden">{label}</span>
+		<Icon name={icon} /><span class="visually-hidden">{label}</span>
 	</button>
 {/snippet}
 
@@ -220,39 +221,39 @@
 			<option value="code">{'{ }'}</option>
 		</select>
 		<span class="sep" aria-hidden="true"></span>
-		{@render btn('B', t('editor.bold') + ' (Ctrl+B)', () => chain().toggleBold().run(), active('bold'))}
-		{@render btn('I', t('editor.italic') + ' (Ctrl+I)', () => chain().toggleItalic().run(), active('italic'))}
-		{@render btn('U', t('editor.underline') + ' (Ctrl+U)', () => chain().toggleUnderline().run(), active('underline'))}
-		{@render btn('S', t('editor.strike'), () => chain().toggleStrike().run(), active('strike'))}
-		{@render btn('</>', t('editor.code'), () => chain().toggleCode().run(), active('code'))}
+		{@render btn('bold', t('editor.bold') + ' (Ctrl+B)', () => chain().toggleBold().run(), active('bold'))}
+		{@render btn('italic', t('editor.italic') + ' (Ctrl+I)', () => chain().toggleItalic().run(), active('italic'))}
+		{@render btn('underline', t('editor.underline') + ' (Ctrl+U)', () => chain().toggleUnderline().run(), active('underline'))}
+		{@render btn('strike', t('editor.strike'), () => chain().toggleStrike().run(), active('strike'))}
+		{@render btn('code', t('editor.code'), () => chain().toggleCode().run(), active('code'))}
 		<span class="sep" aria-hidden="true"></span>
-		{@render btn('🔗', t('editor.link'), setLink, active('link'))}
-		{@render btn('[[ ]]', t('editor.wikiLinkHint'), wikiLink)}
-		{@render btn('📖', t('editor.ruleHint'), ruleRef)}
+		{@render btn('link', t('editor.link'), setLink, active('link'))}
+		{@render btn('wikiLink', t('editor.wikiLinkHint'), wikiLink)}
+		{@render btn('book', t('editor.ruleHint'), ruleRef)}
 		<span class="sep" aria-hidden="true"></span>
-		{@render btn('•', t('editor.bulletList'), () => chain().toggleBulletList().run(), active('bulletList'))}
-		{@render btn('1.', t('editor.orderedList'), () => chain().toggleOrderedList().run(), active('orderedList'))}
-		{@render btn('❝', t('editor.quote'), () => chain().toggleBlockquote().run(), active('blockquote'))}
+		{@render btn('listBullet', t('editor.bulletList'), () => chain().toggleBulletList().run(), active('bulletList'))}
+		{@render btn('listNumber', t('editor.orderedList'), () => chain().toggleOrderedList().run(), active('orderedList'))}
+		{@render btn('quote', t('editor.quote'), () => chain().toggleBlockquote().run(), active('blockquote'))}
 		<span class="sep" aria-hidden="true"></span>
-		{@render btn('ℹ︎', t('editor.note'), () => chain().toggleWrap('callout', { kind: 'note' }).run(), active('callout', { kind: 'note' }))}
-		{@render btn('💡', t('editor.tip'), () => chain().toggleWrap('callout', { kind: 'tip' }).run(), active('callout', { kind: 'tip' }))}
-		{@render btn('⚠︎', t('editor.warning'), () => chain().toggleWrap('callout', { kind: 'warning' }).run(), active('callout', { kind: 'warning' }))}
+		{@render btn('note', t('editor.note'), () => chain().toggleWrap('callout', { kind: 'note' }).run(), active('callout', { kind: 'note' }))}
+		{@render btn('tip', t('editor.tip'), () => chain().toggleWrap('callout', { kind: 'tip' }).run(), active('callout', { kind: 'tip' }))}
+		{@render btn('warning', t('editor.warning'), () => chain().toggleWrap('callout', { kind: 'warning' }).run(), active('callout', { kind: 'warning' }))}
 		{#if canSecret}
-			{@render btn('🔒', t('editor.secret'), () => chain().toggleWrap('secret').run(), active('secret'))}
+			{@render btn('lock', t('editor.secret'), () => chain().toggleWrap('secret').run(), active('secret'))}
 		{/if}
 		<span class="sep" aria-hidden="true"></span>
-		{@render btn('▦', t('editor.table'), () => chain().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run(), undefined, active('table'))}
-		{@render btn('―', t('editor.rule'), () => chain().setHorizontalRule().run())}
-		{@render btn('🖼', t('editor.image'), () => fileInput.click())}
+		{@render btn('table', t('editor.table'), () => chain().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run(), undefined, active('table'))}
+		{@render btn('rule', t('editor.rule'), () => chain().setHorizontalRule().run())}
+		{@render btn('image', t('editor.image'), () => fileInput.click())}
 		{#if active('image')}
-			{@render btn('Alt', t('editor.altEdit'), editAlt)}
+			<button type="button" title={t('editor.altEdit')} onclick={editAlt}>Alt</button>
 		{/if}
 		<span class="sep" aria-hidden="true"></span>
-		{@render btn('↶', t('editor.undo'), () => chain().undo().run(), undefined, !can((e) => e.can().undo()))}
-		{@render btn('↷', t('editor.redo'), () => chain().redo().run(), undefined, !can((e) => e.can().redo()))}
+		{@render btn('undo', t('editor.undo'), () => chain().undo().run(), undefined, !can((e) => e.can().undo()))}
+		{@render btn('redo', t('editor.redo'), () => chain().redo().run(), undefined, !can((e) => e.can().redo()))}
 		<span class="sep" aria-hidden="true"></span>
 		<button type="button" title={t('editor.tips')} aria-expanded={showTips} aria-controls="{labelId}-tips" onclick={() => (showTips = !showTips)}>
-			<span aria-hidden="true">M↓</span><span class="visually-hidden">{t('editor.tips')}</span>
+			<Icon name="markdown" /><span class="visually-hidden">{t('editor.tips')}</span>
 		</button>
 	</div>
 
@@ -271,10 +272,10 @@
 	{#if active('table')}
 		<!-- svelte-ignore a11y_no_noninteractive_element_interactions (mousedown solo per non togliere il focus all'editor; i comandi sono i pulsanti) -->
 		<div class="toolbar table-tools" role="group" aria-label={t('editor.tableTools')} onmousedown={keepFocus}>
-			<button type="button" onclick={() => chain().addRowAfter().run()}>+ {t('editor.addRow')}</button>
-			<button type="button" onclick={() => chain().addColumnAfter().run()}>+ {t('editor.addCol')}</button>
-			<button type="button" onclick={() => chain().deleteRow().run()}>− {t('editor.delRow')}</button>
-			<button type="button" onclick={() => chain().deleteColumn().run()}>− {t('editor.delCol')}</button>
+			<button type="button" onclick={() => chain().addRowAfter().run()}><Icon name="plus" />{t('editor.addRow')}</button>
+			<button type="button" onclick={() => chain().addColumnAfter().run()}><Icon name="plus" />{t('editor.addCol')}</button>
+			<button type="button" onclick={() => chain().deleteRow().run()}><Icon name="minus" />{t('editor.delRow')}</button>
+			<button type="button" onclick={() => chain().deleteColumn().run()}><Icon name="minus" />{t('editor.delCol')}</button>
 			<button type="button" onclick={() => chain().toggleHeaderRow().run()}>{t('editor.headerRow')}</button>
 			<button type="button" class="danger" onclick={() => chain().deleteTable().run()}>{t('editor.delTable')}</button>
 		</div>
@@ -331,12 +332,20 @@
 		padding: 0.2rem 0.55rem;
 		border: 1px solid var(--c-control);
 		border-radius: var(--radius);
-		background: var(--c-surface);
+		background-color: var(--c-surface);
 		color: var(--c-text);
 		cursor: pointer;
 	}
+	/* Spazio per la freccia disegnata in app.css. */
+	.toolbar select {
+		padding-right: 1.75rem;
+	}
 	/* I pulsanti sono raggruppati dai separatori: il bordo compare solo al passaggio. */
 	.toolbar button {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.3rem;
 		border-color: transparent;
 		background: transparent;
 	}
@@ -407,8 +416,25 @@
 		font-weight: 700;
 		margin: 0.25rem 0;
 	}
+	/* Il lucchetto come nella pagina: la stessa icona a tratto, prima del nome del blocco. */
+	.area :global(aside.secret[data-label]) {
+		position: relative;
+	}
 	.area :global(aside.secret[data-label]::before) {
-		content: '🔒 ' attr(data-label);
+		padding-left: 1.45em;
+	}
+	.area :global(aside.secret[data-label]::after) {
+		content: '';
+		position: absolute;
+		/* Al centro della prima riga: spazio interno (0.5rem) + margine del nome (0.25rem) + metà riga − metà icona. */
+		top: calc(0.75rem + (var(--line) - 1.1) * 0.5em);
+		left: 1rem;
+		width: 1.1em;
+		height: 1.1em;
+		background: currentColor;
+		-webkit-mask: var(--icon-lock) center / contain no-repeat;
+		mask: var(--icon-lock) center / contain no-repeat;
+		forced-color-adjust: none;
 	}
 	.area :global(.wikilink) {
 		cursor: text;
@@ -461,6 +487,18 @@
 	.area :global(.ruleref) {
 		border-bottom: 2px dotted currentColor;
 	}
+	.area :global(.ruleref::before) {
+		content: '';
+		display: inline-block;
+		width: 1.1em;
+		height: 1.1em;
+		margin-right: 0.25em;
+		vertical-align: -0.2em;
+		background: currentColor;
+		-webkit-mask: var(--icon-book) center / contain no-repeat;
+		mask: var(--icon-book) center / contain no-repeat;
+		forced-color-adjust: none;
+	}
 	:global(.suggest-popup li.create) {
 		font-style: italic;
 	}
@@ -498,6 +536,9 @@
 		min-height: 2rem;
 		min-width: 2rem;
 		padding: 0.1rem 0.4rem;
+	}
+	.inline .toolbar select {
+		padding-right: 1.75rem;
 	}
 	.inline .tips {
 		border: 1px solid var(--c-border);

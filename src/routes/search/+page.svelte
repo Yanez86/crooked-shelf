@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Icon from '#lib/components/Icon.svelte';
 	import { page } from '$app/state';
 	import { getT } from '#lib/i18n/index.ts';
 	import type { PageProps } from './$types';
@@ -34,7 +35,7 @@
 		<div class="card empty">
 			<p class="muted">{t('search.emptyHint')}</p>
 			{#if page.data.user}
-				<a class="btn btn-primary" href="/wiki/new?title={encodeURIComponent(data.q)}">+ {t('search.create', { q: data.q })}</a>
+				<a class="btn btn-primary" href="/wiki/new?title={encodeURIComponent(data.q)}"><Icon name="plus" />{t('search.create', { q: data.q })}</a>
 			{/if}
 		</div>
 	{/if}

@@ -35,11 +35,12 @@ Ogni cosa della wiki è una **pagina**, nell'albero a sinistra, con un indirizzo
 - **Nuova pagina** chiede da dove partire: **pagina bianca** o uno dei **template**; il Master trova sotto anche «Nuovo template», «Nuova mappa» e «Nuova cronologia».
 - **Template**: alla creazione della wiki ce ne sono già alcuni (PNG, Luogo, Fazione, Resoconto di sessione…) nella cartella **Template**. Si modificano come ogni pagina: la struttura (titoli, riquadri, segreti, colonna a lato, icona) è quella che scrivi tu. Dalla pagina del template, «Usa questo template» crea la fotocopia; il Master può trasformare in template qualsiasi pagina (e viceversa) con la casella «È un template». La casella «Le copie sono resoconti di sessione» fa delle copie dei resoconti (numero, data, voce nella cronologia della campagna). Cambiare un template non cambia le pagine già fatte.
 - **Chi la vede**: pubblica, giocatori, solo Master, oppure personale (solo tu: va bene per gli appunti privati).
+- **Copertina e icona**: come in Notion, in cima alla pagina può esserci una copertina, con l'icona della pagina a cavallo del bordo. Mentre modifichi la pagina, «Aggiungi copertina» apre un pannello: un'immagine della **Galleria**, una **Tinta unita** oppure un file da **Caricare**. Sul lato della copertina tre piccole icone la cambiano, la riposizionano (trascinando l'immagine, oppure con le frecce su e giù; Invio conferma) e la tolgono. L'icona (la stessa dell'albero) si sceglie cliccando la casella sopra il titolo.
 - **Colonna a lato**: di base la pagina non ce l'ha. Mentre la modifichi, il pulsante «+» a destra aggiunge la colonna; dentro metti dei riquadri:
   - **Testo**: un titolo e un testo breve (es. «Allineamento: Caotico buono»); anche lì si può scrivere `[[Pagina]]`;
   - **Immagine**: trascinala dal computer sul riquadro oppure usa «Scegli un'immagine», poi scrivi una didascalia se vuoi.
 
-  Le frecce ↑ ↓ cambiano l'ordine, × toglie un riquadro; vuota, la colonna si toglie con «Togli la colonna». La prima immagine è anche quella della pagina: compare nella galleria e nell'anteprima dei collegamenti. Le pagine fatte con un template partono con i riquadri del template.
+  Le frecce su e giù cambiano l'ordine, la crocetta toglie un riquadro; vuota, la colonna si toglie con «Togli la colonna». La prima immagine è anche quella della pagina: compare nella galleria e nell'anteprima dei collegamenti. Le pagine fatte con un template partono con i riquadri del template.
 - **Cronologia delle modifiche**: dal link sotto il titolo vedi le versioni precedenti, cosa è cambiato e puoi ripristinarle.
 - **Cestino**: le pagine eliminate (anche mappe e cronologie, con pin ed eventi) si recuperano dal Cestino.
 
@@ -72,7 +73,7 @@ Tutti i pin sono anche nell'elenco sotto la mappa. Immagine, scala e mappa che l
 
 ## Galleria
 
-Tutte le immagini della campagna in un posto solo: le immagini delle pagine, quelle inserite nel testo, le mappe e le risorse, le più recenti prima. Sotto ogni immagine c'è dove compare; cliccandola si apre in grande (frecce ← → per scorrere, Esc per chiudere). Si possono vedere tutte, solo quelle delle pagine, solo le mappe o solo le risorse. Ognuno vede solo le immagini delle pagine, delle mappe e delle risorse che può vedere.
+Tutte le immagini della campagna in un posto solo: le immagini delle pagine (copertine e colonna a lato), quelle inserite nel testo, le mappe e le risorse, le più recenti prima. Sotto ogni immagine c'è dove compare; cliccandola si apre in grande (frecce ← → per scorrere, Esc per chiudere). Si possono vedere tutte, solo quelle delle pagine, solo le mappe o solo le risorse. Ognuno vede solo le immagini delle pagine, delle mappe e delle risorse che può vedere.
 
 ## Risorse
 

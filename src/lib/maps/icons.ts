@@ -1,16 +1,16 @@
-/** Simbolo di ogni tipo di pin (decorativo: il nome del pin è sempre scritto). */
-export const PIN_SYMBOL: Record<string, string> = {
-	pin: '●',
-	city: '🏘',
-	castle: '🏰',
-	dungeon: '⛏',
-	tavern: '🍺',
-	temple: '🕯',
-	camp: '⛺',
-	danger: '⚠',
-	treasure: '💰',
-	portal: '🌀',
-	star: '★'
+/** Icona di ogni tipo di pin, dal disegno a tratto comune (decorativa: il nome del pin è sempre scritto). */
+export const PIN_ICON: Record<string, string> = {
+	pin: 'dot',
+	city: 'city',
+	castle: 'castle',
+	dungeon: 'gate',
+	tavern: 'mug',
+	temple: 'temple',
+	camp: 'tent',
+	danger: 'warning',
+	treasure: 'coins',
+	portal: 'spiral',
+	star: 'star'
 };
 
 export const PIN_HEX: Record<string, string> = {

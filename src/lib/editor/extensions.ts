@@ -231,7 +231,7 @@ const RuleRef = Node.create<{ labels: EditorLabels; search: (q: string, signal: 
 		return [
 			'span',
 			{ class: 'ruleref', 'data-rule-kind': kind, 'data-rule-name': name, ...(label ? { 'data-label': label } : {}), title: this.options.labels.kinds[kind] ?? kind },
-			`📖 ${label || name}`
+			label || name
 		];
 	},
 	renderText: ({ node }) => `@${node.attrs.kind}[${node.attrs.name}${node.attrs.label ? '|' + node.attrs.label : ''}]`,

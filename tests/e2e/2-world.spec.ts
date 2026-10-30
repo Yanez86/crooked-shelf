@@ -251,6 +251,69 @@ test('colonna a lato: si aggiunge modificando la pagina, con riquadri di testo e
 	await expect(img).not.toHaveAttribute('src', first);
 });
 
+test('copertina: dalla galleria, riposizionata da tastiera, poi un colore e un file nuovo', async () => {
+	await admin.goto('/wiki/locanda-del-grifone/edit');
+	// L'icona sta sopra il titolo, come in lettura.
+	await admin.getByTitle('Icona', { exact: true }).click();
+	await admin.getByRole('radio', { name: 'Boccale' }).check();
+	await admin.getByTitle('Icona', { exact: true }).click();
+
+	// Dalla galleria: le immagini che ci sono già nella campagna.
+	await admin.getByRole('button', { name: 'Aggiungi copertina' }).click();
+	const picker = admin.getByRole('region', { name: 'Copertina' });
+	await expect(picker.getByRole('heading', { name: 'Copertina' })).toBeFocused();
+	await picker.getByRole('button', { name: 'Il mago nella sua torre' }).click();
+	await expect(picker).toHaveCount(0);
+	const cover = admin.locator('main .page-cover');
+	await expect(cover.locator('img')).toBeVisible();
+	await expect(admin.getByRole('button', { name: 'Cambia copertina' })).toBeFocused();
+
+	// Riposizionare senza mouse: è un cursore, le frecce spostano l'immagine, Invio conferma.
+	await admin.getByRole('button', { name: 'Riposiziona la copertina' }).click();
+	const slider = admin.getByRole('slider', { name: 'Posizione della copertina' });
+	await expect(slider).toBeFocused();
+	await admin.keyboard.press('ArrowDown');
+	await admin.keyboard.press('ArrowDown');
+	await expect(slider).toHaveAttribute('aria-valuenow', '40');
+	await admin.keyboard.press('Enter');
+	await expect(admin.getByRole('button', { name: 'Riposiziona la copertina' })).toBeFocused();
+	await axe(admin, 'copertina in modifica');
+	await shot(admin, '11f-copertina-modifica');
+	await admin.getByRole('button', { name: 'Salva' }).click();
+
+	// In lettura: la copertina in alto e l'icona a cavallo del bordo.
+	await expect(admin.getByRole('heading', { level: 1, name: 'Locanda del Grifone' })).toBeVisible();
+	await expect(cover.locator('img')).toHaveCSS('object-position', '50% 40%');
+	await expect(admin.locator('main .page-icon.on-cover')).toBeVisible();
+	await axe(admin, 'pagina con copertina');
+	await shot(admin, '11g-pagina-con-copertina');
+
+	// Un colore pieno, poi via: il fuoco torna su «Aggiungi copertina».
+	await admin.goto('/wiki/locanda-del-grifone/edit');
+	await admin.getByRole('button', { name: 'Cambia copertina' }).click();
+	await picker.getByRole('button', { name: 'Tinta unita' }).click();
+	await picker.getByRole('button', { name: 'Notte' }).click();
+	await expect(cover).toHaveCSS('background-color', 'rgb(58, 71, 101)');
+	await expect(admin.getByRole('button', { name: 'Riposiziona la copertina' })).toHaveCount(0);
+	await admin.getByRole('button', { name: 'Togli la copertina' }).click();
+	await expect(cover).toHaveCount(0);
+	await expect(admin.getByRole('button', { name: 'Aggiungi copertina' })).toBeFocused();
+
+	// Un file nuovo dal computer; Esc chiude il pannello senza cambiare niente.
+	await admin.keyboard.press('Enter');
+	await admin.keyboard.press('Escape');
+	await expect(picker).toHaveCount(0);
+	await expect(admin.getByRole('button', { name: 'Aggiungi copertina' })).toBeFocused();
+	await admin.getByRole('button', { name: 'Aggiungi copertina' }).click();
+	await picker.getByRole('button', { name: 'Carica' }).click();
+	await picker.getByLabel("Carica un'immagine").setInputFiles('tests/fixtures/map.png');
+	await expect(cover.locator('img')).toBeVisible();
+	await admin.getByRole('button', { name: 'Salva' }).click();
+	await expect(admin.getByRole('heading', { level: 1, name: 'Locanda del Grifone' })).toBeVisible();
+	await expect(cover.locator('img')).toBeVisible();
+	await expect(cover.locator('img')).toHaveCSS('object-position', '50% 50%');
+});
+
 test('un file che non è un\'immagine viene rifiutato', async () => {
 	const r = await admin.request.post('/api/files', {
 		multipart: { file: { name: 'x.svg', mimeType: 'image/svg+xml', buffer: Buffer.from('<svg onload="alert(1)"/>') } },
@@ -467,7 +530,7 @@ test('mappe con pin, livelli e mappe annidate', async () => {
 	await shot(admin, '14-mappa');
 
 	// Mappa annidata.
-	await admin.getByRole('link', { name: '+ Nuova mappa qui dentro' }).click();
+	await admin.getByRole('link', { name: 'Nuova mappa qui dentro' }).click();
 	await admin.getByLabel('Titolo').fill('Waterdeep');
 	await admin.getByLabel('Immagine della mappa').setInputFiles('tests/fixtures/city.png');
 	await expect(admin.getByLabel('Si trova dentro la mappa')).toHaveValue(/\d+/);
@@ -490,24 +553,25 @@ test('mappe con pin, livelli e mappe annidate', async () => {
 test('galleria: tutte le immagini della campagna', async () => {
 	await admin.goto('/gallery');
 	const main = admin.locator('main');
-	// Immagine della pagina, immagine nel testo, due mappe; le più recenti prima.
-	await expect(main.getByRole('status')).toHaveText('4 immagini');
+	// Due mappe, la copertina della Locanda, l'immagine della pagina e quella nel testo di Elminster; le più recenti prima.
+	await expect(main.getByRole('status')).toHaveText('5 immagini');
 	const figures = main.locator('figure');
 	await expect(figures.nth(0)).toContainText('Mappa Waterdeep');
-	await expect(figures.nth(2)).toContainText('Immagine della pagina Elminster');
-	await expect(figures.nth(3)).toContainText('Nel testo di Elminster');
+	await expect(figures.nth(2)).toContainText('Immagine della pagina Locanda del Grifone');
+	await expect(figures.nth(3)).toContainText('Immagine della pagina Elminster');
+	await expect(figures.nth(4)).toContainText('Nel testo di Elminster');
 	await axe(admin, 'galleria');
 	await shot(admin, '16-galleria');
 
 	// Il visore: frecce per scorrere, Esc per chiudere.
 	const thumb = main.getByRole('link', { name: 'Ritratto di un vecchio mago con la barba' });
 	await thumb.click();
-	const viewer = admin.getByRole('dialog', { name: 'Immagine 4 di 4' });
+	const viewer = admin.getByRole('dialog', { name: 'Immagine 5 di 5' });
 	await expect(viewer.getByRole('img', { name: 'Ritratto di un vecchio mago con la barba' })).toBeVisible();
 	await axe(admin, 'galleria: visore');
 	await shot(admin, '17-galleria-visore');
 	await admin.keyboard.press('ArrowRight');
-	await expect(admin.getByRole('dialog', { name: 'Immagine 1 di 4' }).getByRole('img', { name: 'Waterdeep' })).toBeVisible();
+	await expect(admin.getByRole('dialog', { name: 'Immagine 1 di 5' }).getByRole('img', { name: 'Waterdeep' })).toBeVisible();
 	await admin.keyboard.press('Escape');
 	await expect(admin.getByRole('dialog')).toHaveCount(0);
 	await expect(thumb).toBeFocused();

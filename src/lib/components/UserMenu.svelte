@@ -71,7 +71,7 @@
 		min-height: 2.75rem;
 		padding: 0.2rem 0.6rem 0.2rem 0.25rem;
 		border: 1px solid transparent;
-		border-radius: 999px;
+		border-radius: var(--radius);
 		cursor: pointer;
 	}
 	summary::-webkit-details-marker {

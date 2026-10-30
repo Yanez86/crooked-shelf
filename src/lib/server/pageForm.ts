@@ -10,6 +10,7 @@ import { validDate, type Calendar } from '../calendar.ts';
 import { REAL_DATE } from './timeline.ts';
 import { pageIcon } from '../pageIcons.ts';
 import { getFile } from './files.ts';
+import { cleanCover, type PageCover } from '../covers.ts';
 import { isPageKind, type PageKind } from '../pageKinds.ts';
 import { SESSION_TEMPLATE } from '../templates.ts';
 
@@ -27,6 +28,7 @@ export interface PageFormValues {
 	template: string | null;
 	session: SessionInfo | null;
 	icon: string | null;
+	cover: PageCover | null;
 	kind: PageKind;
 }
 
@@ -101,6 +103,7 @@ export function readPageForm(
 		template: str(f, 'template', 120) || null,
 		session: null,
 		icon: pageIcon(f.get('icon')),
+		cover: cleanCover({ image: f.get('coverImage'), color: f.get('coverColor'), y: f.get('coverY') }, imageFile),
 		// Il tipo arriva dal modulo (nuova mappa, nuova cronologia…); chi chiama controlla che sia permesso.
 		kind: isPageKind(f.get('kind')) ? (f.get('kind') as PageKind) : 'page'
 	};
@@ -140,6 +143,7 @@ export function readPageForm(
 			template: values.template,
 			session: values.session,
 			icon: values.icon,
+			cover: values.cover,
 			kind: values.kind
 		}
 	};

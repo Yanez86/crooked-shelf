@@ -1,7 +1,7 @@
 import { error } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { canEdit, canView, isMaster } from '#lib/access.ts';
-import { backlinks, getPageBySlug, pageMeta } from '#lib/server/pages.ts';
+import { backlinks, getPageBySlug, pageCover, pageMeta } from '#lib/server/pages.ts';
 import { pageView } from '#lib/server/pageView.ts';
 import { categoryPath } from '#lib/server/taxonomy.ts';
 import { mapsForPage } from '#lib/server/maps.ts';
@@ -33,7 +33,9 @@ export const load: PageServerLoad = ({ params, locals, url }) => {
 			visibility: page.visibility,
 			updatedAt: page.updatedAt,
 			// Chi non è Master non deve sapere nemmeno che ci sono segreti.
-			hasSecret: isMaster(locals.user) && page.hasSecret
+			hasSecret: isMaster(locals.user) && page.hasSecret,
+			icon: page.icon,
+			cover: pageCover(page)
 		},
 		...pageView(page, locals.user, locals.locale),
 		// Quello che c'è in più nelle pagine di tipo mappa e cronologia.

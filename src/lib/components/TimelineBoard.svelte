@@ -3,6 +3,7 @@
 	import { getT } from '../i18n/index.ts';
 	import EventForm from './EventForm.svelte';
 	import FormError from './FormError.svelte';
+	import Icon from './Icon.svelte';
 	import type { timelineView } from '../server/timelinePage.ts';
 
 	// Gli eventi di una pagina «cronologia», in elenco o sulla linea del tempo. I moduli vanno alle azioni della pagina.
@@ -64,7 +65,7 @@
 {#if data.canAdd}
 	<!-- In alto ma chiuso: la cronologia si legge, il modulo si apre quando serve (e resta aperto dopo un inserimento). -->
 	<details class="disclosure add" open={!data.events.length || !!form}>
-		<summary class="btn">+ {t('timeline.add')}</summary>
+		<summary class="btn"><Icon name="plus" />{t('timeline.add')}</summary>
 		<FormError error={form?.error ?? null} />
 		{#key form}
 			<EventForm
@@ -164,9 +165,10 @@
 		top: 0.55rem;
 		width: 0.8rem;
 		height: 0.8rem;
-		border-radius: 50%;
+		border-radius: var(--radius);
 		background: var(--c-surface);
 		border: 3px solid var(--c-primary);
+		transform: rotate(45deg);
 	}
 	.when {
 		margin: 0;
@@ -213,8 +215,9 @@
 		left: 1rem;
 		width: 0.9rem;
 		height: 0.9rem;
-		border-radius: 50%;
+		border-radius: var(--radius);
 		background: var(--c-primary);
+		transform: rotate(45deg);
 	}
 	.add {
 		max-width: 48rem;

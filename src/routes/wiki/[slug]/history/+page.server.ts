@@ -40,7 +40,8 @@ export const load: PageServerLoad = ({ params, locals, url }) => {
 		const idx = revisions.findIndex((x) => x.id === r.id);
 		const prevMeta = revisions[idx + 1];
 		const prev = prevMeta ? getRevision(page, prevMeta.id, locals.user) : undefined;
-		const parts = diffLines(prev ? revisionText(prev, locals.user) : '', revisionText(r, locals.user));
+		const secret = contentLabels(locals.locale).secret;
+		const parts = diffLines(prev ? revisionText(prev, locals.user, secret) : '', revisionText(r, locals.user, secret));
 		diff = {
 			id: r.id,
 			prevId: prev?.id ?? null,

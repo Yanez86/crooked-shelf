@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Icon from '#lib/components/Icon.svelte';
 	import { page } from '$app/state';
 	import { untrack } from 'svelte';
 	import { getT } from '#lib/i18n/index.ts';
@@ -24,7 +25,7 @@
 <svelte:head><title>{data.isNew ? t('themes.new') : t('themes.edit')}</title></svelte:head>
 
 <h2>{data.isNew ? t('themes.new') : t('themes.edit')}</h2>
-<p><a href="/admin/themes">← {t('admin.themes')}</a></p>
+<p><a class="back" href="/admin/themes"><Icon name="arrowLeft" />{t('admin.themes')}</a></p>
 <FormError error={form && 'error' in form ? form.error : null} />
 <FormOk message={page.url.searchParams.has('saved') ? 'common.saved' : data.imported ? 'themes.imported' : null} />
 
@@ -64,7 +65,7 @@
 				<p>{t('themes.sampleText')} <a href="#prev-title">{t('themes.sampleLink')}</a> · <span class="pv-missing">{t('themes.sampleMissing')}</span></p>
 				<p class="pv-muted">{t('themes.sampleMuted')}</p>
 				<span class="pv-btn">{t('common.save')}</span>
-				<div class="pv-secret"><strong>🔒 {t('editor.secret')}</strong><br />{t('themes.sampleSecret')}</div>
+				<div class="pv-secret"><strong><Icon name="lock" /> {t('editor.secret')}</strong><br />{t('themes.sampleSecret')}</div>
 				<div class="pv-note">{t('editor.note')}</div>
 				<input class="pv-input" type="text" value="Waterdeep" aria-label={t('themes.sampleInput')} readonly />
 			</div>
@@ -77,7 +78,7 @@
 					{#each report as r (r.fg + r.bg)}
 						<tr class:bad={!r.ok}>
 							<td>{t('themes.tokens.' + r.fg)} / {t('themes.tokens.' + r.bg)}</td>
-							<td>{r.ratio.toFixed(2)}:1 {r.ok ? '✓' : '✗'}<span class="visually-hidden">{r.ok ? t('themes.ok') : t('themes.notOk')}</span></td>
+							<td>{r.ratio.toFixed(2)}:1 <Icon name={r.ok ? 'check' : 'close'} /><span class="visually-hidden">{r.ok ? t('themes.ok') : t('themes.notOk')}</span></td>
 							<td>{r.min}:1</td>
 						</tr>
 					{/each}

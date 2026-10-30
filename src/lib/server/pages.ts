@@ -12,6 +12,7 @@ import { ensureTags, tagsForPages } from './taxonomy.ts';
 import { syncSessionEvent } from './timeline.ts';
 import { hasRule } from './rules/index.ts';
 import { getFile } from './files.ts';
+import type { PageCover } from '../covers.ts';
 
 const { pages, pageTags, pageLinks, users, categories, pageRevisions } = schema;
 
@@ -57,6 +58,20 @@ export interface PageInput {
 	session: SessionInfo | null;
 	/** Icona nell'albero; undefined = lascia quella che c'è. */
 	icon?: string | null;
+	/** Copertina in alto; undefined = lascia quella che c'è. */
+	cover?: PageCover | null;
+}
+
+/** Le colonne della copertina (null = nessuna copertina). */
+function coverColumns(c: PageCover | null) {
+	return { coverImageId: c?.image ?? null, coverColor: c?.color ?? null, coverY: c?.y ?? 50 };
+}
+
+/** La copertina di una pagina, se ce l'ha (un'immagine che non c'è più non conta). */
+export function pageCover(p: Pick<PageRow, 'coverImageId' | 'coverColor' | 'coverY'>): PageCover | null {
+	if (p.coverImageId && getFile(p.coverImageId)) return { image: p.coverImageId, color: null, y: p.coverY };
+	if (p.coverColor) return { image: null, color: p.coverColor, y: p.coverY };
+	return null;
 }
 
 function normalizeContent(raw: unknown, u: Viewer): DocNode {
@@ -140,6 +155,7 @@ export function createPage(input: PageInput, u: Viewer, extra?: (page: PageRow) 
 				template: input.template ?? null,
 				session: input.session,
 				icon: input.icon ?? null,
+				...coverColumns(input.cover ?? null),
 				kind,
 				authorId: u.id,
 				updatedBy: u.id,
@@ -177,6 +193,7 @@ export function updatePage(page: PageRow, input: PageInput, u: Viewer, manage: b
 				imageId: coverOf(input.fields),
 				session: input.session,
 				...(input.icon !== undefined ? { icon: input.icon } : {}),
+				...(input.cover !== undefined ? coverColumns(input.cover) : {}),
 				kind,
 				updatedBy: u.id,
 				updatedAt: Math.max(Date.now(), page.updatedAt + 1),
@@ -436,10 +453,10 @@ export function getRevision(page: PageRow, id: number, u: Viewer | null): Revisi
 	return r && canView({ visibility: r.visibility, authorId: page.authorId, playersCanEdit: false, hasSecret: false }, u) ? r : undefined;
 }
 
-/** Testo di una versione per il confronto: chi non è Master non vede i segreti. */
-export function revisionText(r: Pick<RevisionRow, 'title' | 'content' | 'fields'>, u: Viewer | null): string {
+/** Testo di una versione per il confronto: chi non è Master non vede i segreti (dopo `secretLabel`). */
+export function revisionText(r: Pick<RevisionRow, 'title' | 'content' | 'fields'>, u: Viewer | null, secretLabel = '—'): string {
 	const ex = extract(isDoc(r.content) ? r.content : EMPTY_DOC, r.fields ?? []);
 	const parts = [r.title, '', ex.body];
-	if (isMaster(u) && ex.secretBody) parts.push('', '🔒', ex.secretBody);
+	if (isMaster(u) && ex.secretBody) parts.push('', secretLabel, ex.secretBody);
 	return parts.join('\n');
 }

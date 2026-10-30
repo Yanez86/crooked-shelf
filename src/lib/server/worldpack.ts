@@ -2,7 +2,7 @@ import { strFromU8, strToU8, unzipSync, zipSync, type Zippable } from 'fflate';
 import { and, asc, eq, inArray, sql } from 'drizzle-orm';
 import { getDb, schema } from './db/index.ts';
 import { getFile, readFile, saveImage } from './files.ts';
-import { createPage, getPageBySlug, pageMeta, uniquePageSlug, updatePage, type PageInput, type PageRow } from './pages.ts';
+import { createPage, getPageBySlug, pageCover, pageMeta, uniquePageSlug, updatePage, type PageInput, type PageRow } from './pages.ts';
 import { cleanFields } from './pageForm.ts';
 import { categoryWithDescendants, createCategory, listCategories, categoryPath } from './taxonomy.ts';
 import { getCalendar, getSettings, saveSettings, customThemes } from './settings.ts';
@@ -10,6 +10,7 @@ import { getTimeline, listEvents, listTimelines, recomputeSortKeys, saveEvent, s
 import { createMap, getMap, getMapOfPage, saveLayer, savePin, updateMap } from './maps.ts';
 import { importTemplate } from './templates.ts';
 import { pageIcon } from '../pageIcons.ts';
+import { cleanCover, type PageCover } from '../covers.ts';
 import { storeTheme } from './themesAdmin.ts';
 import { stripSecrets } from '../content/extract.ts';
 import { frontMatter, toMarkdown } from '../content/markdown.ts';
@@ -96,6 +97,8 @@ interface PackPage {
 	 */
 	image?: string | null;
 	icon?: string | null;
+	/** Copertina: `image` è il nome del file in files/. Manca nei pacchetti di prima. */
+	cover?: PageCover | null;
 	/** Manca nei pacchetti della 0.10 e precedenti: una pagina normale. */
 	kind?: PageKind;
 	/** Solo nei template: le loro copie sono resoconti di sessione. */
@@ -248,6 +251,8 @@ export function exportWorld(o: ExportOptions, u: Viewer): Uint8Array {
 		const content = secrets ? raw : stripSecrets(raw);
 		imageIds(content, fileIds);
 		for (const f of p.fields ?? []) if (f.image) fileIds.add(f.image);
+		const cover = pageCover(p);
+		if (cover?.image) fileIds.add(cover.image);
 		const meta = pageMeta(p);
 		out[`pages/${p.slug}.md`] = strToU8(
 			frontMatter({ title: p.title, category: categoryPath(p.categoryId).map((c) => c.name).join(' / ') || null, tags: meta.tags.map((t) => t.name), fields: p.fields ?? [] }) +
@@ -267,6 +272,7 @@ export function exportWorld(o: ExportOptions, u: Viewer): Uint8Array {
 			template: p.template,
 			image: p.imageId,
 			icon: p.icon,
+			cover,
 			kind: p.kind,
 			...(p.kind === 'template' ? { session: !!p.session } : {}),
 			...(p.kind === 'map' ? { map: mapOf(p) } : {}),
@@ -455,8 +461,9 @@ export function importPack(pack: Pack, opts: { conflict: Conflict; calendar: boo
 			fields,
 			template: typeof p.template === 'string' ? (slugMap.get(p.template) ?? p.template).slice(0, 120) : null,
 			session: kind === 'template' && p.session ? SESSION_TEMPLATE : null,
-			// I pacchetti di prima non hanno l'icona: in quel caso resta quella che c'è.
+			// I pacchetti di prima non hanno l'icona né la copertina: in quel caso resta quella che c'è.
 			icon: p.icon === undefined ? undefined : pageIcon(p.icon),
+			cover: p.cover === undefined ? undefined : cleanCover(p.cover, (id) => fileMap.get(id) ?? null),
 			kind,
 			slug
 		};
@@ -604,9 +611,11 @@ export function exportMarkdown(u: Viewer): Uint8Array {
 	const text = (t: string): DocNode => ({ type: 'paragraph', content: t ? [{ type: 'text', text: t }] : [] });
 	for (const p of all) {
 		const body = isDoc(p.content) ? p.content : EMPTY_DOC;
-		// La mappa e le immagini della colonna a lato vanno in cima al testo.
+		// La copertina, la mappa e le immagini della colonna a lato vanno in cima al testo.
+		const coverImage = pageCover(p)?.image;
 		const map = p.kind === 'map' ? getMapOfPage(p.id) : undefined;
 		const side: DocNode[] = [
+			...(coverImage ? [{ type: 'image', attrs: { src: `/files/${coverImage}`, alt: p.title } }] : []),
 			...(map ? [{ type: 'image', attrs: { src: `/files/${map.fileId}`, alt: p.title } }] : []),
 			...(p.fields ?? []).flatMap((f) => (f.image ? [{ type: 'image', attrs: { src: `/files/${f.image}`, alt: f.label || p.title } }] : []))
 		];
