@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { useMemoryDb, schema } from './db/index.ts';
-import { backlinks, createPage, getPageBySlug, listPages, renderPage, suggestPages, updatePage } from './pages.ts';
+import { backlinks, createPage, getPageBySlug, listPages, pageMeta, renderPage, suggestPages, updatePage } from './pages.ts';
 import { searchPages } from './search.ts';
 import { categoryTree, createCategory, listTags, pageTree } from './taxonomy.ts';
 import { readPageForm } from './pageForm.ts';
@@ -108,6 +108,15 @@ describe('pagine', () => {
 		expect(pg.hasSecret).toBe(false);
 		updatePage(pg, { ...base, visibility: 'master', title: 'Diario', content: doc(p('ok')) }, alice, false);
 		expect(getPageBySlug('diario')!.visibility).toBe('players');
+	});
+
+	it("chi l'ha creata resta, l'ultima modifica cambia con chi salva", () => {
+		const pg = createPage({ ...base, playersCanEdit: true, title: 'Taverna', content: doc(p('x')) }, master);
+		expect(pageMeta(pg)).toMatchObject({ author: 'U1', editor: 'U1' });
+		updatePage(pg, { ...base, playersCanEdit: true, title: 'Taverna', content: doc(p('y')) }, alice, false);
+		const after = getPageBySlug('taverna')!;
+		expect(pageMeta(after)).toMatchObject({ author: 'U1', editor: 'U2' });
+		expect(after.updatedAt).toBeGreaterThan(pg.updatedAt);
 	});
 
 	it('ricerca con accenti e prefissi', () => {

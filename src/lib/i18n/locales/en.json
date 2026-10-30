@@ -299,6 +299,7 @@
 		"editTitle": "Edit: {title}",
 		"edit": "Edit",
 		"updated": "updated",
+		"createdBy": "Created by {name}",
 		"lastEdit": "Last edited by {name},",
 		"hasSecret": "Contains secrets",
 		"empty": "This page is still empty.",
