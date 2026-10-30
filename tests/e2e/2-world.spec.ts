@@ -324,9 +324,11 @@ test('mappe con pin, livelli e mappe annidate', async () => {
 	await expect(admin.getByRole('dialog')).toHaveCount(0);
 
 	// Righello. I pin si spengono: dove cadono dipende dalla finestra, e un clic su un pin non misura.
+	// Anche il fumetto del Covo deve sparire: Leaflet lo dissolve per un attimo, e intanto prende i clic.
 	const layers = [admin.getByRole('checkbox', { name: 'Senza livello' }), admin.getByRole('checkbox', { name: /Segreti/ })];
 	for (const l of layers) await l.uncheck();
 	await expect(admin.locator('.leaflet-marker-icon')).toHaveCount(0);
+	await expect(admin.locator('.leaflet-popup')).toHaveCount(0);
 	await admin.getByRole('button', { name: /Misura/ }).click();
 	await admin.keyboard.press('Escape');
 	mapBox = await box();
