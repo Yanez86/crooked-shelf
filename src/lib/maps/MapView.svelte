@@ -32,7 +32,8 @@
 		onpick,
 		onmove,
 		onedit,
-		onmeasure
+		onmeasure,
+		onopen
 	}: {
 		src: string;
 		width: number;
@@ -49,6 +50,8 @@
 		onmove?: (id: number, x: number, y: number) => void;
 		onedit?: (id: number) => void;
 		onmeasure?: (distance: number | null) => void;
+		/** Clic su un pin con una pagina: chi usa la mappa la apre in sovraimpressione. Senza, c'è il fumetto. */
+		onopen?: (pin: ViewPin) => void;
 	} = $props();
 
 	const t = getT();
@@ -92,12 +95,19 @@
 				popupAnchor: [0, -16]
 			});
 			const m = L.marker(toLL(p.x, p.y), { icon, keyboard: true, draggable: editable, title: p.label, riseOnHover: true, autoPanOnFocus: true });
-			m.bindPopup(popupHtml(p), { maxWidth: 320 });
+			const opens = !!(onopen && p.page && !p.page.missing);
+			// Come fa il fumetto di Leaflet: si apre col clic e con Invio.
+			if (opens)
+				m.on('click', () => onopen?.(p)).on('keypress', (e: Leaflet.LeafletKeyboardEvent) => {
+					if (e.originalEvent.key === 'Enter') onopen?.(p);
+				});
+			else m.bindPopup(popupHtml(p), { maxWidth: 320 });
 			m.bindTooltip(esc(p.label), { direction: 'top', offset: [0, -16], permanent: showLabels, className: 'cs-pin-label' });
 			m.on('add', () => {
 				const e = m.getElement();
 				e?.setAttribute('aria-label', p.label);
 				e?.setAttribute('role', 'button');
+				if (opens) e?.setAttribute('aria-haspopup', 'dialog');
 			});
 			if (editable) m.on('dragend', () => { const c = fromLL(m.getLatLng()); onmove?.(p.id, c.x, c.y); });
 			m.addTo(pinLayer);
