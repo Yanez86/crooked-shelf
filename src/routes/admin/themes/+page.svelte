@@ -94,7 +94,7 @@
 	.dot {
 		width: 1.2rem;
 		height: 1.2rem;
-		border-radius: 50%;
+		border-radius: var(--radius);
 	}
 	.acts,
 	.inline {

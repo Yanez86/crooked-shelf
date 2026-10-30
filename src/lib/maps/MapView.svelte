@@ -231,7 +231,7 @@
 		place-items: center;
 		width: 34px;
 		height: 34px;
-		border-radius: 50%;
+		border-radius: var(--radius);
 		border: 3px solid #fff;
 		box-shadow: 0 0 0 2px #000, 0 2px 6px rgb(0 0 0 / 0.5);
 		color: #fff;
@@ -241,7 +241,7 @@
 	.map :global(.leaflet-marker-icon:focus-visible) {
 		outline: 3px solid var(--c-focus);
 		outline-offset: 3px;
-		border-radius: 50%;
+		border-radius: var(--radius);
 	}
 	.map :global(.cs-pin-label) {
 		font-weight: 700;
@@ -273,5 +273,9 @@
 		font-size: var(--fs-lg);
 		background: var(--c-surface);
 		color: var(--c-text);
+	}
+	/* Anche i controlli, i fumetti e le etichette di Leaflet con gli angoli vivi. */
+	.map :global(:is(.leaflet-bar, .leaflet-bar a, .leaflet-control-layers, .leaflet-popup-content-wrapper, .leaflet-tooltip)) {
+		border-radius: var(--radius);
 	}
 </style>

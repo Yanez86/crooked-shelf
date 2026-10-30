@@ -15,7 +15,7 @@
 		flex: none;
 		width: var(--size);
 		height: var(--size);
-		border-radius: 50%;
+		border-radius: var(--radius);
 		background: var(--c-surface2);
 		border: 1px solid var(--c-border);
 		color: var(--c-primary);

@@ -171,9 +171,10 @@
 		top: 0.55rem;
 		width: 0.8rem;
 		height: 0.8rem;
-		border-radius: 50%;
+		border-radius: var(--radius);
 		background: var(--c-surface);
 		border: 3px solid var(--c-primary);
+		transform: rotate(45deg);
 	}
 	.when {
 		margin: 0;
@@ -220,8 +221,9 @@
 		left: 1rem;
 		width: 0.9rem;
 		height: 0.9rem;
-		border-radius: 50%;
+		border-radius: var(--radius);
 		background: var(--c-primary);
+		transform: rotate(45deg);
 	}
 	.add {
 		max-width: 48rem;

@@ -331,9 +331,13 @@
 		padding: 0.2rem 0.55rem;
 		border: 1px solid var(--c-control);
 		border-radius: var(--radius);
-		background: var(--c-surface);
+		background-color: var(--c-surface);
 		color: var(--c-text);
 		cursor: pointer;
+	}
+	/* Spazio per la freccia disegnata in app.css. */
+	.toolbar select {
+		padding-right: 1.75rem;
 	}
 	/* I pulsanti sono raggruppati dai separatori: il bordo compare solo al passaggio. */
 	.toolbar button {
@@ -498,6 +502,9 @@
 		min-height: 2rem;
 		min-width: 2rem;
 		padding: 0.1rem 0.4rem;
+	}
+	.inline .toolbar select {
+		padding-right: 1.75rem;
 	}
 	.inline .tips {
 		border: 1px solid var(--c-border);

@@ -36,4 +36,4 @@ SOFTWARE.
 
 ## Librerie e caratteri
 
-Le librerie usate (SvelteKit, TipTap, Leaflet, Drizzle, better-sqlite3 e altre) hanno le proprie licenze libere, elencate nei loro pacchetti in `node_modules`. I caratteri Atkinson Hyperlegible e OpenDyslexic sono distribuiti con licenza SIL Open Font License 1.1.
+Le librerie usate (SvelteKit, TipTap, Leaflet, Drizzle, better-sqlite3 e altre) hanno le proprie licenze libere, elencate nei loro pacchetti in `node_modules`. I caratteri Inter, Archivo, Atkinson Hyperlegible e OpenDyslexic sono distribuiti con licenza SIL Open Font License 1.1.

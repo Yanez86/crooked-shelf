@@ -330,8 +330,12 @@
 		min-height: 2rem;
 		padding: 0.15rem 0.3rem;
 		border: 0;
-		background: none;
+		background-color: transparent;
 		color: var(--c-text);
+	}
+	/* Spazio per la freccia disegnata in app.css. */
+	.chip select {
+		padding-right: 1.75rem;
 	}
 	.chip input[type='text'] {
 		flex: 1;
