@@ -14,10 +14,13 @@ Le persone entrano con un **invito**: Amministrazione › Inviti › «Crea invi
 ## Pagine
 
 - **Albero a sinistra**: le categorie sono cartelle che si aprono e si chiudono con un clic (o con Invio da tastiera); dentro ci sono le sottocartelle e le pagine. Le pagine senza categoria stanno in fondo, alla radice. La cartella della pagina che stai leggendo si apre da sola. In alto ci sono due linguette: **Pagine** (cartelle e pagine) e **Risorse** (immagini, audio e altri file, vedi sotto). Sul telefono l'albero è nel pulsante «Pagine e risorse»; chi non lo vuole lo nasconde in Preferenze. Nelle pagine Preferenze e Amministrazione l'albero non c'è.
-- **Immagine della pagina**: ogni pagina ha un riquadro in alto a destra. Se puoi modificare la pagina, trascinaci sopra un'immagine dal computer (oppure usa «Scegli un'immagine»): si salva subito. Con «Cambia immagine» e «Rimuovi» la sostituisci o la togli.
 - **Nuova pagina** parte da un **template** (PNG, Luogo, Fazione, Resoconto di sessione…) o da una pagina vuota.
 - **Chi la vede**: pubblica, giocatori, solo Master, oppure personale (solo tu: va bene per gli appunti privati).
-- **Scheda**: i campi a lato (es. «Allineamento: Caotico buono»). Anche lì si può scrivere `[[Pagina]]`.
+- **Colonna a lato**: di base la pagina non ce l'ha. Mentre la modifichi, il pulsante «+» a destra aggiunge la colonna; dentro metti dei riquadri:
+  - **Testo**: un titolo e un testo breve (es. «Allineamento: Caotico buono»); anche lì si può scrivere `[[Pagina]]`;
+  - **Immagine**: trascinala dal computer sul riquadro oppure usa «Scegli un'immagine», poi scrivi una didascalia se vuoi.
+
+  Le frecce ↑ ↓ cambiano l'ordine, × toglie un riquadro; vuota, la colonna si toglie con «Togli la colonna». La prima immagine è anche quella della pagina: compare nella galleria e nell'anteprima dei collegamenti. I template (PNG, Luogo…) partono già con i riquadri dei loro campi.
 - **Cronologia delle modifiche**: dal link sotto il titolo vedi le versioni precedenti, cosa è cambiato e puoi ripristinarle.
 - **Cestino**: le pagine eliminate si recuperano da Home › Cestino.
 

@@ -30,7 +30,6 @@
 		knownTags={data.knownTags}
 		updatedAt={data.page.updatedAt}
 		months={data.months}
-		image={data.image}
 		submitLabel={t('common.save')}
 		cancelHref="/wiki/{data.page.slug}"
 	/>

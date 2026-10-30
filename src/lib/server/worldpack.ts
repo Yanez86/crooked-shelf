@@ -2,7 +2,8 @@ import { strFromU8, strToU8, unzipSync, zipSync, type Zippable } from 'fflate';
 import { and, asc, eq, inArray, sql } from 'drizzle-orm';
 import { getDb, schema } from './db/index.ts';
 import { getFile, readFile, saveImage } from './files.ts';
-import { createPage, getPageBySlug, pageMeta, setPageImage, uniquePageSlug, updatePage, type PageRow } from './pages.ts';
+import { createPage, getPageBySlug, pageMeta, uniquePageSlug, updatePage, type PageRow } from './pages.ts';
+import { cleanFields } from './pageForm.ts';
 import { categoryWithDescendants, createCategory, listCategories, categoryPath } from './taxonomy.ts';
 import { getCalendar, saveSettings, customThemes } from './settings.ts';
 import { recomputeSortKeys, saveEvent } from './timeline.ts';
@@ -45,7 +46,10 @@ interface PackPage {
 	category: string | null;
 	tags: string[];
 	template: string | null;
-	/** Immagine della pagina (riquadro in alto a destra): nome del file in files/. */
+	/**
+	 * Immagine della pagina: nome del file in files/. Oggi è il primo riquadro immagine dei campi;
+	 * resta per i pacchetti di prima, che non hanno riquadri immagine.
+	 */
 	image?: string | null;
 	icon?: string | null;
 }
@@ -113,7 +117,7 @@ export function exportWorld(o: ExportOptions, u: Viewer): Uint8Array {
 		const raw = isDoc(p.content) ? p.content : EMPTY_DOC;
 		const content = secrets ? raw : stripSecrets(raw);
 		imageIds(content, fileIds);
-		if (p.imageId) fileIds.add(p.imageId);
+		for (const f of p.fields ?? []) if (f.image) fileIds.add(f.image);
 		const meta = pageMeta(p);
 		out[`pages/${p.slug}.md`] = strToU8(
 			frontMatter({ title: p.title, category: categoryPath(p.categoryId).map((c) => c.name).join(' / ') || null, tags: meta.tags.map((t) => t.name), fields: p.fields ?? [] }) +
@@ -340,6 +344,9 @@ export function importPack(pack: Pack, opts: { conflict: Conflict; calendar: boo
 	}
 	const vis = (v: string): Visibility => (['public', 'players', 'master'].includes(v) ? (v as Visibility) : 'players');
 	for (const { p, existing, slug } of plan) {
+		const fields = cleanFields(p.fields, (id) => fileMap.get(id) ?? null);
+		const cover = typeof p.image === 'string' ? fileMap.get(p.image) : undefined;
+		if (cover && !fields.some((f) => f.image)) fields.unshift({ label: '', value: '', image: cover });
 		const input = {
 			title: p.title.slice(0, 200),
 			content: remap(isDoc(p.content) ? p.content : EMPTY_DOC, fileMap, slugMap),
@@ -347,20 +354,15 @@ export function importPack(pack: Pack, opts: { conflict: Conflict; calendar: boo
 			playersCanEdit: false,
 			categoryId: p.category ? (catIds.get(p.category) ?? null) : null,
 			tags: (Array.isArray(p.tags) ? p.tags : []).map(String).slice(0, 30),
-			fields: (Array.isArray(p.fields) ? p.fields : []).map((f) => ({ label: String(f.label ?? '').slice(0, 60), value: String(f.value ?? '').slice(0, 500) })),
+			fields,
 			template: p.template ?? null,
 			session: null,
 			// I pacchetti di prima non hanno l'icona: in quel caso resta quella che c'è.
 			icon: p.icon === undefined ? undefined : pageIcon(p.icon),
 			slug
 		};
-		let id: number;
-		if (existing) {
-			updatePage(existing, input, u, true);
-			id = existing.id;
-		} else id = createPage(input, u).id;
-		// I pacchetti di prima non hanno l'immagine della pagina: in quel caso resta quella che c'è.
-		if (p.image !== undefined) setPageImage(id, (typeof p.image === 'string' && fileMap.get(p.image)) || null);
+		if (existing) updatePage(existing, input, u, true);
+		else createPage(input, u);
 		done.pages++;
 	}
 
@@ -495,8 +497,9 @@ export function exportMarkdown(u: Viewer): Uint8Array {
 	const index: string[] = ['# Indice', ''];
 	for (const p of all) {
 		const body = isDoc(p.content) ? p.content : EMPTY_DOC;
-		// L'immagine della pagina va in cima al testo.
-		const doc: DocNode = p.imageId ? { ...body, content: [{ type: 'image', attrs: { src: `/files/${p.imageId}`, alt: p.title } }, ...(body.content ?? [])] } : body;
+		// Le immagini della colonna a lato vanno in cima al testo.
+		const side: DocNode[] = (p.fields ?? []).flatMap((f) => (f.image ? [{ type: 'image', attrs: { src: `/files/${f.image}`, alt: f.label || p.title } }] : []));
+		const doc: DocNode = side.length ? { ...body, content: [...side, ...(body.content ?? [])] } : body;
 		const folder = categoryPath(p.categoryId).map((c) => safe(c.name));
 		const depth = folder.length;
 		const path = [...folder, `${safe(p.title)}.md`].join('/');

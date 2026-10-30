@@ -92,8 +92,8 @@ test('esportazione in Markdown', async () => {
 	expect(loc).toBe('Luoghi/Città/Locanda del Grifone.md');
 	expect(strFromU8(zip[loc])).toContain('[[Bartolo Pancia]]');
 	expect(strFromU8(zip[loc])).toContain('> [!secret]');
-	// L'immagine della pagina va in cima, con il file accanto.
-	const cover = /!\[Elminster\]\((_files\/[\w-]+\.png)\)/.exec(strFromU8(zip['Elminster.md']));
+	// Le immagini della colonna a lato vanno in cima, con il file accanto.
+	const cover = /!\[Il mago nella sua torre\]\((_files\/[\w-]+\.png)\)/.exec(strFromU8(zip['Elminster.md']));
 	expect(cover).not.toBeNull();
 	expect(Object.keys(zip)).toContain(cover![1]);
 	expect(Object.keys(zip)).toContain('Indice.md');
@@ -129,7 +129,7 @@ test('pacchetto mondo: esporta e reimporta', async () => {
 	await expect(admin.locator('.content').getByRole('link', { name: 'Bartolo Pancia' })).toHaveAttribute('href', '/wiki/bartolo-pancia-2');
 	await expect(admin.locator('.content .secret')).toHaveCount(0);
 	await admin.goto('/wiki/elminster-2');
-	await expect(admin.getByRole('group', { name: 'Immagine della pagina' }).getByRole('img', { name: 'Elminster' })).toBeVisible();
+	await expect(admin.getByRole('complementary', { name: 'Scheda' }).getByRole('img', { name: 'Il mago nella sua torre' })).toBeVisible();
 	await admin.goto('/maps');
 	await expect(admin.getByRole('link', { name: 'Costa della Spada' })).toHaveCount(2);
 });

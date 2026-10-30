@@ -2,10 +2,10 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { readFileSync, mkdtempSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { strFromU8, unzipSync } from 'fflate';
+import { strFromU8, strToU8, unzipSync, zipSync } from 'fflate';
 import { useMemoryDb, schema } from './db/index.ts';
 import { resetSettingsCache, saveSettings, getCalendar } from './settings.ts';
-import { createPage, getPageBySlug, listPages, setPageImage } from './pages.ts';
+import { createPage, getPageBySlug, listPages } from './pages.ts';
 import { createCategory } from './taxonomy.ts';
 import { createMap, listMaps, pinsOf, saveLayer, layersOf, savePin } from './maps.ts';
 import { saveImage } from './files.ts';
@@ -33,10 +33,10 @@ function buildWorld() {
 	const img = saveImage(readFileSync('tests/fixtures/city.png'), 'city.png', 1);
 	if (!img.ok) throw new Error('img');
 	createPage({ ...base, title: 'Bartolo', categoryId: cat.id, tags: ['Nord'], content: { type: 'doc', content: [p('Oste.'), { type: 'secret', content: [p('Spia.')] }, { type: 'image', attrs: { src: `/files/${img.file.id}`, alt: 'Ritratto' } }] } }, admin);
-	const locanda = createPage({ ...base, title: 'Locanda', categoryId: cat.id, content: { type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'wikiLink', attrs: { target: 'bartolo', title: 'Bartolo' } }] }] } }, admin);
 	const sign = saveImage(readFileSync('tests/fixtures/map.png'), 'insegna.png', 1);
 	if (!sign.ok) throw new Error('img');
-	setPageImage(locanda.id, sign.file.id);
+	const fields = [{ label: 'Oste', value: '[[Bartolo]]' }, { label: "L'insegna", value: '', image: sign.file.id }];
+	createPage({ ...base, title: 'Locanda', categoryId: cat.id, fields, content: { type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'wikiLink', attrs: { target: 'bartolo', title: 'Bartolo' } }] }] } }, admin);
 	createPage({ ...base, visibility: 'master', title: 'Piano segreto', content: { type: 'doc', content: [p('x')] } }, admin);
 	createPage({ ...base, visibility: 'personal', title: 'Diario', content: { type: 'doc', content: [p('x')] } }, admin);
 	const map = createMap({ title: 'Costa', description: '', visibility: 'players', parentId: null, scale: 1, unit: 'km' }, img.file, 1);
@@ -82,9 +82,10 @@ describe('pacchetto mondo', () => {
 		// "Bartolo" importato diventa bartolo-2 e il collegamento della Locanda lo segue.
 		const loc = getPageBySlug('locanda')!;
 		expect(JSON.stringify(loc.content)).toContain('"target":"bartolo-2"');
-		// L'immagine della pagina arriva con un indirizzo nuovo.
+		// L'immagine della colonna a lato arriva con un indirizzo nuovo, con la sua didascalia.
 		expect(loc.imageId).toMatch(/^[\w-]+$/);
 		expect(db.select().from(schema.files).all().map((f) => f.id)).toContain(loc.imageId);
+		expect(loc.fields).toEqual([{ label: 'Oste', value: '[[Bartolo]]' }, { label: "L'insegna", value: '', image: loc.imageId }]);
 		expect(getPageBySlug('bartolo-2')!.title).toBe('Bartolo');
 		expect(JSON.stringify(getPageBySlug('bartolo-2')!.content)).toMatch(/\/files\/[\w-]+/);
 		expect(getCalendar().name).toBe('Harptos');
@@ -93,6 +94,20 @@ describe('pacchetto mondo', () => {
 		expect(pinsOf(map.id, admin).map((x) => x.label).sort()).toEqual(['Covo', 'Locanda']);
 		expect(layersOf(map.id, admin).map((l) => l.name)).toEqual(['Segreti']);
 		expect(listPages(admin).total).toBe(4);
+	});
+
+	it("dai pacchetti di prima l'immagine della pagina diventa il primo riquadro", () => {
+		buildWorld();
+		const zip = unzipSync(exportWorld(all, admin));
+		const pages = JSON.parse(strFromU8(zip['pages.json']));
+		for (const pg of pages) pg.fields = pg.fields.filter((f: { image?: string }) => !f.image);
+		zip['pages.json'] = strToU8(JSON.stringify(pages));
+		db.update(schema.pages).set({ deletedAt: 1 }).run();
+		const r = readPack(zipSync(zip));
+		if (!r.ok) throw new Error(r.error);
+		importPack(r.pack, { conflict: 'rename', calendar: false }, admin);
+		const loc = getPageBySlug('locanda-2')!;
+		expect(loc.fields).toEqual([{ label: '', value: '', image: loc.imageId }, { label: 'Oste', value: '[[Bartolo]]' }]);
 	});
 
 	it('rifiuta file che non sono pacchetti', () => {
@@ -105,10 +120,13 @@ describe('pacchetto mondo', () => {
 		expect(Object.keys(zip).sort()).toEqual(expect.arrayContaining(['Luoghi/Bartolo.md', 'Luoghi/Locanda.md', 'Piano segreto.md', 'Diario.md', 'Indice.md']));
 		expect(strFromU8(zip['Luoghi/Bartolo.md'])).toContain('![Ritratto](../_files/');
 		expect(strFromU8(zip['Luoghi/Bartolo.md'])).toContain('> [!secret]');
-		// L'immagine della pagina in cima al testo, con il file accanto.
-		const cover = /^!\[Locanda\]\(\.\.\/(_files\/[\w-]+\.png)\)$/m.exec(strFromU8(zip['Luoghi/Locanda.md']));
+		// Le immagini della colonna a lato in cima al testo, con il file accanto; i campi di testo nell'intestazione.
+		const md = strFromU8(zip['Luoghi/Locanda.md']);
+		const cover = /^!\[L'insegna\]\(\.\.\/(_files\/[\w-]+\.png)\)$/m.exec(md);
 		expect(cover).not.toBeNull();
 		expect(zip[cover![1]]).toBeDefined();
+		expect(md).toContain('"Oste": "[[Bartolo]]"');
+		expect(md).not.toContain(`"L'insegna"`);
 	});
 });
 

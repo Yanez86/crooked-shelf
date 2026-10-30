@@ -4,12 +4,26 @@
 	import TagBadge from '#lib/components/TagBadge.svelte';
 	import RelTime from '#lib/components/RelTime.svelte';
 	import FormOk from '#lib/components/FormOk.svelte';
-	import PageImage from '#lib/components/PageImage.svelte';
 	import type { PageProps } from './$types';
 
-	let { data, form }: PageProps = $props();
+	let { data }: PageProps = $props();
 	const t = getT();
 	const locale = $derived(appPage.data.locale as string);
+
+	// Colonna a lato: le immagini da sole, i testi di seguito nella stessa scheda (con i dati della sessione in cima).
+	type Field = PageProps['data']['fields'][number];
+	const groups = $derived(
+		data.fields.reduce<(Field | Field[])[]>(
+			(out, f) => {
+				const last = out.at(-1);
+				if (f.image) out.push(f);
+				else if (Array.isArray(last)) last.push(f);
+				else out.push([f]);
+				return out;
+			},
+			data.session ? [[]] : []
+		)
+	);
 </script>
 
 <svelte:head><title>{data.page.title} · {appPage.data.siteName}</title></svelte:head>
@@ -49,28 +63,35 @@
 		</ul>
 	{/if}
 
-	<div class="body">
-		<div class="side">
-			<PageImage image={data.image} title={data.page.title} canEdit={data.canEdit} error={form?.imageError} ok={form?.imageOk} />
-			{#if data.fields.length || data.session}
-				<aside class="infobox" aria-label={t('fields.title')}>
-					<dl>
-						{#if data.session}
-							{#if data.session.number}<dt>{t('session.number')}</dt><dd>{data.session.number}</dd>{/if}
-							{#if data.session.realDate}
-								<dt>{t('session.realDate')}</dt>
-								<dd><time datetime={data.session.realDate}>{new Intl.DateTimeFormat(locale, { dateStyle: 'long' }).format(new Date(data.session.realDate + 'T12:00:00'))}</time></dd>
+	<!-- Senza riquadri la colonna non c'è: si aggiunge modificando la pagina. -->
+	<div class="body" class:with-side={groups.length > 0}>
+		{#if groups.length}
+			<aside class="side" aria-label={t('fields.title')}>
+				{#each groups as g, i (i)}
+					{#if Array.isArray(g)}
+						<dl>
+							{#if i === 0 && data.session}
+								{#if data.session.number}<dt>{t('session.number')}</dt><dd>{data.session.number}</dd>{/if}
+								{#if data.session.realDate}
+									<dt>{t('session.realDate')}</dt>
+									<dd><time datetime={data.session.realDate}>{new Intl.DateTimeFormat(locale, { dateStyle: 'long' }).format(new Date(data.session.realDate + 'T12:00:00'))}</time></dd>
+								{/if}
+								{#if data.session.world}<dt>{t('session.worldDate')}</dt><dd>{data.session.world}</dd>{/if}
 							{/if}
-							{#if data.session.world}<dt>{t('session.worldDate')}</dt><dd>{data.session.world}</dd>{/if}
-						{/if}
-						{#each data.fields as f, i (i)}
-							<dt>{f.label}</dt>
-							<dd>{@html f.html || '—'}</dd>
-						{/each}
-					</dl>
-				</aside>
-			{/if}
-		</div>
+							{#each g as f, j (j)}
+								<dt>{f.label}</dt>
+								<dd>{@html f.html || '—'}</dd>
+							{/each}
+						</dl>
+					{:else if g.image}
+						<figure>
+							<img src={g.image.url} alt={g.label || data.page.title} width={g.image.width} height={g.image.height} />
+							{#if g.label}<figcaption>{g.label}</figcaption>{/if}
+						</figure>
+					{/if}
+				{/each}
+			</aside>
+		{/if}
 
 		<div class="prose content">
 			{#if data.html}
@@ -172,66 +193,82 @@
 	}
 	.body {
 		display: grid;
-		grid-template-columns: minmax(0, 1fr) auto;
+		grid-template-columns: minmax(0, 1fr);
 		align-items: start;
 		gap: 1.5rem 2rem;
 		margin: 1.5rem 0 2.5rem;
+	}
+	.body.with-side {
+		grid-template-columns: minmax(0, 1fr) auto;
 	}
 	.content {
 		grid-column: 1;
 		grid-row: 1;
 		min-width: 0;
 	}
-	/* Immagine e scheda in alto a destra. */
+	/* La colonna in alto a destra: un riquadro a sé, staccato dal testo. */
 	.side {
 		grid-column: 2;
 		grid-row: 1;
 		display: flex;
 		flex-direction: column;
 		gap: 1rem;
-		max-width: 100%;
-	}
-	/* Senza immagine né scheda resta solo il pulsante: la colonna non ruba spazio al testo. */
-	/* Con immagine o scheda la colonna diventa un riquadro a sé, staccato dal testo. */
-	.side:has(:global(.page-image:not(.bare)), .infobox) {
 		width: 20rem;
+		max-width: 100%;
 		background: var(--c-surface);
 		border: 1px solid var(--c-border);
 		border-top: 4px solid var(--c-primary);
 		border-radius: var(--radius);
 		padding: 1rem;
 	}
-	.infobox:not(:first-child) {
+	.side > * + * {
 		border-top: 1px solid var(--c-border);
 		padding-top: 1rem;
 	}
-	/* Nello spazio stretto (telefono) immagine e scheda vanno in cima, prima del testo. */
+	figure {
+		margin: 0;
+	}
+	figure img {
+		display: block;
+		width: 100%;
+		height: auto;
+		max-height: 28rem;
+		object-fit: contain;
+		background: var(--c-surface2);
+		border: 1px solid var(--c-border);
+		border-radius: var(--radius);
+	}
+	figcaption {
+		margin-top: 0.4rem;
+		font-size: var(--fs-sm);
+		color: var(--c-muted);
+	}
+	/* Nello spazio stretto (telefono) la colonna va in cima, prima del testo. */
 	@container (max-width: 44rem) {
-		.body {
+		.body.with-side {
 			grid-template-columns: minmax(0, 1fr);
 		}
-		.side,
-		.side:has(:global(.page-image:not(.bare)), .infobox) {
+		.side {
 			grid-column: 1;
 			width: auto;
 		}
-		.side > :global(.page-image) {
+		figure img {
 			max-width: 22rem;
 		}
 		.content {
 			grid-row: 2;
 		}
 	}
-	.infobox dl {
+	.side dl {
 		margin: 0;
 		display: grid;
 		grid-template-columns: minmax(6rem, auto) 1fr;
 		gap: 0.4rem 0.75rem;
 	}
-	.infobox dt {
+	.side dt {
 		font-weight: 700;
 	}
-	.infobox dd {
+	.side dd {
 		margin: 0;
 		overflow-wrap: anywhere;
 	}
