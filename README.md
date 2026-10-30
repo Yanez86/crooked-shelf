@@ -6,14 +6,15 @@
 
 ## Cosa fa
 
-- **Pagine** con editor a blocchi e Markdown, collegamenti `[[Pagina]]`, template (PNG, luoghi, fazioni, resoconti di sessione…), immagini, categorie, tag e ricerca.
-- **Albero a sinistra** come in Esplora risorse: le categorie sono cartelle da aprire e chiudere, con le pagine dentro.
+- **Pagine** con editor a blocchi e Markdown, collegamenti `[[Pagina]]`, immagini, categorie, tag e ricerca. Ogni pagina è bianca o la fotocopia di un **template**.
+- **Tipi di pagina**: pagina, template (la struttura base da fotocopiare, decisa da te), mappa, cronologia.
+- **Barra a sinistra** con tutta la wiki: nuova pagina, sezioni e albero come in Esplora risorse, con le categorie come cartelle da aprire e chiudere e le pagine di ogni tipo dentro.
 - **Colonna a lato** delle pagine, solo se serve: in modifica la aggiungi col «+» e ci metti riquadri di testo o immagini.
 - **Galleria** con tutte le immagini della campagna (pagine, testo, mappe) e visore a schermo intero.
 - **Segreti del Master**: pagine e blocchi che i giocatori non vedono e non trovano neanche cercando.
 - **Ruoli**: Admin, Master, Giocatore; accesso solo su invito, visitatori spenti di default.
-- **Mappe** da immagine con pin collegati a pagine e ad altre mappe, livelli, pin segreti, righello.
-- **Cronologie** del mondo e della campagna con **calendari fantasy** (Harptos, inventati…); i resoconti di sessione entrano da soli.
+- **Mappe**: pagine con un'immagine, pin collegati a pagine e ad altre mappe, livelli, pin segreti, righello.
+- **Cronologie**: pagine del mondo o della campagna, quante ne vuoi, con **calendari fantasy** (Harptos, inventati…); i resoconti di sessione entrano da soli.
 - **Regole D&D 5.5**: `@incantesimo[Fireball]` diventa un link a D&D Beyond con l'anteprima del testo SRD 5.2.
 - **Bacheche** degli appunti, personali e del gruppo.
 - **Versioni** di ogni pagina, cestino.

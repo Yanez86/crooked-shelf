@@ -48,7 +48,7 @@ describe('pagine', () => {
 		const r = readPageForm(form('claws'), master, cal);
 		if (!r.ok) throw new Error(r.error);
 		const row = createPage(r.input, master);
-		expect(pageTree(alice).pages).toEqual([{ slug: 'drago', title: 'Drago', icon: 'claws' }]);
+		expect(pageTree(alice).pages).toEqual([{ slug: 'drago', title: 'Drago', icon: 'claws', kind: 'page' }]);
 		updatePage(row, { ...base, title: 'Drago', content: doc(p('y')) }, master, true);
 		expect(getPageBySlug('drago')!.icon).toBe('claws');
 	});

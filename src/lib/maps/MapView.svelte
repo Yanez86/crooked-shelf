@@ -76,7 +76,7 @@
 		if (p.page && !p.page.missing) parts.push(`<p><a href="/wiki/${encodeURIComponent(p.page.slug)}">${esc(t('maps.openPage', { title: p.page.title }))}</a></p>`);
 		if (p.page?.missing)
 			parts.push(`<p><a class="wikilink missing" href="/wiki/new?${esc(new URLSearchParams({ title: p.label, slug: p.page.slug }).toString())}">${esc(t('maps.createPage'))}</a></p>`);
-		if (p.target) parts.push(`<p><a href="/maps/${encodeURIComponent(p.target.slug)}">${esc(t('maps.openMap', { title: p.target.title }))}</a></p>`);
+		if (p.target) parts.push(`<p><a href="/wiki/${encodeURIComponent(p.target.slug)}">${esc(t('maps.openMap', { title: p.target.title }))}</a></p>`);
 		if (editable) parts.push(`<p><button type="button" class="btn btn-small" data-edit-pin="${p.id}">${esc(t('maps.editPin'))}</button></p>`);
 		return parts.join('');
 	}
@@ -213,6 +213,8 @@
 		border: 2px solid var(--c-control);
 		border-radius: var(--radius);
 		background: var(--c-surface2);
+		/* I livelli di Leaflet (z-index 400 e oltre) restano dentro la mappa: la barra a sinistra, aperta sul telefono, le passa sopra. */
+		isolation: isolate;
 	}
 	.map:global(.picking) {
 		cursor: crosshair;

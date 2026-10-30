@@ -66,7 +66,9 @@ Gli stessi colori dell'editor dei temi, in formato `#rrggbb`. Il tema viene **ri
 }
 ```
 
-`content` è il formato dell'editor: il modo più semplice per ottenerlo è creare il template nella wiki (Template › Nuovo template) e copiarlo da un pacchetto mondo esportato (`templates.json`).
+`content` è il formato dell'editor: il modo più semplice per ottenerlo è creare il template nella wiki (Nuova pagina › Nuovo template) e copiarlo da un pacchetto mondo esportato (in `pages.json`, la pagina con `"kind": "template"`).
+
+Accendendo il plugin, i suoi template diventano pagine della cartella Template della wiki (una volta sola): da lì si modificano come ogni pagina, e restano anche se il plugin si spegne.
 
 ## Calendario
 

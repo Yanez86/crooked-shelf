@@ -55,7 +55,7 @@ export function galleryImages(u: Viewer | null): GalleryImage[] {
 		const doc = isDoc(p.content) ? p.content : EMPTY_DOC;
 		for (const img of uploadedImages(secrets ? doc : stripSecrets(doc))) add(img.id, { kind: 'content', title: p.title, href }, img.alt);
 	}
-	for (const m of listMaps(u)) add(m.fileId, { kind: 'map', title: m.title, href: `/maps/${m.slug}` });
+	for (const m of listMaps(u)) add(m.fileId, { kind: 'map', title: m.title, href: `/wiki/${m.slug}` });
 	for (const r of listResources(u)) if (r.kind === 'image') add(r.file.id, { kind: 'resource', title: r.title, href: `/resources/${r.id}` });
 
 	if (!uses.size) return [];

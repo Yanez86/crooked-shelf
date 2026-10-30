@@ -75,7 +75,7 @@ export function categoryTree(u: Viewer | null): { roots: CategoryNode[]; flat: C
 /** Cartelle e pagine visibili per l'albero a sinistra. Il Master vede anche le cartelle vuote. */
 export function pageTree(u: Viewer | null): Tree {
 	const rows = getDb()
-		.select({ slug: pages.slug, title: pages.title, categoryId: pages.categoryId, icon: pages.icon })
+		.select({ slug: pages.slug, title: pages.title, categoryId: pages.categoryId, icon: pages.icon, kind: pages.kind })
 		.from(pages)
 		.where(visibleTo(u))
 		.all();

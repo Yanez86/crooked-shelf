@@ -7,6 +7,7 @@
 	interface Row {
 		slug: string;
 		title: string;
+		kind?: string;
 		visibility: string;
 		updatedAt: number;
 		category: string | null;
@@ -27,6 +28,7 @@
 				{#if r.category}
 					<a href="/wiki?category={encodeURIComponent(r.categorySlug ?? '')}">{r.category}</a> ·
 				{/if}
+				{#if r.kind && r.kind !== 'page'}<span class="badge">{t('kinds.' + r.kind)}</span>{/if}
 				{#if r.visibility !== 'players'}<span class="badge">{t('visibility.' + r.visibility)}</span>{/if}
 				<span>{t('page.updated')} <RelTime ts={r.updatedAt} {locale} /></span>
 			</p>

@@ -2,8 +2,11 @@
 	import { page } from '$app/state';
 	import { getT } from '#lib/i18n/index.ts';
 	import PageForm from '#lib/components/PageForm.svelte';
+	import KindSettings from '#lib/components/KindSettings.svelte';
 	import FormError from '#lib/components/FormError.svelte';
 	import { EMPTY_DOC, isDoc, type DocNode } from '#lib/content/types.ts';
+	import { PAGE_ICONS } from '#lib/pageIcons.ts';
+	import { KIND_ICONS, type PageKind } from '#lib/pageKinds.ts';
 	import type { PageProps } from './$types';
 
 	let { data, form }: PageProps = $props();
@@ -11,54 +14,81 @@
 
 	const values = $derived(
 		form?.values
-			? { ...form.values, content: isDoc(form.values.content) ? form.values.content : EMPTY_DOC }
+			? { ...form.values, kind: form.values.kind as PageKind, content: isDoc(form.values.content) ? form.values.content : EMPTY_DOC }
 			: {
 					title: data.title,
 					slug: data.slug,
-					content: (data.template?.content ?? EMPTY_DOC) as DocNode,
-					visibility: 'players',
+					content: (data.start?.content ?? EMPTY_DOC) as DocNode,
+					visibility: data.kind === 'timeline' ? 'public' : 'players',
 					playersCanEdit: false,
 					categoryId: data.categoryId,
 					tags: '',
-					fields: data.template?.fields ?? [],
-					template: data.template?.key ?? null,
-					session: data.template?.session ? { number: null, realDate: data.today, world: null } : null,
-					icon: null
+					fields: data.start?.fields ?? [],
+					template: data.start?.template ?? null,
+					session: data.start?.session ?? null,
+					icon: data.start?.icon ?? null,
+					kind: data.kind as PageKind
 				}
 	);
+	const extra = $derived(form?.extra ?? { map: { parentId: data.parentId, across: '', unit: '' }, mode: 'world' });
+	const kind = $derived(values.kind);
 
-	/** Collegamento al modulo con il template scelto, mantenendo titolo e categoria. */
-	function withTemplate(key: string) {
+	/** Collegamento al modulo scelto, mantenendo titolo, indirizzo e categoria. */
+	function start(key: string, value: string) {
 		const u = new URL(page.url.href);
-		u.searchParams.set('template', key);
+		u.searchParams.delete('template');
+		u.searchParams.delete('kind');
+		u.searchParams.set(key, value);
 		return u.pathname + u.search;
 	}
+
+	const heading = $derived(
+		data.start ? t('page.newFromTemplate', { name: data.start.title }) : kind === 'page' ? t('page.newTitle') : t('kinds.new.' + kind)
+	);
 </script>
 
-<svelte:head><title>{t('page.newTitle')}</title></svelte:head>
+<svelte:head><title>{heading}</title></svelte:head>
+
+{#snippet icon(d: string)}
+	<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path {d} /></svg>
+{/snippet}
 
 {#if !data.chosen}
 	<h1>{t('page.newTitle')}</h1>
 	<p>{t('templates.choose')}</p>
 	<ul class="list-plain template-grid">
 		<li>
-			<a class="card template-card" href={withTemplate('none')}>
-				<strong>{t('templates.blank')}</strong>
+			<a class="card template-card" href={start('template', 'none')}>
+				<strong>{@render icon('M6 2.75h8.25L19 7.5v13.75H6zM14 2.75V7.5h5')}{t('templates.blank')}</strong>
 				<span class="muted">{t('templates.blankHint')}</span>
 			</a>
 		</li>
-		{#each data.templates as tp (tp.key)}
+		{#each data.templates as tp (tp.slug)}
 			<li>
-				<a class="card template-card" href={withTemplate(tp.key)}>
-					<strong>{tp.name}</strong>
-					<span class="muted">{tp.description}</span>
+				<a class="card template-card" href={start('template', tp.slug)}>
+					<strong>{@render icon(PAGE_ICONS[tp.icon ?? ''] ?? KIND_ICONS.template)}{tp.title}</strong>
+					<span class="muted">
+						{#if tp.session}{t('templates.isSession')}{:else if tp.fields.length}{tp.fields.join(', ')}{:else}{t('kinds.template')}{/if}
+					</span>
 				</a>
 			</li>
 		{/each}
 	</ul>
-	<p><a href="/templates">{t('templates.manage')}</a></p>
+	{#if data.otherKinds.length}
+		<h2>{t('kinds.other')}</h2>
+		<ul class="list-plain template-grid">
+			{#each data.otherKinds as k (k)}
+				<li>
+					<a class="card template-card" href={start('kind', k)}>
+						<strong>{@render icon(KIND_ICONS[k])}{t('kinds.new.' + k)}</strong>
+						<span class="muted">{t('kinds.hint.' + k)}</span>
+					</a>
+				</li>
+			{/each}
+		</ul>
+	{/if}
 {:else}
-	<h1 class="visually-hidden">{data.template ? t('page.newFromTemplate', { name: data.template.name }) : t('page.newTitle')}</h1>
+	<h1 class="visually-hidden">{heading}</h1>
 	<FormError error={form?.error} />
 	{#key form}
 		<PageForm
@@ -67,15 +97,28 @@
 			visibilities={data.visibilities}
 			canManage={true}
 			canSecret={data.canSecret}
+			canTemplate={data.canTemplate}
 			knownTags={data.knownTags}
 			months={data.months}
-			submitLabel={t('page.create')}
+			multipart={kind === 'map'}
+			submitLabel={kind === 'map' ? t('maps.create') : t('page.create')}
 			cancelHref="/wiki"
+			settings={kind === 'map' || kind === 'timeline' ? settings : undefined}
 		/>
 	{/key}
 {/if}
 
+{#snippet settings()}
+	{#if kind === 'map' || kind === 'timeline'}
+		<KindSettings {kind} map={extra.map} mode={extra.mode} parents={data.parents} requireImage={true} />
+	{/if}
+{/snippet}
+
 <style>
+	h2 {
+		font-size: var(--fs-md);
+		margin: 1.75rem 0 0.5rem;
+	}
 	.template-grid {
 		display: grid;
 		grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
@@ -91,11 +134,24 @@
 		border-width: 2px;
 	}
 	.template-card strong {
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
 		color: var(--c-link);
 		font-size: var(--fs-md);
 		text-decoration: underline;
 	}
 	.template-card:hover {
 		border-color: var(--c-primary);
+	}
+	.ico {
+		flex: none;
+		width: 1.25rem;
+		height: 1.25rem;
+		fill: none;
+		stroke: currentColor;
+		stroke-width: 1.75;
+		stroke-linecap: round;
+		stroke-linejoin: round;
 	}
 </style>

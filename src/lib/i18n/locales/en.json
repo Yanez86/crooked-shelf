@@ -5,7 +5,6 @@
 	"nav": {
 		"skip": "Skip to content",
 		"main": "Main navigation",
-		"menu": "Menu",
 		"home": "Home",
 		"pages": "Pages",
 		"categories": "Categories",
@@ -15,16 +14,14 @@
 		"admin": "Administration",
 		"logout": "Log out",
 		"login": "Log in",
-		"maps": "Maps",
 		"gallery": "Gallery",
 		"resources": "Resources",
-		"timeline": "Timeline",
 		"rules": "Rules",
 		"boards": "Boards"
 	},
 	"tree": {
 		"label": "Pages and resources",
-		"title": "Pages and resources",
+		"title": "Menu and pages",
 		"empty": "No pages yet.",
 		"emptyFolder": "Empty folder",
 		"expandAll": "Open all folders",
@@ -207,8 +204,8 @@
 		"reduce": "Reduce motion"
 	},
 	"treePref": {
-		"show": "Show",
-		"hide": "Hide"
+		"show": "Always open",
+		"hide": "Closed, opens with the button"
 	},
 	"colors": {
 		"gray": "Gray",
@@ -390,8 +387,8 @@
 		"fontHint": "Atkinson and OpenDyslexic help people with reading difficulties.",
 		"spacing": "Spacing",
 		"motion": "Animations",
-		"tree": "Page tree on the left",
-		"treeHint": "On the left, with categories as folders you can open and close.",
+		"tree": "Left sidebar",
+		"treeHint": "Menu, pages and resources: open next to the page, or closed and opened with the button at the top.",
 		"locale": "Language",
 		"localeDefault": "Wiki language",
 		"saved": "Preferences saved.",
@@ -529,43 +526,20 @@
 		"hint": "The recap automatically appears in the campaign timeline."
 	},
 	"templates": {
-		"title": "Templates",
-		"intro": "Templates prepare a page with ready-made sections and fields. Built-in ones can't be changed: the Game Master can create new ones.",
 		"choose": "Where do you want to start?",
 		"blank": "Blank page",
 		"blankHint": "No structure: write freely.",
-		"manage": "Manage templates",
-		"new": "New template",
-		"edit": "Edit template",
-		"use": "Use",
-		"builtin": "Built-in",
 		"isSession": "Session recap: goes into the campaign timeline.",
-		"sessionCheck": "It's a session recap (number, date, entry in the campaign timeline)",
-		"fieldsHint": "One per line, e.g. Alignment. They become the infobox fields.",
-		"content": "Starting content",
-		"delete": "Delete template",
-		"deleteHint": "Pages already created stay as they are.",
-		"saved": "Template saved.",
-		"deleted": "Template deleted.",
 		"secretHint": "Write here what only the Game Master should know.",
 		"npc": "NPC",
-		"npcHint": "Non-player character: looks, personality, secrets.",
 		"pc": "Player character",
-		"pcHint": "A player's character: backstory and goals.",
 		"place": "Place",
-		"placeHint": "City, dungeon, region or building.",
 		"faction": "Faction",
-		"factionHint": "Guilds, orders, cults, houses.",
 		"item": "Item",
-		"itemHint": "Magic items and relics.",
 		"deity": "Deity",
-		"deityHint": "Gods, domains and worship.",
 		"monster": "Monster",
-		"monsterHint": "Creatures, tactics and lore.",
 		"session": "Session recap",
-		"sessionHint": "What happened at the table: goes into the campaign timeline.",
 		"houserule": "House rule",
-		"houseruleHint": "A rule of your table and why.",
 		"s": {
 			"appearance": "Appearance",
 			"personality": "Personality",
@@ -625,7 +599,6 @@
 		"campaign": "Campaign timeline",
 		"worldIntro": "The history of the world: ages, wars, legends.",
 		"campaignIntro": "What happened at the table, session after session.",
-		"goTo": "Go to: {name}",
 		"calendarIs": "Calendar: {name}.",
 		"today": "Today in the world: {date}.",
 		"views": "View type",
@@ -655,7 +628,14 @@
 		"errNeedAnyDate": "The real date or the in-world date is needed.",
 		"errRealDate": "The real date isn't valid.",
 		"errPage": "No page with this title.",
-		"ago1": "1 year ago"
+		"ago1": "1 year ago",
+		"mode": {
+			"title": "Kind of timeline",
+			"world": "World",
+			"campaign": "Campaign",
+			"worldHint": "In world-date order; the Master writes the events.",
+			"campaignHint": "In play-date order; players write too, and session reports appear here."
+		}
 	},
 	"calendar": {
 		"title": "Calendar",
@@ -706,11 +686,7 @@
 		"errToday": "Today's in-world date doesn't exist in the calendar."
 	},
 	"maps": {
-		"new": "New map",
 		"create": "Create map",
-		"empty": "No maps yet.",
-		"deleted": "Map deleted.",
-		"inside": "Inside: {name}",
 		"image": "Map image",
 		"replaceImage": "Replace the image (optional)",
 		"imageHint": "PNG, JPEG, WebP or GIF, max 25 MB.",
@@ -722,8 +698,6 @@
 		"across": "Real width",
 		"unit": "Unit",
 		"settings": "Map settings",
-		"delete": "Delete map",
-		"deleteConfirm": "Yes, I want to delete “{title}” with all its pins",
 		"errParent": "A map can't be inside itself.",
 		"errPosition": "The pin position is outside the map.",
 		"path": "Map path",
@@ -962,6 +936,41 @@
 			"events": "{n} timeline events",
 			"themes": "{n} themes",
 			"files": "{n} images"
-		}
+		},
+		"timelines": "World timelines"
+	},
+	"kinds": {
+		"label": "Type",
+		"page": "Page",
+		"template": "Template",
+		"map": "Map",
+		"timeline": "Timeline",
+		"folder": {
+			"map": "Maps",
+			"template": "Templates",
+			"timeline": "Timelines"
+		},
+		"list": {
+			"page": "Pages",
+			"template": "Templates",
+			"map": "Maps",
+			"timeline": "Timelines"
+		},
+		"new": {
+			"template": "New template",
+			"map": "New map",
+			"timeline": "New timeline"
+		},
+		"hint": {
+			"template": "Blocks, side column and icon to copy when making new pages.",
+			"map": "An image with pins, layers and nested maps.",
+			"timeline": "Events in date order, in the world or at the table."
+		},
+		"other": "Other page types",
+		"templateNote": "This is a template: every page made from it starts with its blocks, its side column and its icon.",
+		"useTemplate": "Use this template",
+		"asTemplate": "It is a template",
+		"asTemplateHint": "It can be copied to make new pages",
+		"sessionTemplate": "Copies are session reports"
 	}
 }

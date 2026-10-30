@@ -1,51 +1,38 @@
 import { error, fail } from '@sveltejs/kit';
-import type { Actions, PageServerLoad } from './$types';
-import { isMaster } from '#lib/access.ts';
+import { isMaster, type Viewer } from '../access.ts';
 import {
-	canSeeMap,
 	deleteLayer,
 	deletePin,
 	getMap,
-	getMapBySlug,
+	getMapOfPage,
 	getPin,
 	layersOf,
 	listMaps,
+	mapPath,
 	pinsOf,
 	PIN_COLORS,
 	PIN_ICONS,
 	saveLayer,
 	savePin,
+	type MapRow,
 	type PinInput
-} from '#lib/server/maps.ts';
-import { findPageChoice, pageChoices, resolverFor } from '#lib/server/pages.ts';
-import { renderInline } from '#lib/content/render.ts';
-import { inlineLinks } from '#lib/content/extract.ts';
-import { contentLabels } from '#lib/server/pageForm.ts';
-import { str } from '#lib/server/forms.ts';
-import { slugify } from '#lib/slug.ts';
-import { hasRule } from '#lib/server/rules/index.ts';
+} from './maps.ts';
+import { findPageChoice, pageChoices, resolverFor, type PageRow } from './pages.ts';
+import { renderInline } from '../content/render.ts';
+import { inlineLinks } from '../content/extract.ts';
+import { contentLabels } from './pageForm.ts';
+import { str } from './forms.ts';
+import { slugify } from '../slug.ts';
+import { hasRule } from './rules/index.ts';
 
-function visibleMap(slug: string, u: App.Locals['user']) {
-	const m = getMapBySlug(slug);
-	if (!m || !canSeeMap(m, u)) error(404, 'Not found');
-	return m;
-}
-
-export const load: PageServerLoad = ({ params, locals }) => {
-	const map = visibleMap(params.slug, locals.user);
-	const u = locals.user;
+/** Quello che serve per mostrare la mappa di una pagina «mappa»: pin, livelli, mappe intorno. */
+export function mapView(page: PageRow, u: Viewer | null, locale: string) {
+	const map = getMapOfPage(page.id);
+	if (!map) return null;
 	const pins = pinsOf(map.id, u);
 	const slugs = [...pins.flatMap((p) => inlineLinks(p.description)), ...pins.map((p) => p.pageSlug).filter((s): s is string => !!s)];
 	const resolve = resolverFor(slugs, u);
-	const labels = contentLabels(locals.locale);
-
-	// Percorso delle mappe che contengono questa.
-	const path: { slug: string; title: string }[] = [];
-	const seen = new Set([map.id]);
-	for (let p = map.parentId ? getMap(map.parentId) : undefined; p && !seen.has(p.id); p = p.parentId ? getMap(p.parentId) : undefined) {
-		seen.add(p.id);
-		if (canSeeMap(p, u)) path.unshift({ slug: p.slug, title: p.title });
-	}
+	const labels = contentLabels(locale);
 	const all = listMaps(u);
 	const master = isMaster(u);
 	// Nel modulo del pin la pagina si sceglie per nome; due pagine omonime hanno anche l'indirizzo.
@@ -53,23 +40,12 @@ export const load: PageServerLoad = ({ params, locals }) => {
 	const choiceOf = new Map(choices.map((c) => [c.slug, c.label]));
 
 	return {
-		map: {
-			id: map.id,
-			slug: map.slug,
-			title: map.title,
-			description: map.description,
-			fileId: map.fileId,
-			width: map.width,
-			height: map.height,
-			visibility: map.visibility,
-			scale: map.scale,
-			unit: map.unit
-		},
-		path,
+		map: { id: map.id, fileId: map.fileId, width: map.width, height: map.height, scale: map.scale, unit: map.unit },
+		path: mapPath(map, u),
 		children: all.filter((m) => m.parentId === map.id).map(({ slug, title }) => ({ slug, title })),
 		layers: layersOf(map.id, u).map(({ id, name, visibility }) => ({ id, name, visibility })),
 		pins: pins.map((p) => {
-			const page = p.pageSlug ? resolve(p.pageSlug) : undefined;
+			const linked = p.pageSlug ? resolve(p.pageSlug) : undefined;
 			return {
 				id: p.id,
 				x: p.x,
@@ -83,7 +59,7 @@ export const load: PageServerLoad = ({ params, locals }) => {
 				visibility: p.visibility,
 				pageSlug: p.pageSlug,
 				// La pagina collegata: visibile, da creare, oppure nascosta (niente collegamento).
-				page: p.pageSlug ? (page?.visible ? { slug: p.pageSlug, title: page.title } : page ? null : { slug: p.pageSlug, title: '', missing: true }) : null,
+				page: p.pageSlug ? (linked?.visible ? { slug: p.pageSlug, title: linked.title } : linked ? null : { slug: p.pageSlug, title: '', missing: true }) : null,
 				pageTitle: master && p.pageSlug ? (choiceOf.get(p.pageSlug) ?? p.pageSlug) : '',
 				targetMapId: p.targetMapId,
 				target: p.target
@@ -99,9 +75,9 @@ export const load: PageServerLoad = ({ params, locals }) => {
 				}
 			: null
 	};
-};
+}
 
-function readPin(f: FormData, map: { id: number; width: number; height: number }, u: App.Locals['user']): { input: PinInput } | { error: string } {
+function readPin(f: FormData, map: MapRow, u: Viewer | null): { input: PinInput } | { error: string } {
 	const x = Number(f.get('x'));
 	const y = Number(f.get('y'));
 	const label = str(f, 'label', 120);
@@ -131,16 +107,18 @@ function readPin(f: FormData, map: { id: number; width: number; height: number }
 	};
 }
 
-function masterMap(slug: string, u: App.Locals['user']) {
-	if (!isMaster(u)) error(404, 'Not found');
-	return visibleMap(slug, u);
+/** Pin e livelli li cambia solo il Master, sulle mappe che vede. */
+function masterMap(page: PageRow | undefined, u: Viewer | null): MapRow {
+	const map = page?.kind === 'map' && isMaster(u) ? getMapOfPage(page.id) : undefined;
+	if (!map) error(404, 'Not found');
+	return map;
 }
 
-export const actions: Actions = {
-	pin: async ({ params, request, locals }) => {
-		const map = masterMap(params.slug, locals.user);
-		const f = await request.formData();
-		const r = readPin(f, map, locals.user);
+/** Le azioni della pagina di una mappa (moduli dei pin e dei livelli). */
+export const mapActions = {
+	pin: (page: PageRow | undefined, u: Viewer | null, f: FormData) => {
+		const map = masterMap(page, u);
+		const r = readPin(f, map, u);
 		if ('error' in r) return fail(400, { error: r.error });
 		const id = Number(f.get('id'));
 		const existing = id ? getPin(id) : undefined;
@@ -148,23 +126,22 @@ export const actions: Actions = {
 		savePin(map.id, r.input, existing?.id);
 		return { ok: existing ? 'maps.pinSaved' : 'maps.pinAdded' };
 	},
-	deletePin: async ({ params, request, locals }) => {
-		const map = masterMap(params.slug, locals.user);
-		deletePin(map.id, Number((await request.formData()).get('id')));
+	deletePin: (page: PageRow | undefined, u: Viewer | null, f: FormData) => {
+		const map = masterMap(page, u);
+		deletePin(map.id, Number(f.get('id')));
 		return { ok: 'maps.pinDeleted' };
 	},
-	layer: async ({ params, request, locals }) => {
-		const map = masterMap(params.slug, locals.user);
-		const f = await request.formData();
+	layer: (page: PageRow | undefined, u: Viewer | null, f: FormData) => {
+		const map = masterMap(page, u);
 		const name = str(f, 'name', 60);
 		if (!name) return fail(400, { error: 'errors.nameRequired' });
 		const id = Number(f.get('id'));
 		saveLayer(map.id, name, str(f, 'visibility') === 'master' ? 'master' : 'players', id > 0 ? id : undefined);
 		return { ok: 'common.saved' };
 	},
-	deleteLayer: async ({ params, request, locals }) => {
-		const map = masterMap(params.slug, locals.user);
-		deleteLayer(map.id, Number((await request.formData()).get('id')));
+	deleteLayer: (page: PageRow | undefined, u: Viewer | null, f: FormData) => {
+		const map = masterMap(page, u);
+		deleteLayer(map.id, Number(f.get('id')));
 		return { ok: 'maps.layerDeleted' };
 	}
 };

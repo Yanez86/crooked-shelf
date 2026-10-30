@@ -1,74 +1,123 @@
-import { asc, eq } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
 import { getDb, schema } from './db/index.ts';
-import { BUILTIN_TEMPLATES, builtinTemplate, type BuiltinTemplate, type TemplateData } from '../templates.ts';
-import { EMPTY_DOC, isDoc, type DocNode } from '../content/types.ts';
+import { createPage, getPageBySlug, type PageRow } from './pages.ts';
+import { createCategory, getCategoryBySlug } from './taxonomy.ts';
+import { setTimelineMode } from './timeline.ts';
 import { pluginTemplates } from './plugins.ts';
+import { visibleTo } from './visibility.ts';
+import { BUILTIN_TEMPLATES, builtinTemplate, SESSION_TEMPLATE, type TemplateData } from '../templates.ts';
+import { stripSecrets } from '../content/extract.ts';
+import { EMPTY_DOC, isDoc, type DocNode, type PageField } from '../content/types.ts';
+import { canView, isMaster, type Viewer } from '../access.ts';
+import { translate } from '../i18n/index.ts';
+import { slugify } from '../slug.ts';
+import { TIMELINE_MODES } from '../pageKinds.ts';
 
-const { templates } = schema;
+const { pages } = schema;
 
-function fromRow(r: typeof templates.$inferSelect): TemplateData {
+/** I template che chi guarda può fotocopiare, per titolo. */
+export function listTemplates(u: Viewer | null) {
+	return getDb()
+		.select({ slug: pages.slug, title: pages.title, icon: pages.icon, fields: pages.fields, session: pages.session })
+		.from(pages)
+		.where(and(visibleTo(u), eq(pages.kind, 'template')))
+		.orderBy(sql`${pages.title} COLLATE NOCASE`, pages.id)
+		.all()
+		.map((r) => ({ slug: r.slug, title: r.title, icon: r.icon, fields: (r.fields ?? []).filter((f) => f.image === undefined).map((f) => f.label), session: !!r.session }));
+}
+
+export function getTemplatePage(slug: string, u: Viewer | null): PageRow | undefined {
+	const p = getPageBySlug(slug);
+	return p && p.kind === 'template' && canView(p, u) ? p : undefined;
+}
+
+/**
+ * La fotocopia di un template: blocchi, colonna a lato e icona; se è un template di resoconti, anche i dati
+ * di sessione (con la data di oggi). I segreti restano solo per il Master.
+ */
+export function templateCopy(tpl: PageRow, u: Viewer, today: string) {
+	const doc = isDoc(tpl.content) ? tpl.content : EMPTY_DOC;
 	return {
-		key: `c:${r.id}`,
-		name: r.name,
-		description: r.description,
-		fields: r.fields ?? [],
-		content: isDoc(r.content) ? r.content : EMPTY_DOC,
-		session: r.session,
-		builtin: false
+		content: isMaster(u) ? doc : stripSecrets(doc),
+		fields: (tpl.fields ?? []).map((f) => ({ ...f })),
+		icon: tpl.icon,
+		session: tpl.session ? { number: null, realDate: today, world: null } : null,
+		template: tpl.slug
 	};
 }
 
-export function listTemplates(locale: string): TemplateData[] {
-	const custom = getDb().select().from(templates).orderBy(asc(templates.name)).all().map(fromRow);
-	const fromPlugins = pluginTemplates().map((t) => ({ key: t.key, name: t.name, description: t.description || t.plugin, fields: t.fields, content: t.content, session: t.session, builtin: true }));
-	return [...BUILTIN_TEMPLATES.map((id) => builtinTemplate(id, locale)), ...fromPlugins, ...custom];
+/** La cartella dei template (la crea se manca). */
+function templateFolder(locale: string): number {
+	const name = translate(locale, 'kinds.folder.template');
+	return (getCategoryBySlug(slugify(name, 'folder')) ?? createCategory(name, null)).id;
 }
 
-export function getTemplate(key: string, locale: string): TemplateData | undefined {
-	const [kind, id] = key.split(':');
-	if (kind === 'b' && BUILTIN_TEMPLATES.includes(id as BuiltinTemplate)) return builtinTemplate(id as BuiltinTemplate, locale);
-	if (kind === 'p') {
-		const t = pluginTemplates().find((x) => x.key === key);
-		return t && { key: t.key, name: t.name, description: t.description, fields: t.fields, content: t.content, session: t.session, builtin: true };
-	}
-	if (kind === 'c' && /^\d+$/.test(id)) {
-		const r = getDb().select().from(templates).where(eq(templates.id, Number(id))).get();
-		return r ? fromRow(r) : undefined;
-	}
-	return undefined;
+function createTemplatePage(tp: TemplateData, origin: string | null, categoryId: number | null, u: Viewer): PageRow {
+	return createPage(
+		{
+			kind: 'template',
+			title: tp.name,
+			content: tp.content,
+			fields: tp.fields.map((label): PageField => ({ label, value: '' })),
+			session: tp.session ? SESSION_TEMPLATE : null,
+			icon: tp.icon,
+			template: origin,
+			visibility: 'players',
+			playersCanEdit: false,
+			categoryId,
+			tags: []
+		},
+		u
+	);
 }
 
-export interface TemplateInput {
-	name: string;
-	description: string;
-	fields: string[];
-	content: DocNode;
-	session: boolean;
+/**
+ * Le pagine di partenza di una wiki nuova, nella sua lingua: i template preinstallati nella cartella Template
+ * e le due cronologie (del mondo e della campagna).
+ */
+export function seedWiki(locale: string, u: Viewer) {
+	const t = (k: string) => translate(locale, k);
+	getDb().transaction(() => {
+		const folder = templateFolder(locale);
+		for (const id of BUILTIN_TEMPLATES) createTemplatePage(builtinTemplate(id, locale), `b:${id}`, folder, u);
+		for (const mode of TIMELINE_MODES)
+			createPage(
+				{
+					kind: 'timeline',
+					title: t(`timeline.${mode}`),
+					content: { type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: t(`timeline.${mode}Intro`) }] }] },
+					visibility: 'public',
+					playersCanEdit: false,
+					categoryId: null,
+					tags: [],
+					fields: [],
+					session: null
+				},
+				u,
+				(p) => setTimelineMode(p.id, mode)
+			);
+	});
 }
 
-export function saveTemplate(input: TemplateInput, userId: number, id?: number): number {
-	const now = Date.now();
-	const db = getDb();
-	if (id) {
-		db.update(templates).set({ ...input, updatedAt: now }).where(eq(templates.id, id)).run();
-		return id;
-	}
-	return db
-		.insert(templates)
-		.values({ ...input, createdBy: userId, createdAt: now, updatedAt: now })
-		.returning({ id: templates.id })
-		.get().id;
+/**
+ * Accendendo un plugin, i suoi template diventano pagine della cartella Template (una volta sola: se una pagina
+ * viene da quel template, anche nel cestino, non se ne crea un'altra). Da lì sono pagine della wiki come le altre.
+ */
+export function installPluginTemplates(pluginId: string, locale: string, u: Viewer): number {
+	const list = pluginTemplates().filter((t) => t.key.startsWith(`p:${pluginId}:`));
+	let added = 0;
+	getDb().transaction(() => {
+		for (const tp of list) {
+			const done = getDb().select({ id: pages.id }).from(pages).where(and(eq(pages.kind, 'template'), eq(pages.template, tp.key))).get();
+			if (done) continue;
+			createTemplatePage({ name: tp.name, fields: tp.fields, content: tp.content, session: tp.session, icon: null }, tp.key, templateFolder(locale), u);
+			added++;
+		}
+	});
+	return added;
 }
 
-export function deleteTemplate(id: number) {
-	getDb().delete(templates).where(eq(templates.id, id)).run();
-}
-
-/** Nomi dei campi: uno per riga. */
-export function parseFieldNames(raw: string): string[] {
-	return raw
-		.split('\n')
-		.map((s) => s.trim().slice(0, 60))
-		.filter(Boolean)
-		.slice(0, 30);
+/** Un template di un pacchetto mondo della 0.10 e precedenti (templates.json): diventa una pagina template. */
+export function importTemplate(tp: { name: string; fields: string[]; content: DocNode; session: boolean }, locale: string, u: Viewer): PageRow {
+	return createTemplatePage({ ...tp, icon: null }, null, templateFolder(locale), u);
 }

@@ -1,6 +1,7 @@
 import { sqliteTable, text, integer, real, primaryKey, index } from 'drizzle-orm/sqlite-core';
 
 import { ROLES, VISIBILITIES } from '../../roles.ts';
+import { PAGE_KINDS, TIMELINE_MODES } from '../../pageKinds.ts';
 import type { PageField, SessionInfo } from '../../content/types.ts';
 
 export const users = sqliteTable('users', {
@@ -71,12 +72,18 @@ export const pages = sqliteTable(
 		updatedAt: integer('updated_at').notNull(),
 		deletedAt: integer('deleted_at'),
 		fields: text('fields', { mode: 'json' }).$type<PageField[]>().notNull().default([]),
+		/**
+		 * Da dove viene la pagina: per una pagina, l'indirizzo del template da cui è stata fotocopiata;
+		 * per un template, la sua origine ("b:npc" preinstallato, "p:<plugin>:<n>" da un plugin). Solo informativo.
+		 */
 		template: text('template'),
+		/** Resoconto di sessione; in un template: le pagine fatte con lui sono resoconti. */
 		session: text('session', { mode: 'json' }).$type<SessionInfo | null>(),
 		imageId: text('image_id').references(() => files.id, { onDelete: 'set null' }),
-		icon: text('icon')
+		icon: text('icon'),
+		kind: text('kind', { enum: PAGE_KINDS }).notNull().default('page')
 	},
-	(t) => [index('pages_category').on(t.categoryId), index('pages_updated').on(t.updatedAt)]
+	(t) => [index('pages_category').on(t.categoryId), index('pages_updated').on(t.updatedAt), index('pages_kind').on(t.kind)]
 );
 
 export const pageTags = sqliteTable(
@@ -116,20 +123,16 @@ export const files = sqliteTable('files', {
 	createdAt: integer('created_at').notNull()
 });
 
-export const templates = sqliteTable('templates', {
-	id: integer('id').primaryKey({ autoIncrement: true }),
-	name: text('name').notNull(),
-	description: text('description').notNull().default(''),
-	fields: text('fields', { mode: 'json' }).$type<string[]>().notNull().default([]),
-	content: text('content', { mode: 'json' }).notNull(),
-	session: integer('session', { mode: 'boolean' }).notNull().default(false),
-	createdBy: integer('created_by').references(() => users.id, { onDelete: 'set null' }),
-	createdAt: integer('created_at').notNull(),
-	updatedAt: integer('updated_at').notNull()
-});
-
+/**
+ * La mappa di una pagina «mappa». Titolo, testo e visibilità sono quelli della pagina; `slug`, `title`,
+ * `description` e `visibility` restano dalla 0.10, quando la mappa era a sé (`slug` serve ai vecchi indirizzi /maps/…).
+ */
 export const maps = sqliteTable('maps', {
 	id: integer('id').primaryKey({ autoIncrement: true }),
+	pageId: integer('page_id')
+		.notNull()
+		.unique()
+		.references(() => pages.id, { onDelete: 'cascade' }),
 	slug: text('slug').notNull().unique(),
 	title: text('title').notNull(),
 	description: text('description').notNull().default(''),
@@ -174,9 +177,18 @@ export const mapPins = sqliteTable('map_pins', {
 	visibility: text('visibility', { enum: ['players', 'master'] }).notNull()
 });
 
+/** Una pagina «cronologia»: del mondo o della campagna. */
+export const timelines = sqliteTable('timelines', {
+	pageId: integer('page_id')
+		.primaryKey()
+		.references(() => pages.id, { onDelete: 'cascade' }),
+	mode: text('mode', { enum: TIMELINE_MODES }).notNull()
+});
+
 export const timelineEvents = sqliteTable('timeline_events', {
 	id: integer('id').primaryKey({ autoIncrement: true }),
-	timeline: text('timeline', { enum: ['world', 'campaign'] }).notNull(),
+	/** La pagina della cronologia; null per le voci dei resoconti di sessione (sono in tutte quelle della campagna). */
+	timelineId: integer('timeline_id').references(() => pages.id, { onDelete: 'cascade' }),
 	title: text('title').notNull(),
 	description: text('description').notNull().default(''),
 	year: integer('year'),

@@ -16,12 +16,20 @@
 	{#if user}<p class="muted">{t('home.welcome', { name: user.displayName })}</p>{/if}
 </header>
 
-{#if data.total === 0}
+{#if data.empty}
 	<section class="card empty">
 		<h2>{t('home.emptyTitle')}</h2>
 		<p>{t('home.emptyText')}</p>
 		{#if user}<a class="btn btn-primary" href="/wiki/new">+ {t('home.firstPage')}</a>{/if}
 	</section>
+	{#if data.world.length}
+		<h2>{t('home.world')}</h2>
+		<ul class="cats">
+			{#each data.world as w (w.slug)}
+				<li><a href="/wiki/{w.slug}">{w.title}</a> <span class="muted">({t('kinds.' + w.kind)})</span></li>
+			{/each}
+		</ul>
+	{/if}
 {:else}
 	<div class="grid">
 		<section aria-labelledby="recent-title">
@@ -41,16 +49,15 @@
 				<p class="muted">{t('categories.empty')}</p>
 			{/if}
 			<p><a href="/categories">{t('home.manageCategories')}</a></p>
-			<h2>{t('home.world')}</h2>
-			<ul class="cats">
-				<li><a href="/maps">{t('nav.maps')}</a></li>
-				<li><a href="/timeline/world">{t('timeline.world')}</a></li>
-				<li><a href="/timeline/campaign">{t('timeline.campaign')}</a></li>
-				<li><a href="/calendar">{t('calendar.title')}</a></li>
-				<li><a href="/templates">{t('templates.title')}</a></li>
-				<li><a href="/rules">{t('nav.rules')}</a></li>
-				{#if user}<li><a href="/boards">{t('nav.boards')}</a></li><li><a href="/trash">{t('trash.title')}</a></li>{/if}
-			</ul>
+			{#if data.world.length}
+				<!-- Le mappe principali e le cronologie: le pagine da cui si parte per orientarsi. -->
+				<h2>{t('home.world')}</h2>
+				<ul class="cats">
+					{#each data.world as w (w.slug)}
+						<li><a href="/wiki/{w.slug}">{w.title}</a> <span class="muted">({t('kinds.' + w.kind)})</span></li>
+					{/each}
+				</ul>
+			{/if}
 		</section>
 	</div>
 {/if}
