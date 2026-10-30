@@ -86,60 +86,6 @@ export const THEMES: Theme[] = [
 			warningBorder: '#e8a84f',
 			codeBg: '#2a2c33'
 		}
-	},
-	{
-		id: 'parchment',
-		scheme: 'light',
-		colors: {
-			bg: '#f3e9d2',
-			surface: '#faf3e3',
-			surface2: '#eadcbc',
-			text: '#2b1d0e',
-			muted: '#5c4630',
-			border: '#cdb88f',
-			control: '#806645',
-			primary: '#6b2414',
-			onPrimary: '#fff8ea',
-			link: '#6b2414',
-			missing: '#a3121e',
-			focus: '#0b4f9e',
-			danger: '#9c1020',
-			success: '#2d5e1e',
-			secretBg: '#e6d7ee',
-			secretText: '#35144f',
-			secretBorder: '#6e3a91',
-			noteBorder: '#355f8f',
-			tipBorder: '#3f6b2b',
-			warningBorder: '#8f5207',
-			codeBg: '#eadcbc'
-		}
-	},
-	{
-		id: 'contrast',
-		scheme: 'dark',
-		colors: {
-			bg: '#000000',
-			surface: '#000000',
-			surface2: '#1a1a1a',
-			text: '#ffffff',
-			muted: '#e6e6e6',
-			border: '#ffffff',
-			control: '#ffffff',
-			primary: '#ffff00',
-			onPrimary: '#000000',
-			link: '#ffff00',
-			missing: '#ff9e9e',
-			focus: '#00ffff',
-			danger: '#ff9e9e',
-			success: '#7dff9b',
-			secretBg: '#1a0033',
-			secretText: '#ffffff',
-			secretBorder: '#e0b3ff',
-			noteBorder: '#80c4ff',
-			tipBorder: '#7dff9b',
-			warningBorder: '#ffc04d',
-			codeBg: '#1a1a1a'
-		}
 	}
 ];
 

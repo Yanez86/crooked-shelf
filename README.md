@@ -17,7 +17,7 @@
 - **Regole D&D 5.5**: `@incantesimo[Fireball]` diventa un link a D&D Beyond con l'anteprima del testo SRD 5.2.
 - **Bacheche** degli appunti, personali e del gruppo.
 - **Versioni** di ogni pagina, cestino.
-- **Temi** (chiaro, scuro, pergamena, alto contrasto, e quelli creati da te) e **accessibilità** WCAG 2.2 AA: testo fino al 200%, caratteri per la dislessia, uso completo da tastiera.
+- **Temi** (chiaro, scuro e quelli creati da te) e **accessibilità** WCAG 2.2 AA: testo fino al 200%, caratteri per la dislessia, uso completo da tastiera.
 - **Italiano e inglese**, altre lingue con un file o un plugin.
 - **Plugin** di soli dati: temi, template, calendari, lingue, regole.
 - **I tuoi dati restano tuoi**: backup completo, esportazione in Markdown (compatibile con Obsidian), **pacchetto mondo** `.shelf` per portare mappe e regole della casa in un'altra campagna.

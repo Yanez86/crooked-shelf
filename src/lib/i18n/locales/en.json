@@ -136,8 +136,6 @@
 		"auto": "Automatic (like your system)",
 		"light": "Light",
 		"dark": "Dark",
-		"parchment": "Parchment",
-		"contrast": "High contrast",
 		"intro": "Built-in themes can't be changed, but you can copy them and change the colors. A theme is saved only if all text stays readable (WCAG AA).",
 		"builtin": "Built-in themes",
 		"custom": "Your themes",

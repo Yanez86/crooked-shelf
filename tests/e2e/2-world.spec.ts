@@ -31,7 +31,7 @@ async function login(browser: Browser, u: { user: string; pass: string }) {
 
 test('accesso', async ({ browser }) => {
 	admin = await login(browser, ADMIN);
-	// I test precedenti lasciano il tema ad alto contrasto: torniamo al chiaro.
+	// I test precedenti lasciano il tema scuro: torniamo al chiaro.
 	await admin.goto('/preferences');
 	await admin.getByRole('radio', { name: 'Chiaro', exact: true }).check();
 	await admin.getByRole('button', { name: 'Salva' }).first().click();

@@ -13,7 +13,7 @@ Le persone entrano con un **invito**: Amministrazione › Inviti › «Crea invi
 
 ## Pagine
 
-- **Albero a sinistra**: le categorie sono cartelle che si aprono e si chiudono con un clic (o con Invio da tastiera); dentro ci sono le sottocartelle e le pagine. Le pagine senza categoria stanno in fondo, alla radice. La cartella della pagina che stai leggendo si apre da sola. In alto ci sono due linguette: **Pagine** (cartelle e pagine) e **Risorse** (immagini, audio e altri file, vedi sotto). Sul telefono l'albero è nel pulsante «Pagine e risorse»; chi non lo vuole lo nasconde in Preferenze.
+- **Albero a sinistra**: le categorie sono cartelle che si aprono e si chiudono con un clic (o con Invio da tastiera); dentro ci sono le sottocartelle e le pagine. Le pagine senza categoria stanno in fondo, alla radice. La cartella della pagina che stai leggendo si apre da sola. In alto ci sono due linguette: **Pagine** (cartelle e pagine) e **Risorse** (immagini, audio e altri file, vedi sotto). Sul telefono l'albero è nel pulsante «Pagine e risorse»; chi non lo vuole lo nasconde in Preferenze. Nelle pagine Preferenze e Amministrazione l'albero non c'è.
 - **Immagine della pagina**: ogni pagina ha un riquadro in alto a destra. Se puoi modificare la pagina, trascinaci sopra un'immagine dal computer (oppure usa «Scegli un'immagine»): si salva subito. Con «Cambia immagine» e «Rimuovi» la sostituisci o la togli.
 - **Nuova pagina** parte da un **template** (PNG, Luogo, Fazione, Resoconto di sessione…) o da una pagina vuota.
 - **Chi la vede**: pubblica, giocatori, solo Master, oppure personale (solo tu: va bene per gli appunti privati).
@@ -80,7 +80,7 @@ Schede di appunti in colonne: personali (solo tu) o del gruppo. Le schede si spo
 
 In **Preferenze** ognuno sceglie:
 
-- tema: chiaro, scuro, pergamena, alto contrasto (o quelli creati dall'Admin);
+- tema: chiaro, scuro o automatico, come il sistema (o quelli creati dall'Admin);
 - dimensione del testo fino al 200%;
 - carattere Atkinson Hyperlegible o OpenDyslexic;
 - spaziatura ampia, animazioni ridotte, lingua;
