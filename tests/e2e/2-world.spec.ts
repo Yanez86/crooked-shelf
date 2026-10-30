@@ -58,7 +58,7 @@ test('calendario: Harptos', async () => {
 
 test('template PNG con scheda, segreto e immagine', async () => {
 	await admin.goto('/wiki/new');
-	await expect(admin.getByText('Da dove vuoi partire?')).toBeVisible();
+	await expect(admin.getByText('Che pagina vuoi fare?')).toBeVisible();
 	await axe(admin, 'scelta template');
 	await shot(admin, '10-scelta-template');
 	await admin.locator('main').getByRole('link', { name: /^PNG/ }).click();
