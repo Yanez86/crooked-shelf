@@ -31,7 +31,7 @@ async function login(browser: Browser, u: { user: string; pass: string }) {
 
 test('accesso', async ({ browser }) => {
 	admin = await login(browser, ADMIN);
-	// I test precedenti lasciano il tema ad alto contrasto: torniamo al chiaro.
+	// I test precedenti lasciano il tema scuro: torniamo al chiaro.
 	await admin.goto('/preferences');
 	await admin.getByRole('radio', { name: 'Chiaro', exact: true }).check();
 	await admin.getByRole('button', { name: 'Salva' }).first().click();
@@ -67,7 +67,7 @@ test('template PNG con scheda, segreto e immagine', async () => {
 	await expect(admin.getByLabel('Nome del campo 3')).toHaveValue('Allineamento');
 	await admin.getByLabel('Valore del campo 3').fill('Caotico buono');
 	await admin.getByLabel('Valore del campo 4').fill('[[Locanda del Grifone]]');
-	await admin.getByRole('button', { name: 'Aggiungi riquadro' }).click();
+	await admin.getByRole('region', { name: 'Colonna a lato' }).getByRole('button', { name: 'Testo', exact: true }).click();
 	await expect(admin.getByLabel('Nome del campo 6')).toBeFocused();
 	await admin.getByLabel('Nome del campo 6').fill('Età');
 	await admin.getByLabel('Valore del campo 6').fill('Più di mille anni');
@@ -110,52 +110,92 @@ test('template PNG con scheda, segreto e immagine', async () => {
 	await expect(admin.locator('main').getByRole('link', { name: 'Elminster' })).toBeVisible();
 });
 
-test("immagine della pagina: si trascina nel riquadro in alto a destra", async () => {
-	await admin.goto('/wiki/elminster');
-	const box = admin.getByRole('group', { name: 'Immagine della pagina' });
-	// Senza immagine resta solo il pulsante; il riquadro compare mentre si trascina un file.
-	await expect(box.getByRole('button', { name: "Aggiungi un'immagine" })).toBeVisible();
-	await axe(admin, 'pagina senza immagine');
+test('colonna a lato: si aggiunge modificando la pagina, con riquadri di testo e immagini', async () => {
+	// Di base la colonna non c'è, nemmeno per chi può modificare.
+	await admin.goto('/wiki/locanda-del-grifone');
+	const column = admin.getByRole('complementary', { name: 'Scheda' });
+	await expect(column).toHaveCount(0);
+	await admin.goto('/wiki/locanda-del-grifone/edit');
+	const side = admin.getByRole('region', { name: 'Colonna a lato' });
+	await expect(side).toHaveCount(0);
+	const plus = admin.getByRole('button', { name: 'Aggiungi la colonna a lato' });
+	await shot(admin, '11c-modifica-senza-colonna');
+	await plus.click();
+	await expect(side.getByRole('button', { name: 'Testo', exact: true })).toBeFocused();
+	await axe(admin, 'colonna vuota');
+	// Vuota si toglie com'è stata aggiunta.
+	await side.getByRole('button', { name: 'Togli la colonna' }).click();
+	await expect(side).toHaveCount(0);
+	await expect(plus).toBeFocused();
+
+	// Un riquadro di testo, salvato.
+	await plus.click();
+	await side.getByRole('button', { name: 'Testo', exact: true }).click();
+	await admin.getByLabel('Nome del campo 1').fill('Oste');
+	await admin.getByLabel('Valore del campo 1').fill('[[Bartolo Pancia]]');
+	await admin.getByRole('button', { name: 'Salva' }).click();
+	await expect(column.getByRole('link', { name: 'Bartolo Pancia' })).toBeVisible();
+	// Tolto l'ultimo riquadro e la colonna, la pagina torna senza.
+	await admin.goto('/wiki/locanda-del-grifone/edit');
+	await side.getByRole('button', { name: 'Elimina: Nome del campo 1' }).click();
+	await side.getByRole('button', { name: 'Togli la colonna' }).click();
+	await admin.getByRole('button', { name: 'Salva' }).click();
+	await expect(admin.getByRole('heading', { level: 1, name: 'Locanda del Grifone' })).toBeVisible();
+	await expect(column).toHaveCount(0);
+
+	// Elminster ha già la scheda del template: la colonna è aperta. Si aggiunge un'immagine.
+	await admin.goto('/wiki/elminster/edit');
+	await side.getByRole('button', { name: 'Immagine', exact: true }).click();
+	let box = side.getByRole('group', { name: 'Immagine 7' });
+	await expect(box.getByRole('button', { name: "Scegli un'immagine" })).toBeFocused();
+
+	// Un file che non è un'immagine viene rifiutato.
+	await box.getByLabel("File dell'immagine 7").setInputFiles({ name: 'x.svg', mimeType: 'image/svg+xml', buffer: Buffer.from('<svg/>') });
+	await expect(box.getByRole('status')).toContainText('Formato non supportato');
 
 	// Un file trascinato dal computer sul riquadro.
-	const png = readFileSync('tests/fixtures/city.png').toString('base64');
+	const png = readFileSync('tests/fixtures/map.png').toString('base64');
 	const dataTransfer = await admin.evaluateHandle((b64) => {
 		const dt = new DataTransfer();
 		dt.items.add(new File([Uint8Array.from(atob(b64), (c) => c.charCodeAt(0))], 'elminster.png', { type: 'image/png' }));
 		return dt;
 	}, png);
-	await box.dispatchEvent('dragenter', { dataTransfer });
 	await box.dispatchEvent('dragover', { dataTransfer });
 	await box.dispatchEvent('drop', { dataTransfer });
-	await expect(box.getByRole('status')).toContainText('Immagine salvata');
-	const img = box.getByRole('img', { name: 'Elminster' });
-	await expect(img).toBeVisible();
+	await expect(box.getByRole('status')).toContainText('Immagine caricata');
+	await expect(box.locator('img')).toBeVisible();
+	await box.getByLabel("Didascalia dell'immagine 7").fill('Il mago nella sua torre');
 
-	// È salvata davvero.
-	await admin.reload();
+	// In cima con la freccia, da tastiera: il fuoco resta sulla freccia.
+	await box.getByRole('button', { name: 'Sposta su: Immagine 7' }).focus();
+	for (let i = 0; i < 6; i++) await admin.keyboard.press('Enter');
+	box = side.getByRole('group', { name: 'Immagine 1' });
+	await expect(box.getByRole('button', { name: 'Sposta giù: Immagine 1' })).toBeFocused();
+	await expect(box.getByRole('button', { name: 'Sposta su: Immagine 1' })).toBeDisabled();
+	await axe(admin, 'colonna con immagine');
+	await shot(admin, '11d-modifica-colonna');
+	await admin.getByRole('button', { name: 'Salva' }).click();
+
+	// In lettura: immagine in cima con la didascalia, poi la scheda; nessun pulsante.
+	const img = column.getByRole('img', { name: 'Il mago nella sua torre' });
 	await expect(img).toBeVisible();
+	await expect(column.locator('figcaption')).toHaveText('Il mago nella sua torre');
+	await expect(column.locator(':scope > *').first()).toHaveJSProperty('tagName', 'FIGURE');
+	await expect(column).toContainText('Caotico buono');
+	await expect(column.getByRole('button')).toHaveCount(0);
 	const first = (await img.getAttribute('src'))!;
 	expect((await admin.request.get(first)).headers()['content-type']).toBe('image/png');
 	await axe(admin, 'pagina con immagine');
-	await shot(admin, '11c-immagine-della-pagina');
+	await shot(admin, '11e-colonna-con-immagine');
 
 	// Senza mouse: «Cambia immagine» apre la scelta del file.
+	await admin.goto('/wiki/elminster/edit');
 	await expect(box.getByRole('button', { name: 'Cambia immagine' })).toBeVisible();
-	await box.getByLabel("File dell'immagine della pagina").setInputFiles('tests/fixtures/map.png');
-	await expect(box.getByRole('status')).toContainText('Immagine salvata');
-	await expect(img).not.toHaveAttribute('src', first);
-
-	// Un file che non è un'immagine viene rifiutato.
-	await box.getByLabel("File dell'immagine della pagina").setInputFiles({ name: 'x.svg', mimeType: 'image/svg+xml', buffer: Buffer.from('<svg/>') });
-	await expect(box.getByRole('status')).toContainText('Formato non supportato');
-
-	admin.once('dialog', (d) => d.accept());
-	await box.getByRole('button', { name: 'Rimuovi' }).click();
-	await expect(box.getByRole('status')).toContainText('Immagine rimossa');
-	await expect(box.getByRole('img')).toHaveCount(0);
-
-	await box.getByLabel("File dell'immagine della pagina").setInputFiles('tests/fixtures/city.png');
+	await box.getByLabel("File dell'immagine 1").setInputFiles('tests/fixtures/city.png');
+	await expect(box.getByRole('status')).toContainText('Immagine caricata');
+	await admin.getByRole('button', { name: 'Salva' }).click();
 	await expect(img).toBeVisible();
+	await expect(img).not.toHaveAttribute('src', first);
 });
 
 test('un file che non è un\'immagine viene rifiutato', async () => {
@@ -443,18 +483,13 @@ test('il giocatore non vede pin, livelli ed eventi segreti', async ({ browser })
 	await expect(p.locator('.content')).not.toContainText('solo il Master');
 	await expect(p.locator('.content img')).toBeVisible();
 
-	// Vede l'immagine della pagina ma non può cambiarla.
-	const box = p.getByRole('group', { name: 'Immagine della pagina' });
-	await expect(box.getByRole('img', { name: 'Elminster' })).toBeVisible();
-	await expect(box.getByRole('button')).toHaveCount(0);
-	const up = await p.request.post('/wiki/elminster?/image', {
-		multipart: { file: { name: 'x.png', mimeType: 'image/png', buffer: readFileSync('tests/fixtures/city.png') } },
-		headers: { origin: new URL(p.url()).origin }
-	});
-	expect(up.status()).toBe(404);
+	// Vede la colonna con l'immagine ma non può cambiarla.
+	const column = p.getByRole('complementary', { name: 'Scheda' });
+	await expect(column.getByRole('img', { name: 'Il mago nella sua torre' })).toBeVisible();
+	await expect(column.getByRole('button')).toHaveCount(0);
+	expect((await p.goto('/wiki/elminster/edit'))?.status()).toBe(404);
 	await p.goto('/wiki/locanda-del-grifone');
-	// Senza immagine e senza permessi il riquadro non c'è proprio.
-	await expect(p.getByRole('group', { name: 'Immagine della pagina' })).toHaveCount(0);
+	await expect(column).toHaveCount(0);
 
 	await p.goto('/gallery');
 	await expect(p.locator('main').getByRole('link', { name: 'Ritratto di un vecchio mago con la barba' })).toBeVisible();

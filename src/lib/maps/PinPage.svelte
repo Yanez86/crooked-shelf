@@ -14,9 +14,8 @@
 	interface View {
 		slug: string;
 		title: string;
-		image: { url: string; width: number; height: number } | null;
 		html: string;
-		fields: { label: string; html: string }[];
+		fields: { label: string; html: string; image?: { url: string; width: number; height: number } }[];
 		session: { number: number | null; realDate: string | null; world: string | null } | null;
 	}
 
@@ -88,7 +87,7 @@
 
 		<div class="page" aria-busy={!view && !failed}>
 			{#if view}
-				<PageBody title={view.title} image={view.image} html={view.html} fields={view.fields} session={view.session} {locale} />
+				<PageBody title={view.title} html={view.html} fields={view.fields} session={view.session} {locale} />
 			{:else if failed}
 				<p role="alert">{t('maps.pageError')}</p>
 			{:else}

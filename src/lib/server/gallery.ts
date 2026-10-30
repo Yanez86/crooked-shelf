@@ -9,7 +9,7 @@ import { isMaster, type Viewer } from '../access.ts';
 
 const { pages, files } = schema;
 
-/** Dove compare un'immagine: immagine della pagina, nel testo di una pagina, mappa, risorsa. */
+/** Dove compare un'immagine: colonna a lato di una pagina, nel testo di una pagina, mappa, risorsa. */
 export const GALLERY_KINDS = ['cover', 'content', 'map', 'resource'] as const;
 export type GalleryKind = (typeof GALLERY_KINDS)[number];
 
@@ -30,7 +30,7 @@ export interface GalleryImage {
 }
 
 /**
- * Le immagini della campagna che chi guarda può vedere: l'immagine di ogni pagina, quelle nel testo
+ * Le immagini della campagna che chi guarda può vedere: quelle nella colonna a lato delle pagine e nel testo
  * (dentro i segreti solo per il Master), le mappe e le risorse. Le più recenti prima.
  */
 export function galleryImages(u: Viewer | null): GalleryImage[] {
@@ -44,14 +44,14 @@ export function galleryImages(u: Viewer | null): GalleryImage[] {
 
 	const secrets = isMaster(u);
 	const rows = getDb()
-		.select({ slug: pages.slug, title: pages.title, content: pages.content, imageId: pages.imageId })
+		.select({ slug: pages.slug, title: pages.title, content: pages.content, fields: pages.fields })
 		.from(pages)
 		.where(visibleTo(u))
 		.orderBy(sql`${pages.title} COLLATE NOCASE`)
 		.all();
 	for (const p of rows) {
 		const href = `/wiki/${p.slug}`;
-		if (p.imageId) add(p.imageId, { kind: 'cover', title: p.title, href });
+		for (const f of p.fields ?? []) if (f.image) add(f.image, { kind: 'cover', title: p.title, href }, f.label);
 		const doc = isDoc(p.content) ? p.content : EMPTY_DOC;
 		for (const img of uploadedImages(secrets ? doc : stripSecrets(doc))) add(img.id, { kind: 'content', title: p.title, href }, img.alt);
 	}

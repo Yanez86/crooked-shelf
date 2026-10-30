@@ -7,7 +7,7 @@
 	import PageBody from '#lib/components/PageBody.svelte';
 	import type { PageProps } from './$types';
 
-	let { data, form }: PageProps = $props();
+	let { data }: PageProps = $props();
 	const t = getT();
 	const locale = $derived(appPage.data.locale as string);
 </script>
@@ -46,17 +46,7 @@
 		</ul>
 	{/if}
 
-	<PageBody
-		title={data.page.title}
-		image={data.image}
-		html={data.html}
-		fields={data.fields}
-		session={data.session}
-		{locale}
-		canEdit={data.canEdit}
-		imageError={form?.imageError}
-		imageOk={form?.imageOk}
-	/>
+	<PageBody title={data.page.title} html={data.html} fields={data.fields} session={data.session} {locale} />
 
 	{#if data.maps.length || data.events.length}
 		<section class="related" aria-labelledby="related-title">

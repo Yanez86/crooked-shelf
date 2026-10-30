@@ -265,5 +265,13 @@ export const MIGRATIONS: string[] = [
 		created_at INTEGER NOT NULL,
 		updated_at INTEGER NOT NULL
 	);
+	`,
+	// L'immagine della pagina diventa il primo riquadro della colonna a lato.
+	`
+	UPDATE pages SET fields = CASE
+		WHEN json_array_length(fields) = 0 THEN json_array(json_object('label', '', 'value', '', 'image', image_id))
+		ELSE '[' || json_object('label', '', 'value', '', 'image', image_id) || ',' || substr(json(fields), 2)
+	END
+	WHERE image_id IS NOT NULL AND json_valid(fields) AND json_type(fields) = 'array';
 	`
 ];

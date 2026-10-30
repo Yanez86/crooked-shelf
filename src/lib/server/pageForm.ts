@@ -9,6 +9,7 @@ import type { PageField, SessionInfo, WorldDate } from '../content/types.ts';
 import { validDate, type Calendar } from '../calendar.ts';
 import { REAL_DATE } from './timeline.ts';
 import { pageIcon } from '../pageIcons.ts';
+import { getFile } from './files.ts';
 
 const CONTENT_MAX = 2_000_000;
 
@@ -26,15 +27,31 @@ export interface PageFormValues {
 	icon: string | null;
 }
 
+/**
+ * Riquadri della colonna a lato, ripuliti. `image` dice quale file mostra un riquadro immagine
+ * (null = il file non va bene e il riquadro si toglie).
+ */
+export function cleanFields(raw: unknown, image: (id: string) => string | null): PageField[] {
+	if (!Array.isArray(raw)) return [];
+	const out: PageField[] = [];
+	for (const f of raw) {
+		if (!f || typeof f !== 'object') continue;
+		const label = typeof f.label === 'string' ? f.label.trim() : '';
+		const value = typeof f.value === 'string' ? f.value.trim() : '';
+		if (f.image !== undefined) {
+			const id = typeof f.image === 'string' ? image(f.image) : null;
+			if (id) out.push({ label: label.slice(0, 200), value: '', image: id });
+		} else if (label || value) out.push({ label: label.slice(0, 60), value: value.slice(0, 500) });
+	}
+	return out.slice(0, 30);
+}
+
+/** Solo immagini già caricate: un riquadro non mostra un PDF né un file che non c'è. */
+const imageFile = (id: string) => (getFile(id)?.mime.startsWith('image/') ? id : null);
+
 function parseFields(raw: string): PageField[] {
 	try {
-		const v = JSON.parse(raw || '[]');
-		if (!Array.isArray(v)) return [];
-		return v
-			.filter((f) => f && typeof f.label === 'string' && typeof f.value === 'string')
-			.map((f) => ({ label: f.label.trim().slice(0, 60), value: f.value.trim().slice(0, 500) }))
-			.filter((f) => f.label || f.value)
-			.slice(0, 30);
+		return cleanFields(JSON.parse(raw || '[]'), imageFile);
 	} catch {
 		return [];
 	}

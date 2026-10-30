@@ -107,7 +107,8 @@ export function frontMatter(meta: { title: string; category?: string | null; tag
 	if (meta.category) lines.push(`category: ${yamlString(meta.category)}`);
 	if (meta.tags?.length) lines.push(`tags: [${meta.tags.map(yamlString).join(', ')}]`);
 	if (meta.visibility) lines.push(`visibility: ${meta.visibility}`);
-	for (const f of meta.fields ?? []) if (f.label) lines.push(`${yamlString(f.label)}: ${yamlString(f.value)}`);
+	// Le immagini della colonna a lato vanno nel testo, non qui.
+	for (const f of meta.fields ?? []) if (f.label && !f.image) lines.push(`${yamlString(f.label)}: ${yamlString(f.value)}`);
 	lines.push('---', '');
 	return lines.join('\n');
 }

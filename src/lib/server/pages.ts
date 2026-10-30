@@ -10,6 +10,7 @@ import { visibleTo } from './visibility.ts';
 import { ensureTags, tagsForPages } from './taxonomy.ts';
 import { syncSessionEvent } from './timeline.ts';
 import { hasRule } from './rules/index.ts';
+import { getFile } from './files.ts';
 
 const { pages, pageTags, pageLinks, users, categories, pageRevisions } = schema;
 
@@ -59,6 +60,11 @@ function normalizeContent(raw: unknown, u: Viewer): DocNode {
 	const doc = isDoc(raw) ? raw : EMPTY_DOC;
 	// Solo Master e Admin scrivono blocchi segreti.
 	return isMaster(u) ? doc : stripSecrets(doc);
+}
+
+/** La prima immagine della colonna a lato è l'immagine della pagina (galleria, anteprima dei collegamenti). */
+function coverOf(fields: PageField[]): string | null {
+	return fields.find((f) => f.image && getFile(f.image))?.image ?? null;
 }
 
 function writeIndex(id: number, title: string, doc: DocNode, fields: PageField[]) {
@@ -122,6 +128,7 @@ export function createPage(input: PageInput, u: Viewer): PageRow {
 				hasSecret: extract(doc).hasSecret,
 				categoryId: input.categoryId,
 				fields: input.fields,
+				imageId: coverOf(input.fields),
 				template: input.template ?? null,
 				session: input.session,
 				icon: input.icon ?? null,
@@ -152,6 +159,7 @@ export function updatePage(page: PageRow, input: PageInput, u: Viewer, manage: b
 				hasSecret: extract(doc).hasSecret,
 				categoryId: input.categoryId,
 				fields: input.fields,
+				imageId: coverOf(input.fields),
 				session: input.session,
 				...(input.icon !== undefined ? { icon: input.icon } : {}),
 				updatedBy: u.id,
@@ -166,11 +174,6 @@ export function updatePage(page: PageRow, input: PageInput, u: Viewer, manage: b
 		syncSessionEvent({ id: page.id, title: input.title, visibility, authorId: page.authorId }, input.session);
 		writeRevision(page.id);
 	});
-}
-
-/** Immagine della pagina: non crea una versione e non cambia la data di modifica (chi sta scrivendo non va in conflitto). */
-export function setPageImage(id: number, fileId: string | null) {
-	getDb().update(pages).set({ imageId: fileId }).where(eq(pages.id, id)).run();
 }
 
 export function deletePage(id: number) {
@@ -228,7 +231,12 @@ export function renderPage(page: PageRow, u: Viewer | null, labels: RenderOption
 	const resolve = linkResolver(doc, u, fields);
 	return {
 		html: renderDoc(doc, { showSecrets: isMaster(u), resolve, labels, hasRule }),
-		fields: fields.map((f) => ({ label: f.label, html: renderInline(f.value, { resolve, labels, hasRule }) }))
+		// I riquadri immagine il cui file non c'è più (es. risorsa eliminata) non si mostrano.
+		fields: fields.flatMap((f): { label: string; html: string; image?: { url: string; width: number; height: number } }[] => {
+			if (f.image === undefined) return [{ label: f.label, html: renderInline(f.value, { resolve, labels, hasRule }) }];
+			const file = getFile(f.image);
+			return file ? [{ label: f.label, html: '', image: { url: `/files/${file.id}`, width: file.width, height: file.height } }] : [];
+		})
 	};
 }
 

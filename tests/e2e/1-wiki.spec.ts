@@ -283,18 +283,18 @@ test('il giocatore non vede i segreti', async ({ browser }) => {
 
 	// Preferenze di lettura.
 	await p.goto('/preferences');
-	await p.getByRole('radio', { name: 'Alto contrasto' }).check();
+	await p.getByRole('radio', { name: 'Scuro', exact: true }).check();
 	await p.getByLabel('Dimensione del testo').selectOption('150');
 	await p.getByLabel('Carattere').selectOption('opendyslexic');
 	await p.getByRole('button', { name: 'Salva' }).first().click();
 	await expect(p.getByRole('status').first()).toContainText('Preferenze salvate');
 	const html = p.locator('html');
-	await expect(html).toHaveAttribute('data-theme', 'contrast');
+	await expect(html).toHaveAttribute('data-theme', 'dark');
 	await expect(html).toHaveAttribute('data-font', 'opendyslexic');
 	await p.goto('/wiki/locanda-del-grifone');
 	await expect(html).toHaveAttribute('style', /--font-scale:1\.5/);
-	await shot(p, '06-giocatore-alto-contrasto');
-	await axe(p, 'giocatore alto contrasto');
+	await shot(p, '06-giocatore-scuro');
+	await axe(p, 'giocatore scuro');
 
 	await p.goto('/preferences');
 	await p.getByLabel('Lingua', { exact: true }).selectOption('en');
@@ -317,7 +317,7 @@ test('visitatori: spenti di default', async ({ browser }) => {
 });
 
 test('temi: contrasti e accessibilità', async () => {
-	for (const theme of ['Chiaro', 'Scuro', 'Pergamena', 'Alto contrasto']) {
+	for (const theme of ['Chiaro', 'Scuro']) {
 		await admin.goto('/preferences');
 		await admin.getByRole('radio', { name: theme, exact: true }).check();
 		await admin.getByRole('button', { name: 'Salva' }).first().click();
@@ -343,6 +343,19 @@ test("l'albero si può nascondere", async () => {
 	await expect(admin.getByRole('navigation', { name: TREE })).toHaveCount(0);
 	await save('Mostra');
 	await admin.goto('/wiki/locanda-del-grifone');
+	await expect(admin.getByRole('navigation', { name: TREE })).toBeVisible();
+
+	// Preferenze e Amministrazione: niente albero, anche arrivandoci dal menu.
+	await admin.getByRole('navigation', { name: 'Navigazione principale' }).getByRole('link', { name: 'Preferenze', exact: true }).click();
+	await expect(admin).toHaveURL(/\/preferences$/);
+	await expect(admin.getByRole('navigation', { name: TREE })).toHaveCount(0);
+	await expect(admin.locator('#tree-toggle')).toHaveCount(0);
+	for (const url of ['/admin', '/admin/themes']) {
+		await admin.goto(url);
+		await expect(admin.getByRole('navigation', { name: TREE })).toHaveCount(0);
+	}
+	await admin.getByRole('navigation', { name: 'Navigazione principale' }).getByRole('link', { name: 'Pagine', exact: true }).click();
+	await expect(admin).toHaveURL(/\/wiki$/);
 	await expect(admin.getByRole('navigation', { name: TREE })).toBeVisible();
 });
 

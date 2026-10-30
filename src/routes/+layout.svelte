@@ -40,7 +40,10 @@
 		href === '/' ? path === '/' : path === href || path.startsWith(href + '/') ? 'page' : undefined;
 	const isAdmin = $derived(data.user?.role === 'admin');
 	const bare = $derived(path.startsWith('/setup') || path.startsWith('/login') || path.startsWith('/invite/'));
-	const tree = $derived(bare ? null : data.tree);
+	// Preferenze e Amministrazione senza albero; intestazione e piè di pagina restano larghi come altrove.
+	const treeless = $derived(['/preferences', '/admin'].some((p) => path === p || path.startsWith(p + '/')));
+	const wide = $derived(!bare && !!data.tree);
+	const tree = $derived(wide && !treeless ? data.tree : null);
 
 	// Sul telefono la navigazione sta dietro il pulsante Menu e l'albero in un pannello a scomparsa;
 	// si richiudono a ogni cambio di pagina.
@@ -61,7 +64,7 @@
 <a class="skip-link" href="#main">{t('nav.skip')}</a>
 
 <header class="site-header">
-	<div class="container header-inner" class:wide={!!tree} class:bare>
+	<div class="container header-inner" class:wide class:bare>
 		{#if tree}
 			<button
 				id="tree-toggle"
@@ -113,7 +116,7 @@
 	</div>
 
 	{#if !bare}
-		<nav id="main-nav" class="container main-nav" class:wide={!!tree} class:open={menuOpen} aria-label={t('nav.main')}>
+		<nav id="main-nav" class="container main-nav" class:wide class:open={menuOpen} aria-label={t('nav.main')}>
 			<ul class="list-plain">
 				<li><a href="/" aria-current={current('/')}>{t('nav.home')}</a></li>
 				<li><a href="/wiki" aria-current={current('/wiki')}>{t('nav.pages')}</a></li>
@@ -151,7 +154,7 @@
 	{/if}
 </header>
 
-<div class="container shell" class:wide={!!tree}>
+<div class="container shell" class:wide class:with-tree={!!tree}>
 	{#if tree}<PageTree {tree} resources={data.resources ?? []} bind:open={treeOpen} />{/if}
 	<main id="main" tabindex="-1">
 		{@render children()}
@@ -162,7 +165,7 @@
 <LinkPreview />
 
 <footer class="site-footer">
-	<div class="container" class:wide={!!tree} class:bare>
+	<div class="container" class:wide class:bare>
 		<p>
 			<a href="/changelog" title={t('footer.changelog', { v: data.version })}>Crooked Shelf {data.version}</a> ·
 			<a href={REPO} rel="noopener noreferrer">{t('footer.source')}</a> ·
@@ -318,7 +321,7 @@
 		}
 	}
 	/* Albero a sinistra, pagina a destra. */
-	.shell.wide {
+	.shell.with-tree {
 		display: grid;
 		grid-template-columns: 17rem minmax(0, 1fr);
 		align-items: start;
@@ -332,7 +335,7 @@
 		.brand {
 			margin-right: auto;
 		}
-		.shell.wide {
+		.shell.with-tree {
 			grid-template-columns: minmax(0, 1fr);
 			gap: 1rem;
 		}

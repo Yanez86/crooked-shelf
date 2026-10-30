@@ -16,7 +16,6 @@ function editable(slug: string, u: App.Locals['user']) {
 export const load: PageServerLoad = ({ params, locals, url }) => {
 	if (!locals.user) redirect(303, `/login?next=${encodeURIComponent(url.pathname)}`);
 	const page = editable(params.slug, locals.user);
-	const img = page.imageId ? getFile(page.imageId) : undefined;
 	return {
 		page: {
 			slug: page.slug,
@@ -27,12 +26,12 @@ export const load: PageServerLoad = ({ params, locals, url }) => {
 			categoryId: page.categoryId,
 			updatedAt: page.updatedAt,
 			tags: pageMeta(page).tags.map((t) => t.name).join(', '),
-			fields: page.fields ?? [],
+			// Un riquadro immagine il cui file non c'è più si toglie anche qui.
+			fields: (page.fields ?? []).filter((f) => !f.image || getFile(f.image)),
 			template: page.template,
 			session: page.session ?? null,
 			icon: page.icon
 		},
-		image: img ? { url: `/files/${img.id}`, width: img.width, height: img.height } : null,
 		months: getCalendar().months,
 		categories: categoryTree(locals.user).flat.map(({ id, label }) => ({ id, label })),
 		visibilities: allowedVisibilities(locals.user),

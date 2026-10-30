@@ -1,8 +1,7 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
 	import Editor from '../editor/Editor.svelte';
-	import FieldsEditor from './FieldsEditor.svelte';
-	import PageImage from './PageImage.svelte';
+	import SideColumn from './SideColumn.svelte';
 	import WorldDateInput from './WorldDateInput.svelte';
 	import type { CalMonth } from '../calendar.ts';
 	import { getT } from '../i18n/index.ts';
@@ -24,8 +23,7 @@
 		updatedAt = null,
 		submitLabel,
 		cancelHref,
-		months,
-		image = null
+		months
 	}: {
 		values: {
 			title: string;
@@ -49,8 +47,6 @@
 		submitLabel: string;
 		cancelHref: string;
 		months: CalMonth[];
-		/** Immagine della pagina: qui si vede soltanto, si cambia dalla pagina stessa. */
-		image?: { url: string; width: number; height: number } | null;
 	} = $props();
 
 	const t = getT();
@@ -135,24 +131,24 @@
 
 	<div class="body">
 		<div class="side">
-			{#if image}<PageImage {image} title={values.title} canEdit={false} />{/if}
-			{#if values.session}
-				<fieldset class="session">
-					<legend>{t('session.title')}</legend>
-					<input type="hidden" name="isSession" value="1" />
-					<div class="field">
-						<label for="sessionNumber">{t('session.number')}</label>
-						<input id="sessionNumber" name="sessionNumber" type="number" min="1" step="1" value={values.session.number ?? ''} />
-					</div>
-					<div class="field">
-						<label for="sessionDate">{t('session.realDate')}</label>
-						<input id="sessionDate" name="sessionDate" type="date" value={values.session.realDate ?? ''} />
-					</div>
-					<WorldDateInput prefix="sessionWorld" {months} value={values.session.world} legend={t('session.worldDate')} />
-					<p class="hint">{t('session.hint')}</p>
-				</fieldset>
-			{/if}
-			<FieldsEditor fields={values.fields} />
+			<SideColumn fields={values.fields} fixed={!!values.session}>
+				{#if values.session}
+					<fieldset class="session">
+						<legend>{t('session.title')}</legend>
+						<input type="hidden" name="isSession" value="1" />
+						<div class="field">
+							<label for="sessionNumber">{t('session.number')}</label>
+							<input id="sessionNumber" name="sessionNumber" type="number" min="1" step="1" value={values.session.number ?? ''} />
+						</div>
+						<div class="field">
+							<label for="sessionDate">{t('session.realDate')}</label>
+							<input id="sessionDate" name="sessionDate" type="date" value={values.session.realDate ?? ''} />
+						</div>
+						<WorldDateInput prefix="sessionWorld" {months} value={values.session.world} legend={t('session.worldDate')} />
+						<p class="hint">{t('session.hint')}</p>
+					</fieldset>
+				{/if}
+			</SideColumn>
 		</div>
 
 		<div class="content">
@@ -333,10 +329,10 @@
 		background: var(--c-surface2);
 		font-weight: 700;
 	}
-	/* Come la pagina: testo a sinistra, colonna a destra. */
+	/* Come la pagina: testo a sinistra, colonna a destra (o solo il «+» per aggiungerla). */
 	.body {
 		display: grid;
-		grid-template-columns: minmax(0, 1fr) 20rem;
+		grid-template-columns: minmax(0, 1fr) auto;
 		align-items: start;
 		gap: 1.5rem 2rem;
 		margin: 1.5rem 0 2rem;
@@ -351,12 +347,8 @@
 		grid-row: 1;
 		display: flex;
 		flex-direction: column;
-		gap: 1rem;
-		background: var(--c-surface);
-		border: 1px solid var(--c-border);
-		border-top: 4px solid var(--c-primary);
-		border-radius: var(--radius);
-		padding: 1rem;
+		align-items: flex-end;
+		min-width: 0;
 	}
 	.session {
 		margin: 0;
@@ -367,6 +359,11 @@
 		}
 		.side {
 			grid-column: 1;
+			align-items: stretch;
+		}
+		/* Sul telefono il «+» resta a destra, sopra il testo. */
+		.side > :global(.open) {
+			align-self: flex-end;
 		}
 		.content {
 			grid-row: 2;
