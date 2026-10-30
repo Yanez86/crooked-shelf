@@ -43,12 +43,14 @@ describe('pagine', () => {
 		const cal = { months: [] } as never;
 		const bad = readPageForm(form('<b>'), master, cal);
 		expect(bad.ok && bad.input.icon).toBeNull();
-		const r = readPageForm(form('🐉'), master, cal);
+		// Le emoji di prima diventano il nome dell'icona.
+		expect(readPageForm(form('🐉'), master, cal)).toMatchObject({ ok: true, input: { icon: 'claws' } });
+		const r = readPageForm(form('claws'), master, cal);
 		if (!r.ok) throw new Error(r.error);
 		const row = createPage(r.input, master);
-		expect(pageTree(alice).pages).toEqual([{ slug: 'drago', title: 'Drago', icon: '🐉' }]);
+		expect(pageTree(alice).pages).toEqual([{ slug: 'drago', title: 'Drago', icon: 'claws' }]);
 		updatePage(row, { ...base, title: 'Drago', content: doc(p('y')) }, master, true);
-		expect(getPageBySlug('drago')!.icon).toBe('🐉');
+		expect(getPageBySlug('drago')!.icon).toBe('claws');
 	});
 
 	it('crea, collega e trova i backlink', () => {

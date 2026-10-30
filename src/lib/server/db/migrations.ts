@@ -216,5 +216,41 @@ export const MIGRATIONS: string[] = [
 	// Icona della pagina (nell'albero a sinistra).
 	`
 	ALTER TABLE pages ADD COLUMN icon TEXT;
+	`,
+	// Icone della pagina: dalle emoji ai disegni a tratto (si salva il nome).
+	`
+	UPDATE pages SET icon = CASE icon
+		WHEN '📜' THEN 'scroll'
+		WHEN '📖' THEN 'book'
+		WHEN '👤' THEN 'person'
+		WHEN '👑' THEN 'crown'
+		WHEN '🧙' THEN 'hat'
+		WHEN '🧝' THEN 'leaf'
+		WHEN '⚔️' THEN 'swords'
+		WHEN '🛡️' THEN 'shield'
+		WHEN '🏹' THEN 'bow'
+		WHEN '🐉' THEN 'claws'
+		WHEN '👹' THEN 'horns'
+		WHEN '💀' THEN 'skull'
+		WHEN '🏰' THEN 'castle'
+		WHEN '🏘️' THEN 'house'
+		WHEN '🍺' THEN 'mug'
+		WHEN '⛪' THEN 'temple'
+		WHEN '🌲' THEN 'tree'
+		WHEN '⛰️' THEN 'mountain'
+		WHEN '🌊' THEN 'wave'
+		WHEN '🗺️' THEN 'map'
+		WHEN '🕯️' THEN 'candle'
+		WHEN '💰' THEN 'coins'
+		WHEN '💎' THEN 'gem'
+		WHEN '🗝️' THEN 'key'
+		WHEN '⭐' THEN 'star'
+		WHEN '⚠️' THEN 'warning'
+		WHEN '🌀' THEN 'spiral'
+		WHEN '🔥' THEN 'flame'
+		WHEN '🌙' THEN 'moon'
+		WHEN '⚙️' THEN 'cog'
+	END
+	WHERE icon IS NOT NULL;
 	`
 ];

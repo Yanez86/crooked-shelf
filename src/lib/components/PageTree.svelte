@@ -4,6 +4,7 @@
 	import { page } from '$app/state';
 	import { getT } from '../i18n/index.ts';
 	import { isMaster } from '../access.ts';
+	import { PAGE_ICONS } from '../pageIcons.ts';
 	import { treePaths, type Tree, type TreeFolder, type TreePage } from '../tree.ts';
 
 	let { tree }: { tree: Tree } = $props();
@@ -85,14 +86,14 @@
 {#snippet leaf(p: TreePage)}
 	<li>
 		<a href="/wiki/{p.slug}" aria-current={current === p.slug ? 'page' : undefined}>
-			{#if p.icon}
-				<span class="ico emoji" aria-hidden="true">{p.icon}</span>
-			{:else}
-				<svg class="ico doc" viewBox="0 0 24 24" aria-hidden="true">
+			<svg class="ico doc" viewBox="0 0 24 24" aria-hidden="true">
+				{#if p.icon}
+					<path d={PAGE_ICONS[p.icon]} />
+				{:else}
 					<path d="M6 2.75h8.25L19 7.5v13.75H6z" />
 					<path d="M14 2.75V7.5h5M9 12h7M9 15.5h7" />
-				</svg>
-			{/if}
+				{/if}
+			</svg>
 			<span>{p.title}</span>
 		</a>
 	</li>
@@ -278,17 +279,8 @@
 		fill: none;
 		stroke: var(--c-muted);
 		stroke-width: 1.5;
+		stroke-linecap: round;
 		stroke-linejoin: round;
-	}
-	.emoji {
-		margin-left: 0.25rem;
-		margin-top: 0;
-		font-size: 0.95rem;
-		line-height: 1.15rem;
-		text-align: center;
-	}
-	a:hover .emoji {
-		text-decoration: none;
 	}
 	.folder.opened,
 	details[open] > summary > .folder.closed {
