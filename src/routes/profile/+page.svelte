@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Icon from '#lib/components/Icon.svelte';
 	import { page } from '$app/state';
 	import { enhance } from '$app/forms';
 	import { getT } from '#lib/i18n/index.ts';
@@ -47,7 +48,7 @@
 					<label class="choice theme-choice">
 						<input type="radio" name="theme" value={th} checked={data.current.theme === th} />
 						<span class="swatch" aria-hidden="true" style={c ? `background:${c.bg};color:${c.text};border-color:${c.control}` : ''}>
-							{#if c}<span style="color:{c.link}">Aa</span>{:else}◐{/if}
+							{#if c}<span style="color:{c.link}">Aa</span>{:else}<Icon name="contrast" />{/if}
 						</span>
 						<span>{themeName(th)}</span>
 					</label>

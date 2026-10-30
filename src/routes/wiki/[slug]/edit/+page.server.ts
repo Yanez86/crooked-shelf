@@ -1,7 +1,7 @@
 import { error, fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { allowedVisibilities, canEdit, canManage, isMaster } from '#lib/access.ts';
-import { deletePage, getPageBySlug, pageMeta, updatePage } from '#lib/server/pages.ts';
+import { deletePage, getPageBySlug, pageCover, pageMeta, updatePage } from '#lib/server/pages.ts';
 import { readPageForm } from '#lib/server/pageForm.ts';
 import { categoryTree, listTags } from '#lib/server/taxonomy.ts';
 import { getCalendar } from '#lib/server/settings.ts';
@@ -30,7 +30,8 @@ export const load: PageServerLoad = ({ params, locals, url }) => {
 			fields: (page.fields ?? []).filter((f) => !f.image || getFile(f.image)),
 			template: page.template,
 			session: page.session ?? null,
-			icon: page.icon
+			icon: page.icon,
+			cover: pageCover(page)
 		},
 		months: getCalendar().months,
 		categories: categoryTree(locals.user).flat.map(({ id, label }) => ({ id, label })),

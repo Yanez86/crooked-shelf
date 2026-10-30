@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Icon from '#lib/components/Icon.svelte';
 	import { page } from '$app/state';
 	import { getT } from '#lib/i18n/index.ts';
 	import FormError from '#lib/components/FormError.svelte';
@@ -40,7 +41,7 @@
 
 <!-- Aperto finché non c'è nessuna bacheca: allora creare è l'unica cosa da fare. -->
 <details class="disclosure new" open={!data.mine.length && !data.shared.length || !!form?.error}>
-	<summary class="btn btn-primary">+ {t('boards.new')}</summary>
+	<summary class="btn btn-primary"><Icon name="plus" />{t('boards.new')}</summary>
 	<FormError error={form?.error} />
 	<form method="post" action="?/create" class="card">
 		<div class="field">

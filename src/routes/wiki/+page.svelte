@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Icon from '#lib/components/Icon.svelte';
 	import { page as appPage } from '$app/state';
 	import { getT } from '#lib/i18n/index.ts';
 	import PageList from '#lib/components/PageList.svelte';
@@ -32,7 +33,7 @@
 <div class="head">
 	<h1>{heading}</h1>
 	{#if appPage.data.user}
-		<a class="btn btn-primary" href="/wiki/new{data.category ? `?category=${data.category.id}` : ''}">+ {t('nav.newPage')}</a>
+		<a class="btn btn-primary" href="/wiki/new{data.category ? `?category=${data.category.id}` : ''}"><Icon name="plus" />{t('nav.newPage')}</a>
 	{/if}
 </div>
 {#if data.category?.description}<p>{data.category.description}</p>{/if}
@@ -78,9 +79,9 @@
 
 {#if data.pages > 1}
 	<nav class="pager" aria-label={t('list.pagination')}>
-		{#if data.page > 1}<a class="btn" href={href(data.page - 1)}>← {t('list.prev')}</a>{/if}
+		{#if data.page > 1}<a class="btn" href={href(data.page - 1)}><Icon name="arrowLeft" />{t('list.prev')}</a>{/if}
 		<span>{t('list.pageOf', { n: data.page, total: data.pages })}</span>
-		{#if data.page < data.pages}<a class="btn" href={href(data.page + 1)}>{t('list.next')} →</a>{/if}
+		{#if data.page < data.pages}<a class="btn" href={href(data.page + 1)}>{t('list.next')}<Icon name="arrowRight" /></a>{/if}
 	</nav>
 {/if}
 

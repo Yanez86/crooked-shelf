@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Icon from '#lib/components/Icon.svelte';
 	import { page } from '$app/state';
 	import { getT } from '#lib/i18n/index.ts';
 	import PageList from '#lib/components/PageList.svelte';
@@ -20,7 +21,7 @@
 	<section class="card empty">
 		<h2>{t('home.emptyTitle')}</h2>
 		<p>{t('home.emptyText')}</p>
-		{#if user}<a class="btn btn-primary" href="/wiki/new">+ {t('home.firstPage')}</a>{/if}
+		{#if user}<a class="btn btn-primary" href="/wiki/new"><Icon name="plus" />{t('home.firstPage')}</a>{/if}
 	</section>
 {:else}
 	<div class="grid">

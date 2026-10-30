@@ -10,6 +10,7 @@ import { validDate, type Calendar } from '../calendar.ts';
 import { REAL_DATE } from './timeline.ts';
 import { pageIcon } from '../pageIcons.ts';
 import { getFile } from './files.ts';
+import { cleanCover, type PageCover } from '../covers.ts';
 
 const CONTENT_MAX = 2_000_000;
 
@@ -25,6 +26,7 @@ export interface PageFormValues {
 	template: string | null;
 	session: SessionInfo | null;
 	icon: string | null;
+	cover: PageCover | null;
 }
 
 /**
@@ -97,7 +99,8 @@ export function readPageForm(
 		fields: parseFields(String(f.get('fields') ?? '')),
 		template: str(f, 'template', 20) || null,
 		session: null,
-		icon: pageIcon(f.get('icon'))
+		icon: pageIcon(f.get('icon')),
+		cover: cleanCover({ image: f.get('coverImage'), color: f.get('coverColor'), y: f.get('coverY') }, imageFile)
 	};
 	let badDate = false;
 	if (f.get('isSession') === '1') {
@@ -130,7 +133,8 @@ export function readPageForm(
 			fields: values.fields,
 			template: values.template,
 			session: values.session,
-			icon: values.icon
+			icon: values.icon,
+			cover: values.cover
 		}
 	};
 }

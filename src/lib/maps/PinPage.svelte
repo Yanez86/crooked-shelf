@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Icon from '../components/Icon.svelte';
 	import { page } from '$app/state';
 	import { getT } from '../i18n/index.ts';
 	import PageBody from '../components/PageBody.svelte';
@@ -73,7 +74,7 @@
 			<h1 id="pin-page-title">{view?.title ?? pin.page.title}</h1>
 			<div class="acts">
 				<a class="btn btn-small" href="/wiki/{pin.page.slug}">{t('maps.fullPage')}</a>
-				<button class="btn btn-small" type="button" onclick={() => dlg?.close()}>✕ {t('common.close')}</button>
+				<button class="btn btn-small" type="button" onclick={() => dlg?.close()}><Icon name="close" />{t('common.close')}</button>
 			</div>
 		</header>
 

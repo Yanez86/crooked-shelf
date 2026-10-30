@@ -5,6 +5,8 @@
 	import { getT } from '../i18n/index.ts';
 	import { isMaster } from '../access.ts';
 	import { PAGE_ICONS } from '../pageIcons.ts';
+	import { iconPath } from '../icons.ts';
+	import Icon from './Icon.svelte';
 	import { treePaths, type Tree, type TreeFolder, type TreePage } from '../tree.ts';
 	import { RESOURCE_KINDS, type ResourceItem, type ResourceKind } from '../resources.ts';
 
@@ -149,13 +151,8 @@
 <svelte:window onkeydown={keys} onfocusin={focusMoved} />
 
 {#snippet folderIcon()}
-	<svg class="ico folder closed" viewBox="0 0 24 24" aria-hidden="true">
-		<path d="M2.5 6.5A1.5 1.5 0 0 1 4 5h5l2 2h9a1.5 1.5 0 0 1 1.5 1.5v9A1.5 1.5 0 0 1 20 19H4a1.5 1.5 0 0 1-1.5-1.5z" />
-	</svg>
-	<svg class="ico folder opened" viewBox="0 0 24 24" aria-hidden="true">
-		<path d="M2.5 6.5A1.5 1.5 0 0 1 4 5h5l2 2h7.5A1.5 1.5 0 0 1 20 8.5V10H7.3a1.5 1.5 0 0 0-1.4 1l-2.4 7.2-1-1z" />
-		<path d="M6.6 11.5h15a.8.8 0 0 1 .75 1.06l-2 5.6A1.5 1.5 0 0 1 18.95 19H3.6z" />
-	</svg>
+	<svg class="ico folder closed" viewBox="0 0 24 24" aria-hidden="true"><path d={iconPath('folder')} /></svg>
+	<svg class="ico folder opened" viewBox="0 0 24 24" aria-hidden="true"><path d={iconPath('folderOpen')} /></svg>
 {/snippet}
 
 {#snippet leaf(p: TreePage)}
@@ -165,8 +162,7 @@
 				{#if p.icon}
 					<path d={PAGE_ICONS[p.icon]} />
 				{:else}
-					<path d="M6 2.75h8.25L19 7.5v13.75H6z" />
-					<path d="M14 2.75V7.5h5M9 12h7M9 15.5h7" />
+					<path d={iconPath('doc')} />
 				{/if}
 			</svg>
 			<span>{p.title}</span>
@@ -179,11 +175,9 @@
 		<a href="/resources/{r.id}" aria-current={currentRes === r.id ? 'page' : undefined}>
 			<svg class="ico doc" viewBox="0 0 24 24" aria-hidden="true">
 				{#if r.kind === 'image'}
-					<path d="M3.75 4.75h16.5v14.5H3.75zM3.75 16l5-5 4 4 2.5-2.5 5 5" />
-					<path d="M17 8.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z" />
+					<path d={iconPath('image')} />
 				{:else if r.kind === 'audio'}
-					<path d="M9 18V5.5l11-2.5v12.5" />
-					<path d="M9 18a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0zM20 15.5a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z" />
+					<path d={iconPath('audio')} />
 				{:else}
 					<path d="M6 2.75h8.25L19 7.5v13.75H6z" />
 					<path d="M14 2.75V7.5h5" />
@@ -232,25 +226,23 @@
 			</div>
 			{#if tab === 'pages' ? tree.folders.length : groups.length}
 				<button type="button" class="tool" title={t('tree.expandAll')} aria-label={t('tree.expandAll')} onclick={() => setAll(true)}>
-					<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 9l5-5 5 5M7 15l5 5 5-5" /></svg>
+					<Icon name="expandAll" />
 				</button>
 				<button type="button" class="tool" title={t('tree.collapseAll')} aria-label={t('tree.collapseAll')} onclick={() => setAll(false)}>
-					<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4l5 5 5-5M7 20l5-5 5 5" /></svg>
+					<Icon name="collapseAll" />
 				</button>
 			{/if}
 			{#if canManage && tab === 'pages'}
 				<a class="tool" href="/categories#new-cat" title={t('tree.newFolder')} aria-label={t('tree.newFolder')}>
-					<svg viewBox="0 0 24 24" aria-hidden="true">
-						<path d="M2.5 6.5A1.5 1.5 0 0 1 4 5h5l2 2h9a1.5 1.5 0 0 1 1.5 1.5v9A1.5 1.5 0 0 1 20 19H4a1.5 1.5 0 0 1-1.5-1.5zM12 10v6M9 13h6" />
-					</svg>
+					<Icon name="folderPlus" />
 				</a>
 			{:else if canManage}
 				<a class="tool" href="/resources/new" title={t('resources.new')} aria-label={t('resources.new')}>
-					<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V4M7.5 8.5 12 4l4.5 4.5M4.5 14.5v4.75h15V14.5" /></svg>
+					<Icon name="upload" />
 				</a>
 			{/if}
 			<button type="button" class="tool close" title={t('common.close')} aria-label={t('common.close')} onclick={() => close()}>
-				<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg>
+				<Icon name="close" />
 			</button>
 		</div>
 		<div role="tabpanel" id="tree-panel-pages" aria-labelledby="tree-tab-pages" hidden={tab !== 'pages'}>
@@ -359,14 +351,9 @@
 		background: var(--c-surface2);
 		color: var(--c-text);
 	}
-	.tool svg {
+	.tool :global(.icon) {
 		width: 1.15rem;
 		height: 1.15rem;
-		fill: none;
-		stroke: currentColor;
-		stroke-width: 1.75;
-		stroke-linecap: round;
-		stroke-linejoin: round;
 	}
 	.close,
 	.backdrop {
@@ -421,28 +408,33 @@
 		transition: transform 0.15s;
 	}
 	.chevron::before {
-		content: '▸';
+		content: '';
+		display: block;
+		height: 0.9rem;
+		background: currentColor;
+		-webkit-mask: var(--icon-chevron-right) center / contain no-repeat;
+		mask: var(--icon-chevron-right) center / contain no-repeat;
+		forced-color-adjust: none;
 	}
 	details[open] > summary > .chevron {
 		transform: rotate(90deg);
 	}
+	/* Cartelle e pagine: lo stesso disegno a tratto, nello stesso colore. */
 	.ico {
 		flex: none;
 		width: 1.15rem;
 		height: 1.15rem;
 		margin-top: 0.05rem;
-	}
-	.folder {
-		fill: var(--c-warning-border);
+		color: var(--c-muted);
+		fill: none;
+		stroke: currentColor;
+		stroke-width: 1.5;
+		stroke-linecap: round;
+		stroke-linejoin: round;
 	}
 	.doc {
 		/* Spazio della freccia delle cartelle, per allineare le pagine. */
 		margin-left: 0.25rem;
-		fill: none;
-		stroke: var(--c-muted);
-		stroke-width: 1.5;
-		stroke-linecap: round;
-		stroke-linejoin: round;
 	}
 	.folder.opened,
 	details[open] > summary > .folder.closed {
@@ -457,9 +449,6 @@
 		font-style: italic;
 	}
 	@media (forced-colors: active) {
-		.folder {
-			fill: CanvasText;
-		}
 		a[aria-current='page'],
 		[role='tab'][aria-selected='true'] {
 			outline: 2px solid CanvasText;

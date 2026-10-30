@@ -13,6 +13,8 @@
 	import LinkPreview from '#lib/components/LinkPreview.svelte';
 	import PageTree from '#lib/components/PageTree.svelte';
 	import UserMenu from '#lib/components/UserMenu.svelte';
+	import Icon from '#lib/components/Icon.svelte';
+	import { iconCss } from '#lib/icons.ts';
 	import type { LayoutProps } from './$types';
 
 	let { data, children }: LayoutProps = $props();
@@ -59,7 +61,8 @@
 </script>
 
 <svelte:head>
-	{@html `<style>${data.themeCss}</style>`}
+	{@html `<style>${data.themeCss}
+${iconCss()}</style>`}
 	<title>{data.siteName}</title>
 </svelte:head>
 
@@ -81,7 +84,7 @@
 					menuOpen = false;
 				}}
 			>
-				<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.75 4.75h16.5v14.5H3.75zM9.5 4.75v14.5M5.75 8.5h1.75M5.75 11.5h1.75" /></svg>
+				<Icon name="panel" />
 			</button>
 		{/if}
 		<a class="brand" href="/">
@@ -111,7 +114,7 @@
 					treeOpen = false;
 				}}
 			>
-				<span aria-hidden="true">{menuOpen ? '✕' : '☰'}</span>
+				<Icon name={menuOpen ? 'close' : 'menu'} />
 				{t('nav.menu')}
 			</button>
 			<!-- Profilo in alto a destra: icona, nome e grado. -->
@@ -133,7 +136,7 @@
 				<li><a href="/rules" aria-current={current('/rules')}>{t('nav.rules')}</a></li>
 				{#if data.user}<li><a href="/boards" aria-current={current('/boards')}>{t('nav.boards')}</a></li>{/if}
 				{#if data.user}
-					<li><a class="nav-new" href="/wiki/new" aria-current={current('/wiki/new')}>+ {t('nav.newPage')}</a></li>
+					<li><a class="nav-new" href="/wiki/new" aria-current={current('/wiki/new')}><Icon name="plus" />{t('nav.newPage')}</a></li>
 				{/if}
 			</ul>
 		</nav>
@@ -211,6 +214,7 @@
 	.main-nav a {
 		display: inline-flex;
 		align-items: center;
+		gap: 0.3rem;
 		min-height: 2.75rem;
 		padding: 0 0.6rem;
 		color: var(--c-text);
@@ -237,14 +241,9 @@
 		padding: 0;
 		justify-content: center;
 	}
-	.tree-toggle svg {
+	.tree-toggle :global(.icon) {
 		width: 1.4rem;
 		height: 1.4rem;
-		fill: none;
-		stroke: currentColor;
-		stroke-width: 1.75;
-		stroke-linecap: round;
-		stroke-linejoin: round;
 	}
 	/* Accesso, prima configurazione e invito: tutto al centro, come il modulo. */
 	.header-inner.bare {

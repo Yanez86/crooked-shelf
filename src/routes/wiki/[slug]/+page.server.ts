@@ -1,7 +1,7 @@
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { canEdit, canView, isMaster } from '#lib/access.ts';
-import { backlinks, getPageBySlug, pageMeta } from '#lib/server/pages.ts';
+import { backlinks, getPageBySlug, pageCover, pageMeta } from '#lib/server/pages.ts';
 import { pageView } from '#lib/server/pageView.ts';
 import { categoryPath } from '#lib/server/taxonomy.ts';
 import { mapsForPage } from '#lib/server/maps.ts';
@@ -24,7 +24,9 @@ export const load: PageServerLoad = ({ params, locals }) => {
 			visibility: page.visibility,
 			updatedAt: page.updatedAt,
 			// Chi non è Master non deve sapere nemmeno che ci sono segreti.
-			hasSecret: isMaster(locals.user) && page.hasSecret
+			hasSecret: isMaster(locals.user) && page.hasSecret,
+			icon: page.icon,
+			cover: pageCover(page)
 		},
 		...pageView(page, locals.user, locals.locale),
 		maps: mapsForPage(page.slug, locals.user),

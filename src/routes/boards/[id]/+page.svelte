@@ -5,6 +5,7 @@
 	import { tick } from 'svelte';
 	import { getT } from '#lib/i18n/index.ts';
 	import FormError from '#lib/components/FormError.svelte';
+	import Icon from '#lib/components/Icon.svelte';
 	import type { PageProps } from './$types';
 
 	let { data, form }: PageProps = $props();
@@ -14,10 +15,10 @@
 	let dragId = $state<number | null>(null);
 
 	const DIRS = [
-		{ dir: 'left', icon: '←', key: 'boards.moveLeft' },
-		{ dir: 'up', icon: '↑', key: 'boards.moveUp' },
-		{ dir: 'down', icon: '↓', key: 'boards.moveDown' },
-		{ dir: 'right', icon: '→', key: 'boards.moveRight' }
+		{ dir: 'left', icon: 'arrowLeft', key: 'boards.moveLeft' },
+		{ dir: 'up', icon: 'arrowUp', key: 'boards.moveUp' },
+		{ dir: 'down', icon: 'arrowDown', key: 'boards.moveDown' },
+		{ dir: 'right', icon: 'arrowRight', key: 'boards.moveRight' }
 	] as const;
 
 	/** Dopo uno spostamento il focus resta sul pulsante usato, così si può continuare a spostare. */
@@ -49,7 +50,7 @@
 
 <svelte:head><title>{data.board.title} · {page.data.siteName}</title></svelte:head>
 
-<p><a href="/boards">← {t('nav.boards')}</a></p>
+<p><a class="back" href="/boards"><Icon name="arrowLeft" />{t('nav.boards')}</a></p>
 <h1>{data.board.title}</h1>
 <p class="muted">
 	{data.board.personal ? t('boards.kindMine') : t('boards.kindShared')}
@@ -93,11 +94,11 @@
 									<form method="post" action="?/moveCard" use:enhance={afterMove(card.id, d.dir)}>
 										<input type="hidden" name="id" value={card.id} />
 										<input type="hidden" name="dir" value={d.dir} />
-										<button id="move-{card.id}-{d.dir}" class="mini" type="submit" {disabled} aria-label="{t(d.key)}: {card.title}" title={t(d.key)}>{d.icon}</button>
+										<button id="move-{card.id}-{d.dir}" class="mini" type="submit" {disabled} aria-label="{t(d.key)}: {card.title}" title={t(d.key)}><Icon name={d.icon} /></button>
 									</form>
 								{/each}
 								<button class="mini" type="button" aria-expanded={editing === card.id} onclick={() => (editing = editing === card.id ? null : card.id)}>
-									✎<span class="visually-hidden">{t('page.edit')}: {card.title}</span>
+									<Icon name="edit" /><span class="visually-hidden">{t('page.edit')}: {card.title}</span>
 								</button>
 							</div>
 							{#if editing === card.id}
@@ -132,7 +133,7 @@
 			</ol>
 
 			<details class="add">
-				<summary>+ {t('boards.addCard')}<span class="visually-hidden">: {col.title}</span></summary>
+				<summary><Icon name="plus" />{t('boards.addCard')}<span class="visually-hidden">: {col.title}</span></summary>
 				<form method="post" action="?/addCard" use:enhance>
 					<input type="hidden" name="columnId" value={col.id} />
 					<div class="field">
@@ -156,7 +157,7 @@
 
 			{#if data.canManage}
 				<details class="add">
-					<summary>⚙ {t('boards.columnSettings')}<span class="visually-hidden">: {col.title}</span></summary>
+					<summary><Icon name="cog" />{t('boards.columnSettings')}<span class="visually-hidden">: {col.title}</span></summary>
 					<form method="post" action="?/renameColumn" use:enhance class="inline">
 						<input type="hidden" name="id" value={col.id} />
 						<label class="visually-hidden" for="cn-{col.id}">{t('boards.columnName')}</label>
@@ -166,11 +167,11 @@
 					<div class="inline">
 						<form method="post" action="?/shiftColumn" use:enhance>
 							<input type="hidden" name="id" value={col.id} /><input type="hidden" name="dir" value="left" />
-							<button class="btn btn-small" type="submit" disabled={ci === 0}>← {t('boards.colLeft')}</button>
+							<button class="btn btn-small" type="submit" disabled={ci === 0}><Icon name="arrowLeft" />{t('boards.colLeft')}</button>
 						</form>
 						<form method="post" action="?/shiftColumn" use:enhance>
 							<input type="hidden" name="id" value={col.id} /><input type="hidden" name="dir" value="right" />
-							<button class="btn btn-small" type="submit" disabled={ci === data.columns.length - 1}>{t('boards.colRight')} →</button>
+							<button class="btn btn-small" type="submit" disabled={ci === data.columns.length - 1}>{t('boards.colRight')}<Icon name="arrowRight" /></button>
 						</form>
 						<form method="post" action="?/deleteColumn" use:enhance>
 							<input type="hidden" name="id" value={col.id} />
@@ -293,6 +294,7 @@
 		min-height: 2.5rem;
 		display: flex;
 		align-items: center;
+		gap: 0.35rem;
 		font-weight: 600;
 	}
 	.inline {

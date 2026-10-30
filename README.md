@@ -6,7 +6,7 @@
 
 ## Cosa fa
 
-- **Pagine** con editor a blocchi e Markdown, collegamenti `[[Pagina]]`, template (PNG, luoghi, fazioni, resoconti di sessione…), immagini, categorie, tag e ricerca.
+- **Pagine** con editor a blocchi e Markdown, collegamenti `[[Pagina]]`, template (PNG, luoghi, fazioni, resoconti di sessione…), copertina e icona come in Notion, immagini, categorie, tag e ricerca.
 - **Albero a sinistra** come in Esplora risorse: le categorie sono cartelle da aprire e chiudere, con le pagine dentro.
 - **Colonna a lato** delle pagine, solo se serve: in modifica la aggiungi col «+» e ci metti riquadri di testo o immagini.
 - **Galleria** con tutte le immagini della campagna (pagine, testo, mappe) e visore a schermo intero.

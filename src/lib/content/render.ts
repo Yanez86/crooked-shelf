@@ -2,6 +2,7 @@ import { CALLOUT_KINDS, type DocNode } from './types.ts';
 import { INLINE_LINK } from './extract.ts';
 import { slugify } from '../slug.ts';
 import { ddbUrl, parseRuleKind, ruleKey, type RuleKind } from '../rules/index.ts';
+import { iconPath } from '../icons.ts';
 
 export interface LinkTarget {
 	title: string;
@@ -166,7 +167,7 @@ function ruleRefHtml(kind: RuleKind, name: string, label: string | null, opt: Li
 	const link = `<a class="ruleref-link" href="${esc(ddbUrl(kind, name))}" rel="noopener noreferrer nofollow" target="_blank">${esc(label ?? name)}${ext}</a>`;
 	const info =
 		opt.hasRule?.(kind, key) && opt.labels.preview
-			? `<button type="button" class="rule-info" data-rule="${kind}/${esc(key)}" aria-label="${esc(opt.labels.preview.replace('{name}', label ?? name))}" aria-expanded="false" aria-haspopup="dialog">i</button>`
+			? `<button type="button" class="rule-info" data-rule="${kind}/${esc(key)}" aria-label="${esc(opt.labels.preview.replace('{name}', label ?? name))}" aria-expanded="false" aria-haspopup="dialog"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="${iconPath('info')}"/></svg></button>`
 			: '';
 	return `<span class="ruleref">${link}${info}</span>`;
 }

@@ -521,6 +521,35 @@
 		"moveDown": "Move down",
 		"moved": "Box moved."
 	},
+	"cover": {
+		"title": "Cover",
+		"add": "Add cover",
+		"change": "Change cover",
+		"reposition": "Reposition cover",
+		"remove": "Remove cover",
+		"gallery": "Gallery",
+		"colors": "Solid color",
+		"upload": "Upload",
+		"galleryHint": "The campaign images: pages, maps and resources.",
+		"galleryEmpty": "There are no images in the gallery yet: upload one.",
+		"galleryLoading": "Loading the gallery…",
+		"galleryError": "The gallery could not be opened.",
+		"colorsHint": "A band of color, without an image.",
+		"uploadLabel": "Upload an image",
+		"uploadHint": "PNG, JPEG, WebP or GIF. Ideally at least 1500 px wide. It also goes into the gallery.",
+		"uploading": "Uploading…",
+		"position": "Cover position",
+		"repositionHint": "Drag the image or use the arrow keys.",
+		"done": "Done",
+		"colorNames": {
+			"rust": "Rust",
+			"night": "Night",
+			"forest": "Forest",
+			"sea": "Sea",
+			"stone": "Stone",
+			"parchment": "Parchment"
+		}
+	},
 	"session": {
 		"title": "Session recap",
 		"number": "Session no.",

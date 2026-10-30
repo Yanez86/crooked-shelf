@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Icon from '#lib/components/Icon.svelte';
 	import { page } from '$app/state';
 	import { getT } from '#lib/i18n/index.ts';
 	import EventForm from '#lib/components/EventForm.svelte';
@@ -64,7 +65,7 @@
 {#if data.canAdd}
 	<!-- In alto ma chiuso: la cronologia si legge, il modulo si apre quando serve (e resta aperto dopo un inserimento). -->
 	<details class="disclosure add" open={!data.events.length || !!form}>
-		<summary class="btn">+ {t('timeline.add')}</summary>
+		<summary class="btn"><Icon name="plus" />{t('timeline.add')}</summary>
 		<FormError error={form && 'error' in form ? form.error : null} />
 		{#key form}
 			<EventForm

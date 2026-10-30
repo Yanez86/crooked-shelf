@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Icon from '#lib/components/Icon.svelte';
 	import { page } from '$app/state';
 	import { getT } from '#lib/i18n/index.ts';
 	import FormOk from '#lib/components/FormOk.svelte';
@@ -13,7 +14,7 @@
 
 <div class="head">
 	<h1>{t('nav.maps')}</h1>
-	{#if data.canCreate}<a class="btn btn-primary" href="/maps/new">+ {t('maps.new')}</a>{/if}
+	{#if data.canCreate}<a class="btn btn-primary" href="/maps/new"><Icon name="plus" />{t('maps.new')}</a>{/if}
 </div>
 <FormOk message={page.url.searchParams.has('deleted') ? 'maps.deleted' : null} />
 

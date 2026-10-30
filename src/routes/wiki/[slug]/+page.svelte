@@ -1,10 +1,13 @@
 <script lang="ts">
+	import Icon from '#lib/components/Icon.svelte';
 	import { page as appPage } from '$app/state';
 	import { getT } from '#lib/i18n/index.ts';
 	import TagBadge from '#lib/components/TagBadge.svelte';
 	import RelTime from '#lib/components/RelTime.svelte';
 	import FormOk from '#lib/components/FormOk.svelte';
 	import PageBody from '#lib/components/PageBody.svelte';
+	import { PAGE_ICONS } from '#lib/pageIcons.ts';
+	import { COVER_COLORS } from '#lib/covers.ts';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
@@ -25,10 +28,20 @@
 		</nav>
 	{/if}
 
+	{#if data.page.cover}
+		{@const c = data.page.cover}
+		<div class="page-cover" style:background-color={c.color ? COVER_COLORS[c.color] : null}>
+			{#if c.image}<img src="/files/{c.image}" alt="" style:object-position="50% {c.y}%" />{/if}
+		</div>
+	{/if}
+	{#if data.page.icon && PAGE_ICONS[data.page.icon]}
+		<span class="page-icon" class:on-cover={!!data.page.cover} aria-hidden="true"><svg viewBox="0 0 24 24"><path d={PAGE_ICONS[data.page.icon]} /></svg></span>
+	{/if}
+
 	<header class="page-head">
 		<h1>{data.page.title}</h1>
 		{#if data.canEdit}
-			<a class="edit-pencil" href="/wiki/{data.page.slug}/edit" title={t('page.edit')}><span aria-hidden="true">✎</span><span class="visually-hidden">{t('page.edit')}: {data.page.title}</span></a>
+			<a class="edit-pencil" href="/wiki/{data.page.slug}/edit" title={t('page.edit')}><Icon name="edit" /><span class="visually-hidden">{t('page.edit')}: {data.page.title}</span></a>
 		{/if}
 	</header>
 
@@ -36,7 +49,7 @@
 
 	<p class="meta muted">
 		<span class="badge">{t('visibility.' + data.page.visibility)}</span>
-		{#if data.page.hasSecret}<span class="badge">🔒 {t('page.hasSecret')}</span>{/if}
+		{#if data.page.hasSecret}<span class="badge"><Icon name="lock" />{t('page.hasSecret')}</span>{/if}
 		<a href="/wiki/{data.page.slug}/history">{t('history.link')}</a>
 	</p>
 

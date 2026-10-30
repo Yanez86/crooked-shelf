@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Icon from './Icon.svelte';
 	import { onMount, tick } from 'svelte';
 	import { getT } from '../i18n/index.ts';
 
@@ -86,7 +87,7 @@
 
 {#if open}
 	<div class="rule-pop" role="dialog" aria-labelledby="rule-pop-title" bind:this={box} style="top:{pos.top}px;left:{pos.left}px">
-		<button type="button" class="close" aria-label={t('common.close')} onclick={() => close()}>×</button>
+		<button type="button" class="close" aria-label={t('common.close')} onclick={() => close()}><Icon name="close" /></button>
 		{#if data}
 			<h2 id="rule-pop-title" tabindex="-1" bind:this={heading}>{data.name}</h2>
 			<p class="summary">{data.summary}</p>

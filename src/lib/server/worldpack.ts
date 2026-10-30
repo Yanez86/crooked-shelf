@@ -2,7 +2,7 @@ import { strFromU8, strToU8, unzipSync, zipSync, type Zippable } from 'fflate';
 import { and, asc, eq, inArray, sql } from 'drizzle-orm';
 import { getDb, schema } from './db/index.ts';
 import { getFile, readFile, saveImage } from './files.ts';
-import { createPage, getPageBySlug, pageMeta, uniquePageSlug, updatePage, type PageRow } from './pages.ts';
+import { createPage, getPageBySlug, pageCover, pageMeta, uniquePageSlug, updatePage, type PageRow } from './pages.ts';
 import { cleanFields } from './pageForm.ts';
 import { categoryWithDescendants, createCategory, listCategories, categoryPath } from './taxonomy.ts';
 import { getCalendar, saveSettings, customThemes } from './settings.ts';
@@ -10,6 +10,7 @@ import { recomputeSortKeys, saveEvent } from './timeline.ts';
 import { createMap, deleteMap, getMapBySlug, saveLayer, savePin } from './maps.ts';
 import { saveTemplate } from './templates.ts';
 import { pageIcon } from '../pageIcons.ts';
+import { cleanCover, type PageCover } from '../covers.ts';
 import { storeTheme } from './themesAdmin.ts';
 import { stripSecrets } from '../content/extract.ts';
 import { frontMatter, toMarkdown } from '../content/markdown.ts';
@@ -52,6 +53,8 @@ interface PackPage {
 	 */
 	image?: string | null;
 	icon?: string | null;
+	/** Copertina: `image` è il nome del file in files/. Manca nei pacchetti di prima. */
+	cover?: PageCover | null;
 }
 
 const { pages, pageTags, maps, mapLayers, mapPins, timelineEvents, templates } = schema;
@@ -118,6 +121,8 @@ export function exportWorld(o: ExportOptions, u: Viewer): Uint8Array {
 		const content = secrets ? raw : stripSecrets(raw);
 		imageIds(content, fileIds);
 		for (const f of p.fields ?? []) if (f.image) fileIds.add(f.image);
+		const cover = pageCover(p);
+		if (cover?.image) fileIds.add(cover.image);
 		const meta = pageMeta(p);
 		out[`pages/${p.slug}.md`] = strToU8(
 			frontMatter({ title: p.title, category: categoryPath(p.categoryId).map((c) => c.name).join(' / ') || null, tags: meta.tags.map((t) => t.name), fields: p.fields ?? [] }) +
@@ -135,7 +140,8 @@ export function exportWorld(o: ExportOptions, u: Viewer): Uint8Array {
 			tags: meta.tags.map((t) => t.name),
 			template: p.template,
 			image: p.imageId,
-			icon: p.icon
+			icon: p.icon,
+			cover
 		};
 	});
 	out['pages.json'] = json(packPages);
@@ -357,8 +363,9 @@ export function importPack(pack: Pack, opts: { conflict: Conflict; calendar: boo
 			fields,
 			template: p.template ?? null,
 			session: null,
-			// I pacchetti di prima non hanno l'icona: in quel caso resta quella che c'è.
+			// I pacchetti di prima non hanno l'icona né la copertina: in quel caso resta quella che c'è.
 			icon: p.icon === undefined ? undefined : pageIcon(p.icon),
+			cover: p.cover === undefined ? undefined : cleanCover(p.cover, (id) => fileMap.get(id) ?? null),
 			slug
 		};
 		if (existing) updatePage(existing, input, u, true);
@@ -497,8 +504,12 @@ export function exportMarkdown(u: Viewer): Uint8Array {
 	const index: string[] = ['# Indice', ''];
 	for (const p of all) {
 		const body = isDoc(p.content) ? p.content : EMPTY_DOC;
-		// Le immagini della colonna a lato vanno in cima al testo.
-		const side: DocNode[] = (p.fields ?? []).flatMap((f) => (f.image ? [{ type: 'image', attrs: { src: `/files/${f.image}`, alt: f.label || p.title } }] : []));
+		// La copertina e le immagini della colonna a lato vanno in cima al testo.
+		const coverImage = pageCover(p)?.image;
+		const side: DocNode[] = [
+			...(coverImage ? [{ type: 'image', attrs: { src: `/files/${coverImage}`, alt: p.title } }] : []),
+			...(p.fields ?? []).flatMap((f) => (f.image ? [{ type: 'image', attrs: { src: `/files/${f.image}`, alt: f.label || p.title } }] : []))
+		];
 		const doc: DocNode = side.length ? { ...body, content: [...side, ...(body.content ?? [])] } : body;
 		const folder = categoryPath(p.categoryId).map((c) => safe(c.name));
 		const depth = folder.length;

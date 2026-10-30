@@ -74,7 +74,10 @@ export const pages = sqliteTable(
 		template: text('template'),
 		session: text('session', { mode: 'json' }).$type<SessionInfo | null>(),
 		imageId: text('image_id').references(() => files.id, { onDelete: 'set null' }),
-		icon: text('icon')
+		icon: text('icon'),
+		coverImageId: text('cover_image_id').references(() => files.id, { onDelete: 'set null' }),
+		coverColor: text('cover_color'),
+		coverY: integer('cover_y').notNull().default(50)
 	},
 	(t) => [index('pages_category').on(t.categoryId), index('pages_updated').on(t.updatedAt)]
 );

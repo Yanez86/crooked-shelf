@@ -16,11 +16,12 @@ Le persone entrano con un **invito**: Amministrazione › Inviti › «Crea invi
 - **Albero a sinistra**: le categorie sono cartelle che si aprono e si chiudono con un clic (o con Invio da tastiera); dentro ci sono le sottocartelle e le pagine. Le pagine senza categoria stanno in fondo, alla radice. La cartella della pagina che stai leggendo si apre da sola. In alto ci sono due linguette: **Pagine** (cartelle e pagine) e **Risorse** (immagini, audio e altri file, vedi sotto). Sul telefono l'albero è nel pulsante «Pagine e risorse»; chi non lo vuole lo nasconde dal Profilo. Nelle pagine Profilo e Amministrazione l'albero non c'è.
 - **Nuova pagina** parte da un **template** (PNG, Luogo, Fazione, Resoconto di sessione…) o da una pagina vuota.
 - **Chi la vede**: pubblica, giocatori, solo Master, oppure personale (solo tu: va bene per gli appunti privati).
+- **Copertina e icona**: come in Notion, in cima alla pagina può esserci una copertina, con l'icona della pagina a cavallo del bordo. Mentre modifichi la pagina, «Aggiungi copertina» apre un pannello: un'immagine della **Galleria**, una **Tinta unita** oppure un file da **Caricare**. Sul lato della copertina tre piccole icone la cambiano, la riposizionano (trascinando l'immagine, oppure con le frecce su e giù; Invio conferma) e la tolgono. L'icona (la stessa dell'albero) si sceglie cliccando la casella sopra il titolo.
 - **Colonna a lato**: di base la pagina non ce l'ha. Mentre la modifichi, il pulsante «+» a destra aggiunge la colonna; dentro metti dei riquadri:
   - **Testo**: un titolo e un testo breve (es. «Allineamento: Caotico buono»); anche lì si può scrivere `[[Pagina]]`;
   - **Immagine**: trascinala dal computer sul riquadro oppure usa «Scegli un'immagine», poi scrivi una didascalia se vuoi.
 
-  Le frecce ↑ ↓ cambiano l'ordine, × toglie un riquadro; vuota, la colonna si toglie con «Togli la colonna». La prima immagine è anche quella della pagina: compare nella galleria e nell'anteprima dei collegamenti. I template (PNG, Luogo…) partono già con i riquadri dei loro campi.
+  Le frecce su e giù cambiano l'ordine, la crocetta toglie un riquadro; vuota, la colonna si toglie con «Togli la colonna». La prima immagine è anche quella della pagina: compare nella galleria e nell'anteprima dei collegamenti. I template (PNG, Luogo…) partono già con i riquadri dei loro campi.
 - **Cronologia delle modifiche**: dal link sotto il titolo vedi le versioni precedenti, cosa è cambiato e puoi ripristinarle.
 - **Cestino**: le pagine eliminate si recuperano da Home › Cestino.
 
@@ -53,7 +54,7 @@ Tutti i pin sono anche nell'elenco sotto la mappa.
 
 ## Galleria
 
-Tutte le immagini della campagna in un posto solo: le immagini delle pagine, quelle inserite nel testo, le mappe e le risorse, le più recenti prima. Sotto ogni immagine c'è dove compare; cliccandola si apre in grande (frecce ← → per scorrere, Esc per chiudere). Si possono vedere tutte, solo quelle delle pagine, solo le mappe o solo le risorse. Ognuno vede solo le immagini delle pagine, delle mappe e delle risorse che può vedere.
+Tutte le immagini della campagna in un posto solo: le immagini delle pagine (copertine e colonna a lato), quelle inserite nel testo, le mappe e le risorse, le più recenti prima. Sotto ogni immagine c'è dove compare; cliccandola si apre in grande (frecce ← → per scorrere, Esc per chiudere). Si possono vedere tutte, solo quelle delle pagine, solo le mappe o solo le risorse. Ognuno vede solo le immagini delle pagine, delle mappe e delle risorse che può vedere.
 
 ## Risorse
 

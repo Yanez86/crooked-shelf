@@ -6,6 +6,9 @@
 	import type { CalMonth } from '../calendar.ts';
 	import { getT } from '../i18n/index.ts';
 	import { PAGE_ICONS } from '../pageIcons.ts';
+	import Icon from './Icon.svelte';
+	import CoverEdit from './CoverEdit.svelte';
+	import type { PageCover } from '../covers.ts';
 	import type { DocNode, PageField, SessionInfo } from '../content/types.ts';
 
 	interface Category {
@@ -37,6 +40,7 @@
 			template?: string | null;
 			session: SessionInfo | null;
 			icon?: string | null;
+			cover?: PageCover | null;
 		};
 		categories: Category[];
 		visibilities: string[];
@@ -51,6 +55,8 @@
 
 	const t = getT();
 	let icon = $state(untrack(() => values.icon ?? ''));
+	let cover = $state(untrack(() => values.cover ?? null));
+	let pickingCover = $state(false);
 </script>
 
 <!-- Stesso aspetto della pagina: si scrive dove si legge. -->
@@ -59,36 +65,39 @@
 	{#if values.slug}<input type="hidden" name="slug" value={values.slug} />{/if}
 	{#if values.template}<input type="hidden" name="template" value={values.template} />{/if}
 
-	<header class="page-head">
-		<details class="icon-pick">
-			<summary title={t('page.icon')}>
-				{#if PAGE_ICONS[icon]}
-					<svg viewBox="0 0 24 24" aria-hidden="true"><path d={PAGE_ICONS[icon]} /></svg>
-				{:else}
-					<span aria-hidden="true">∅</span>
-				{/if}
-				<span class="visually-hidden">{t('page.icon')}</span>
-			</summary>
-			<fieldset class="icons">
-				<legend class="visually-hidden">{t('page.icon')}</legend>
-				<label class="icon-choice" title={t('page.noIcon')}>
-					<input type="radio" name="icon" value="" bind:group={icon} />
-					<span aria-hidden="true">∅</span><span class="visually-hidden">{t('page.noIcon')}</span>
+	<!-- Copertina e icona come in lettura: l'icona sta a cavallo del bordo della copertina. -->
+	<CoverEdit bind:cover bind:picking={pickingCover} />
+	<details class="icon-pick">
+		<summary class="page-icon" class:on-cover={!!cover && !pickingCover} title={t('page.icon')}>
+			{#if PAGE_ICONS[icon]}
+				<svg viewBox="0 0 24 24" aria-hidden="true"><path d={PAGE_ICONS[icon]} /></svg>
+			{:else}
+				<Icon name="none" />
+			{/if}
+			<span class="visually-hidden">{t('page.icon')}</span>
+		</summary>
+		<fieldset class="icons">
+			<legend class="visually-hidden">{t('page.icon')}</legend>
+			<label class="icon-choice" title={t('page.noIcon')}>
+				<input type="radio" name="icon" value="" bind:group={icon} />
+				<Icon name="none" /><span class="visually-hidden">{t('page.noIcon')}</span>
+			</label>
+			{#each Object.entries(PAGE_ICONS) as [name, d] (name)}
+				<label class="icon-choice" title={t(`page.icons.${name}`)}>
+					<input type="radio" name="icon" value={name} bind:group={icon} />
+					<svg viewBox="0 0 24 24" aria-hidden="true"><path {d} /></svg><span class="visually-hidden">{t(`page.icons.${name}`)}</span>
 				</label>
-				{#each Object.entries(PAGE_ICONS) as [name, d] (name)}
-					<label class="icon-choice" title={t(`page.icons.${name}`)}>
-						<input type="radio" name="icon" value={name} bind:group={icon} />
-						<svg viewBox="0 0 24 24" aria-hidden="true"><path {d} /></svg><span class="visually-hidden">{t(`page.icons.${name}`)}</span>
-					</label>
-				{/each}
-			</fieldset>
-		</details>
+			{/each}
+		</fieldset>
+	</details>
+
+	<header class="page-head">
 		<label class="visually-hidden" for="title">{t('page.title')}</label>
 		<input id="title" name="title" type="text" required maxlength="200" value={values.title} placeholder={t('page.title')} class="title-input editable" />
 		<!-- Dove in lettura c'è la matita, e come la matita: solo un segno. -->
 		<div class="head-actions">
-			<a class="icon-action" href={cancelHref} title={t('common.cancel')}><span aria-hidden="true">✕</span><span class="visually-hidden">{t('common.cancel')}</span></a>
-			<button class="icon-action save" type="submit" title={submitLabel}><span aria-hidden="true">✓</span><span class="visually-hidden">{submitLabel}</span></button>
+			<a class="icon-action" href={cancelHref} title={t('common.cancel')}><Icon name="close" /><span class="visually-hidden">{t('common.cancel')}</span></a>
+			<button class="icon-action save" type="submit" title={submitLabel}><Icon name="check" /><span class="visually-hidden">{submitLabel}</span></button>
 		</div>
 	</header>
 
@@ -222,16 +231,13 @@
 	}
 	.icon-pick {
 		position: relative;
+		width: fit-content;
 	}
+	/* La stessa casella della pagina (.page-icon), tratteggiata finché non si sceglie. */
 	.icon-pick summary {
 		list-style: none;
-		display: grid;
-		place-items: center;
-		width: 2.75rem;
-		height: 2.75rem;
-		font-size: 1.4rem;
-		border: 1px dashed var(--c-border);
-		border-radius: var(--radius);
+		border-style: dashed;
+		border-color: var(--c-control);
 		cursor: pointer;
 	}
 	.icon-pick summary::-webkit-details-marker {
@@ -278,8 +284,13 @@
 		stroke-linejoin: round;
 	}
 	.icon-pick summary svg {
-		width: 1.5rem;
-		height: 1.5rem;
+		width: 62%;
+		height: 62%;
+	}
+	.icon-pick summary :global(.icon) {
+		width: 45%;
+		height: 45%;
+		color: var(--c-muted);
 	}
 	.icon-choice input {
 		position: absolute;

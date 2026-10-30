@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Icon from '#lib/components/Icon.svelte';
 	import { page } from '$app/state';
 	import { getT } from '#lib/i18n/index.ts';
 	import FormOk from '#lib/components/FormOk.svelte';
@@ -13,7 +14,7 @@
 
 <div class="head">
 	<h1>{t('templates.title')}</h1>
-	{#if data.canManage}<a class="btn btn-primary" href="/templates/new">+ {t('templates.new')}</a>{/if}
+	{#if data.canManage}<a class="btn btn-primary" href="/templates/new"><Icon name="plus" />{t('templates.new')}</a>{/if}
 </div>
 <FormOk message={flash ? 'templates.' + flash : null} />
 <p>{t('templates.intro')}</p>

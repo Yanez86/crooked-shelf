@@ -9,7 +9,7 @@ import { isMaster, type Viewer } from '../access.ts';
 
 const { pages, files } = schema;
 
-/** Dove compare un'immagine: colonna a lato di una pagina, nel testo di una pagina, mappa, risorsa. */
+/** Dove compare un'immagine: copertina o colonna a lato di una pagina, nel testo di una pagina, mappa, risorsa. */
 export const GALLERY_KINDS = ['cover', 'content', 'map', 'resource'] as const;
 export type GalleryKind = (typeof GALLERY_KINDS)[number];
 
@@ -44,13 +44,14 @@ export function galleryImages(u: Viewer | null): GalleryImage[] {
 
 	const secrets = isMaster(u);
 	const rows = getDb()
-		.select({ slug: pages.slug, title: pages.title, content: pages.content, fields: pages.fields })
+		.select({ slug: pages.slug, title: pages.title, content: pages.content, fields: pages.fields, cover: pages.coverImageId })
 		.from(pages)
 		.where(visibleTo(u))
 		.orderBy(sql`${pages.title} COLLATE NOCASE`)
 		.all();
 	for (const p of rows) {
 		const href = `/wiki/${p.slug}`;
+		if (p.cover) add(p.cover, { kind: 'cover', title: p.title, href });
 		for (const f of p.fields ?? []) if (f.image) add(f.image, { kind: 'cover', title: p.title, href }, f.label);
 		const doc = isDoc(p.content) ? p.content : EMPTY_DOC;
 		for (const img of uploadedImages(secrets ? doc : stripSecrets(doc))) add(img.id, { kind: 'content', title: p.title, href }, img.alt);

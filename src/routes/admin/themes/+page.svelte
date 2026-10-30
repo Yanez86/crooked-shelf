@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Icon from '#lib/components/Icon.svelte';
 	import { getT } from '#lib/i18n/index.ts';
 	import FormError from '#lib/components/FormError.svelte';
 	import FormOk from '#lib/components/FormOk.svelte';
@@ -60,7 +61,7 @@
 {:else}
 	<p class="muted">{t('themes.noCustom')}</p>
 {/if}
-<p><a class="btn btn-primary" href="/admin/themes/new">+ {t('themes.new')}</a></p>
+<p><a class="btn btn-primary" href="/admin/themes/new"><Icon name="plus" />{t('themes.new')}</a></p>
 
 <h3>{t('themes.import')}</h3>
 <form method="post" action="?/import" enctype="multipart/form-data" class="card inline">

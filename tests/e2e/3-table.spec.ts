@@ -153,7 +153,7 @@ test('bacheche', async ({ browser }) => {
 	await expect(admin.getByRole('heading', { level: 1, name: 'Missioni del gruppo' })).toBeVisible();
 
 	const col = (name: string) => admin.getByRole('listitem').filter({ has: admin.getByRole('heading', { level: 2, name: new RegExp(`^${name}`) }) });
-	await col('Indizi').getByText('+ Aggiungi scheda').click();
+	await col('Indizi').locator('summary', { hasText: 'Aggiungi scheda' }).click();
 	await col('Indizi').getByLabel('Titolo').fill('Chi è il cuoco?');
 	await col('Indizi').getByLabel('Testo').fill('Lavora alla [[Locanda del Grifone]]. Conosce @incantesimo[Fireball].');
 	await col('Indizi').getByRole('button', { name: 'Aggiungi scheda' }).click();
@@ -166,7 +166,7 @@ test('bacheche', async ({ browser }) => {
 	await expect(col('Domande').getByRole('article', { name: 'Chi è il cuoco?' })).toBeVisible();
 	await expect(admin.getByRole('button', { name: 'Sposta nella colonna a destra: Chi è il cuoco?' })).toBeFocused();
 
-	await col('Domande').getByText('+ Aggiungi scheda').click();
+	await col('Domande').locator('summary', { hasText: 'Aggiungi scheda' }).click();
 	await col('Domande').getByLabel('Titolo').fill('Dove dorme il drago?');
 	await col('Domande').getByRole('button', { name: 'Aggiungi scheda' }).click();
 	await expect(col('Domande').getByRole('article')).toHaveCount(2);

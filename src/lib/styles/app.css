@@ -126,6 +126,38 @@ mark {
 	font-weight: 700;
 }
 
+/* Icone a tratto (componente Icon): un solo colore, quello del testo. */
+.icon {
+	width: 1.15em;
+	height: 1.15em;
+	flex: none;
+	vertical-align: -0.2em;
+	fill: none;
+	stroke: currentColor;
+	stroke-width: 1.75;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+}
+/* Collegamento per tornare indietro: freccia e nome. */
+.back {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.3rem;
+}
+/* Le stesse icone nei ::before e ::after: una maschera del colore del testo (le variabili --icon-* le scrive il layout). */
+.secret-title::before,
+.disclosure > summary::after {
+	content: '';
+	display: inline-block;
+	width: 1.1em;
+	height: 1.1em;
+	vertical-align: -0.2em;
+	background: currentColor;
+	-webkit-mask: var(--icon) center / contain no-repeat;
+	mask: var(--icon) center / contain no-repeat;
+	forced-color-adjust: none;
+}
+
 .visually-hidden {
 	position: absolute !important;
 	width: 1px;
@@ -361,11 +393,10 @@ input[type='checkbox']:disabled {
 	display: none;
 }
 .disclosure > summary::after {
-	content: '▾';
-	font-size: 0.8em;
+	--icon: var(--icon-chevron-down);
 }
 .disclosure[open] > summary::after {
-	content: '▴';
+	--icon: var(--icon-chevron-up);
 }
 .disclosure[open] > summary {
 	margin-bottom: 1rem;
@@ -461,6 +492,60 @@ table.data td {
 	vertical-align: top;
 }
 
+/* --- Copertina e icona della pagina (uguali in lettura e in modifica) --- */
+
+.page-cover {
+	position: relative;
+	height: clamp(8rem, 26cqi, 14rem);
+	margin: 0.5rem 0 0;
+	overflow: hidden;
+	background: var(--c-surface2);
+}
+.page-cover img {
+	display: block;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+.page-icon {
+	display: grid;
+	place-items: center;
+	width: 4rem;
+	height: 4rem;
+	margin-top: 0.75rem;
+	background: var(--c-surface);
+	border: 1px solid var(--c-border);
+	color: var(--c-primary);
+}
+.page-icon svg {
+	width: 62%;
+	height: 62%;
+	fill: none;
+	stroke: currentColor;
+	stroke-width: 1.5;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+}
+/* Sulla copertina: più grande, a cavallo del bordo in basso, staccata dall'immagine col colore dello sfondo. */
+.page-icon.on-cover {
+	position: relative;
+	width: 5.5rem;
+	height: 5.5rem;
+	margin: -2.75rem 0 0 1.5rem;
+	box-shadow: 0 0 0 4px var(--c-bg);
+}
+/* Sul telefono la copertina va da un bordo all'altro dello schermo. */
+@media (max-width: 48rem) {
+	.page-cover {
+		margin-inline: calc(-1 * var(--space));
+	}
+	.page-icon.on-cover {
+		width: 4.5rem;
+		height: 4.5rem;
+		margin: -2.25rem 0 0;
+	}
+}
+
 /* --- Contenuto delle pagine --- */
 
 .prose {
@@ -545,7 +630,8 @@ table.data td {
 	color: inherit;
 }
 .secret-title::before {
-	content: '🔒 ';
+	--icon: var(--icon-lock);
+	margin-right: 0.35em;
 }
 
 /* --- Movimento --- */
@@ -606,8 +692,12 @@ table.data td {
 	border: 2px solid var(--c-control);
 	background: var(--c-surface);
 	color: var(--c-text);
-	font: 700 0.9rem/1 var(--font-body);
+	font-size: 0.9rem;
 	cursor: pointer;
+}
+.rule-info .icon {
+	width: 1.15rem;
+	height: 1.15rem;
 }
 .rule-info[aria-expanded='true'] {
 	background: var(--c-primary);

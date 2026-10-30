@@ -4,7 +4,8 @@
 	import { getT } from '#lib/i18n/index.ts';
 	import MapView from '#lib/maps/MapView.svelte';
 	import PinPage from '#lib/maps/PinPage.svelte';
-	import { PIN_SYMBOL } from '#lib/maps/icons.ts';
+	import { PIN_ICON } from '#lib/maps/icons.ts';
+	import Icon from '#lib/components/Icon.svelte';
 	import FormError from '#lib/components/FormError.svelte';
 	import FormOk from '#lib/components/FormOk.svelte';
 	import type { PageProps } from './$types';
@@ -99,7 +100,7 @@
 
 <div class="head">
 	<h1>{data.map.title}</h1>
-	{#if data.canEdit}<a class="btn" href="/maps/{data.map.slug}/edit">⚙ {t('maps.settings')}</a>{/if}
+	{#if data.canEdit}<a class="btn" href="/maps/{data.map.slug}/edit"><Icon name="cog" />{t('maps.settings')}</a>{/if}
 </div>
 {#if data.map.description}<p>{data.map.description}</p>{/if}
 
@@ -122,10 +123,10 @@
 	<div class="buttons">
 		<label class="choice"><input type="checkbox" bind:checked={showLabels} /><span>{t('maps.showLabels')}</span></label>
 		{#if data.map.scale}
-			<button class="btn btn-small btn-ghost" type="button" aria-pressed={measuring} onclick={() => { measuring = !measuring; adding = false; distance = null; status = measuring ? t('maps.measureHint') : ''; }}>📏 {t('maps.measure')}</button>
+			<button class="btn btn-small btn-ghost" type="button" aria-pressed={measuring} onclick={() => { measuring = !measuring; adding = false; distance = null; status = measuring ? t('maps.measureHint') : ''; }}><Icon name="ruler" />{t('maps.measure')}</button>
 		{/if}
 		{#if data.canEdit}
-			<button class="btn btn-small" type="button" aria-pressed={adding} onclick={() => { adding = !adding; measuring = false; status = adding ? t('maps.addHint') : ''; }}>📍 {t('maps.addPin')}</button>
+			<button class="btn btn-small" type="button" aria-pressed={adding} onclick={() => { adding = !adding; measuring = false; status = adding ? t('maps.addHint') : ''; }}><Icon name="markerPlus" />{t('maps.addPin')}</button>
 			<button class="btn btn-small btn-ghost" type="button" onclick={() => { const c = view?.center(); if (c) newDraft(c.x, c.y); }}>{t('maps.addCenter')}</button>
 		{/if}
 	</div>
@@ -191,7 +192,7 @@
 				<div class="field">
 					<label for="pin-icon">{t('maps.icon')}</label>
 					<select id="pin-icon" name="icon" bind:value={draft.icon}>
-						{#each data.editData.icons as i (i)}<option value={i}>{PIN_SYMBOL[i]} {t('maps.icons.' + i)}</option>{/each}
+						{#each data.editData.icons as i (i)}<option value={i}>{t('maps.icons.' + i)}</option>{/each}
 					</select>
 				</div>
 				<div class="field">
@@ -261,14 +262,14 @@
 					{#each visiblePins as p (p.id)}
 						<tr>
 							<th scope="row">
-								<span aria-hidden="true">{PIN_SYMBOL[p.icon]}</span> {p.label}
+								<Icon name={PIN_ICON[p.icon] ?? 'dot'} /> {p.label}
 								{#if p.visibility === 'master'}<span class="badge">{t('visibility.master')}</span>{/if}
 								{#if p.html}<br /><span class="muted small">{@html p.html}</span>{/if}
 							</th>
 							{#if data.layers.length}<td>{layerName(p.layerId)}</td>{/if}
 							<td>
 								{#if p.page && !p.page.missing}<a href="/wiki/{p.page.slug}">{p.page.title}</a>{/if}
-								{#if p.target}<a href="/maps/{p.target.slug}">🗺 {p.target.title}</a>{/if}
+								{#if p.target}<a href="/maps/{p.target.slug}"><Icon name="map" /> {p.target.title}</a>{/if}
 							</td>
 							<td class="row-actions">
 								<button class="btn btn-small btn-ghost" type="button" onclick={() => view?.openPin(p.id)}>{t('maps.showOnMap')}<span class="visually-hidden">: {p.label}</span></button>
@@ -290,13 +291,13 @@
 		{#if data.children.length}
 			<ul>{#each data.children as c (c.slug)}<li><a href="/maps/{c.slug}">{c.title}</a></li>{/each}</ul>
 		{:else}<p class="muted">{t('maps.noChildren')}</p>{/if}
-		{#if data.canEdit}<a class="btn btn-small" href="/maps/new?parent={data.map.id}">+ {t('maps.newChild')}</a>{/if}
+		{#if data.canEdit}<a class="btn btn-small" href="/maps/new?parent={data.map.id}"><Icon name="plus" />{t('maps.newChild')}</a>{/if}
 	</section>
 {/if}
 
 {#if data.canEdit}
 	<details class="disclosure layers-admin">
-		<summary class="btn">⚙ {t('maps.manageLayers')}</summary>
+		<summary class="btn"><Icon name="cog" />{t('maps.manageLayers')}</summary>
 		{#each data.layers as l (l.id)}
 			<div class="layer-row">
 				<form method="post" action="?/layer" use:enhance class="inline">
