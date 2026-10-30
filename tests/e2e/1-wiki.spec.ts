@@ -115,6 +115,10 @@ test('pagine, collegamenti e segreti', async () => {
 	await expect(content.locator('.secret')).toContainText('spia degli Zhentarim');
 	await expect(admin.getByRole('navigation', { name: 'Percorso della categoria' })).toContainText('Luoghi');
 	await expect(admin.getByRole('link', { name: 'Taverna' })).toBeVisible();
+	// In fondo: chi l'ha creata e l'ultima modifica.
+	const foot = admin.locator('.page-foot');
+	await expect(foot).toContainText('Creata da Davide');
+	await expect(foot).toContainText(/Ultima modifica di Davide, \d/);
 	await axe(admin, 'pagina con segreto');
 	await shot(admin, '02-pagina');
 
@@ -241,6 +245,7 @@ test('il giocatore non vede i segreti', async ({ browser }) => {
 	await expect(p.locator('.content')).not.toContainText('spia');
 	await expect(p.getByText('Contiene segreti')).toHaveCount(0);
 	await expect(p.getByRole('link', { name: /Modifica/ })).toHaveCount(0);
+	await expect(p.locator('.page-foot')).toContainText('Creata da Davide');
 
 	await expect(p.getByRole('navigation', { name: TREE })).toContainText('Bartolo Pancia');
 	await expect(p.getByRole('navigation', { name: TREE })).not.toContainText('Piano del cattivo');

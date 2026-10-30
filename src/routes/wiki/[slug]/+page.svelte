@@ -37,9 +37,6 @@
 	<p class="meta muted">
 		<span class="badge">{t('visibility.' + data.page.visibility)}</span>
 		{#if data.page.hasSecret}<span class="badge">🔒 {t('page.hasSecret')}</span>{/if}
-		{#if data.editor}
-			<span>{t('page.lastEdit', { name: data.editor })} <RelTime ts={data.page.updatedAt} {locale} /></span>
-		{/if}
 		<a href="/wiki/{data.page.slug}/history">{t('history.link')}</a>
 	</p>
 
@@ -114,6 +111,15 @@
 			<p class="muted">{t('page.noBacklinks')}</p>
 		{/if}
 	</section>
+
+	{#if data.author || data.editor}
+		<footer class="page-foot">
+			<p class="muted">
+				{#if data.author}<span>{t('page.createdBy', { name: data.author })}</span>{/if}
+				{#if data.editor}<span>{t('page.lastEdit', { name: data.editor })} <RelTime ts={data.page.updatedAt} {locale} /></span>{/if}
+			</p>
+		</footer>
+	{/if}
 </article>
 
 <style>
@@ -254,5 +260,22 @@
 	.backlinks h2 {
 		font-size: var(--fs-md);
 		margin-top: 1rem;
+	}
+	/* In fondo: chi ha creato la pagina e chi l'ha modificata per ultimo. */
+	.page-foot {
+		margin-top: 2rem;
+		border-top: 1px solid var(--c-border);
+		max-width: var(--measure);
+	}
+	.page-foot p {
+		display: flex;
+		flex-wrap: wrap;
+		margin: 0.75rem 0 0;
+		font-size: var(--fs-sm);
+	}
+	/* Il punto resta in fondo alla prima riga quando sul telefono le due parti vanno a capo. */
+	.page-foot span:not(:last-child)::after {
+		content: '·';
+		padding: 0 0.5rem;
 	}
 </style>
