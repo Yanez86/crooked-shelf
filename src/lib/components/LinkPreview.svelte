@@ -1,7 +1,12 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 
-	/** Anteprima dei collegamenti alle pagine: compare passando col mouse o arrivandoci con la tastiera su a.wikilink[data-title]. */
+	/**
+	 * Anteprima dei collegamenti alle pagine: compare passando col mouse o arrivandoci con la tastiera su a.wikilink[data-title].
+	 * Dentro una finestra in sovraimpressione (<dialog>) serve una copia sua, con `within`: quella della pagina resterebbe sotto.
+	 */
+	let { within = null }: { within?: HTMLElement | null } = $props();
+
 	interface Preview {
 		title: string;
 		excerpt: string;
@@ -36,7 +41,10 @@
 		data = null;
 	}
 
-	const target = (e: Event) => (e.target as HTMLElement).closest?.<HTMLAnchorElement>('a.wikilink[data-title]') ?? null;
+	const target = (e: Event) => {
+		const a = (e.target as HTMLElement).closest?.<HTMLAnchorElement>('a.wikilink[data-title]') ?? null;
+		return a && (within ? within.contains(a) : !a.closest('dialog')) ? a : null;
+	};
 
 	onMount(() => {
 		const onOver = (e: MouseEvent) => {

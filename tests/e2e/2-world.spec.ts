@@ -288,10 +288,43 @@ test('mappe con pin, livelli e mappe annidate', async () => {
 	await expect(admin.locator('.leaflet-marker-icon')).toHaveCount(1);
 	await admin.getByRole('checkbox', { name: /Segreti/ }).check();
 
-	// Il pin si apre da tastiera dall'elenco.
+	// Il pin si trova dall'elenco; Invio apre la sua pagina sopra la mappa, Esc la chiude.
 	await admin.getByRole('button', { name: /^Mostra ?: Waterdeep$/ }).click();
-	await expect(admin.locator('.leaflet-popup')).toContainText('Apri «Locanda del Grifone»');
-	await expect(admin.getByRole('button', { name: 'Waterdeep', exact: true })).toBeFocused();
+	const waterdeep = admin.getByRole('button', { name: 'Waterdeep', exact: true });
+	await expect(waterdeep).toBeFocused();
+	await admin.keyboard.press('Enter');
+	const pinPage = admin.getByRole('dialog', { name: 'Locanda del Grifone' });
+	await expect(pinPage.locator('.content')).toContainText('birra annacquata');
+	await expect(pinPage.locator('.content .secret')).toContainText('spia');
+	await expect(pinPage.getByRole('link', { name: 'Apri la pagina intera' })).toHaveAttribute('href', '/wiki/locanda-del-grifone');
+	await expect(pinPage).toBeFocused();
+	await axe(admin, 'mappa: pagina del pin');
+	await admin.screenshot({ path: `${SHOTS}/14b-mappa-pagina-del-pin.png` });
+	await admin.keyboard.press('Escape');
+	await expect(pinPage).toBeHidden();
+	await expect(waterdeep).toBeFocused();
+
+	// Col mouse: clic sul pin. Dalla finestra il Master passa al modulo del pin.
+	await waterdeep.click();
+	await expect(pinPage).toBeVisible();
+	await pinPage.getByRole('button', { name: 'Modifica pin' }).click();
+	await expect(pinPage).toBeHidden();
+	await expect(pinForm.getByLabel('Nome', { exact: true })).toHaveValue('Waterdeep');
+	await pinForm.getByRole('button', { name: 'Annulla' }).click();
+
+	// Clic fuori dalla finestra: si chiude.
+	await waterdeep.click();
+	await expect(pinPage).toBeVisible();
+	await admin.mouse.click(5, 5);
+	await expect(pinPage).toBeHidden();
+
+	// Un pin senza pagina ha ancora il fumetto.
+	await admin.getByRole('button', { name: 'Covo dei Zhentarim', exact: true }).click();
+	await expect(admin.locator('.leaflet-popup')).toContainText('Modifica pin');
+	await expect(admin.getByRole('dialog')).toHaveCount(0);
+	await admin.locator('.leaflet-popup-close-button').click();
+	// Il fumetto ha spostato la mappa: si torna su Waterdeep, così il righello non cade su un pin.
+	await admin.getByRole('button', { name: /^Mostra ?: Waterdeep$/ }).click();
 
 	// Righello.
 	await admin.getByRole('button', { name: /Misura/ }).click();
@@ -370,6 +403,18 @@ test('il giocatore non vede pin, livelli ed eventi segreti', async ({ browser })
 	await expect(p.getByRole('button', { name: /Aggiungi pin/ })).toHaveCount(0);
 	const move = await p.request.patch('/api/maps/1/pins/1', { data: { x: 1, y: 1 } });
 	expect(move.status()).toBe(404);
+
+	// La pagina del pin sopra la mappa: senza i segreti del Master e senza «Modifica pin».
+	await p.getByRole('button', { name: 'Waterdeep', exact: true }).click();
+	const pinPage = p.getByRole('dialog', { name: 'Locanda del Grifone' });
+	await expect(pinPage.locator('.content')).toContainText('birra annacquata');
+	await expect(pinPage.locator('.content')).not.toContainText('spia');
+	await expect(pinPage.getByRole('button', { name: 'Modifica pin' })).toHaveCount(0);
+	await pinPage.getByRole('button', { name: /Chiudi/ }).click();
+	await expect(pinPage).toBeHidden();
+	const peek = await p.request.get('/api/pages/locanda-del-grifone');
+	expect(await peek.text()).not.toContain('spia');
+	expect((await p.request.get('/api/pages/piano-del-cattivo')).status()).toBe(404);
 
 	await p.goto('/timeline/world');
 	await expect(p.locator('main')).not.toContainText('Il patto segreto');

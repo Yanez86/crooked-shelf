@@ -64,6 +64,25 @@ test('riferimenti alle regole con anteprima SRD', async () => {
 	await expect(info).toBeFocused();
 });
 
+test('anteprima della regola dentro la pagina aperta dalla mappa', async () => {
+	await admin.goto('/maps/costa-della-spada');
+	await admin.getByRole('button', { name: 'Waterdeep', exact: true }).click();
+	const pinPage = admin.getByRole('dialog', { name: 'Locanda del Grifone' });
+	const info = pinPage.getByRole('button', { name: 'Anteprima: Fireball' });
+	await info.click();
+	const rule = pinPage.getByRole('dialog', { name: 'Fireball' });
+	await expect(rule).toContainText('8d6');
+	await expect(rule.getByRole('heading', { name: 'Fireball' })).toBeFocused();
+	await axe(admin, 'anteprima regola sopra la mappa');
+	// Il primo Esc chiude l'anteprima, il secondo la pagina.
+	await admin.keyboard.press('Escape');
+	await expect(rule).toBeHidden();
+	await expect(pinPage).toBeVisible();
+	await expect(info).toBeFocused();
+	await admin.keyboard.press('Escape');
+	await expect(pinPage).toBeHidden();
+});
+
 test('pagina delle regole', async () => {
 	await admin.goto('/rules');
 	await axe(admin, 'regole');

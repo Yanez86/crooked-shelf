@@ -2,8 +2,14 @@
 	import { onMount, tick } from 'svelte';
 	import { getT } from '../i18n/index.ts';
 
-	/** Anteprima delle regole: si apre dal pulsante "i" accanto a ogni riferimento @regola. */
+	/**
+	 * Anteprima delle regole: si apre dal pulsante "i" accanto a ogni riferimento @regola.
+	 * Fuori da una finestra in sovraimpressione (<dialog>) non si può cliccare: chi la apre ci mette dentro
+	 * una copia con `within`, che pensa ai pulsanti della finestra; quella della pagina li lascia stare.
+	 */
+	let { within = null }: { within?: HTMLElement | null } = $props();
 	const t = getT();
+	const mine = (el: Element) => (within ? within.contains(el) : !el.closest('dialog'));
 
 	interface Preview {
 		name: string;
@@ -26,10 +32,15 @@
 		opener = btn;
 		btn.setAttribute('aria-expanded', 'true');
 		const r = btn.getBoundingClientRect();
-		const width = Math.min(window.innerWidth - 32, 448);
+		// Nella pagina si conta dall'inizio del documento; nella finestra dal suo angolo, e la finestra scorre per conto suo.
+		const w = within?.getBoundingClientRect();
+		const area = within && w
+			? { x: w.left + within.clientLeft, y: w.top + within.clientTop, sx: within.scrollLeft, sy: within.scrollTop, width: within.clientWidth }
+			: { x: 0, y: 0, sx: window.scrollX, sy: window.scrollY, width: window.innerWidth };
+		const width = Math.min(area.width - 32, 448);
 		pos = {
-			top: r.bottom + window.scrollY + 6,
-			left: Math.max(16, Math.min(r.left + window.scrollX, window.scrollX + window.innerWidth - width - 16))
+			top: r.bottom - area.y + area.sy + 6,
+			left: Math.max(16, Math.min(r.left - area.x + area.sx, area.sx + area.width - width - 16))
 		};
 		data = null;
 		failed = false;
@@ -51,14 +62,18 @@
 	onMount(() => {
 		const onClick = (e: MouseEvent) => {
 			const btn = (e.target as HTMLElement).closest<HTMLButtonElement>('button.rule-info');
-			if (btn) {
+			if (btn && mine(btn)) {
 				e.preventDefault();
 				if (open && btn === opener) close();
 				else show(btn);
 			} else if (open && box && !box.contains(e.target as Node)) close(false);
 		};
 		const onKey = (e: KeyboardEvent) => {
-			if (e.key === 'Escape' && open) close();
+			// Esc chiude l'anteprima e basta, non anche la finestra che la contiene.
+			if (e.key === 'Escape' && open) {
+				e.preventDefault();
+				close();
+			}
 		};
 		document.addEventListener('click', onClick);
 		document.addEventListener('keydown', onKey);

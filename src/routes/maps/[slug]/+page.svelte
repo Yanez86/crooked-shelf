@@ -3,6 +3,7 @@
 	import { enhance } from '$app/forms';
 	import { getT } from '#lib/i18n/index.ts';
 	import MapView from '#lib/maps/MapView.svelte';
+	import PinPage from '#lib/maps/PinPage.svelte';
 	import { PIN_SYMBOL } from '#lib/maps/icons.ts';
 	import FormError from '#lib/components/FormError.svelte';
 	import FormOk from '#lib/components/FormOk.svelte';
@@ -12,6 +13,7 @@
 	const t = getT();
 
 	let view: ReturnType<typeof MapView> | undefined = $state();
+	let pinPage: ReturnType<typeof PinPage> | undefined = $state();
 	// Livelli accesi: 0 = pin senza livello.
 	let hidden = $state<number[]>([]);
 	let showLabels = $state(false);
@@ -151,8 +153,10 @@
 	onmove={movePin}
 	onedit={editPin}
 	onmeasure={(d) => (distance = d)}
+	onopen={(p) => pinPage?.show(p)}
 />
 <p class="hint">{t('maps.keyboardHint')}</p>
+<PinPage bind:this={pinPage} editable={data.canEdit} onedit={editPin} />
 
 {#if draft && data.editData}
 	<section class="card pin-form" aria-labelledby="pin-form-title">

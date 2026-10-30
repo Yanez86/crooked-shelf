@@ -42,7 +42,7 @@ Un collegamento a una pagina che non esiste è **rosso tratteggiato**: cliccando
 
 ## Mappe
 
-Il Master carica un'immagine (Mappe › Nuova mappa) e aggiunge i **pin**: cliccando sulla mappa, oppure con «Pin al centro della vista» se usa la tastiera. Un pin può aprire una pagina o un'altra mappa (regno › città › edificio).
+Il Master carica un'immagine (Mappe › Nuova mappa) e aggiunge i **pin**: cliccando sulla mappa, oppure con «Pin al centro della vista» se usa la tastiera. Un pin può aprire una pagina o un'altra mappa (regno › città › edificio). Cliccando su un pin collegato a una pagina (o con Invio), la pagina si apre in sovraimpressione, sopra la mappa: Esc, «Chiudi» o un clic fuori la chiudono, «Apri la pagina intera» porta alla pagina vera e propria.
 
 I **livelli** raggruppano i pin e si accendono e spengono; un livello «Solo Master» è invisibile ai giocatori. Indicando la larghezza reale della mappa compare il righello per misurare le distanze.
 
