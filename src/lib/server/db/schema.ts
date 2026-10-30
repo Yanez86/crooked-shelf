@@ -238,3 +238,16 @@ export const boardCards = sqliteTable('board_cards', {
 	createdAt: integer('created_at').notNull(),
 	updatedAt: integer('updated_at').notNull()
 });
+
+export const resources = sqliteTable('resources', {
+	id: integer('id').primaryKey({ autoIncrement: true }),
+	title: text('title').notNull(),
+	description: text('description').notNull().default(''),
+	fileId: text('file_id')
+		.notNull()
+		.references(() => files.id),
+	visibility: text('visibility', { enum: ['public', 'players', 'master'] }).notNull(),
+	createdBy: integer('created_by').references(() => users.id, { onDelete: 'set null' }),
+	createdAt: integer('created_at').notNull(),
+	updatedAt: integer('updated_at').notNull()
+});

@@ -5,7 +5,7 @@
 | Ruolo | Cosa può fare |
 |---|---|
 | **Admin** | Tutto: impostazioni, utenti, inviti, temi, plugin, backup, pacchetti mondo |
-| **Master** | Crea e modifica tutte le pagine, scrive e vede i segreti, gestisce categorie, tag, mappe, calendario e cronologia del mondo |
+| **Master** | Crea e modifica tutte le pagine, scrive e vede i segreti, gestisce categorie, tag, mappe, risorse, calendario e cronologia del mondo |
 | **Giocatore** | Legge, crea pagine, modifica le sue e quelle aperte ai giocatori, aggiunge eventi alla cronologia della campagna, usa le bacheche |
 | **Visitatore** | Solo le pagine pubbliche, e solo se l'Admin ha acceso l'accesso dei visitatori |
 
@@ -13,7 +13,7 @@ Le persone entrano con un **invito**: Amministrazione › Inviti › «Crea invi
 
 ## Pagine
 
-- **Albero a sinistra**: le categorie sono cartelle che si aprono e si chiudono con un clic (o con Invio da tastiera); dentro ci sono le sottocartelle e le pagine. Le pagine senza categoria stanno in fondo, alla radice. La cartella della pagina che stai leggendo si apre da sola. Sul telefono l'albero è nel pulsante «Cartelle e pagine»; chi non lo vuole lo nasconde in Preferenze.
+- **Albero a sinistra**: le categorie sono cartelle che si aprono e si chiudono con un clic (o con Invio da tastiera); dentro ci sono le sottocartelle e le pagine. Le pagine senza categoria stanno in fondo, alla radice. La cartella della pagina che stai leggendo si apre da sola. In alto ci sono due linguette: **Pagine** (cartelle e pagine) e **Risorse** (immagini, audio e altri file, vedi sotto). Sul telefono l'albero è nel pulsante «Pagine e risorse»; chi non lo vuole lo nasconde in Preferenze.
 - **Immagine della pagina**: ogni pagina ha un riquadro in alto a destra. Se puoi modificare la pagina, trascinaci sopra un'immagine dal computer (oppure usa «Scegli un'immagine»): si salva subito. Con «Cambia immagine» e «Rimuovi» la sostituisci o la togli.
 - **Nuova pagina** parte da un **template** (PNG, Luogo, Fazione, Resoconto di sessione…) o da una pagina vuota.
 - **Chi la vede**: pubblica, giocatori, solo Master, oppure personale (solo tu: va bene per gli appunti privati).
@@ -50,7 +50,17 @@ Tutti i pin sono anche nell'elenco sotto la mappa.
 
 ## Galleria
 
-Tutte le immagini della campagna in un posto solo: le immagini delle pagine, quelle inserite nel testo e le mappe, le più recenti prima. Sotto ogni immagine c'è dove compare; cliccandola si apre in grande (frecce ← → per scorrere, Esc per chiudere). Si possono vedere tutte, solo quelle delle pagine o solo le mappe. Ognuno vede solo le immagini delle pagine e delle mappe che può leggere.
+Tutte le immagini della campagna in un posto solo: le immagini delle pagine, quelle inserite nel testo, le mappe e le risorse, le più recenti prima. Sotto ogni immagine c'è dove compare; cliccandola si apre in grande (frecce ← → per scorrere, Esc per chiudere). Si possono vedere tutte, solo quelle delle pagine, solo le mappe o solo le risorse. Ognuno vede solo le immagini delle pagine, delle mappe e delle risorse che può vedere.
+
+## Risorse
+
+Immagini, musica e altri file della campagna: dispense, ritratti, sottofondi per le sessioni. Stanno nella linguetta **Risorse** dell'albero a sinistra, divise in Immagini, Audio e Altri file, e nella pagina Risorse del menu.
+
+Il Master le carica con «Carica una risorsa»: immagini (PNG, JPEG, WebP o GIF, fino a 25 MB), audio (MP3, OGG, WAV, FLAC o M4A) o qualsiasi altro file, fino a 90 MB. Se non scrive un titolo si usa il nome del file. Come per le mappe sceglie chi le vede: pubbliche, giocatori o solo Master.
+
+Le immagini si guardano e l'audio si ascolta direttamente nella wiki, anche dal telefono; gli altri file (PDF compresi) si scaricano. Con «Modifica la risorsa» si cambiano titolo, descrizione, visibilità e file, o la si elimina.
+
+Le risorse entrano nel backup, ma non ancora nel pacchetto mondo.
 
 ## Cronologie e calendario
 

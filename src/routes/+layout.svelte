@@ -92,6 +92,7 @@
 				<li><a href="/tags" aria-current={current('/tags')}>{t('nav.tags')}</a></li>
 				<li><a href="/maps" aria-current={current('/maps')}>{t('nav.maps')}</a></li>
 				<li><a href="/gallery" aria-current={current('/gallery')}>{t('nav.gallery')}</a></li>
+				<li><a href="/resources" aria-current={current('/resources')}>{t('nav.resources')}</a></li>
 				<li><a href="/timeline/world" aria-current={current('/timeline')}>{t('nav.timeline')}</a></li>
 				<li><a href="/rules" aria-current={current('/rules')}>{t('nav.rules')}</a></li>
 				{#if data.user}<li><a href="/boards" aria-current={current('/boards')}>{t('nav.boards')}</a></li>{/if}
@@ -122,7 +123,7 @@
 </header>
 
 <div class="container shell" class:wide={!!tree}>
-	{#if tree}<PageTree {tree} />{/if}
+	{#if tree}<PageTree {tree} resources={data.resources ?? []} />{/if}
 	<main id="main" tabindex="-1">
 		{@render children()}
 	</main>

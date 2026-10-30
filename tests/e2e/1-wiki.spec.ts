@@ -9,7 +9,7 @@ const SHOTS = 'test-results/screens';
 mkdirSync(SHOTS, { recursive: true });
 
 const ADMIN = { user: 'davide', pass: 'drago-rosso-2024' };
-const TREE = 'Albero delle cartelle e delle pagine';
+const TREE = 'Pagine e risorse';
 const PLAYER = { user: 'alice', pass: 'elfa-dei-boschi-99' };
 
 let admin: Page;
@@ -161,7 +161,7 @@ test('albero delle cartelle e delle pagine', async () => {
 
 	// Sul telefono l'albero sta chiuso in un pulsante.
 	await admin.setViewportSize({ width: 390, height: 844 });
-	const toggle = admin.getByRole('button', { name: 'Cartelle e pagine' });
+	const toggle = admin.getByRole('button', { name: 'Pagine e risorse' });
 	await expect(locanda).toBeHidden();
 	await toggle.click();
 	await expect(toggle).toHaveAttribute('aria-expanded', 'true');
