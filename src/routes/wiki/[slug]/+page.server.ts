@@ -8,6 +8,7 @@ import { mapsForPage } from '#lib/server/maps.ts';
 import { eventsForPage } from '#lib/server/timeline.ts';
 import { mapActions, mapView } from '#lib/server/mapPage.ts';
 import { addEvent, timelineView } from '#lib/server/timelinePage.ts';
+import { boardActions, boardView } from '#lib/server/boardPage.ts';
 import { getCalendar } from '#lib/server/settings.ts';
 import { formatDate } from '#lib/calendar.ts';
 import { canCreateKind } from '#lib/pageKinds.ts';
@@ -38,9 +39,10 @@ export const load: PageServerLoad = ({ params, locals, url }) => {
 			cover: pageCover(page)
 		},
 		...pageView(page, locals.user, locals.locale),
-		// Quello che c'è in più nelle pagine di tipo mappa e cronologia.
+		// Quello che c'è in più nelle pagine di tipo mappa, cronologia e bacheca.
 		mapData: page.kind === 'map' ? mapView(page, locals.user, locals.locale) : null,
 		timelineData: page.kind === 'timeline' ? timelineView(page, locals.user, locals.locale, url) : null,
+		boardData: page.kind === 'board' ? boardView(page, locals.user, locals.locale) : null,
 		// Un template si fotocopia da qui; una nuova mappa può nascere dentro questa.
 		canCopy: page.kind === 'template' && canCreateKind('page', locals.user),
 		maps: mapsForPage(page.slug, locals.user),
@@ -61,5 +63,12 @@ export const actions: Actions = {
 	deletePin: async ({ params, request, locals }) => mapActions.deletePin(visiblePage(params.slug, locals.user), locals.user, await form(request)),
 	layer: async ({ params, request, locals }) => mapActions.layer(visiblePage(params.slug, locals.user), locals.user, await form(request)),
 	deleteLayer: async ({ params, request, locals }) => mapActions.deleteLayer(visiblePage(params.slug, locals.user), locals.user, await form(request)),
-	addEvent: async ({ params, request, locals }) => addEvent(visiblePage(params.slug, locals.user), locals.user, await form(request))
+	addEvent: async ({ params, request, locals }) => addEvent(visiblePage(params.slug, locals.user), locals.user, await form(request)),
+	// Schede e colonne delle bacheche.
+	...Object.fromEntries(
+		Object.entries(boardActions).map(([name, act]) => [
+			name,
+			async ({ params, request, locals }: Parameters<Actions[string]>[0]) => act(visiblePage(params.slug, locals.user), locals.user, await form(request))
+		])
+	)
 };

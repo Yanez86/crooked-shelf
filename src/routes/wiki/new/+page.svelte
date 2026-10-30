@@ -30,7 +30,7 @@
 					kind: data.kind as PageKind
 				}
 	);
-	const extra = $derived(form?.extra ?? { map: { parentId: data.parentId, across: '', unit: '' }, mode: 'world' });
+	const extra = $derived(form?.extra ?? { map: { parentId: data.parentId, across: '', unit: '' }, mode: 'world', columns: undefined as string | undefined });
 	const kind = $derived(values.kind);
 
 	/** Collegamento al modulo scelto, mantenendo titolo, indirizzo e categoria. */
@@ -55,7 +55,8 @@
 
 {#if !data.chosen}
 	<h1>{t('page.newTitle')}</h1>
-	<p>{t('templates.choose')}</p>
+	<p>{t('kinds.choose')}</p>
+	<!-- Prima i tipi di pagina (vuota, bacheca, cronologia…), poi le fotocopie dei template. -->
 	<ul class="list-plain template-grid">
 		<li>
 			<a class="card template-card" href={start('template', 'none')}>
@@ -63,25 +64,25 @@
 				<span class="muted">{t('templates.blankHint')}</span>
 			</a>
 		</li>
-		{#each data.templates as tp (tp.slug)}
+		{#each data.otherKinds as k (k)}
 			<li>
-				<a class="card template-card" href={start('template', tp.slug)}>
-					<strong>{@render icon(PAGE_ICONS[tp.icon ?? ''] ?? KIND_ICONS.template)}{tp.title}</strong>
-					<span class="muted">
-						{#if tp.session}{t('templates.isSession')}{:else if tp.fields.length}{tp.fields.join(', ')}{:else}{t('kinds.template')}{/if}
-					</span>
+				<a class="card template-card" href={start('kind', k)}>
+					<strong>{@render icon(KIND_ICONS[k])}{t('kinds.new.' + k)}</strong>
+					<span class="muted">{t('kinds.hint.' + k)}</span>
 				</a>
 			</li>
 		{/each}
 	</ul>
-	{#if data.otherKinds.length}
-		<h2>{t('kinds.other')}</h2>
+	{#if data.templates.length}
+		<h2>{t('kinds.fromTemplate')}</h2>
 		<ul class="list-plain template-grid">
-			{#each data.otherKinds as k (k)}
+			{#each data.templates as tp (tp.slug)}
 				<li>
-					<a class="card template-card" href={start('kind', k)}>
-						<strong>{@render icon(KIND_ICONS[k])}{t('kinds.new.' + k)}</strong>
-						<span class="muted">{t('kinds.hint.' + k)}</span>
+					<a class="card template-card" href={start('template', tp.slug)}>
+						<strong>{@render icon(PAGE_ICONS[tp.icon ?? ''] ?? KIND_ICONS.template)}{tp.title}</strong>
+						<span class="muted">
+							{#if tp.session}{t('templates.isSession')}{:else if tp.fields.length}{tp.fields.join(', ')}{:else}{t('kinds.template')}{/if}
+						</span>
 					</a>
 				</li>
 			{/each}
@@ -103,14 +104,14 @@
 			multipart={kind === 'map'}
 			submitLabel={kind === 'map' ? t('maps.create') : t('page.create')}
 			cancelHref="/wiki"
-			settings={kind === 'map' || kind === 'timeline' ? settings : undefined}
+			settings={kind === 'map' || kind === 'timeline' || kind === 'board' ? settings : undefined}
 		/>
 	{/key}
 {/if}
 
 {#snippet settings()}
-	{#if kind === 'map' || kind === 'timeline'}
-		<KindSettings {kind} map={extra.map} mode={extra.mode} parents={data.parents} requireImage={true} />
+	{#if kind === 'map' || kind === 'timeline' || kind === 'board'}
+		<KindSettings {kind} map={extra.map} mode={extra.mode} columns={extra.columns} parents={data.parents} requireImage={true} />
 	{/if}
 {/snippet}
 

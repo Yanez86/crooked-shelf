@@ -23,82 +23,7 @@ export function pageKindsMigration(db: Database.Database) {
 	);
 	`);
 
-	const one = <T>(q: string, ...p: unknown[]) => db.prepare(q).get(...p) as T | undefined;
-	const all = <T>(q: string, ...p: unknown[]) => db.prepare(q).all(...p) as T[];
-
-	const rawLocale = one<{ value: string }>(`SELECT value FROM settings WHERE key = 'defaultLocale'`)?.value;
-	let locale = DEFAULT_LOCALE;
-	try {
-		if (rawLocale) locale = String(JSON.parse(rawLocale));
-	} catch {
-		/* resta l'inglese */
-	}
-	const t = (k: string) => translate(locale, k);
-	const hasWiki = (one<{ n: number }>('SELECT count(*) AS n FROM users')?.n ?? 0) > 0;
-	const author = one<{ id: number }>(`SELECT id FROM users ORDER BY CASE role WHEN 'admin' THEN 0 WHEN 'master' THEN 1 ELSE 2 END, id LIMIT 1`)?.id ?? null;
-	const now = Date.now();
-
-	const uniqueSlug = (base: string) => {
-		let slug = base;
-		for (let i = 2; one('SELECT 1 FROM pages WHERE slug = ?', slug); i++) slug = `${base}-${i}`;
-		return slug;
-	};
-
-	const folder = (name: string) => {
-		const slug = slugify(name, 'folder');
-		const hit = one<{ id: number }>('SELECT id FROM categories WHERE slug = ?', slug);
-		if (hit) return hit.id;
-		return Number(db.prepare(`INSERT INTO categories (name, slug, parent_id, description) VALUES (?, ?, NULL, '')`).run(name, slug).lastInsertRowid);
-	};
-
-	const insertPage = (p: {
-		slug: string;
-		title: string;
-		content: DocNode;
-		kind: 'template' | 'map' | 'timeline';
-		visibility: string;
-		categoryId: number | null;
-		fields?: PageField[];
-		session?: SessionInfo | null;
-		template?: string | null;
-		icon?: string | null;
-		authorId: number | null;
-		createdAt: number;
-		updatedAt: number;
-	}): number => {
-		const fields = p.fields ?? [];
-		const ex = extract(p.content, fields);
-		const id = Number(
-			db
-				.prepare(
-					`INSERT INTO pages (slug, title, content, visibility, players_can_edit, has_secret, category_id, author_id, updated_by, created_at, updated_at, fields, template, session, icon, kind)
-					VALUES (?, ?, ?, ?, 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
-				)
-				.run(
-					p.slug,
-					p.title,
-					JSON.stringify(p.content),
-					p.visibility,
-					ex.hasSecret ? 1 : 0,
-					p.categoryId,
-					p.authorId,
-					p.authorId,
-					p.createdAt,
-					p.updatedAt,
-					JSON.stringify(fields),
-					p.template ?? null,
-					p.session ? JSON.stringify(p.session) : null,
-					p.icon ?? null,
-					p.kind
-				).lastInsertRowid
-		);
-		for (const l of ex.links) db.prepare('INSERT INTO page_links (from_page_id, target_slug, secret) VALUES (?, ?, ?)').run(id, l.target, l.secret ? 1 : 0);
-		db.prepare('INSERT INTO pages_fts (rowid, title, body, secret_body) VALUES (?, ?, ?, ?)').run(id, p.title, ex.body, ex.secretBody);
-		db.prepare(
-			`INSERT INTO page_revisions (page_id, title, content, fields, visibility, has_secret, edited_by, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
-		).run(id, p.title, JSON.stringify(p.content), JSON.stringify(fields), p.visibility, ex.hasSecret ? 1 : 0, p.authorId, p.updatedAt);
-		return id;
-	};
+	const { one, all, t, locale, hasWiki, author, now, uniqueSlug, folder, insertPage } = rawPages(db);
 
 	const paragraphs = (text: string): DocNode => {
 		const parts = text
@@ -234,4 +159,124 @@ export function pageKindsMigration(db: Database.Database) {
 	const remap = db.prepare(`UPDATE pages SET template = ? WHERE template = ? AND kind = 'page'`);
 	for (const [key, slug] of origin) remap.run(slug, key);
 	db.exec('DROP TABLE templates');
+}
+
+/** Aiuti per le migrazioni che creano pagine scrivendo direttamente nel database. */
+function rawPages(db: Database.Database) {
+	const one = <T>(q: string, ...p: unknown[]) => db.prepare(q).get(...p) as T | undefined;
+	const all = <T>(q: string, ...p: unknown[]) => db.prepare(q).all(...p) as T[];
+
+	const rawLocale = one<{ value: string }>(`SELECT value FROM settings WHERE key = 'defaultLocale'`)?.value;
+	let locale = DEFAULT_LOCALE;
+	try {
+		if (rawLocale) locale = String(JSON.parse(rawLocale));
+	} catch {
+		/* resta l'inglese */
+	}
+	const t = (k: string) => translate(locale, k);
+	const hasWiki = (one<{ n: number }>('SELECT count(*) AS n FROM users')?.n ?? 0) > 0;
+	const author = one<{ id: number }>(`SELECT id FROM users ORDER BY CASE role WHEN 'admin' THEN 0 WHEN 'master' THEN 1 ELSE 2 END, id LIMIT 1`)?.id ?? null;
+	const now = Date.now();
+
+	const uniqueSlug = (base: string) => {
+		let slug = base;
+		for (let i = 2; one('SELECT 1 FROM pages WHERE slug = ?', slug); i++) slug = `${base}-${i}`;
+		return slug;
+	};
+
+	const folder = (name: string) => {
+		const slug = slugify(name, 'folder');
+		const hit = one<{ id: number }>('SELECT id FROM categories WHERE slug = ?', slug);
+		if (hit) return hit.id;
+		return Number(db.prepare(`INSERT INTO categories (name, slug, parent_id, description) VALUES (?, ?, NULL, '')`).run(name, slug).lastInsertRowid);
+	};
+
+	const insertPage = (p: {
+		slug: string;
+		title: string;
+		content: DocNode;
+		kind: 'template' | 'map' | 'timeline' | 'board';
+		visibility: string;
+		categoryId: number | null;
+		fields?: PageField[];
+		session?: SessionInfo | null;
+		template?: string | null;
+		icon?: string | null;
+		authorId: number | null;
+		createdAt: number;
+		updatedAt: number;
+	}): number => {
+		const fields = p.fields ?? [];
+		const ex = extract(p.content, fields);
+		const id = Number(
+			db
+				.prepare(
+					`INSERT INTO pages (slug, title, content, visibility, players_can_edit, has_secret, category_id, author_id, updated_by, created_at, updated_at, fields, template, session, icon, kind)
+					VALUES (?, ?, ?, ?, 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+				)
+				.run(
+					p.slug,
+					p.title,
+					JSON.stringify(p.content),
+					p.visibility,
+					ex.hasSecret ? 1 : 0,
+					p.categoryId,
+					p.authorId,
+					p.authorId,
+					p.createdAt,
+					p.updatedAt,
+					JSON.stringify(fields),
+					p.template ?? null,
+					p.session ? JSON.stringify(p.session) : null,
+					p.icon ?? null,
+					p.kind
+				).lastInsertRowid
+		);
+		for (const l of ex.links) db.prepare('INSERT INTO page_links (from_page_id, target_slug, secret) VALUES (?, ?, ?)').run(id, l.target, l.secret ? 1 : 0);
+		db.prepare('INSERT INTO pages_fts (rowid, title, body, secret_body) VALUES (?, ?, ?, ?)').run(id, p.title, ex.body, ex.secretBody);
+		db.prepare(
+			`INSERT INTO page_revisions (page_id, title, content, fields, visibility, has_secret, edited_by, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+		).run(id, p.title, JSON.stringify(p.content), JSON.stringify(fields), p.visibility, ex.hasSecret ? 1 : 0, p.authorId, p.updatedAt);
+		return id;
+	};
+
+	return { one, all, t, locale, hasWiki, author, now, uniqueSlug, folder, insertPage };
+}
+
+/**
+ * Migrazione dopo la 0.10.0: le bacheche diventano pagine «bacheca», nella cartella Bacheche.
+ * Le personali restano visibili solo a chi le ha fatte (visibilità «personale»), le condivise tengono la loro visibilità.
+ * Il vincolo sui tipi di pagina si cambia togliendo e rimettendo la colonna (SQLite non sa cambiare un CHECK).
+ */
+export function boardPagesMigration(db: Database.Database) {
+	db.exec(`
+	CREATE TEMP TABLE page_kinds_old AS SELECT id, kind FROM pages;
+	DROP INDEX pages_kind;
+	ALTER TABLE pages DROP COLUMN kind;
+	ALTER TABLE pages ADD COLUMN kind TEXT NOT NULL DEFAULT 'page' CHECK (kind IN ('page','template','map','timeline','board'));
+	UPDATE pages SET kind = (SELECT o.kind FROM temp.page_kinds_old o WHERE o.id = pages.id);
+	DROP TABLE temp.page_kinds_old;
+	CREATE INDEX pages_kind ON pages(kind);
+	ALTER TABLE boards ADD COLUMN page_id INTEGER REFERENCES pages(id) ON DELETE CASCADE;
+	`);
+	const { all, t, uniqueSlug, folder, insertPage } = rawPages(db);
+	const boards = all<{ id: number; title: string; owner_id: number | null; visibility: string; created_by: number | null; created_at: number }>(
+		'SELECT id, title, owner_id, visibility, created_by, created_at FROM boards ORDER BY id'
+	);
+	const boardsFolder = boards.length ? folder(t('kinds.folder.board')) : null;
+	for (const b of boards) {
+		const pageId = insertPage({
+			slug: uniqueSlug(slugify(b.title, 'board')),
+			title: b.title,
+			content: { type: 'doc', content: [{ type: 'paragraph' }] },
+			kind: 'board',
+			visibility: b.owner_id !== null ? 'personal' : b.visibility,
+			categoryId: boardsFolder,
+			authorId: b.owner_id ?? b.created_by,
+			createdAt: b.created_at,
+			updatedAt: b.created_at
+		});
+		db.prepare('UPDATE boards SET page_id = ? WHERE id = ?').run(pageId, b.id);
+	}
+	db.exec('CREATE UNIQUE INDEX boards_page ON boards(page_id)');
 }

@@ -2,15 +2,20 @@
 	import { getT } from '../i18n/index.ts';
 	import { TIMELINE_MODES } from '../pageKinds.ts';
 
-	/** Le impostazioni proprie di una pagina «mappa» (immagine, mappa che la contiene, scala) o «cronologia» (modo). */
+	/**
+	 * Le impostazioni proprie di una pagina «mappa» (immagine, mappa che la contiene, scala), «cronologia» (modo)
+	 * o «bacheca» (le colonne con cui nasce; dopo si cambiano dalla bacheca).
+	 */
 	let {
 		kind,
 		map,
 		mode,
+		columns,
 		parents = [],
 		requireImage = false
 	}: {
-		kind: 'map' | 'timeline';
+		kind: 'map' | 'timeline' | 'board';
+		columns?: string;
 		map?: { parentId: number | null; across: string; unit: string };
 		mode?: string;
 		parents?: { id: number; title: string }[];
@@ -49,6 +54,15 @@
 				</div>
 			</div>
 		</fieldset>
+	</fieldset>
+{:else if kind === 'board'}
+	<fieldset class="kind-settings">
+		<legend>{t('kinds.boardColumns')}</legend>
+		<div class="field">
+			<label for="columns">{t('boards.columns')}</label>
+			<textarea id="columns" name="columns" rows="4" aria-describedby="columns-hint">{columns ?? t('boards.defaultColumns')}</textarea>
+			<span id="columns-hint" class="hint">{t('boards.columnsHint')}</span>
+		</div>
 	</fieldset>
 {:else if kind === 'timeline'}
 	<fieldset class="kind-settings">

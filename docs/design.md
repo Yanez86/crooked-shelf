@@ -222,7 +222,7 @@ Ogni fase si chiude con test automatici (unità, interfaccia con Playwright, acc
 - Testi SRD 5.2 solo in inglese (999 voci), ricavati dal progetto 5e-database con `tools/import-srd.mjs`; attribuzione in `THIRD_PARTY_NOTICES.md` e nell'interfaccia.
 - Le pagine che citano una regola compaiono nella sua scheda e nell'anteprima: così le regole della casa sono collegate alle regole ufficiali.
 - Versioni: ogni salvataggio crea una versione. Chi guarda vede solo le versioni di quando la pagina era visibile per lui, e i segreti solo se è Master.
-- Bacheche: tutti quelli che vedono una bacheca del gruppo possono aggiungere e spostare schede; colonne e bacheca le gestisce il Master (o il proprietario per quelle personali).
+- Bacheche: sono pagine «bacheca» (tabella `boards` con `page_id`), con la visibilità della pagina (le personali sono pagine `personale`). Chi vede la pagina e ha fatto l'accesso aggiunge e sposta schede; le colonne le gestisce chi può modificare la pagina. Le vecchie bacheche sono state convertite dalla migrazione della 0.11 nella cartella Bacheche; i vecchi indirizzi `/boards/<id>` rimandano alla pagina.
 - Temi personalizzati: salvati nelle impostazioni, accettati solo se tutti i contrasti WCAG AA sono rispettati, anche quando importati da file.
 
 ## 20. Note sulla fase 4
@@ -243,7 +243,7 @@ Ogni fase si chiude con test automatici (unità, interfaccia con Playwright, acc
 
 ## 22. Note sui tipi di pagina e sulla barra a sinistra
 
-- **Una sola barra di navigazione**, a sinistra: in alto «Nuova pagina», poi le sezioni (Home, Pagine, Categorie, Tag, Galleria, Risorse, Regole, Calendario, Bacheche, Cestino), poi l'albero con le linguette Pagine e Risorse. La barra orizzontale sotto l'intestazione non c'è più. Di base la barra sta aperta accanto alla pagina; dal Profilo si può tenere chiusa (si apre col pulsante in alto, come sul telefono). In Profilo e Amministrazione è chiusa.
+- **Una sola barra di navigazione**, a sinistra: in alto «Nuova pagina», poi l'albero con le linguette Pagine e Risorse. Le altre sezioni (Pagine, Tag, Galleria, Regole, Calendario, Cartelle, Cestino) stanno nel menu del profilo in alto a destra. «Nuova cartella» crea la cartella direttamente nell'albero, col nome da scrivere (API `POST /api/categories`). «Nuova pagina» propone prima i tipi (pagina bianca, bacheca, cronologia, template, mappa) e poi le fotocopie dei template. La barra orizzontale sotto l'intestazione non c'è più. Di base la barra sta aperta accanto alla pagina; dal Profilo si può tenere chiusa (si apre col pulsante in alto, come sul telefono). In Profilo e Amministrazione è chiusa.
 - **Tipo nel database**: colonna `kind` delle pagine (`page`, `template`, `map`, `timeline`). La mappa ha la sua riga in `maps` (immagine, scala, mappa che la contiene) legata alla pagina; la cronologia ha il suo modo in `timelines` (`world` o `campaign`); gli eventi stanno nella loro cronologia (`timeline_events.timeline_id`), tranne le voci dei resoconti di sessione, che compaiono in tutte le cronologie della campagna.
 - **Chi crea cosa**: le pagine chiunque abbia fatto l'accesso; template, mappe e cronologie il Master. Pagina e template si scambiano con la casella «È un template» (solo il Master); mappe e cronologie restano del loro tipo.
 - **Fotocopia**: alla nuova pagina passano blocchi, colonna a lato e icona del template (i segreti solo se chi crea è Master); se il template è di resoconti, anche i dati di sessione con la data di oggi. La pagina ricorda da quale template viene (colonna `template`), solo per informazione.

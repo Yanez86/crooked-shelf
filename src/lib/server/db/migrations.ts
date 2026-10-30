@@ -1,5 +1,5 @@
 import type Database from 'better-sqlite3';
-import { pageKindsMigration } from './pageKinds.ts';
+import { boardPagesMigration, pageKindsMigration } from './pageKinds.ts';
 
 // Migrazioni in ordine: SQL, oppure una funzione per quelle che devono anche tradurre o convertire dati.
 // Non modificare quelle già pubblicate: aggiungine una nuova in fondo.
@@ -289,5 +289,7 @@ export const MIGRATIONS: (string | ((db: Database.Database) => void))[] = [
 	ALTER TABLE pages ADD COLUMN cover_image_id TEXT REFERENCES files(id) ON DELETE SET NULL;
 	ALTER TABLE pages ADD COLUMN cover_color TEXT;
 	ALTER TABLE pages ADD COLUMN cover_y INTEGER NOT NULL DEFAULT 50;
-	`
+	`,
+	// Le bacheche diventano pagine «bacheca».
+	boardPagesMigration
 ];

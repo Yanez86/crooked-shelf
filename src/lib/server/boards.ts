@@ -1,51 +1,25 @@
-import { and, asc, eq, isNull, or, sql } from 'drizzle-orm';
+import { and, asc, eq, sql } from 'drizzle-orm';
 import { getDb, schema } from './db/index.ts';
-import { isMaster, type Viewer } from '../access.ts';
 
 const { boards, boardColumns: cols, boardCards: cards, users } = schema;
+
+// Le bacheche sono pagine «bacheca»: chi vede la pagina usa le schede, chi la modifica cambia le colonne (boardPage.ts).
 
 export const CARD_COLORS = ['yellow', 'blue', 'green', 'pink', 'purple', 'gray'] as const;
 export type BoardRow = typeof boards.$inferSelect;
 
-/** Bacheca personale: solo il proprietario. Condivisa: i giocatori o solo il Master. */
-export function canSeeBoard(b: Pick<BoardRow, 'ownerId' | 'visibility'>, u: Viewer | null): boolean {
-	if (!u) return false;
-	if (b.ownerId !== null) return b.ownerId === u.id;
-	return b.visibility === 'players' || isMaster(u);
+/** La bacheca di una pagina «bacheca». */
+export function boardOfPage(pageId: number) {
+	return getDb().select().from(boards).where(eq(boards.pageId, pageId)).get();
 }
 
-/** Rinominare, cambiare colonne o eliminare: il proprietario, o il Master per quelle condivise. */
-export function canManageBoard(b: Pick<BoardRow, 'ownerId' | 'visibility'>, u: Viewer | null): boolean {
-	if (!u) return false;
-	return b.ownerId !== null ? b.ownerId === u.id : isMaster(u);
-}
-
-export function listBoards(u: Viewer) {
-	const shared = isMaster(u) ? isNull(boards.ownerId) : and(isNull(boards.ownerId), eq(boards.visibility, 'players'));
-	return getDb()
-		.select({
-			id: boards.id,
-			title: boards.title,
-			ownerId: boards.ownerId,
-			visibility: boards.visibility,
-			cards: sql<number>`(SELECT count(*) FROM board_cards c JOIN board_columns k ON k.id = c.column_id WHERE k.board_id = "boards"."id")`
-		})
-		.from(boards)
-		.where(or(eq(boards.ownerId, u.id), shared))
-		.orderBy(asc(boards.title))
-		.all();
-}
-
-export function getBoard(id: number) {
-	return getDb().select().from(boards).where(eq(boards.id, id)).get();
-}
-
-export function createBoard(title: string, personal: boolean, visibility: 'players' | 'master', columns: string[], u: Viewer): number {
+/** Crea la bacheca di una pagina appena nata, con le sue colonne. */
+export function createBoard(pageId: number, title: string, columns: string[], userId: number | null): number {
 	const db = getDb();
 	return db.transaction(() => {
 		const id = db
 			.insert(boards)
-			.values({ title, ownerId: personal ? u.id : null, visibility: personal ? 'players' : visibility, createdBy: u.id, createdAt: Date.now() })
+			.values({ title, ownerId: null, visibility: 'players', createdBy: userId, createdAt: Date.now(), pageId })
 			.returning({ id: boards.id })
 			.get().id;
 		columns.forEach((c, i) => db.insert(cols).values({ boardId: id, title: c, sort: i }).run());
@@ -53,12 +27,13 @@ export function createBoard(title: string, personal: boolean, visibility: 'playe
 	});
 }
 
-export function updateBoard(id: number, title: string, visibility: 'players' | 'master') {
-	getDb().update(boards).set({ title, visibility }).where(eq(boards.id, id)).run();
-}
-
-export function deleteBoard(id: number) {
-	getDb().delete(boards).where(eq(boards.id, id)).run();
+/** Le colonne scritte una per riga (al massimo 12). */
+export function readColumns(raw: unknown): string[] {
+	return String(raw ?? '')
+		.split('\n')
+		.map((c) => c.trim().slice(0, 60))
+		.filter(Boolean)
+		.slice(0, 12);
 }
 
 export function boardContent(id: number) {

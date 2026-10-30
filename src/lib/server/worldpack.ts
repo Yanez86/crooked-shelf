@@ -163,6 +163,8 @@ function exportablePages(o: ExportOptions, u: Viewer): PageRow[] {
 		if (p.visibility === 'personal') return false;
 		if (p.visibility === 'master' && !o.secrets) return false;
 		if (!canView(p, u)) return false;
+		// Le bacheche sono appunti del tavolo, non del mondo: restano nella campagna.
+		if (p.kind === 'board') return false;
 		if (p.kind === 'template') return o.templates;
 		if (p.kind === 'map') return o.maps;
 		if (p.kind === 'timeline') return o.timeline && getTimeline(p.id)?.mode === 'world';
@@ -430,7 +432,7 @@ export function importPack(pack: Pack, opts: { conflict: Conflict; calendar: boo
 
 	// Pagine: prima si decidono gli indirizzi (per aggiustare i collegamenti), poi si scrivono.
 	// Una mappa senza la sua immagine non si importa; una pagina di un altro tipo non si sostituisce, si rinomina.
-	const packPages = packPagesOf(pack).filter((p) => kindOf(p) !== 'map' || (p.map && fileMap.has(p.map.file)));
+	const packPages = packPagesOf(pack).filter((p) => kindOf(p) !== 'board' && (kindOf(p) !== 'map' || (p.map && fileMap.has(p.map.file))));
 	const slugMap = new Map<string, string>();
 	const plan: { p: PackPage; kind: PageKind; existing?: PageRow; slug: string }[] = [];
 	for (const p of packPages) {

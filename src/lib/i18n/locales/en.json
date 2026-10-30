@@ -17,7 +17,8 @@
 		"gallery": "Gallery",
 		"resources": "Resources",
 		"rules": "Rules",
-		"boards": "Boards"
+		"boards": "Boards",
+		"folders": "Folders"
 	},
 	"tree": {
 		"label": "Pages and resources",
@@ -27,6 +28,8 @@
 		"expandAll": "Open all folders",
 		"collapseAll": "Close all folders",
 		"newFolder": "New folder",
+		"folderName": "New folder name",
+		"folderError": "Could not create the folder. Try again.",
 		"tabs": "What to show",
 		"tab": {
 			"pages": "Pages",
@@ -885,7 +888,8 @@
 		"manage": "Manage board",
 		"newColumn": "New column",
 		"delete": "Delete board",
-		"deleteConfirm": "Yes, I want to delete “{title}” with all its cards"
+		"deleteConfirm": "Yes, I want to delete “{title}” with all its cards",
+		"noColumns": "This board has no columns yet."
 	},
 	"plugins": {
 		"intro": "Plugins add themes, templates, calendars, languages and rules. They contain only data, not programs: installing them doesn't put the server at risk. They stay off until you turn them on.",
@@ -974,32 +978,39 @@
 		"template": "Template",
 		"map": "Map",
 		"timeline": "Timeline",
+		"board": "Board",
 		"folder": {
 			"map": "Maps",
 			"template": "Templates",
-			"timeline": "Timelines"
+			"timeline": "Timelines",
+			"board": "Boards"
 		},
 		"list": {
 			"page": "Pages",
 			"template": "Templates",
 			"map": "Maps",
-			"timeline": "Timelines"
+			"timeline": "Timelines",
+			"board": "Boards"
 		},
 		"new": {
 			"template": "New template",
 			"map": "New map",
-			"timeline": "New timeline"
+			"timeline": "New timeline",
+			"board": "New board"
 		},
 		"hint": {
 			"template": "Blocks, side column and icon to copy when making new pages.",
 			"map": "An image with pins, layers and nested maps.",
-			"timeline": "Events in date order, in the world or at the table."
+			"timeline": "Events in date order, in the world or at the table.",
+			"board": "Note cards in columns to move around: clues, quests, questions."
 		},
 		"other": "Other page types",
 		"templateNote": "This is a template: every page made from it starts with its blocks, its side column and its icon.",
 		"useTemplate": "Use this template",
 		"asTemplate": "It is a template",
 		"asTemplateHint": "It can be copied to make new pages",
-		"sessionTemplate": "Copies are session reports"
+		"sessionTemplate": "Copies are session reports",
+		"fromTemplate": "Start from a template",
+		"choose": "What kind of page do you want to make?"
 	}
 }

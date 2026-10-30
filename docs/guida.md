@@ -16,8 +16,10 @@ Le persone entrano con un **invito**: Amministrazione › Inviti › «Crea invi
 Tutta la wiki si raggiunge dalla barra a sinistra (in alto non c'è più il menu orizzontale):
 
 - **Nuova pagina**, in cima;
-- le sezioni: Home, Pagine (l'elenco con i filtri), Categorie, Tag, Galleria, Risorse, Regole, Calendario, Bacheche, Cestino;
-- l'**albero**: le categorie sono cartelle che si aprono e si chiudono con un clic (o con Invio da tastiera); dentro ci sono le sottocartelle e le pagine di ogni tipo (pagine, template, mappe, cronologie), ognuna con la sua icona. Le pagine senza categoria stanno in fondo, alla radice. La cartella della pagina che stai leggendo si apre da sola. Due linguette: **Pagine** e **Risorse** (immagini, audio e altri file, vedi sotto).
+- l'**albero**: le categorie sono cartelle che si aprono e si chiudono con un clic (o con Invio da tastiera); dentro ci sono le sottocartelle e le pagine di ogni tipo (pagine, template, mappe, cronologie, bacheche), ognuna con la sua icona. Le pagine senza categoria stanno in fondo, alla radice. La cartella della pagina che stai leggendo si apre da sola. Due linguette: **Pagine** e **Risorse** (immagini, audio e altri file, vedi sotto).
+- **Nuova cartella** (l'icona della cartella col «+», per Master e Admin): la cartella compare subito in cima all'albero col nome da scrivere; Invio la crea, Esc la lascia perdere. Spostarle una dentro l'altra, rinominarle ed eliminarle si fa in **Cartelle**, nel menu del profilo.
+
+Le altre sezioni della wiki (Pagine, cioè l'elenco con i filtri, Tag, Galleria, Regole, Calendario, Cartelle e Cestino) stanno nel menu del profilo, in alto a destra.
 
 Sul telefono la barra si apre con il pulsante in alto a sinistra («Menu e pagine») e si chiude con Esc, con × o toccando fuori. Chi preferisce la pagina più larga la tiene chiusa anche sul computer (Profilo › «Barra a sinistra»). Nelle pagine Profilo e Amministrazione la barra è chiusa e si apre col pulsante.
 
@@ -35,7 +37,7 @@ Ogni cosa della wiki è una **pagina**, nell'albero a sinistra, con un indirizzo
 - **Nuova pagina** chiede da dove partire: **pagina bianca** o uno dei **template**; il Master trova sotto anche «Nuovo template», «Nuova mappa» e «Nuova cronologia».
 - **Template**: alla creazione della wiki ce ne sono già alcuni (PNG, Luogo, Fazione, Resoconto di sessione…) nella cartella **Template**. Si modificano come ogni pagina: la struttura (titoli, riquadri, segreti, colonna a lato, icona) è quella che scrivi tu. Dalla pagina del template, «Usa questo template» crea la fotocopia; il Master può trasformare in template qualsiasi pagina (e viceversa) con la casella «È un template». La casella «Le copie sono resoconti di sessione» fa delle copie dei resoconti (numero, data, voce nella cronologia della campagna). Cambiare un template non cambia le pagine già fatte.
 - **Chi la vede**: pubblica, giocatori, solo Master, oppure personale (solo tu: va bene per gli appunti privati).
-- **Copertina e icona**: come in Notion, in cima alla pagina può esserci una copertina, con l'icona della pagina a cavallo del bordo. Mentre modifichi la pagina, «Aggiungi copertina» apre un pannello: un'immagine della **Galleria**, una **Tinta unita** oppure un file da **Caricare**. Sul lato della copertina tre piccole icone la cambiano, la riposizionano (trascinando l'immagine, oppure con le frecce su e giù; Invio conferma) e la tolgono. L'icona (la stessa dell'albero) si sceglie cliccando la casella sopra il titolo.
+- **Copertina e icona**: come in Notion, in cima alla pagina può esserci una copertina, con l'icona della pagina a cavallo del bordo. Mentre modifichi la pagina, l'icona dell'immagine accanto a Salva e Annulla («Aggiungi copertina») apre un pannello: un'immagine della **Galleria**, una **Tinta unita** oppure un file da **Caricare**. Sul lato della copertina tre piccole icone la cambiano, la riposizionano (trascinando l'immagine, oppure con le frecce su e giù; Invio conferma) e la tolgono. L'icona (la stessa dell'albero) si sceglie cliccando la casella sopra il titolo.
 - **Colonna a lato**: di base la pagina non ce l'ha. Mentre la modifichi, il pulsante «+» a destra aggiunge la colonna; dentro metti dei riquadri:
   - **Testo**: un titolo e un testo breve (es. «Allineamento: Caotico buono»); anche lì si può scrivere `[[Pagina]]`;
   - **Immagine**: trascinala dal computer sul riquadro oppure usa «Scegli un'immagine», poi scrivi una didascalia se vuoi.
@@ -102,11 +104,11 @@ Pagina **Regole**: 999 voci dell'SRD 5.2 (in inglese) da cercare e citare. Nelle
 
 ## Bacheche
 
-Schede di appunti in colonne: personali (solo tu) o del gruppo. Le schede si spostano con le frecce o trascinandole; nel testo vanno bene `[[Pagina]]` e `@regole`.
+Le bacheche sono pagine: **Nuova pagina › Nuova bacheca**, con le colonne di partenza (una per riga). Stanno nell'albero come le altre pagine e hanno la loro visibilità: **Personale** (solo tu), Giocatori, Solo Master. Chi vede la bacheca aggiunge e sposta le schede (con le frecce o trascinandole); nel testo vanno bene `[[Pagina]]` e `@regole`. Le colonne le aggiunge, rinomina, sposta ed elimina chi può modificare la pagina. Le bacheche non entrano nel pacchetto mondo.
 
 ## Profilo
 
-In alto a destra c'è il tuo profilo: la tua icona, il tuo nome e il tuo grado (Admin, Master o Giocatore). Cliccandoci si apre il menu con **Profilo**, **Amministrazione** (solo per l'Admin) ed **Esci**; sul telefono in alto resta solo l'icona, e nome e grado si leggono nel menu.
+In alto a destra c'è il tuo profilo: la tua icona, il tuo nome e il tuo grado (Admin, Master o Giocatore). Cliccandoci si apre il menu con le sezioni della wiki (Pagine, Tag, Galleria, Regole, Calendario, Cartelle, Cestino), poi **Profilo**, **Amministrazione** (solo per l'Admin) ed **Esci**; sul telefono in alto resta solo l'icona, e nome e grado si leggono nel menu.
 
 Nella pagina **Profilo** ci sono le preferenze di lettura (sotto), l'icona da scegliere tra quelle delle pagine (una corona, un cappello da mago, delle spade…), il nome visualizzato e la password. Chi non ha fatto l'accesso trova solo le preferenze, salvate nel browser.
 
