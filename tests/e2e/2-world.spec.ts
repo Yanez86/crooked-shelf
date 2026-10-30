@@ -322,11 +322,11 @@ test('mappe con pin, livelli e mappe annidate', async () => {
 	await admin.getByRole('button', { name: 'Covo dei Zhentarim', exact: true }).click();
 	await expect(admin.locator('.leaflet-popup')).toContainText('Modifica pin');
 	await expect(admin.getByRole('dialog')).toHaveCount(0);
-	await admin.locator('.leaflet-popup-close-button').click();
-	// Il fumetto ha spostato la mappa: si torna su Waterdeep, così il righello non cade su un pin.
-	await admin.getByRole('button', { name: /^Mostra ?: Waterdeep$/ }).click();
 
-	// Righello.
+	// Righello. I pin si spengono: dove cadono dipende dalla finestra, e un clic su un pin non misura.
+	const layers = [admin.getByRole('checkbox', { name: 'Senza livello' }), admin.getByRole('checkbox', { name: /Segreti/ })];
+	for (const l of layers) await l.uncheck();
+	await expect(admin.locator('.leaflet-marker-icon')).toHaveCount(0);
 	await admin.getByRole('button', { name: /Misura/ }).click();
 	await admin.keyboard.press('Escape');
 	mapBox = await box();
@@ -334,6 +334,8 @@ test('mappe con pin, livelli e mappe annidate', async () => {
 	await admin.mouse.click(mapBox.x + mapBox.width * 0.8, mapBox.y + mapBox.height * 0.5);
 	await expect(admin.getByRole('status').filter({ hasText: 'Distanza' })).toContainText('km');
 	await admin.getByRole('button', { name: /Misura/ }).click();
+	for (const l of layers) await l.check();
+	await expect(admin.locator('.leaflet-marker-icon')).toHaveCount(2);
 
 	await axe(admin, 'mappa');
 	await shot(admin, '14-mappa');
