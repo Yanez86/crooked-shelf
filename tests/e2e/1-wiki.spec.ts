@@ -126,7 +126,7 @@ test('pagine, collegamenti e segreti', async () => {
 
 	// Il collegamento rosso porta alla creazione con il titolo già scritto.
 	await content.locator('.wikilink.missing').click();
-	await admin.getByRole('link', { name: /Mostro/ }).click();
+	await admin.locator('main').getByRole('link', { name: /Mostro/ }).click();
 	await expect(admin.getByLabel('Titolo', { exact: true })).toHaveValue('Drago Rosso');
 	await expect(admin.getByLabel('Nome del campo 1')).toHaveValue('Tipo');
 
@@ -162,12 +162,20 @@ test('albero delle cartelle e delle pagine', async () => {
 	await expect(tree.getByRole('link', { name: 'Bartolo Pancia' })).toHaveAttribute('aria-current', 'page');
 	// Le cartelle aperte restano aperte.
 	await expect(locanda).toBeVisible();
+	// Niente barra orizzontale: le sezioni della wiki stanno nella barra a sinistra, sopra l'albero.
+	await expect(admin.locator('header.site-header nav')).toHaveCount(0);
+	const sections = admin.locator('#explorer').getByRole('navigation', { name: 'Navigazione principale' });
+	await expect(sections.getByRole('link', { name: 'Galleria' })).toBeVisible();
+	await expect(admin.locator('#explorer').getByRole('link', { name: 'Nuova pagina' })).toHaveAttribute('href', '/wiki/new');
+	// Anche le cronologie e i template preparati con la wiki sono pagine dell'albero.
+	await expect(tree.getByRole('link', { name: 'Cronologia del mondo, Cronologia' })).toBeVisible();
+	await expect(tree.locator('summary', { hasText: 'Template' })).toBeVisible();
 	await axe(admin, 'albero');
 	await shot(admin, '02b-albero');
 
-	// Sul telefono l'albero sta chiuso in un pulsante.
+	// Sul telefono la barra sta chiusa in un pulsante.
 	await admin.setViewportSize({ width: 390, height: 844 });
-	const toggle = admin.getByRole('button', { name: 'Pagine e risorse' });
+	const toggle = admin.getByRole('button', { name: 'Menu e pagine' });
 	await expect(locanda).toBeHidden();
 	await toggle.click();
 	await expect(toggle).toHaveAttribute('aria-expanded', 'true');
@@ -331,33 +339,42 @@ test('temi: contrasti e accessibilità', async () => {
 	}
 });
 
-test("l'albero si può nascondere", async () => {
+test('la barra a sinistra si può tenere chiusa', async () => {
 	const save = async (choice: string) => {
 		await admin.goto('/preferences');
-		await admin.getByLabel('Albero delle pagine a sinistra').selectOption({ label: choice });
+		await admin.getByLabel('Barra a sinistra').selectOption({ label: choice });
 		await admin.getByRole('button', { name: 'Salva' }).first().click();
 		await expect(admin.getByRole('status').first()).toContainText('Preferenze salvate');
 	};
-	await save('Nascondi');
+	const tree = admin.getByRole('navigation', { name: TREE });
+	const toggle = admin.locator('#tree-toggle');
+	await save('Chiusa, si apre col pulsante');
 	await admin.goto('/wiki/locanda-del-grifone');
-	await expect(admin.getByRole('navigation', { name: TREE })).toHaveCount(0);
-	await save('Mostra');
+	await expect(tree).toBeHidden();
+	await toggle.click();
+	await expect(tree).toBeVisible();
+	await admin.keyboard.press('Escape');
+	await expect(tree).toBeHidden();
+	await expect(toggle).toBeFocused();
+	await save('Sempre aperta');
 	await admin.goto('/wiki/locanda-del-grifone');
-	await expect(admin.getByRole('navigation', { name: TREE })).toBeVisible();
+	await expect(tree).toBeVisible();
+	await expect(toggle).toBeHidden();
 
-	// Profilo e Amministrazione: niente albero, anche arrivandoci dal menu del profilo.
+	// Profilo e Amministrazione: la barra è chiusa, anche arrivandoci dal menu del profilo; si apre col pulsante.
 	await admin.locator('.user-menu summary').click();
 	await admin.locator('.user-menu').getByRole('link', { name: 'Profilo', exact: true }).click();
 	await expect(admin).toHaveURL(/\/profile$/);
-	await expect(admin.getByRole('navigation', { name: TREE })).toHaveCount(0);
-	await expect(admin.locator('#tree-toggle')).toHaveCount(0);
+	await expect(tree).toBeHidden();
+	await expect(toggle).toBeVisible();
 	for (const url of ['/admin', '/admin/themes']) {
 		await admin.goto(url);
-		await expect(admin.getByRole('navigation', { name: TREE })).toHaveCount(0);
+		await expect(tree).toBeHidden();
 	}
+	await toggle.click();
 	await admin.getByRole('navigation', { name: 'Navigazione principale' }).getByRole('link', { name: 'Pagine', exact: true }).click();
 	await expect(admin).toHaveURL(/\/wiki$/);
-	await expect(admin.getByRole('navigation', { name: TREE })).toBeVisible();
+	await expect(tree).toBeVisible();
 });
 
 test('tastiera: link per saltare al contenuto', async () => {

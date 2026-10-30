@@ -11,6 +11,8 @@ import { REAL_DATE } from './timeline.ts';
 import { pageIcon } from '../pageIcons.ts';
 import { getFile } from './files.ts';
 import { cleanCover, type PageCover } from '../covers.ts';
+import { isPageKind, type PageKind } from '../pageKinds.ts';
+import { SESSION_TEMPLATE } from '../templates.ts';
 
 const CONTENT_MAX = 2_000_000;
 
@@ -27,6 +29,7 @@ export interface PageFormValues {
 	session: SessionInfo | null;
 	icon: string | null;
 	cover: PageCover | null;
+	kind: PageKind;
 }
 
 /**
@@ -79,7 +82,7 @@ export function readPageForm(
 	f: FormData,
 	u: Viewer,
 	cal: Calendar
-): { ok: true; input: PageInput } | { ok: false; error: string; values: PageFormValues } {
+): { ok: true; input: PageInput; values: PageFormValues } | { ok: false; error: string; values: PageFormValues } {
 	const raw = String(f.get('content') ?? '');
 	let content: unknown = null;
 	try {
@@ -97,13 +100,18 @@ export function readPageForm(
 		tags: str(f, 'tags', 2000),
 		slug: str(f, 'slug', 100),
 		fields: parseFields(String(f.get('fields') ?? '')),
-		template: str(f, 'template', 20) || null,
+		template: str(f, 'template', 120) || null,
 		session: null,
 		icon: pageIcon(f.get('icon')),
-		cover: cleanCover({ image: f.get('coverImage'), color: f.get('coverColor'), y: f.get('coverY') }, imageFile)
+		cover: cleanCover({ image: f.get('coverImage'), color: f.get('coverColor'), y: f.get('coverY') }, imageFile),
+		// Il tipo arriva dal modulo (nuova mappa, nuova cronologia…); chi chiama controlla che sia permesso.
+		kind: isPageKind(f.get('kind')) ? (f.get('kind') as PageKind) : 'page'
 	};
+	// Pagina o template: lo dice la casella, che c'è solo per chi può fare template.
+	if (f.get('kindSwitch') === '1' && (values.kind === 'page' || values.kind === 'template')) values.kind = f.get('asTemplate') === 'on' ? 'template' : 'page';
 	let badDate = false;
-	if (f.get('isSession') === '1') {
+	if (values.kind === 'template') values.session = f.get('sessionTemplate') === 'on' ? SESSION_TEMPLATE : null;
+	else if (f.get('isSession') === '1') {
 		const realDate = str(f, 'sessionDate', 10);
 		const world = readWorldDate(f, 'sessionWorld', cal);
 		badDate = world === undefined || (!!realDate && !REAL_DATE.test(realDate));
@@ -122,6 +130,7 @@ export function readPageForm(
 	if (values.categoryId && !getCategory(values.categoryId)) values.categoryId = null;
 	return {
 		ok: true,
+		values,
 		input: {
 			title: values.title,
 			content,
@@ -134,7 +143,8 @@ export function readPageForm(
 			template: values.template,
 			session: values.session,
 			icon: values.icon,
-			cover: values.cover
+			cover: values.cover,
+			kind: values.kind
 		}
 	};
 }

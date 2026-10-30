@@ -6,6 +6,7 @@ import { readFileSync } from 'node:fs';
 test.describe.configure({ mode: 'serial' });
 
 const SHOTS = 'test-results/screens';
+const TREE = 'Pagine e risorse';
 const ADMIN = { user: 'davide', pass: 'drago-rosso-2024' };
 const PLAYER = { user: 'alice', pass: 'elfa-dei-boschi-99' };
 
@@ -60,7 +61,7 @@ test('template PNG con scheda, segreto e immagine', async () => {
 	await expect(admin.getByText('Da dove vuoi partire?')).toBeVisible();
 	await axe(admin, 'scelta template');
 	await shot(admin, '10-scelta-template');
-	await admin.getByRole('link', { name: /^PNG/ }).click();
+	await admin.locator('main').getByRole('link', { name: /^PNG/ }).click();
 
 	await expect(admin.getByRole('heading', { level: 1 })).toHaveText('Nuova pagina: PNG');
 	await admin.getByLabel('Titolo', { exact: true }).fill('Elminster');
@@ -108,6 +109,56 @@ test('template PNG con scheda, segreto e immagine', async () => {
 	// E la ricerca trova i campi.
 	await admin.goto('/search?q=caotico');
 	await expect(admin.locator('main').getByRole('link', { name: 'Elminster' })).toBeVisible();
+});
+
+test('i template sono pagine: si modificano e si fotocopiano', async () => {
+	// Nella cartella Template dell'albero, come le altre pagine.
+	await admin.goto('/wiki/elminster');
+	const tree = admin.getByRole('navigation', { name: TREE });
+	await tree.locator('summary', { hasText: 'Template' }).click();
+	await tree.getByRole('link', { name: 'Luogo, Template' }).click();
+	await expect(admin.getByRole('heading', { level: 1, name: 'Luogo' })).toBeVisible();
+	await expect(admin.locator('main .meta')).toContainText('Template');
+
+	// La struttura la decide chi lo scrive: si aggiunge una sezione.
+	await admin.getByRole('link', { name: 'Modifica: Luogo' }).click();
+	await expect(admin.getByRole('checkbox', { name: 'È un template' })).toBeChecked();
+	const editor = admin.locator('.editor-content');
+	await expect(editor).toHaveAttribute('contenteditable', 'true');
+	await editor.getByRole('heading', { name: 'Personaggi' }).click();
+	await admin.keyboard.press('End');
+	await admin.keyboard.press('Enter');
+	await admin.keyboard.type('## Clima');
+	await admin.getByRole('button', { name: 'Salva' }).click();
+	const headings = admin.locator('.content h2');
+	await expect(headings).toHaveText(['Descrizione', 'Luoghi notevoli', 'Personaggi', 'Clima', 'Segreti']);
+	await axe(admin, 'pagina template');
+	await shot(admin, '11f-template');
+
+	// La fotocopia: stessi blocchi, stessa colonna, stessa icona.
+	await admin.getByRole('link', { name: 'Usa questo template' }).click();
+	await expect(admin.getByRole('heading', { level: 1 })).toHaveText('Nuova pagina: Luogo');
+	await expect(admin.locator('.editor-content').getByRole('heading', { name: 'Clima', exact: true })).toBeVisible();
+	await expect(admin.getByLabel('Nome del campo 1')).toHaveValue('Tipo');
+	await expect(admin.getByRole('checkbox', { name: 'È un template' })).not.toBeChecked();
+	await admin.getByLabel('Titolo', { exact: true }).fill('Neverwinter');
+	await admin.getByRole('button', { name: 'Crea la pagina' }).click();
+	await expect(admin.getByRole('heading', { level: 1, name: 'Neverwinter' })).toBeVisible();
+	await expect(admin.locator('.content').getByRole('heading', { name: 'Clima', exact: true })).toBeVisible();
+	await expect(admin.locator('main .meta')).not.toContainText('Template');
+
+	// Una pagina qualsiasi diventa un template e compare tra le scelte.
+	await admin.goto('/wiki/neverwinter/edit');
+	await admin.getByRole('checkbox', { name: 'È un template' }).check();
+	await admin.getByRole('button', { name: 'Salva' }).click();
+	await expect(admin.locator('main .meta')).toContainText('Template');
+	await admin.goto('/wiki/new');
+	await expect(admin.locator('main').getByRole('link', { name: /^Neverwinter/ })).toBeVisible();
+	await admin.goto('/wiki/neverwinter/edit');
+	await admin.getByRole('checkbox', { name: 'È un template' }).uncheck();
+	await admin.getByRole('button', { name: 'Salva' }).click();
+	await admin.goto('/wiki/new');
+	await expect(admin.locator('main').getByRole('link', { name: /^Neverwinter/ })).toHaveCount(0);
 });
 
 test('colonna a lato: si aggiunge modificando la pagina, con riquadri di testo e immagini', async () => {
@@ -273,7 +324,10 @@ test('un file che non è un\'immagine viene rifiutato', async () => {
 });
 
 test('cronologia del mondo', async () => {
-	await admin.goto('/timeline/world');
+	// Le cronologie sono pagine dell'albero.
+	await admin.goto('/');
+	await admin.getByRole('navigation', { name: TREE }).getByRole('link', { name: 'Cronologia del mondo, Cronologia' }).click();
+	await expect(admin.getByRole('heading', { level: 1, name: 'Cronologia del mondo' })).toBeVisible();
 	const add = async (title: string, y: string, m: string, d: string, extra?: () => Promise<void>) => {
 		await admin.getByLabel('Titolo').fill(title);
 		await admin.getByLabel('Anno').fill(y);
@@ -325,7 +379,7 @@ test('cronologia del mondo', async () => {
 });
 
 test('resoconto di sessione nella cronologia della campagna', async () => {
-	await admin.goto('/wiki/new?template=b:session');
+	await admin.goto('/wiki/new?template=resoconto-di-sessione');
 	await admin.getByLabel('Titolo', { exact: true }).fill('Sessione 1: il Grifone');
 	await admin.getByLabel('Sessione n.').fill('1');
 	await admin.getByLabel('Data della sessione').fill('2026-10-24');
@@ -335,7 +389,7 @@ test('resoconto di sessione nella cronologia della campagna', async () => {
 	await admin.getByRole('button', { name: 'Crea la pagina' }).click();
 	await expect(admin.getByRole('complementary', { name: 'Scheda' })).toContainText('15 Mirtul 1491 DR');
 
-	await admin.goto('/timeline/campaign');
+	await admin.getByRole('navigation', { name: TREE }).getByRole('link', { name: 'Cronologia della campagna, Cronologia' }).click();
 	const ev = admin.locator('main li.event').first();
 	await expect(ev).toContainText('15 Mirtul 1491 DR');
 	await expect(ev).toContainText('giocata il 24 ottobre 2026');
@@ -344,8 +398,29 @@ test('resoconto di sessione nella cronologia della campagna', async () => {
 	await axe(admin, 'cronologia campagna');
 });
 
+test('una cronologia nuova è una pagina con i suoi eventi', async () => {
+	await admin.goto('/wiki/new');
+	await admin.locator('main').getByRole('link', { name: /^Nuova cronologia/ }).click();
+	await admin.getByLabel('Titolo', { exact: true }).fill('Leggende del Nord');
+	await expect(admin.getByRole('radio', { name: 'Del mondo' })).toBeChecked();
+	await axe(admin, 'nuova cronologia');
+	await admin.getByRole('button', { name: 'Crea la pagina' }).click();
+	await expect(admin.getByRole('heading', { level: 1, name: 'Leggende del Nord' })).toBeVisible();
+	await expect(admin.getByRole('navigation', { name: TREE }).getByRole('link', { name: 'Leggende del Nord, Cronologia' })).toHaveAttribute('aria-current', 'page');
+	await expect(admin.getByText('Ancora nessun evento.')).toBeVisible();
+	await admin.getByLabel('Titolo').fill('Il drago di ghiaccio');
+	await admin.getByLabel('Anno').fill('1300');
+	await admin.getByRole('button', { name: 'Aggiungi', exact: true }).click();
+	await expect(admin.getByRole('status').first()).toContainText('Evento aggiunto');
+	await expect(admin.locator('main li.event')).toHaveCount(1);
+	// Gli eventi restano nella loro cronologia.
+	await admin.goto('/wiki/cronologia-del-mondo');
+	await expect(admin.locator('main')).not.toContainText('Il drago di ghiaccio');
+});
+
 test('mappe con pin, livelli e mappe annidate', async () => {
-	await admin.goto('/maps/new');
+	await admin.goto('/wiki/new');
+	await admin.locator('main').getByRole('link', { name: /^Nuova mappa/ }).click();
 	await admin.getByLabel('Titolo').fill('Costa della Spada');
 	await admin.getByLabel('Immagine della mappa').setInputFiles('tests/fixtures/map.png');
 	await admin.getByLabel('Larghezza reale').fill('1200');
@@ -353,6 +428,8 @@ test('mappe con pin, livelli e mappe annidate', async () => {
 	await admin.getByRole('button', { name: 'Crea la mappa' }).click();
 	await expect(admin.getByRole('heading', { level: 1, name: 'Costa della Spada' })).toBeVisible();
 	await expect(admin.locator('.leaflet-image-layer')).toBeVisible();
+	// La mappa è una pagina dell'albero.
+	await expect(admin.getByRole('navigation', { name: TREE }).getByRole('link', { name: 'Costa della Spada, Mappa' })).toHaveAttribute('aria-current', 'page');
 
 	// Livello segreto.
 	await admin.getByText('Gestisci i livelli').click();

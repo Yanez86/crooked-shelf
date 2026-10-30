@@ -1,5 +1,9 @@
-// Migrazioni SQL in ordine. Non modificare quelle già pubblicate: aggiungine una nuova in fondo.
-export const MIGRATIONS: string[] = [
+import type Database from 'better-sqlite3';
+import { pageKindsMigration } from './pageKinds.ts';
+
+// Migrazioni in ordine: SQL, oppure una funzione per quelle che devono anche tradurre o convertire dati.
+// Non modificare quelle già pubblicate: aggiungine una nuova in fondo.
+export const MIGRATIONS: (string | ((db: Database.Database) => void))[] = [
 	`
 	CREATE TABLE users (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -278,6 +282,8 @@ export const MIGRATIONS: string[] = [
 	`
 	ALTER TABLE users ADD COLUMN icon TEXT;
 	`,
+	// Template, mappe e cronologie diventano tipi di pagina.
+	pageKindsMigration,
 	// Copertina della pagina (in alto, come in Notion): un'immagine o un colore, e quale parte dell'immagine si vede.
 	`
 	ALTER TABLE pages ADD COLUMN cover_image_id TEXT REFERENCES files(id) ON DELETE SET NULL;

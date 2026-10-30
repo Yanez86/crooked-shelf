@@ -162,20 +162,21 @@ test('modifica ed elimina una risorsa', async () => {
 	await expect(admin.getByRole('navigation', { name: TREE })).not.toContainText('Piano del drago');
 });
 
-test('sul telefono l\'albero è un pannello a scomparsa', async () => {
+test('sul telefono la barra a sinistra è un pannello a scomparsa', async () => {
 	await admin.setViewportSize({ width: 390, height: 844 });
 	await admin.goto('/resources');
-	const toggle = admin.getByRole('button', { name: 'Pagine e risorse' });
+	const toggle = admin.getByRole('button', { name: 'Menu e pagine' });
 	const tree = admin.getByRole('navigation', { name: TREE });
 	const tema = tree.getByRole('link', { name: 'Tema della locanda' });
 	const title = admin.getByRole('heading', { level: 1, name: 'Risorse' });
 	await expect(tema).toBeHidden();
 	const before = await title.boundingBox();
 
-	// Entra da sinistra sopra la pagina, senza spostarla; il fuoco va sulla linguetta aperta.
+	// Entra da sinistra sopra la pagina, senza spostarla; il fuoco va sul primo collegamento, Nuova pagina.
 	await toggle.click();
 	await expect(toggle).toHaveAttribute('aria-expanded', 'true');
-	await expect(tree.getByRole('tab', { name: 'Risorse' })).toBeFocused();
+	await expect(admin.getByRole('link', { name: 'Nuova pagina' })).toBeFocused();
+	await expect(tree.getByRole('tab', { name: 'Risorse' })).toHaveAttribute('aria-selected', 'true');
 	await expect(tema).toBeVisible();
 	expect((await title.boundingBox())?.y).toBe(before?.y);
 	await axe(admin, 'risorse telefono');

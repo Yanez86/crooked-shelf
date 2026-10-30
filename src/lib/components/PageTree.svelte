@@ -7,13 +7,37 @@
 	import { PAGE_ICONS } from '../pageIcons.ts';
 	import { iconPath } from '../icons.ts';
 	import Icon from './Icon.svelte';
+	import { KIND_ICONS } from '../pageKinds.ts';
 	import { treePaths, type Tree, type TreeFolder, type TreePage } from '../tree.ts';
 	import { RESOURCE_KINDS, type ResourceItem, type ResourceKind } from '../resources.ts';
 
-	// `open`: sul telefono l'albero è un pannello a scomparsa, aperto dal pulsante in alto (nel layout).
-	let { tree, resources, open: shown = $bindable(false) }: { tree: Tree; resources: ResourceItem[]; open?: boolean } = $props();
+	// La barra a sinistra: in alto «Nuova pagina» e le sezioni della wiki, sotto l'albero delle pagine (di ogni tipo) e delle risorse.
+	// `docked`: sta accanto alla pagina; altrimenti (e sempre sul telefono) è un pannello a scomparsa, aperto dal pulsante in alto.
+	let {
+		tree,
+		resources,
+		docked = true,
+		open: shown = $bindable(false)
+	}: { tree: Tree; resources: ResourceItem[]; docked?: boolean; open?: boolean } = $props();
 	const t = getT();
 	const canManage = $derived(isMaster(page.data.user));
+	const user = $derived(page.data.user);
+
+	// Le sezioni che non sono pagine. Le icone sono disegni a tratto come quelli delle pagine.
+	const SECTIONS = [
+		{ href: '/', key: 'nav.home', icon: 'M3 11l9-7.5 9 7.5M5 9.5V21h14V9.5M10 21v-6h4v6' },
+		{ href: '/wiki', key: 'nav.pages', icon: 'M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01' },
+		{ href: '/categories', key: 'nav.categories', icon: iconPath('folder') },
+		{ href: '/tags', key: 'nav.tags', icon: 'M3 3h8l10 10-8 8L3 11zM7.5 7.5h.01' },
+		{ href: '/gallery', key: 'nav.gallery', icon: 'M3.75 4.75h16.5v14.5H3.75zM3.75 16l5-5 4 4 2.5-2.5 5 5M17 8.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z' },
+		{ href: '/resources', key: 'nav.resources', icon: 'M20.5 11.5l-8.6 8.6a5.25 5.25 0 0 1-7.4-7.4l8.6-8.6a3.5 3.5 0 0 1 4.95 4.95l-8.6 8.6a1.75 1.75 0 0 1-2.48-2.48l7.9-7.9' },
+		{ href: '/rules', key: 'nav.rules', icon: 'M12 6.5C10 5 7 4.5 3 5v13c4-.5 7 0 9 1.5 2-1.5 5-2 9-1.5V5c-4-.5-7 0-9 1.5zM12 6.5v13' },
+		{ href: '/calendar', key: 'calendar.title', icon: 'M4 5.5h16v15H4zM4 10h16M8.5 3v4M15.5 3v4' },
+		{ href: '/boards', key: 'nav.boards', user: true, icon: 'M3.5 4.5h17v15h-17zM7 8h4v4H7zM13.5 8H17M13.5 11h3M7 15.5h10' },
+		{ href: '/trash', key: 'trash.title', user: true, icon: 'M4 6.5h16M9.5 6.5V4h5v2.5M6 6.5l1 14h10l1-14M10 10.5v6M14 10.5v6' }
+	];
+	// Home e l'elenco delle pagine solo al loro indirizzo: dentro una pagina è l'albero a dire dove sei.
+	const here = (href: string) => (path === href || (href !== '/' && href !== '/wiki' && path.startsWith(href + '/')) ? 'page' : undefined);
 
 	// Cartelle aperte: quelle che portano alla pagina che stai leggendo, più quelle che hai aperto tu
 	// (ricordate in questo browser).
@@ -127,10 +151,10 @@
 		}
 	}
 
-	// Pannello aperto: il fuoco entra sulla linguetta scelta. Esc, il pulsante Chiudi, un tocco fuori
+	// Pannello aperto: il fuoco entra sul primo collegamento (Nuova pagina, o Home). Esc, il pulsante Chiudi, un tocco fuori
 	// o il fuoco che esce lo richiudono; con Esc e Chiudi il fuoco torna al pulsante che l'ha aperto.
 	$effect(() => {
-		if (shown) untrack(() => document.getElementById(`tree-tab-${tab}`)?.focus());
+		if (shown) untrack(() => document.querySelector<HTMLElement>('#explorer a')?.focus());
 	});
 
 	function close(refocus = true) {
@@ -157,10 +181,17 @@
 
 {#snippet leaf(p: TreePage)}
 	<li>
-		<a href="/wiki/{p.slug}" aria-current={current === p.slug ? 'page' : undefined}>
+		<!-- Il tipo (mappa, cronologia, template) si legge anche con il lettore di schermo. -->
+		<a
+			href="/wiki/{p.slug}"
+			aria-current={current === p.slug ? 'page' : undefined}
+			aria-label={p.kind && p.kind !== 'page' ? `${p.title}, ${t('kinds.' + p.kind)}` : undefined}
+		>
 			<svg class="ico doc" viewBox="0 0 24 24" aria-hidden="true">
-				{#if p.icon}
+				{#if p.icon && PAGE_ICONS[p.icon]}
 					<path d={PAGE_ICONS[p.icon]} />
+				{:else if p.kind && p.kind !== 'page'}
+					<path d={KIND_ICONS[p.kind]} />
 				{:else}
 					<path d={iconPath('doc')} />
 				{/if}
@@ -179,8 +210,7 @@
 				{:else if r.kind === 'audio'}
 					<path d={iconPath('audio')} />
 				{:else}
-					<path d="M6 2.75h8.25L19 7.5v13.75H6z" />
-					<path d="M14 2.75V7.5h5" />
+					<path d="M6 2.75h8.25L19 7.5v13.75H6zM14 2.75V7.5h5" />
 				{/if}
 			</svg>
 			<span>{r.title}</span>
@@ -205,8 +235,31 @@
 	</li>
 {/snippet}
 
-<nav id="explorer" class="explorer" class:open={shown} aria-label={t('tree.label')}>
-	<div>
+<div id="explorer" class="explorer" class:floating={!docked} class:open={shown}>
+	<div class="explorer-top">
+		{#if user}
+			<a class="new-page" href="/wiki/new" aria-current={path === '/wiki/new' ? 'page' : undefined}>
+				<Icon name="plus" />
+				<span>{t('nav.newPage')}</span>
+			</a>
+		{/if}
+		<button type="button" class="tool close" title={t('common.close')} aria-label={t('common.close')} onclick={() => close()}>
+			<Icon name="close" />
+		</button>
+	</div>
+	<nav class="sections" aria-label={t('nav.main')}>
+		<ul class="list-plain">
+			{#each SECTIONS.filter((x) => !x.user || user) as x (x.href)}
+				<li>
+					<a href={x.href} aria-current={here(x.href)}>
+						<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d={x.icon} /></svg>
+						<span>{t(x.key)}</span>
+					</a>
+				</li>
+			{/each}
+		</ul>
+	</nav>
+	<nav aria-label={t('tree.label')}>
 		<div class="explorer-head">
 			<div class="tabs" role="tablist" aria-label={t('tree.tabs')}>
 				{#each TABS as id (id)}
@@ -241,9 +294,6 @@
 					<Icon name="upload" />
 				</a>
 			{/if}
-			<button type="button" class="tool close" title={t('common.close')} aria-label={t('common.close')} onclick={() => close()}>
-				<Icon name="close" />
-			</button>
 		</div>
 		<div role="tabpanel" id="tree-panel-pages" aria-labelledby="tree-tab-pages" hidden={tab !== 'pages'}>
 			{#if tree.folders.length || tree.pages.length}
@@ -277,8 +327,8 @@
 				<p class="muted none">{t('resources.empty')}</p>
 			{/if}
 		</div>
-	</div>
-</nav>
+	</nav>
+</div>
 {#if shown}
 	<!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions (da tastiera c'è Esc, o il pulsante Chiudi) -->
 	<div class="backdrop" aria-hidden="true" onclick={() => close(false)}></div>
@@ -296,6 +346,59 @@
 		border: 1px solid var(--c-border);
 		border-radius: var(--radius);
 		padding: 0.5rem 0.4rem 0.75rem;
+	}
+	.explorer-top {
+		display: flex;
+		align-items: center;
+		gap: 0.25rem;
+		margin: 0 0 0.35rem;
+	}
+	/* Nuova pagina: l'azione principale della barra, come un pulsante. */
+	.new-page {
+		flex: 1;
+		align-items: center;
+		justify-content: center;
+		min-height: 2.25rem;
+		border: 2px solid var(--c-primary);
+		color: var(--c-primary);
+		font-weight: 700;
+	}
+	.new-page :global(.icon),
+	.sections svg {
+		flex: none;
+		width: 1.15rem;
+		height: 1.15rem;
+		fill: none;
+		stroke: currentColor;
+		stroke-width: 1.75;
+		stroke-linecap: round;
+		stroke-linejoin: round;
+	}
+	.new-page:hover,
+	.new-page[aria-current='page'] {
+		background: var(--c-primary);
+		color: var(--c-on-primary);
+		box-shadow: none;
+	}
+	.new-page:hover span {
+		text-decoration: none;
+	}
+	/* Le sezioni della wiki: due colonne compatte sopra l'albero. */
+	.sections {
+		margin: 0 0 0.5rem;
+		padding: 0 0 0.4rem;
+		border-bottom: 1px solid var(--c-border);
+	}
+	.sections ul {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 0 0.1rem;
+	}
+	.sections a {
+		align-items: center;
+	}
+	.sections svg {
+		color: var(--c-muted);
 	}
 	.explorer-head {
 		display: flex;
@@ -454,7 +557,42 @@
 			outline: 2px solid CanvasText;
 		}
 	}
-	/* Sul telefono l'albero è un pannello a scomparsa: entra da sinistra sopra la pagina, senza spostarla. */
+	/*
+	 * Barra chiusa (dal profilo, in Profilo e Amministrazione) e sempre sul telefono: un pannello a scomparsa
+	 * che entra da sinistra sopra la pagina, senza spostarla. Le stesse regole due volte: per la classe e per lo schermo stretto.
+	 */
+	.explorer.floating {
+		position: fixed;
+		inset: 0 auto 0 0;
+		z-index: 30;
+		width: min(20rem, 85vw);
+		max-height: none;
+		padding: 0.75rem 0.5rem;
+		border-width: 0 1px 0 0;
+		border-radius: 0;
+		box-shadow: 0 0 1.5rem rgb(0 0 0 / 0.3);
+		overscroll-behavior: contain;
+		transform: translateX(-100%);
+		visibility: hidden;
+		transition:
+			transform 0.2s ease,
+			visibility 0s 0.2s;
+	}
+	.explorer.floating.open {
+		transform: none;
+		visibility: visible;
+		transition: transform 0.2s ease;
+	}
+	.floating .close {
+		display: inline-flex;
+	}
+	.floating ~ .backdrop {
+		display: block;
+		position: fixed;
+		inset: 0;
+		z-index: 29;
+		background: rgb(0 0 0 / 0.4);
+	}
 	@media (max-width: 60rem) {
 		.explorer {
 			position: fixed;

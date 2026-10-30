@@ -41,21 +41,18 @@
 	});
 
 	const path = $derived(page.url.pathname);
-	const current = (href: string) =>
-		href === '/' ? path === '/' : path === href || path.startsWith(href + '/') ? 'page' : undefined;
 	const bare = $derived(path.startsWith('/setup') || path.startsWith('/login') || path.startsWith('/invite/'));
-	// Profilo e Amministrazione senza albero; intestazione e piè di pagina restano larghi come altrove.
+	// La barra a sinistra è tutta la navigazione: pagine di ogni tipo, risorse e sezioni della wiki.
+	// Di base sta aperta accanto alla pagina; chiusa (si apre col pulsante) se lo chiede il profilo,
+	// nelle pagine Profilo e Amministrazione e sul telefono.
 	const treeless = $derived(['/profile', '/admin'].some((p) => path === p || path.startsWith(p + '/')));
 	const wide = $derived(!bare && !!data.tree);
-	const tree = $derived(wide && !treeless ? data.tree : null);
+	const tree = $derived(wide ? data.tree : null);
+	const docked = $derived(!!tree && data.prefs.tree === 'show' && !treeless);
 
-	// Sul telefono la navigazione sta dietro il pulsante Menu e l'albero in un pannello a scomparsa;
-	// si richiudono a ogni cambio di pagina.
-	let menuOpen = $state(false);
 	let treeOpen = $state(false);
 	$effect(() => {
 		path;
-		menuOpen = false;
 		treeOpen = false;
 	});
 </script>
@@ -74,15 +71,13 @@ ${iconCss()}</style>`}
 			<button
 				id="tree-toggle"
 				class="btn tree-toggle"
+				class:undocked={!docked}
 				type="button"
 				aria-expanded={treeOpen}
 				aria-controls="explorer"
 				aria-label={t('tree.title')}
 				title={t('tree.title')}
-				onclick={() => {
-					treeOpen = !treeOpen;
-					menuOpen = false;
-				}}
+				onclick={() => (treeOpen = !treeOpen)}
 			>
 				<Icon name="panel" />
 			</button>
@@ -104,47 +99,14 @@ ${iconCss()}</style>`}
 				/>
 				<button class="btn" type="submit">{t('search.submit')}</button>
 			</form>
-			<button
-				class="btn menu-toggle"
-				type="button"
-				aria-expanded={menuOpen}
-				aria-controls="main-nav"
-				onclick={() => {
-					menuOpen = !menuOpen;
-					treeOpen = false;
-				}}
-			>
-				<Icon name={menuOpen ? 'close' : 'menu'} />
-				{t('nav.menu')}
-			</button>
 			<!-- Profilo in alto a destra: icona, nome e grado. -->
 			<UserMenu user={data.user} />
 		{/if}
 	</div>
-
-	{#if !bare}
-		<nav id="main-nav" class="container main-nav" class:wide class:open={menuOpen} aria-label={t('nav.main')}>
-			<ul class="list-plain">
-				<li><a href="/" aria-current={current('/')}>{t('nav.home')}</a></li>
-				<li><a href="/wiki" aria-current={current('/wiki')}>{t('nav.pages')}</a></li>
-				<li><a href="/categories" aria-current={current('/categories')}>{t('nav.categories')}</a></li>
-				<li><a href="/tags" aria-current={current('/tags')}>{t('nav.tags')}</a></li>
-				<li><a href="/maps" aria-current={current('/maps')}>{t('nav.maps')}</a></li>
-				<li><a href="/gallery" aria-current={current('/gallery')}>{t('nav.gallery')}</a></li>
-				<li><a href="/resources" aria-current={current('/resources')}>{t('nav.resources')}</a></li>
-				<li><a href="/timeline/world" aria-current={current('/timeline')}>{t('nav.timeline')}</a></li>
-				<li><a href="/rules" aria-current={current('/rules')}>{t('nav.rules')}</a></li>
-				{#if data.user}<li><a href="/boards" aria-current={current('/boards')}>{t('nav.boards')}</a></li>{/if}
-				{#if data.user}
-					<li><a class="nav-new" href="/wiki/new" aria-current={current('/wiki/new')}><Icon name="plus" />{t('nav.newPage')}</a></li>
-				{/if}
-			</ul>
-		</nav>
-	{/if}
 </header>
 
-<div class="container shell" class:wide class:with-tree={!!tree}>
-	{#if tree}<PageTree {tree} resources={data.resources ?? []} bind:open={treeOpen} />{/if}
+<div class="container shell" class:wide class:with-tree={docked}>
+	{#if tree}<PageTree {tree} resources={data.resources ?? []} {docked} bind:open={treeOpen} />{/if}
 	<main id="main" tabindex="-1">
 		{@render children()}
 	</main>
@@ -199,42 +161,12 @@ ${iconCss()}</style>`}
 		flex: 1;
 		min-width: 0;
 	}
-	.main-nav {
-		display: flex;
-		flex-wrap: wrap;
-		justify-content: space-between;
-		gap: 0.25rem 1rem;
-		padding-bottom: 0.25rem;
-	}
-	.main-nav ul {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 0.1rem 0.25rem;
-	}
-	.main-nav a {
-		display: inline-flex;
-		align-items: center;
-		gap: 0.3rem;
-		min-height: 2.75rem;
-		padding: 0 0.6rem;
-		color: var(--c-text);
-		text-decoration: none;
-		border-bottom: 3px solid transparent;
-	}
-	.main-nav a:hover {
-		border-bottom-color: var(--c-control);
-	}
-	.main-nav a[aria-current='page'] {
-		border-bottom-color: var(--c-primary);
-		font-weight: 700;
-	}
-	.nav-new {
-		color: var(--c-primary) !important;
-		font-weight: 700;
-	}
-	.menu-toggle,
 	.tree-toggle {
 		display: none;
+	}
+	/* Barra chiusa: il pulsante c'è anche sullo schermo grande. */
+	.tree-toggle.undocked {
+		display: inline-flex;
 	}
 	.tree-toggle {
 		width: 2.75rem;
@@ -252,7 +184,7 @@ ${iconCss()}</style>`}
 	.site-footer .bare {
 		text-align: center;
 	}
-	/* Telefono: marchio e Menu sulla prima riga, ricerca sotto, navigazione chiusa. */
+	/* Telefono: pulsante della barra, marchio e profilo sulla prima riga, ricerca sotto. */
 	@media (max-width: 48rem) {
 		.header-inner {
 			gap: 0.5rem;
@@ -266,31 +198,10 @@ ${iconCss()}</style>`}
 			text-overflow: ellipsis;
 			white-space: nowrap;
 		}
-		.menu-toggle {
-			display: inline-flex;
-		}
 		.search {
 			order: 3;
 			flex-basis: 100%;
 			max-width: none;
-		}
-		.main-nav:not(.open) {
-			display: none;
-		}
-		.main-nav {
-			flex-direction: column;
-			padding-bottom: 0.5rem;
-		}
-		.main-nav ul {
-			flex-direction: column;
-		}
-		.main-nav a {
-			width: 100%;
-			border-bottom: 0;
-			border-left: 3px solid transparent;
-		}
-		.main-nav a[aria-current='page'] {
-			border-left-color: var(--c-primary);
 		}
 	}
 	/* Albero a sinistra, pagina a destra. */
@@ -300,11 +211,14 @@ ${iconCss()}</style>`}
 		align-items: start;
 		gap: 0 2rem;
 	}
+	/* Pulsante della barra e nome della wiki a sinistra, ricerca a destra. */
+	.undocked + .brand {
+		margin-right: auto;
+	}
 	@media (max-width: 60rem) {
 		.tree-toggle {
 			display: inline-flex;
 		}
-		/* Pulsante dell'albero e nome della wiki a sinistra, ricerca a destra. */
 		.brand {
 			margin-right: auto;
 		}

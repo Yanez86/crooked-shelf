@@ -62,13 +62,13 @@ describe('colonna a lato', () => {
 		const conn = new Database(':memory:');
 		conn.pragma('foreign_keys = OFF');
 		// Cercata per contenuto: dopo ne possono venire altre.
-		const cover = MIGRATIONS.findIndex((m) => m.includes("'image', image_id"));
-		for (const m of MIGRATIONS.slice(0, cover)) conn.exec(m);
+		const cover = MIGRATIONS.findIndex((m) => typeof m === 'string' && m.includes("'image', image_id"));
+		for (const m of MIGRATIONS.slice(0, cover)) conn.exec(m as string);
 		const insert = conn.prepare("INSERT INTO pages (slug, title, content, visibility, created_at, updated_at, fields, image_id) VALUES (?, ?, '{}', 'players', 0, 0, ?, ?)");
 		insert.run('a', 'A', '[]', 'coverxxxxxxxx');
 		insert.run('b', 'B', '[{"label":"Razza","value":"Elfo"}]', 'coverxxxxxxxx');
 		insert.run('c', 'C', '[{"label":"Razza","value":"Elfo"}]', null);
-		conn.exec(MIGRATIONS[cover]);
+		conn.exec(MIGRATIONS[cover] as string);
 		const fields = (slug: string) => JSON.parse((conn.prepare('SELECT fields FROM pages WHERE slug = ?').get(slug) as { fields: string }).fields);
 		expect(fields('a')).toEqual([pic('coverxxxxxxxx')]);
 		expect(fields('b')).toEqual([pic('coverxxxxxxxx'), { label: 'Razza', value: 'Elfo' }]);
@@ -120,7 +120,7 @@ describe('galleria', () => {
 		createPage({ ...base, title: 'Elminster', fields: [pic('coverxxxxxxxx')], content: doc(img('inlinexxxxxxxx', 'Torre di Elminster'), { type: 'secret', content: [img('secretxxxxxxxx')] }) }, master);
 		createPage({ ...base, visibility: 'master', title: 'Piano', fields: [pic('inlinexxxxxxxx')], content: doc(img('gmxxxxxxxx')) }, master);
 		createPage({ ...base, visibility: 'personal', title: 'Diario', content: doc(img('diaryxxxxxxxx')) }, alice);
-		createMap({ title: 'Faerûn', description: '', visibility: 'players', parentId: null, scale: null, unit: '' }, { id: 'mapxxxxxxxx', width: 40, height: 30 }, 1);
+		createPage({ ...base, kind: 'map', title: 'Faerûn' }, master, (p) => createMap(p, { parentId: null, scale: null, unit: '' }, { id: 'mapxxxxxxxx', width: 40, height: 30 }, 1));
 	});
 
 	it('il giocatore vede solo le immagini delle pagine e delle mappe che può leggere', () => {
@@ -136,7 +136,7 @@ describe('galleria', () => {
 		expect(inline(master).sources.map((s) => `${s.kind}:${s.title}`)).toEqual(['content:Elminster', 'cover:Piano']);
 		const cover = galleryImages(alice).find((i) => i.id.startsWith('cover'))!;
 		expect(cover).toMatchObject({ url: '/files/coverxxxxxxxx', alt: 'Elminster', width: 40, height: 30 });
-		expect(galleryImages(alice).find((i) => i.id.startsWith('map'))!.sources).toEqual([{ kind: 'map', title: 'Faerûn', href: '/maps/faerun' }]);
+		expect(galleryImages(alice).find((i) => i.id.startsWith('map'))!.sources).toEqual([{ kind: 'map', title: 'Faerûn', href: '/wiki/faerun' }]);
 	});
 });
 

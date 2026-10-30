@@ -71,9 +71,16 @@ Così una pagina "Locanda del Grifone" può avere la descrizione pubblica e, nel
 - **Backlink**: ogni pagina mostra chi la cita.
 - Anteprima al passaggio del mouse (e tocco prolungato su telefono).
 
+### Tipi di pagina
+Tutto ciò che si scrive è una pagina, nell'albero a sinistra e all'indirizzo `/wiki/…`. Le pagine hanno un tipo:
+- **pagina**: bianca, oppure fotocopiata da un template;
+- **template**: una pagina da fotocopiare, con la struttura base (blocchi, colonna a lato, icona) decisa da chi la scrive;
+- **mappa**: una pagina con un'immagine, pin e livelli (vedi §6);
+- **cronologia**: una pagina con eventi in ordine di data (vedi §8).
+
 ### Template
-- Preinstallati: PNG, Personaggio giocante, Luogo, Fazione, Oggetto, Divinità, Mostro, Resoconto di sessione, Regola della casa.
-- Template creati da Master/Admin, con campi strutturati (es. "Allineamento", "Luogo di residenza" collegato a una pagina).
+- Alla creazione della wiki diventano pagine «template» della cartella **Template**: PNG, Personaggio giocante, Luogo, Fazione, Oggetto, Divinità, Mostro, Resoconto di sessione, Regola della casa. Da lì sono pagine come le altre: si modificano, si eliminano, se ne aggiungono.
+- Una pagina nuova è bianca o la fotocopia di un template: blocchi, colonna a lato (es. "Allineamento", "Luogo di residenza" collegato a una pagina) e icona. Cambiare il template non cambia le copie già fatte.
 
 ## 5. Categorie e tag
 
@@ -83,6 +90,7 @@ Così una pagina "Locanda del Grifone" può avere la descrizione pubblica e, nel
 
 ## 6. Mappe
 
+- Ogni mappa è una pagina di tipo «mappa»: titolo, testo, cartella, tag e visibilità sono quelli della pagina.
 - Importazione di un'immagine (PNG/JPG/WebP), anche molto grande: il server la divide in tasselli per uno zoom fluido.
 - **Pin** con icona, colore, etichetta e collegamento a una pagina.
 - **Livelli** (es. città, dungeon, percorsi) attivabili; livelli e pin possono essere visibili solo al Master.
@@ -101,10 +109,10 @@ Così una pagina "Locanda del Grifone" può avere la descrizione pubblica e, nel
 
 ## 8. Cronologie
 
-- Due cronologie: **del mondo** (storia, ere, leggende) e **della campagna** (cosa è successo al tavolo).
+- Ogni cronologia è una pagina di tipo «cronologia», e se ne fanno quante se ne vogliono. Ognuna è **del mondo** (storia, ere, leggende) o **della campagna** (cosa è successo al tavolo); alla creazione della wiki ce n'è una per tipo.
 - **Calendario personalizzabile**: nomi e durata dei mesi, giorni della settimana, ere, feste, lune. Calendari preimpostati (gregoriano, Harptos dei Forgotten Realms come esempio).
 - Eventi con data (anche approssimata: "circa 300 anni fa"), descrizione, pagine collegate, visibilità.
-- I **resoconti di sessione** aggiungono in automatico una voce alla cronologia della campagna (data reale + data nel mondo).
+- I **resoconti di sessione** aggiungono in automatico una voce alle cronologie della campagna (data reale + data nel mondo).
 - Vista a linea orizzontale e vista elenco (più accessibile).
 
 ## 9. Bacheca appunti
@@ -227,13 +235,23 @@ Ogni fase si chiude con test automatici (unità, interfaccia con Playwright, acc
 
 ## 21. Note su albero, risorse, immagine della pagina e galleria
 
-- **Albero a sinistra** (come Esplora risorse) in tutti i temi: le categorie sono cartelle che si aprono e si chiudono, sotto ci sono le pagine; le pagine senza categoria stanno alla radice. Si apre da sola la cartella della pagina che stai leggendo; le cartelle aperte a mano sono ricordate nel browser. Ognuno può nasconderlo dal Profilo; nelle pagine Profilo e Amministrazione non c'è. Mostra solo le pagine che chi guarda può vedere; le cartelle vuote solo a Master e Admin; nessun titolo a chi non ha fatto l'accesso se i visitatori sono spenti. Sul telefono sta sopra la pagina, chiuso in un pulsante. In alto due linguette, **Pagine** e **Risorse** (tablist ARIA, frecce per passare dall'una all'altra): si apre quella di ciò che stai guardando, altrove resta l'ultima scelta.
+- **Albero a sinistra** (come Esplora risorse) in tutti i temi: le categorie sono cartelle che si aprono e si chiudono, sotto ci sono le pagine di ogni tipo, con l'icona scelta o quella del tipo; le pagine senza categoria stanno alla radice. Si apre da sola la cartella della pagina che stai leggendo; le cartelle aperte a mano sono ricordate nel browser. Sta nella barra a sinistra (vedi §22). Mostra solo le pagine che chi guarda può vedere; le cartelle vuote solo a Master e Admin; nessun titolo a chi non ha fatto l'accesso se i visitatori sono spenti. Sul telefono sta sopra la pagina, chiuso in un pulsante. In alto due linguette, **Pagine** e **Risorse** (tablist ARIA, frecce per passare dall'una all'altra): si apre quella di ciò che stai guardando, altrove resta l'ultima scelta.
 - **Risorse**: immagini, audio (MP3, OGG, WAV, FLAC, M4A) e qualsiasi altro file della campagna, nella seconda linguetta dell'albero (divise per tipo) e nella pagina `/resources`. Le carica il Master; chi le vede si sceglie come per le mappe (pubblica, giocatori, solo Master). Il tipo si riconosce dai primi byte del file: immagini e audio si aprono nel browser, tutto il resto (PDF compresi) si scarica sempre come allegato, così un file caricato non può eseguire script. I file si consegnano a pezzi (`Range`), che serve per saltare avanti nell'audio e a Safari su iPhone per suonarlo. Al massimo 90 MB (le immagini restano a 25 MB). Cambiando o eliminando una risorsa il suo file sparisce anche dal disco. Entrano nel backup e, se sono immagini, nella galleria; non ancora nel pacchetto mondo.
 - **Colonna a lato**: di base non c'è, né in lettura né in modifica. In modifica il «+» la aggiunge; dentro ci sono riquadri di **testo** (titolo e valore, con `[[collegamenti]]`) o **immagine** (con didascalia), da riordinare con le frecce. Si salvano con la pagina (nei campi, quindi anche nelle versioni); l'immagine si carica subito (`/api/files`) e si può trascinare sul riquadro. La prima immagine è l'immagine della pagina (galleria, anteprima dei collegamenti). Entrano nel pacchetto mondo e nell'esportazione Markdown (le immagini in cima al testo). L'immagine della pagina di prima è diventata il primo riquadro.
 - **Copertina e icona** (come in Notion): in cima alla pagina una copertina facoltativa, un'immagine o una tinta unita (sei colori fissi, uguali in tutti i temi), con l'icona della pagina a cavallo del bordo; senza copertina l'icona sta sopra il titolo. In modifica è uguale, e sul lato della copertina tre piccole icone la cambiano, la riposizionano e la tolgono; il pannello di scelta ha tre schede: Galleria (`/api/gallery`, solo le immagini che chi scrive può vedere), Tinta unita, Carica (`/api/files`). Riposizionare è un cursore ARIA: si trascina l'immagine o si usano le frecce, e si salva la posizione verticale (0–100, `object-position`). Si salva nelle colonne `cover_image_id`, `cover_color`, `cover_y` delle pagine, fuori dalle versioni (come l'icona); entra nella galleria, nel pacchetto mondo e nell'esportazione Markdown (in cima al testo).
 - **Galleria**: tutte le immagini della campagna (copertine e immagini delle pagine, immagini nel testo, mappe, risorse), le più recenti prima, con il visore a schermo intero (frecce per scorrere, Esc per chiudere). Ognuno vede solo le immagini di pagine, mappe e risorse che può vedere; quelle dentro i segreti solo il Master. Le miniature sono le immagini originali caricate in ritardo: generare miniature più leggere resta un miglioramento futuro.
 
-## 22. Decisioni prese
+## 22. Note sui tipi di pagina e sulla barra a sinistra
+
+- **Una sola barra di navigazione**, a sinistra: in alto «Nuova pagina», poi le sezioni (Home, Pagine, Categorie, Tag, Galleria, Risorse, Regole, Calendario, Bacheche, Cestino), poi l'albero con le linguette Pagine e Risorse. La barra orizzontale sotto l'intestazione non c'è più. Di base la barra sta aperta accanto alla pagina; dal Profilo si può tenere chiusa (si apre col pulsante in alto, come sul telefono). In Profilo e Amministrazione è chiusa.
+- **Tipo nel database**: colonna `kind` delle pagine (`page`, `template`, `map`, `timeline`). La mappa ha la sua riga in `maps` (immagine, scala, mappa che la contiene) legata alla pagina; la cronologia ha il suo modo in `timelines` (`world` o `campaign`); gli eventi stanno nella loro cronologia (`timeline_events.timeline_id`), tranne le voci dei resoconti di sessione, che compaiono in tutte le cronologie della campagna.
+- **Chi crea cosa**: le pagine chiunque abbia fatto l'accesso; template, mappe e cronologie il Master. Pagina e template si scambiano con la casella «È un template» (solo il Master); mappe e cronologie restano del loro tipo.
+- **Fotocopia**: alla nuova pagina passano blocchi, colonna a lato e icona del template (i segreti solo se chi crea è Master); se il template è di resoconti, anche i dati di sessione con la data di oggi. La pagina ricorda da quale template viene (colonna `template`), solo per informazione.
+- **Template dei plugin**: accendendo un plugin i suoi template diventano pagine della cartella Template, una volta sola; restano anche a plugin spento.
+- **Aggiornamento di una wiki esistente** (migrazione): ogni mappa diventa una pagina nella cartella Mappe (con lo stesso indirizzo se è libero, e la descrizione come testo); le due cronologie diventano due pagine con i loro eventi; i template del Master e quelli preinstallati diventano pagine della cartella Template. I vecchi indirizzi `/maps/…`, `/timeline/…` e `/templates` portano alle pagine nuove.
+- **Pacchetto mondo**: versione 2, le mappe (con pin e livelli), le cronologie del mondo (con gli eventi) e i template sono pagine di `pages.json` con il loro tipo; i pacchetti di versione 1 (`maps.json`, `timeline.json`, `templates.json`) si importano ancora. Nell'esportazione Markdown la mappa va in cima alla pagina e gli eventi in fondo, in elenco.
+
+## 23. Decisioni prese
 
 - Il nome **Crooked Shelf** resta anche nell'interfaccia italiana.
 - L'accesso dei **visitatori** è **spento** di default; l'Admin può attivarlo.

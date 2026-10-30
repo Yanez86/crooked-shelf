@@ -9,8 +9,8 @@ import { themeCss } from '#lib/themes.ts';
 export const load: LayoutServerLoad = ({ locals }) => {
 	const u = locals.user;
 	const s = getSettings();
-	// Albero a sinistra: niente titoli a chi non può ancora leggere la wiki (es. nella pagina di accesso).
-	const tree = locals.prefs.tree === 'show' && (u || s.allowVisitors);
+	// Barra a sinistra (pagine, risorse e sezioni): niente titoli a chi non può ancora leggere la wiki (es. nella pagina di accesso).
+	const tree = !!u || s.allowVisitors;
 	return {
 		user: u ? { id: u.id, username: u.username, displayName: u.displayName, role: u.role, icon: u.icon } : null,
 		prefs: locals.prefs,

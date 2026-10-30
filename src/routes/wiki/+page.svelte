@@ -14,7 +14,9 @@
 			? t('list.inCategory', { name: data.category.name })
 			: data.tag
 				? t('list.withTag', { name: data.tag.name })
-				: t('list.title')
+				: data.kind
+					? t('kinds.list.' + data.kind)
+					: t('list.title')
 	);
 
 	function href(p: number) {
@@ -33,7 +35,7 @@
 <div class="head">
 	<h1>{heading}</h1>
 	{#if appPage.data.user}
-		<a class="btn btn-primary" href="/wiki/new{data.category ? `?category=${data.category.id}` : ''}"><Icon name="plus" />{t('nav.newPage')}</a>
+		<a class="btn btn-primary" href="/wiki/new{data.category ? `?category=${data.category.id}` : data.kind && data.kind !== 'page' ? `?kind=${data.kind}` : ''}"><Icon name="plus" />{t('nav.newPage')}</a>
 	{/if}
 </div>
 {#if data.category?.description}<p>{data.category.description}</p>{/if}
@@ -54,6 +56,15 @@
 			<option value="">{t('list.all')}</option>
 			{#each data.tags as tg (tg.slug)}
 				<option value={tg.slug} selected={data.tag?.slug === tg.slug}>{tg.name}</option>
+			{/each}
+		</select>
+	</div>
+	<div class="field">
+		<label for="f-kind">{t('kinds.label')}</label>
+		<select id="f-kind" name="kind">
+			<option value="">{t('list.all')}</option>
+			{#each data.kinds as k (k)}
+				<option value={k} selected={data.kind === k}>{t('kinds.list.' + k)}</option>
 			{/each}
 		</select>
 	</div>

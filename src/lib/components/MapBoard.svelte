@@ -1,16 +1,16 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { enhance } from '$app/forms';
-	import { getT } from '#lib/i18n/index.ts';
-	import MapView from '#lib/maps/MapView.svelte';
-	import PinPage from '#lib/maps/PinPage.svelte';
-	import { PIN_ICON } from '#lib/maps/icons.ts';
-	import Icon from '#lib/components/Icon.svelte';
-	import FormError from '#lib/components/FormError.svelte';
-	import FormOk from '#lib/components/FormOk.svelte';
-	import type { PageProps } from './$types';
+	import { getT } from '../i18n/index.ts';
+	import MapView from '../maps/MapView.svelte';
+	import PinPage from '../maps/PinPage.svelte';
+	import { PIN_ICON } from '../maps/icons.ts';
+	import Icon from './Icon.svelte';
+	import FormError from './FormError.svelte';
+	import type { mapView } from '../server/mapPage.ts';
 
-	let { data, form }: PageProps = $props();
+	// La mappa di una pagina «mappa»: strumenti, pin, livelli e mappe annidate. I moduli vanno alle azioni della pagina.
+	let { data, title, form }: { data: NonNullable<ReturnType<typeof mapView>>; title: string; form: { error?: string | null } | null } = $props();
 	const t = getT();
 
 	let view: ReturnType<typeof MapView> | undefined = $state();
@@ -87,25 +87,16 @@
 	const fmtDistance = (d: number) => `${new Intl.NumberFormat(page.data.locale as string, { maximumFractionDigits: 1 }).format(d)} ${data.map.unit}`;
 </script>
 
-<svelte:head><title>{data.map.title} · {page.data.siteName}</title></svelte:head>
-
 {#if data.path.length}
 	<nav aria-label={t('maps.path')}>
 		<ol class="crumbs">
-			<li><a href="/maps">{t('nav.maps')}</a></li>
-			{#each data.path as p (p.slug)}<li><a href="/maps/{p.slug}">{p.title}</a></li>{/each}
+			{#each data.path as p (p.slug)}<li><a href="/wiki/{p.slug}">{p.title}</a></li>{/each}
+			<li aria-current="page">{title}</li>
 		</ol>
 	</nav>
 {/if}
 
-<div class="head">
-	<h1>{data.map.title}</h1>
-	{#if data.canEdit}<a class="btn" href="/maps/{data.map.slug}/edit"><Icon name="cog" />{t('maps.settings')}</a>{/if}
-</div>
-{#if data.map.description}<p>{data.map.description}</p>{/if}
-
-<FormOk message={form && 'ok' in form ? form.ok : null} />
-<FormError error={form && 'error' in form ? form.error : null} />
+<FormError error={form?.error ?? null} />
 
 <div class="tools">
 	{#if data.layers.length}
@@ -142,7 +133,7 @@
 	src="/files/{data.map.fileId}"
 	width={data.map.width}
 	height={data.map.height}
-	title={data.map.title}
+	{title}
 	pins={visiblePins}
 	editable={data.canEdit}
 	{adding}
@@ -269,7 +260,7 @@
 							{#if data.layers.length}<td>{layerName(p.layerId)}</td>{/if}
 							<td>
 								{#if p.page && !p.page.missing}<a href="/wiki/{p.page.slug}">{p.page.title}</a>{/if}
-								{#if p.target}<a href="/maps/{p.target.slug}"><Icon name="map" /> {p.target.title}</a>{/if}
+								{#if p.target}<a href="/wiki/{p.target.slug}"><Icon name="map" /> {p.target.title}</a>{/if}
 							</td>
 							<td class="row-actions">
 								<button class="btn btn-small btn-ghost" type="button" onclick={() => view?.openPin(p.id)}>{t('maps.showOnMap')}<span class="visually-hidden">: {p.label}</span></button>
@@ -289,9 +280,9 @@
 	<section aria-labelledby="children-title">
 		<h2 id="children-title">{t('maps.children')}</h2>
 		{#if data.children.length}
-			<ul>{#each data.children as c (c.slug)}<li><a href="/maps/{c.slug}">{c.title}</a></li>{/each}</ul>
+			<ul>{#each data.children as c (c.slug)}<li><a href="/wiki/{c.slug}">{c.title}</a></li>{/each}</ul>
 		{:else}<p class="muted">{t('maps.noChildren')}</p>{/if}
-		{#if data.canEdit}<a class="btn btn-small" href="/maps/new?parent={data.map.id}"><Icon name="plus" />{t('maps.newChild')}</a>{/if}
+		{#if data.canEdit}<a class="btn btn-small" href="/wiki/new?kind=map&amp;parent={data.map.id}"><Icon name="plus" />{t('maps.newChild')}</a>{/if}
 	</section>
 {/if}
 
@@ -338,17 +329,14 @@
 		padding: 0;
 		margin: 0;
 	}
+	.crumbs {
+		margin-bottom: 0.75rem;
+		font-size: var(--fs-sm);
+	}
 	.crumbs li + li::before {
 		content: '›';
 		padding: 0 0.5rem;
 		color: var(--c-muted);
-	}
-	.head {
-		display: flex;
-		flex-wrap: wrap;
-		justify-content: space-between;
-		align-items: center;
-		gap: 0.5rem 1rem;
 	}
 	.tools {
 		display: flex;

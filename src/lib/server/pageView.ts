@@ -10,6 +10,8 @@ export function pageView(page: PageRow, u: Viewer | null, locale: string) {
 	const cal = getCalendar();
 	return {
 		html: rendered.html,
+		// Nessun testo (solo paragrafi vuoti): nelle mappe e nelle cronologie il corpo non si mostra.
+		blank: !rendered.html.replace(/<p><\/p>/g, '').trim(),
 		fields: rendered.fields,
 		session: page.session
 			? {

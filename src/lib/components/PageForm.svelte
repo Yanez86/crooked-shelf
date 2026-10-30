@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { untrack } from 'svelte';
+	import { untrack, type Snippet } from 'svelte';
 	import Editor from '../editor/Editor.svelte';
 	import SideColumn from './SideColumn.svelte';
 	import WorldDateInput from './WorldDateInput.svelte';
@@ -10,6 +10,7 @@
 	import CoverEdit from './CoverEdit.svelte';
 	import type { PageCover } from '../covers.ts';
 	import type { DocNode, PageField, SessionInfo } from '../content/types.ts';
+	import type { PageKind } from '../pageKinds.ts';
 
 	interface Category {
 		id: number;
@@ -26,7 +27,10 @@
 		updatedAt = null,
 		submitLabel,
 		cancelHref,
-		months
+		months,
+		canTemplate = false,
+		multipart = false,
+		settings
 	}: {
 		values: {
 			title: string;
@@ -41,6 +45,7 @@
 			session: SessionInfo | null;
 			icon?: string | null;
 			cover?: PageCover | null;
+			kind?: PageKind;
 		};
 		categories: Category[];
 		visibilities: string[];
@@ -51,16 +56,25 @@
 		submitLabel: string;
 		cancelHref: string;
 		months: CalMonth[];
+		/** Chi può fare template sceglie se la pagina lo è (solo tra pagina e template). */
+		canTemplate?: boolean;
+		/** Il modulo porta un file (l'immagine di una mappa). */
+		multipart?: boolean;
+		/** Impostazioni del tipo di pagina (mappa, cronologia), sotto i dati della pagina. */
+		settings?: Snippet;
 	} = $props();
 
 	const t = getT();
 	let icon = $state(untrack(() => values.icon ?? ''));
 	let cover = $state(untrack(() => values.cover ?? null));
 	let pickingCover = $state(false);
+	const kind = $derived(values.kind ?? 'page');
+	let asTemplate = $state(untrack(() => values.kind === 'template'));
 </script>
 
 <!-- Stesso aspetto della pagina: si scrive dove si legge. -->
-<form method="post" action="?/save" class="page-form">
+<form method="post" action="?/save" class="page-form" enctype={multipart ? 'multipart/form-data' : undefined}>
+	<input type="hidden" name="kind" value={kind} />
 	{#if updatedAt}<input type="hidden" name="updatedAt" value={updatedAt} />{/if}
 	{#if values.slug}<input type="hidden" name="slug" value={values.slug} />{/if}
 	{#if values.template}<input type="hidden" name="template" value={values.template} />{/if}
@@ -136,12 +150,27 @@
 			<input type="hidden" name="visibility" value={values.visibility} />
 			{#if values.playersCanEdit}<input type="hidden" name="playersCanEdit" value="on" />{/if}
 		{/if}
+		{#if canTemplate && (kind === 'page' || kind === 'template')}
+			<input type="hidden" name="kindSwitch" value="1" />
+			<label class="chip" title={t('kinds.asTemplateHint')}>
+				<input type="checkbox" name="asTemplate" bind:checked={asTemplate} />
+				<span>{t('kinds.asTemplate')}</span>
+			</label>
+		{/if}
+		{#if asTemplate || (!canTemplate && kind === 'template')}
+			<label class="chip">
+				<input type="checkbox" name="sessionTemplate" checked={!!values.session} />
+				<span>{t('kinds.sessionTemplate')}</span>
+			</label>
+		{/if}
 	</div>
+
+	{#if settings}<div class="settings">{@render settings()}</div>{/if}
 
 	<div class="body">
 		<div class="side">
-			<SideColumn fields={values.fields} fixed={!!values.session}>
-				{#if values.session}
+			<SideColumn fields={values.fields} fixed={!!values.session && kind !== 'template'}>
+				{#if values.session && kind !== 'template'}
 					<fieldset class="session">
 						<legend>{t('session.title')}</legend>
 						<input type="hidden" name="isSession" value="1" />
@@ -351,6 +380,9 @@
 	.chip input[type='text'] {
 		flex: 1;
 		min-width: 0;
+	}
+	.settings {
+		margin: 1rem 0 0;
 	}
 	/* I fieldset non vanno a capo da soli: senza questo escono dallo schermo del telefono. */
 	.visibility {

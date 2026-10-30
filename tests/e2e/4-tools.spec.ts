@@ -47,7 +47,7 @@ test('plugin: acceso porta tema, template, calendario e regole', async () => {
 	await expect(admin.getByRole('radio', { name: 'Gotico' })).toBeVisible();
 
 	await admin.goto('/wiki/new');
-	await admin.getByRole('link', { name: /^Taverna/ }).click();
+	await admin.locator('main').getByRole('link', { name: /^Taverna/ }).click();
 	await expect(admin.getByLabel('Nome del campo 1')).toHaveValue('Oste');
 
 	await admin.goto('/calendar');
@@ -131,7 +131,7 @@ test('pacchetto mondo: esporta e reimporta', async () => {
 	await admin.goto('/wiki/elminster-2');
 	await expect(admin.getByRole('complementary', { name: 'Scheda' }).getByRole('img', { name: 'Il mago nella sua torre' })).toBeVisible();
 	await admin.goto('/maps');
-	await expect(admin.getByRole('link', { name: 'Costa della Spada' })).toHaveCount(2);
+	await expect(admin.locator('main').getByRole('link', { name: 'Costa della Spada' })).toHaveCount(2);
 });
 
 test('pagine con lo stesso titolo: si sceglie quale collegare, e mappa e cronologie si aprono', async ({ browser }) => {
