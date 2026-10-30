@@ -77,6 +77,23 @@ CS_TRUST_PROXY: "1"
 
 L'accesso dei visitatori senza account è **spento** di default: finché non lo accendi, sulla wiki entra solo chi ha ricevuto un invito.
 
+## 4. Provarla online gratis, con Render
+
+Per dare un'occhiata alla wiki da fuori casa senza un server tuo c'è [Render](https://render.com/): il file `render.yaml` è già pronto.
+
+1. Accedi a Render con GitHub.
+2. **New › Blueprint**, scegli il repository e conferma.
+3. Finita la costruzione, apri l'indirizzo `https://crooked-shelf-….onrender.com` e crea **subito** la wiki e l'account amministratore: finché non lo fai, chiunque apra l'indirizzo può farlo al posto tuo.
+
+A ogni modifica su `main` Render costruisce e pubblica da solo la nuova versione.
+
+Sul piano gratuito:
+
+- dopo 15 minuti senza visite la wiki si spegne, e alla visita successiva ci mette fino a un minuto a ripartire;
+- **i dati non restano**: a ogni spegnimento, riavvio o nuova versione si riparte da una wiki vuota.
+
+Va bene per provarla, non per giocarci una campagna: per quello usa uno dei modi qui sopra.
+
 ## Impostazioni
 
 | Variabile | Significato | Predefinito |
