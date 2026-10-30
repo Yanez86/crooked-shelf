@@ -42,11 +42,14 @@
 	const bare = $derived(path.startsWith('/setup') || path.startsWith('/login') || path.startsWith('/invite/'));
 	const tree = $derived(bare ? null : data.tree);
 
-	// Sul telefono la navigazione sta dietro il pulsante Menu; si richiude a ogni cambio di pagina.
+	// Sul telefono la navigazione sta dietro il pulsante Menu e l'albero in un pannello a scomparsa;
+	// si richiudono a ogni cambio di pagina.
 	let menuOpen = $state(false);
+	let treeOpen = $state(false);
 	$effect(() => {
 		path;
 		menuOpen = false;
+		treeOpen = false;
 	});
 </script>
 
@@ -59,6 +62,23 @@
 
 <header class="site-header">
 	<div class="container header-inner" class:wide={!!tree} class:bare>
+		{#if tree}
+			<button
+				id="tree-toggle"
+				class="btn tree-toggle"
+				type="button"
+				aria-expanded={treeOpen}
+				aria-controls="explorer"
+				aria-label={t('tree.title')}
+				title={t('tree.title')}
+				onclick={() => {
+					treeOpen = !treeOpen;
+					menuOpen = false;
+				}}
+			>
+				<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.75 4.75h16.5v14.5H3.75zM9.5 4.75v14.5M5.75 8.5h1.75M5.75 11.5h1.75" /></svg>
+			</button>
+		{/if}
 		<a class="brand" href="/">
 			<img src="/favicon.svg" alt="" width="32" height="32" />
 			<span>{data.siteName}</span>
@@ -76,7 +96,16 @@
 				/>
 				<button class="btn" type="submit">{t('search.submit')}</button>
 			</form>
-			<button class="btn menu-toggle" type="button" aria-expanded={menuOpen} aria-controls="main-nav" onclick={() => (menuOpen = !menuOpen)}>
+			<button
+				class="btn menu-toggle"
+				type="button"
+				aria-expanded={menuOpen}
+				aria-controls="main-nav"
+				onclick={() => {
+					menuOpen = !menuOpen;
+					treeOpen = false;
+				}}
+			>
 				<span aria-hidden="true">{menuOpen ? '✕' : '☰'}</span>
 				{t('nav.menu')}
 			</button>
@@ -123,7 +152,7 @@
 </header>
 
 <div class="container shell" class:wide={!!tree}>
-	{#if tree}<PageTree {tree} resources={data.resources ?? []} />{/if}
+	{#if tree}<PageTree {tree} resources={data.resources ?? []} bind:open={treeOpen} />{/if}
 	<main id="main" tabindex="-1">
 		{@render children()}
 	</main>
@@ -217,8 +246,23 @@
 		color: var(--c-primary) !important;
 		font-weight: 700;
 	}
-	.menu-toggle {
+	.menu-toggle,
+	.tree-toggle {
 		display: none;
+	}
+	.tree-toggle {
+		width: 2.75rem;
+		padding: 0;
+		justify-content: center;
+	}
+	.tree-toggle svg {
+		width: 1.4rem;
+		height: 1.4rem;
+		fill: none;
+		stroke: currentColor;
+		stroke-width: 1.75;
+		stroke-linecap: round;
+		stroke-linejoin: round;
 	}
 	/* Accesso, prima configurazione e invito: tutto al centro, come il modulo. */
 	.header-inner.bare {
@@ -281,6 +325,13 @@
 		gap: 0 2rem;
 	}
 	@media (max-width: 60rem) {
+		.tree-toggle {
+			display: inline-flex;
+		}
+		/* Pulsante dell'albero e nome della wiki a sinistra, ricerca a destra. */
+		.brand {
+			margin-right: auto;
+		}
 		.shell.wide {
 			grid-template-columns: minmax(0, 1fr);
 			gap: 1rem;

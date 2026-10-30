@@ -8,7 +8,8 @@
 	import { treePaths, type Tree, type TreeFolder, type TreePage } from '../tree.ts';
 	import { RESOURCE_KINDS, type ResourceItem, type ResourceKind } from '../resources.ts';
 
-	let { tree, resources }: { tree: Tree; resources: ResourceItem[] } = $props();
+	// `open`: sul telefono l'albero è un pannello a scomparsa, aperto dal pulsante in alto (nel layout).
+	let { tree, resources, open: shown = $bindable(false) }: { tree: Tree; resources: ResourceItem[]; open?: boolean } = $props();
 	const t = getT();
 	const canManage = $derived(isMaster(page.data.user));
 
@@ -124,13 +125,28 @@
 		}
 	}
 
-	// Sul telefono l'albero è chiuso in un pulsante; si richiude quando apri una pagina.
-	let shown = $state(false);
+	// Pannello aperto: il fuoco entra sulla linguetta scelta. Esc, il pulsante Chiudi, un tocco fuori
+	// o il fuoco che esce lo richiudono; con Esc e Chiudi il fuoco torna al pulsante che l'ha aperto.
 	$effect(() => {
-		void path;
-		shown = false;
+		if (shown) untrack(() => document.getElementById(`tree-tab-${tab}`)?.focus());
 	});
+
+	function close(refocus = true) {
+		shown = false;
+		if (refocus) document.getElementById('tree-toggle')?.focus();
+	}
+
+	function keys(e: KeyboardEvent) {
+		if (shown && e.key === 'Escape') close();
+	}
+
+	function focusMoved(e: FocusEvent) {
+		const to = e.target as Node;
+		if (shown && !document.getElementById('explorer')?.contains(to) && !document.getElementById('tree-toggle')?.contains(to)) close(false);
+	}
 </script>
+
+<svelte:window onkeydown={keys} onfocusin={focusMoved} />
 
 {#snippet folderIcon()}
 	<svg class="ico folder closed" viewBox="0 0 24 24" aria-hidden="true">
@@ -195,12 +211,8 @@
 	</li>
 {/snippet}
 
-<nav class="explorer" aria-label={t('tree.label')}>
-	<button type="button" class="btn explorer-toggle" aria-expanded={shown} aria-controls="explorer-body" onclick={() => (shown = !shown)}>
-		<span class="chevron" aria-hidden="true"></span>
-		{t('tree.title')}
-	</button>
-	<div id="explorer-body" class="explorer-body" class:shown>
+<nav id="explorer" class="explorer" class:open={shown} aria-label={t('tree.label')}>
+	<div>
 		<div class="explorer-head">
 			<div class="tabs" role="tablist" aria-label={t('tree.tabs')}>
 				{#each TABS as id (id)}
@@ -237,6 +249,9 @@
 					<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V4M7.5 8.5 12 4l4.5 4.5M4.5 14.5v4.75h15V14.5" /></svg>
 				</a>
 			{/if}
+			<button type="button" class="tool close" title={t('common.close')} aria-label={t('common.close')} onclick={() => close()}>
+				<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg>
+			</button>
 		</div>
 		<div role="tabpanel" id="tree-panel-pages" aria-labelledby="tree-tab-pages" hidden={tab !== 'pages'}>
 			{#if tree.folders.length || tree.pages.length}
@@ -272,6 +287,10 @@
 		</div>
 	</div>
 </nav>
+{#if shown}
+	<!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions (da tastiera c'è Esc, o il pulsante Chiudi) -->
+	<div class="backdrop" aria-hidden="true" onclick={() => close(false)}></div>
+{/if}
 
 <style>
 	.explorer {
@@ -349,10 +368,9 @@
 		stroke-linecap: round;
 		stroke-linejoin: round;
 	}
-	.explorer-toggle {
+	.close,
+	.backdrop {
 		display: none;
-		width: 100%;
-		justify-content: flex-start;
 	}
 	.level.root {
 		margin: 0;
@@ -405,8 +423,7 @@
 	.chevron::before {
 		content: '▸';
 	}
-	details[open] > summary > .chevron,
-	.explorer-toggle[aria-expanded='true'] > .chevron {
+	details[open] > summary > .chevron {
 		transform: rotate(90deg);
 	}
 	.ico {
@@ -448,29 +465,39 @@
 			outline: 2px solid CanvasText;
 		}
 	}
-	/* Sul telefono l'albero sta sopra la pagina, chiuso in un pulsante. */
+	/* Sul telefono l'albero è un pannello a scomparsa: entra da sinistra sopra la pagina, senza spostarla. */
 	@media (max-width: 60rem) {
 		.explorer {
-			position: static;
+			position: fixed;
+			inset: 0 auto 0 0;
+			z-index: 30;
+			width: min(20rem, 85vw);
 			max-height: none;
-			overflow: visible;
-			padding: 0;
-			border: 0;
-			background: none;
+			padding: 0.75rem 0.5rem;
+			border-width: 0 1px 0 0;
+			border-radius: 0;
+			box-shadow: 0 0 1.5rem rgb(0 0 0 / 0.3);
+			overscroll-behavior: contain;
+			transform: translateX(-100%);
+			visibility: hidden;
+			transition:
+				transform 0.2s ease,
+				visibility 0s 0.2s;
 		}
-		.explorer-toggle {
+		.explorer.open {
+			transform: none;
+			visibility: visible;
+			transition: transform 0.2s ease;
+		}
+		.close {
 			display: inline-flex;
 		}
-		.explorer-body {
-			display: none;
-		}
-		.explorer-body.shown {
+		.backdrop {
 			display: block;
-			margin-top: 0.5rem;
-			padding: 0.5rem 0.4rem;
-			background: var(--c-surface);
-			border: 1px solid var(--c-border);
-			border-radius: var(--radius);
+			position: fixed;
+			inset: 0;
+			z-index: 29;
+			background: rgb(0 0 0 / 0.4);
 		}
 	}
 </style>
