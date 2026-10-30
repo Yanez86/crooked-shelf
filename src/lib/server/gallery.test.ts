@@ -61,12 +61,14 @@ describe('colonna a lato', () => {
 	it("la migrazione porta l'immagine della pagina nel primo riquadro", () => {
 		const conn = new Database(':memory:');
 		conn.pragma('foreign_keys = OFF');
-		for (const m of MIGRATIONS.slice(0, -1)) conn.exec(m);
+		// Cercata per contenuto: dopo ne possono venire altre.
+		const cover = MIGRATIONS.findIndex((m) => m.includes("'image', image_id"));
+		for (const m of MIGRATIONS.slice(0, cover)) conn.exec(m);
 		const insert = conn.prepare("INSERT INTO pages (slug, title, content, visibility, created_at, updated_at, fields, image_id) VALUES (?, ?, '{}', 'players', 0, 0, ?, ?)");
 		insert.run('a', 'A', '[]', 'coverxxxxxxxx');
 		insert.run('b', 'B', '[{"label":"Razza","value":"Elfo"}]', 'coverxxxxxxxx');
 		insert.run('c', 'C', '[{"label":"Razza","value":"Elfo"}]', null);
-		conn.exec(MIGRATIONS.at(-1)!);
+		conn.exec(MIGRATIONS[cover]);
 		const fields = (slug: string) => JSON.parse((conn.prepare('SELECT fields FROM pages WHERE slug = ?').get(slug) as { fields: string }).fields);
 		expect(fields('a')).toEqual([pic('coverxxxxxxxx')]);
 		expect(fields('b')).toEqual([pic('coverxxxxxxxx'), { label: 'Razza', value: 'Elfo' }]);

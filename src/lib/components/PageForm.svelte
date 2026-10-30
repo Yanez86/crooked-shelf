@@ -85,10 +85,10 @@
 		</details>
 		<label class="visually-hidden" for="title">{t('page.title')}</label>
 		<input id="title" name="title" type="text" required maxlength="200" value={values.title} placeholder={t('page.title')} class="title-input editable" />
-		<!-- Dove in lettura c'è la matita. -->
+		<!-- Dove in lettura c'è la matita, e come la matita: solo un segno. -->
 		<div class="head-actions">
-			<a class="btn" href={cancelHref}>{t('common.cancel')}</a>
-			<button class="btn btn-primary" type="submit">{submitLabel}</button>
+			<a class="icon-action" href={cancelHref} title={t('common.cancel')}><span aria-hidden="true">✕</span><span class="visually-hidden">{t('common.cancel')}</span></a>
+			<button class="icon-action save" type="submit" title={submitLabel}><span aria-hidden="true">✓</span><span class="visually-hidden">{submitLabel}</span></button>
 		</div>
 	</header>
 
@@ -169,8 +169,36 @@
 	}
 	.head-actions {
 		display: flex;
-		gap: 0.5rem;
+		gap: 0.25rem;
 		margin-left: auto;
+	}
+	/* Stessa misura della matita della pagina; Salva nel colore principale. */
+	.icon-action {
+		display: inline-grid;
+		place-items: center;
+		width: 2rem;
+		height: 2rem;
+		min-height: 0;
+		padding: 0;
+		border: 0;
+		border-radius: var(--radius);
+		background: none;
+		color: var(--c-muted);
+		text-decoration: none;
+		font: inherit;
+		font-size: 1.1rem;
+		line-height: 1;
+		cursor: pointer;
+		flex-shrink: 0;
+	}
+	.icon-action.save {
+		color: var(--c-primary);
+		font-weight: 700;
+	}
+	.icon-action:hover,
+	.icon-action:focus-visible {
+		color: var(--c-primary);
+		background: var(--c-surface);
 	}
 	/* Titolo, blocchi e riquadri: tratteggiati finché non ci si scrive dentro. */
 	.title-input {

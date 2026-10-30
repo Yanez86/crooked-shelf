@@ -188,9 +188,11 @@ test('colonna a lato: si aggiunge modificando la pagina, con riquadri di testo e
 	await axe(admin, 'pagina con immagine');
 	await shot(admin, '11e-colonna-con-immagine');
 
-	// Senza mouse: «Cambia immagine» apre la scelta del file.
+	// In modifica la matita e la × stanno sull'immagine stessa; senza mouse la matita apre la scelta del file.
 	await admin.goto('/wiki/elminster/edit');
-	await expect(box.getByRole('button', { name: 'Cambia immagine' })).toBeVisible();
+	const onImage = box.locator('.frame');
+	await expect(onImage.getByRole('button', { name: 'Cambia immagine: Immagine 1' })).toBeVisible();
+	await expect(onImage.getByRole('button', { name: 'Elimina: Immagine 1' })).toBeVisible();
 	await box.getByLabel("File dell'immagine 1").setInputFiles('tests/fixtures/city.png');
 	await expect(box.getByRole('status')).toContainText('Immagine caricata');
 	await admin.getByRole('button', { name: 'Salva' }).click();

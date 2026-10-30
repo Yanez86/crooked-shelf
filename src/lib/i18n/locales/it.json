@@ -395,12 +395,18 @@
 		"locale": "Lingua",
 		"localeDefault": "Lingua della wiki",
 		"saved": "Preferenze salvate.",
-		"profile": "Profilo",
+		"profile": "Icona e nome",
 		"password": "Password",
 		"currentPassword": "Password attuale",
 		"newPassword": "Nuova password",
 		"changePassword": "Cambia password",
 		"passwordChanged": "Password cambiata. Le sessioni sugli altri dispositivi sono state chiuse."
+	},
+	"profile": {
+		"title": "Profilo",
+		"guest": "Ospite",
+		"icon": "Icona",
+		"iconHint": "Si vede in alto a destra, accanto al tuo nome e al tuo grado."
 	},
 	"admin": {
 		"settings": "Impostazioni",

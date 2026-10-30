@@ -11,6 +11,7 @@ export const users = sqliteTable('users', {
 	role: text('role', { enum: ROLES }).notNull(),
 	disabled: integer('disabled', { mode: 'boolean' }).notNull().default(false),
 	prefs: text('prefs', { mode: 'json' }).$type<Record<string, string>>().notNull().default({}),
+	icon: text('icon'),
 	createdAt: integer('created_at').notNull()
 });
 

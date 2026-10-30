@@ -5,6 +5,8 @@
 	import { THEMES } from '#lib/themes.ts';
 	import FormError from '#lib/components/FormError.svelte';
 	import FormOk from '#lib/components/FormOk.svelte';
+	import UserIcon from '#lib/components/UserIcon.svelte';
+	import { PAGE_ICONS } from '#lib/pageIcons.ts';
 	import type { PageProps } from './$types';
 
 	let { data, form }: PageProps = $props();
@@ -16,9 +18,20 @@
 	const themeName = (id: string) => data.custom.find((c) => c.id === id)?.name ?? t('themes.' + id);
 </script>
 
-<svelte:head><title>{t('prefs.title')} · {page.data.siteName}</title></svelte:head>
+<svelte:head><title>{user ? t('profile.title') : t('prefs.title')} · {page.data.siteName}</title></svelte:head>
 
-<h1>{t('prefs.title')}</h1>
+<!-- Per chi non ha fatto l'accesso ci sono solo le preferenze, salvate nel browser. -->
+<h1>{user ? t('profile.title') : t('prefs.title')}</h1>
+{#if user}
+	<div class="card who">
+		<UserIcon icon={user.icon} size="4.5rem" />
+		<div>
+			<p class="name">{user.displayName}</p>
+			<p class="muted"><span class="badge">{t('roles.' + user.role)}</span> @{user.username}</p>
+			<p class="hint">{t('roles.' + user.role + 'Hint')}</p>
+		</div>
+	</div>
+{/if}
 <p>{user ? t('prefs.introUser') : t('prefs.introGuest')}</p>
 
 <section aria-labelledby="read-title">
@@ -92,8 +105,19 @@
 		<h2 id="profile-title">{t('prefs.profile')}</h2>
 		<FormError error={msg('profile')?.error} />
 		<FormOk message={msg('profile')?.ok} />
-		<form method="post" action="?/profile" class="card">
-			<p class="muted">{t('auth.username')}: <strong>{user.username}</strong> · {t('roles.' + user.role)}</p>
+		<form method="post" action="?/profile" class="card" use:enhance={() => async ({ update }) => update({ reset: false })}>
+			<fieldset>
+				<legend>{t('profile.icon')}</legend>
+				<p class="hint">{t('profile.iconHint')}</p>
+				<div class="icons">
+					{#each Object.entries(PAGE_ICONS) as [name, d] (name)}
+						<label class="icon-choice" title={t(`page.icons.${name}`)}>
+							<input type="radio" name="icon" value={name} checked={(user.icon ?? 'person') === name} />
+							<svg viewBox="0 0 24 24" aria-hidden="true"><path {d} /></svg><span class="visually-hidden">{t(`page.icons.${name}`)}</span>
+						</label>
+					{/each}
+				</div>
+			</fieldset>
 			<div class="field">
 				<label for="displayName">{t('auth.displayName')}</label>
 				<input id="displayName" name="displayName" type="text" required maxlength="60" value={user.displayName} />
@@ -126,8 +150,67 @@
 {/if}
 
 <style>
-	section {
+	section,
+	.who {
 		max-width: 48rem;
+	}
+	.who {
+		display: flex;
+		align-items: center;
+		gap: 1rem;
+	}
+	.who p {
+		margin: 0.15rem 0;
+	}
+	.who .name {
+		font-family: var(--font-head);
+		font-size: var(--fs-xl);
+		font-weight: 700;
+	}
+	.icons {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, 2.75rem);
+		gap: 0.35rem;
+	}
+	/* Come la scelta dell'icona della pagina. */
+	.icon-choice {
+		position: relative;
+		display: inline-grid;
+		place-items: center;
+		width: 2.75rem;
+		height: 2.75rem;
+		border: 1px solid var(--c-border);
+		border-radius: var(--radius);
+		cursor: pointer;
+	}
+	.icon-choice svg {
+		width: 1.4rem;
+		height: 1.4rem;
+		fill: none;
+		stroke: currentColor;
+		stroke-width: 1.75;
+		stroke-linecap: round;
+		stroke-linejoin: round;
+	}
+	.icon-choice input {
+		position: absolute;
+		opacity: 0;
+		inset: 0;
+		margin: 0;
+		cursor: pointer;
+	}
+	.icon-choice:hover {
+		background: var(--c-surface2);
+	}
+	.icon-choice:has(input:checked) {
+		border-color: var(--c-primary);
+		box-shadow: inset 0 0 0 1px var(--c-primary);
+		background: var(--c-surface2);
+		color: var(--c-primary);
+	}
+	.icon-choice:has(input:focus-visible) {
+		outline: 2px solid var(--c-primary);
+		outline-offset: 2px;
 	}
 	.themes {
 		display: grid;

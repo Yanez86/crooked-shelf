@@ -395,12 +395,18 @@
 		"locale": "Language",
 		"localeDefault": "Wiki language",
 		"saved": "Preferences saved.",
-		"profile": "Profile",
+		"profile": "Icon and name",
 		"password": "Password",
 		"currentPassword": "Current password",
 		"newPassword": "New password",
 		"changePassword": "Change password",
 		"passwordChanged": "Password changed. Sessions on other devices have been closed."
+	},
+	"profile": {
+		"title": "Profile",
+		"guest": "Guest",
+		"icon": "Icon",
+		"iconHint": "Shown at the top right, next to your name and rank."
 	},
 	"admin": {
 		"settings": "Settings",

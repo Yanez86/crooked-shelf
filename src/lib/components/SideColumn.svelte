@@ -112,11 +112,16 @@
 
 <input type="hidden" name="fields" value={json} />
 
+{#snippet removeButton(row: Box, i: number, cls: string)}
+	<button class="{cls} remove" type="button" title={t('common.delete')} onclick={() => remove(i)}>
+		<span aria-hidden="true">×</span><span class="visually-hidden">{t('common.delete')}: {boxName(row, i)}</span>
+	</button>
+{/snippet}
+
+<!-- Con l'immagine, la × sta sull'immagine stessa: qui restano le frecce. -->
 {#snippet tools(row: Box, i: number)}
 	<div class="tools">
-		<button class="tool remove" type="button" title={t('common.delete')} onclick={() => remove(i)}>
-			<span aria-hidden="true">×</span><span class="visually-hidden">{t('common.delete')}: {boxName(row, i)}</span>
-		</button>
+		{#if !row.image}{@render removeButton(row, i, 'tool')}{/if}
 		<button id="field-up-{i}" class="tool" type="button" title={t('fields.moveUp')} disabled={i === 0} onclick={() => move(i, -1)}>
 			<span aria-hidden="true">↑</span><span class="visually-hidden">{t('fields.moveUp')}: {boxName(row, i)}</span>
 		</button>
@@ -142,13 +147,22 @@
 					ondrop={(e) => drop(e, row)}
 				>
 					{#if row.image}
-						<img src="/files/{row.image}" alt="" />
+						<div class="frame">
+							<img src="/files/{row.image}" alt="" />
+							<!-- Come la matita della pagina: si cambia e si cancella dall'immagine stessa. -->
+							<div class="on-image">
+								<button id="field-pick-{i}" class="on-tool" type="button" title={t('fields.changeImage')} disabled={row.busy} onclick={() => document.getElementById(`field-file-${i}`)?.click()}>
+									<span aria-hidden="true">✎</span><span class="visually-hidden">{t('fields.changeImage')}: {boxName(row, i)}</span>
+								</button>
+								{@render removeButton(row, i, 'on-tool')}
+							</div>
+						</div>
 					{:else}
 						<p class="drop">{t('fields.drop')}</p>
+						<button id="field-pick-{i}" class="btn btn-small pick" type="button" disabled={row.busy} onclick={() => document.getElementById(`field-file-${i}`)?.click()}>
+							{t('fields.chooseImage')}
+						</button>
 					{/if}
-					<button id="field-pick-{i}" class="btn btn-small pick" type="button" disabled={row.busy} onclick={() => document.getElementById(`field-file-${i}`)?.click()}>
-						{row.image ? t('fields.changeImage') : t('fields.chooseImage')}
-					</button>
 					<input
 						id="field-file-{i}"
 						type="file"
@@ -265,6 +279,9 @@
 		outline: 3px dashed var(--c-primary);
 		outline-offset: 2px;
 	}
+	.frame {
+		position: relative;
+	}
 	.image-box img {
 		display: block;
 		width: 100%;
@@ -274,6 +291,42 @@
 		background: var(--c-surface2);
 		border: 1px solid var(--c-border);
 		border-radius: var(--radius);
+	}
+	.on-image {
+		position: absolute;
+		top: 0.4rem;
+		right: 0.4rem;
+		display: flex;
+		gap: 0.25rem;
+	}
+	/* Stessa misura della matita della pagina; con un fondo pieno, perché si vedano su qualsiasi immagine. */
+	.on-tool {
+		display: inline-grid;
+		place-items: center;
+		width: 2rem;
+		height: 2rem;
+		padding: 0;
+		border: 1px solid var(--c-border);
+		border-radius: var(--radius);
+		background: var(--c-surface);
+		color: var(--c-muted);
+		font: inherit;
+		font-size: 1.1rem;
+		line-height: 1;
+		cursor: pointer;
+		box-shadow: 0 1px 4px rgb(0 0 0 / 0.25);
+	}
+	.on-tool:hover:not(:disabled),
+	.on-tool:focus-visible {
+		color: var(--c-primary);
+	}
+	.on-tool.remove:hover,
+	.on-tool.remove:focus-visible {
+		color: var(--c-danger);
+	}
+	.on-tool:disabled {
+		cursor: progress;
+		opacity: 0.6;
 	}
 	.drop {
 		margin: 0;

@@ -273,5 +273,9 @@ export const MIGRATIONS: string[] = [
 		ELSE '[' || json_object('label', '', 'value', '', 'image', image_id) || ',' || substr(json(fields), 2)
 	END
 	WHERE image_id IS NOT NULL AND json_valid(fields) AND json_type(fields) = 'array';
+	`,
+	// Icona dell'utente (nel profilo in alto a destra): il nome di un'icona delle pagine.
+	`
+	ALTER TABLE users ADD COLUMN icon TEXT;
 	`
 ];

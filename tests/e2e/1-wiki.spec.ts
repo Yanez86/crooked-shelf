@@ -299,7 +299,7 @@ test('il giocatore non vede i segreti', async ({ browser }) => {
 	await p.goto('/preferences');
 	await p.getByLabel('Lingua', { exact: true }).selectOption('en');
 	await p.getByRole('button', { name: 'Salva' }).first().click();
-	await expect(p.getByRole('heading', { level: 1, name: 'Preferences' })).toBeVisible();
+	await expect(p.getByRole('heading', { level: 1, name: 'Profile' })).toBeVisible();
 	await expect(html).toHaveAttribute('lang', 'en');
 	await p.context().close();
 });
@@ -345,9 +345,10 @@ test("l'albero si può nascondere", async () => {
 	await admin.goto('/wiki/locanda-del-grifone');
 	await expect(admin.getByRole('navigation', { name: TREE })).toBeVisible();
 
-	// Preferenze e Amministrazione: niente albero, anche arrivandoci dal menu.
-	await admin.getByRole('navigation', { name: 'Navigazione principale' }).getByRole('link', { name: 'Preferenze', exact: true }).click();
-	await expect(admin).toHaveURL(/\/preferences$/);
+	// Profilo e Amministrazione: niente albero, anche arrivandoci dal menu del profilo.
+	await admin.locator('.user-menu summary').click();
+	await admin.locator('.user-menu').getByRole('link', { name: 'Profilo', exact: true }).click();
+	await expect(admin).toHaveURL(/\/profile$/);
 	await expect(admin.getByRole('navigation', { name: TREE })).toHaveCount(0);
 	await expect(admin.locator('#tree-toggle')).toHaveCount(0);
 	for (const url of ['/admin', '/admin/themes']) {
