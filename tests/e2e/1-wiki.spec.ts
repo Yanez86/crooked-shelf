@@ -43,6 +43,8 @@ async function login(browser: Browser, u: { user: string; pass: string }) {
 	await page.getByLabel('Nome utente').fill(u.user);
 	await page.getByLabel('Password').fill(u.pass);
 	await page.getByRole('button', { name: 'Accedi' }).click();
+	// Senza aspettare, la pagina successiva può partire prima che l'accesso sia fatto (e finire sul login).
+	await page.waitForURL((url) => !url.pathname.startsWith('/login'));
 	return page;
 }
 
