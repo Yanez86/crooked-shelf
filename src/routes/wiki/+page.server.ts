@@ -2,6 +2,7 @@ import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { listPages } from '#lib/server/pages.ts';
 import { categoryWithDescendants, getCategoryBySlug, getTagBySlug, categoryTree, listTags } from '#lib/server/taxonomy.ts';
+import { isPageKind, PAGE_KINDS } from '#lib/pageKinds.ts';
 
 const PER_PAGE = 30;
 
@@ -9,6 +10,8 @@ export const load: PageServerLoad = ({ url, locals }) => {
 	const catSlug = url.searchParams.get('category');
 	const tagSlug = url.searchParams.get('tag');
 	const sort = url.searchParams.get('sort') === 'title' ? 'title' : 'updated';
+	const want = url.searchParams.get('kind');
+	const kind = isPageKind(want) ? want : undefined;
 	const n = Math.max(1, Number(url.searchParams.get('p')) || 1);
 
 	const category = catSlug ? getCategoryBySlug(catSlug) : undefined;
@@ -18,6 +21,7 @@ export const load: PageServerLoad = ({ url, locals }) => {
 	const { total, rows } = listPages(locals.user, {
 		categoryIds: category ? categoryWithDescendants(category.id) : undefined,
 		tagId: tag?.id,
+		kind,
 		sort,
 		limit: PER_PAGE,
 		offset: (n - 1) * PER_PAGE
@@ -28,6 +32,8 @@ export const load: PageServerLoad = ({ url, locals }) => {
 		page: n,
 		pages: Math.max(1, Math.ceil(total / PER_PAGE)),
 		sort,
+		kind: kind ?? null,
+		kinds: [...PAGE_KINDS],
 		category: category ? { name: category.name, slug: category.slug, id: category.id, description: category.description } : null,
 		tag: tag ? { name: tag.name, slug: tag.slug, color: tag.color } : null,
 		categories: categoryTree(locals.user).flat.map(({ label, slug }) => ({ label, slug })),

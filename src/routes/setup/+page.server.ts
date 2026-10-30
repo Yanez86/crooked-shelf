@@ -4,6 +4,7 @@ import { createSession, createUser, findUserByName, hasUsers, setSessionCookie }
 import { saveSettings } from '#lib/server/settings.ts';
 import { checkCredentials, str } from '#lib/server/forms.ts';
 import { isLocale, localeNames } from '#lib/i18n/index.ts';
+import { seedWiki } from '#lib/server/templates.ts';
 
 export const load: PageServerLoad = ({ locals }) => ({ locales: localeNames(), suggested: locals.locale });
 
@@ -25,6 +26,8 @@ export const actions: Actions = {
 
 		const id = await createUser({ username, displayName, password, role: 'admin' });
 		saveSettings({ siteName, defaultLocale: locale, allowVisitors: false });
+		// Template preinstallati e cronologie, nella lingua scelta.
+		seedWiki(locale, { id, role: 'admin' });
 		const s = createSession(id);
 		setSessionCookie(cookies, url, s.token, s.expires);
 		redirect(303, '/');

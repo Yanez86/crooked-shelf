@@ -15,11 +15,14 @@ export function dataDir(): string {
 	return resolve(process.env.CS_DATA_DIR ?? 'data');
 }
 
-function migrate(conn: Database.Database) {
+/** Porta il database all'ultima versione (o fino a `upTo`, per i test delle migrazioni). */
+export function migrate(conn: Database.Database, upTo = MIGRATIONS.length) {
 	const current = conn.pragma('user_version', { simple: true }) as number;
-	for (let v = current; v < MIGRATIONS.length; v++) {
+	for (let v = current; v < upTo; v++) {
 		conn.transaction(() => {
-			conn.exec(MIGRATIONS[v]);
+			const m = MIGRATIONS[v];
+			if (typeof m === 'string') conn.exec(m);
+			else m(conn);
 			conn.pragma(`user_version = ${v + 1}`);
 		})();
 	}
@@ -44,11 +47,11 @@ export function getDb(): DB {
 	return db;
 }
 
-/** Solo per i test: database in memoria. */
-export function useMemoryDb(): DB {
+/** Solo per i test: database in memoria (`upTo`: fermo a una migrazione, per provare quelle dopo). */
+export function useMemoryDb(upTo?: number): DB {
 	sqlite = new Database(':memory:');
 	sqlite.pragma('foreign_keys = ON');
-	migrate(sqlite);
+	migrate(sqlite, upTo);
 	db = drizzle(sqlite, { schema });
 	return db;
 }

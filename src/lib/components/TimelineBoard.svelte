@@ -1,15 +1,22 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import { getT } from '#lib/i18n/index.ts';
-	import EventForm from '#lib/components/EventForm.svelte';
-	import FormError from '#lib/components/FormError.svelte';
-	import FormOk from '#lib/components/FormOk.svelte';
-	import type { PageProps } from './$types';
+	import { getT } from '../i18n/index.ts';
+	import EventForm from './EventForm.svelte';
+	import FormError from './FormError.svelte';
+	import type { timelineView } from '../server/timelinePage.ts';
 
-	let { data, form }: PageProps = $props();
+	// Gli eventi di una pagina «cronologia», in elenco o sulla linea del tempo. I moduli vanno alle azioni della pagina.
+	let {
+		data,
+		slug,
+		form
+	}: {
+		data: NonNullable<ReturnType<typeof timelineView>>;
+		slug: string;
+		form: { error?: string | null; values?: Record<string, unknown> | null } | null;
+	} = $props();
 	const t = getT();
 	const locale = $derived(page.data.locale as string);
-	const other = $derived(data.timeline === 'world' ? 'campaign' : 'world');
 	const realFmt = (d: string) => new Intl.DateTimeFormat(locale, { dateStyle: 'long' }).format(new Date(d + 'T12:00:00'));
 
 	const emptyValues = $derived({
@@ -17,7 +24,7 @@
 		description: '',
 		date: null,
 		approx: '',
-		realDate: data.timeline === 'campaign' ? new Date().toISOString().slice(0, 10) : null,
+		realDate: data.mode === 'campaign' ? new Date().toISOString().slice(0, 10) : null,
 		page: '',
 		visibility: 'players'
 	});
@@ -26,9 +33,9 @@
 	const groups = $derived.by(() => {
 		const out: { key: string; label: string; items: typeof data.events }[] = [];
 		for (const e of data.events) {
-			const key = data.timeline === 'world' ? String(e.year) : e.realDate ? e.realDate.slice(0, 7) : 'none';
+			const key = data.mode === 'world' ? String(e.year) : e.realDate ? e.realDate.slice(0, 7) : 'none';
 			const label =
-				data.timeline === 'world'
+				data.mode === 'world'
 					? e.yearLabel
 					: e.realDate
 						? new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric' }).format(new Date(e.realDate + 'T12:00:00'))
@@ -41,20 +48,13 @@
 	});
 </script>
 
-<svelte:head><title>{t('timeline.' + data.timeline)} · {page.data.siteName}</title></svelte:head>
-
-<div class="head">
-	<h1>{t('timeline.' + data.timeline)}</h1>
-	<a href="/timeline/{other}">{t('timeline.goTo', { name: t('timeline.' + other) })}</a>
-</div>
 <p class="muted">
-	{t('timeline.' + data.timeline + 'Intro')}
+	{t('timeline.mode.' + data.mode + 'Hint')}
 	{t('timeline.calendarIs', { name: data.calendarName })}
 	{#if data.today}{t('timeline.today', { date: data.today })}{/if}
 	· <a href="/calendar">{t('calendar.title')}</a>
 </p>
 
-<FormOk message={form && 'ok' in form ? form.ok : null} />
 
 <nav class="views" aria-label={t('timeline.views')}>
 	<a href="?view=list" aria-current={data.view === 'list' ? 'page' : undefined}>{t('timeline.viewList')}</a>
@@ -65,15 +65,15 @@
 	<!-- In alto ma chiuso: la cronologia si legge, il modulo si apre quando serve (e resta aperto dopo un inserimento). -->
 	<details class="disclosure add" open={!data.events.length || !!form}>
 		<summary class="btn">+ {t('timeline.add')}</summary>
-		<FormError error={form && 'error' in form ? form.error : null} />
+		<FormError error={form?.error ?? null} />
 		{#key form}
 			<EventForm
-				values={form && 'values' in form && form.values ? { ...form.values } : emptyValues}
-				timeline={data.timeline}
+				values={form?.values ? { ...emptyValues, ...form.values } : emptyValues}
+				timeline={data.mode}
 				months={data.months}
 				visibilities={data.visibilities}
 				pageTitles={data.pageTitles}
-				action="?/add"
+				action="?/addEvent"
 				submitLabel={t('timeline.addSubmit')}
 			/>
 		{/key}
@@ -86,7 +86,7 @@
 		{:else if e.when}<span>{e.when}</span>{/if}
 		{#if e.weekday}<span class="muted"> · {e.weekday}</span>{/if}
 		{#if e.ago !== null && e.ago > 0}<span class="muted"> · {t(e.ago === 1 ? 'timeline.ago1' : 'timeline.ago', { n: e.ago })}</span>{/if}
-		{#if data.timeline === 'campaign' && e.realDate}<span class="muted"> · {t('timeline.played', { date: realFmt(e.realDate) })}</span>{/if}
+		{#if data.mode === 'campaign' && e.realDate}<span class="muted"> · {t('timeline.played', { date: realFmt(e.realDate) })}</span>{/if}
 	</p>
 	<h3 class="ev-title">
 		{#if e.page}<a href="/wiki/{e.page.slug}">{e.title}</a>{:else}{e.title}{/if}
@@ -95,7 +95,7 @@
 	<p class="tags">
 		{#if e.session}<span class="badge">{t('timeline.session')}</span>{/if}
 		{#if e.visibility !== 'players'}<span class="badge">{t('visibility.' + e.visibility)}</span>{/if}
-		{#if e.canEdit}<a class="edit" href="/timeline/{data.timeline}/{e.id}">{t('page.edit')}<span class="visually-hidden">: {e.title}</span></a>{/if}
+		{#if e.canEdit}<a class="edit" href="/wiki/{slug}/events/{e.id}">{t('page.edit')}<span class="visually-hidden">: {e.title}</span></a>{/if}
 	</p>
 {/snippet}
 
@@ -125,13 +125,6 @@
 {/if}
 
 <style>
-	.head {
-		display: flex;
-		flex-wrap: wrap;
-		justify-content: space-between;
-		align-items: baseline;
-		gap: 0.5rem 1rem;
-	}
 	.views {
 		display: flex;
 		gap: 0.5rem;

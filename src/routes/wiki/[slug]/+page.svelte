@@ -5,11 +5,17 @@
 	import RelTime from '#lib/components/RelTime.svelte';
 	import FormOk from '#lib/components/FormOk.svelte';
 	import PageBody from '#lib/components/PageBody.svelte';
+	import MapBoard from '#lib/components/MapBoard.svelte';
+	import TimelineBoard from '#lib/components/TimelineBoard.svelte';
 	import type { PageProps } from './$types';
 
-	let { data }: PageProps = $props();
+	let { data, form }: PageProps = $props();
 	const t = getT();
 	const locale = $derived(appPage.data.locale as string);
+	// Esito dei moduli di pin, livelli ed eventi (azioni di questa pagina).
+	const result = $derived(form as { ok?: string | null; error?: string | null; values?: Record<string, unknown> | null } | null);
+	// Nelle mappe e nelle cronologie il testo è facoltativo: se non c'è, niente «pagina vuota».
+	const showBody = $derived(data.page.kind === 'page' || data.page.kind === 'template' || !data.blank || data.fields.length > 0);
 </script>
 
 <svelte:head><title>{data.page.title} · {appPage.data.siteName}</title></svelte:head>
@@ -32,9 +38,11 @@
 		{/if}
 	</header>
 
-	<FormOk message={appPage.url.searchParams.has('restored') ? 'history.restored' : null} />
+	<!-- Anche l'esito dei moduli della mappa e della cronologia (pin, livelli, eventi). -->
+	<FormOk message={appPage.url.searchParams.has('restored') ? 'history.restored' : (result?.ok ?? null)} />
 
 	<p class="meta muted">
+		{#if data.page.kind !== 'page'}<span class="badge kind">{t('kinds.' + data.page.kind)}</span>{/if}
 		<span class="badge">{t('visibility.' + data.page.visibility)}</span>
 		{#if data.page.hasSecret}<span class="badge">🔒 {t('page.hasSecret')}</span>{/if}
 		<a href="/wiki/{data.page.slug}/history">{t('history.link')}</a>
@@ -46,24 +54,44 @@
 		</ul>
 	{/if}
 
-	<PageBody title={data.page.title} html={data.html} fields={data.fields} session={data.session} {locale} />
+	{#if data.page.kind === 'template'}
+		<!-- Un template si fotocopia: la nuova pagina parte con i suoi blocchi, la sua colonna e la sua icona. -->
+		<div class="template-note card">
+			<p>{t('kinds.templateNote')}</p>
+			{#if data.canCopy}<a class="btn btn-primary" href="/wiki/new?template={encodeURIComponent(data.page.slug)}">{t('kinds.useTemplate')}</a>{/if}
+		</div>
+	{/if}
+
+	{#if showBody}
+		<PageBody title={data.page.title} html={data.html} fields={data.fields} session={data.page.kind === 'template' ? null : data.session} {locale} />
+	{/if}
+
+	{#if data.mapData}
+		<section class="board" aria-label={t('kinds.map')}>
+			<MapBoard data={data.mapData} title={data.page.title} form={result} />
+		</section>
+	{:else if data.timelineData}
+		<section class="board" aria-label={t('kinds.timeline')}>
+			<TimelineBoard data={data.timelineData} slug={data.page.slug} form={result} />
+		</section>
+	{/if}
 
 	{#if data.maps.length || data.events.length}
 		<section class="related" aria-labelledby="related-title">
 			<h2 id="related-title">{t('page.related')}</h2>
 			{#if data.maps.length}
-				<h3>{t('nav.maps')}</h3>
+				<h3>{t('kinds.folder.map')}</h3>
 				<ul>
-					{#each data.maps as m (m.slug)}<li><a href="/maps/{m.slug}">{m.title}</a></li>{/each}
+					{#each data.maps as m (m.slug)}<li><a href="/wiki/{m.slug}">{m.title}</a></li>{/each}
 				</ul>
 			{/if}
 			{#if data.events.length}
-				<h3>{t('nav.timeline')}</h3>
+				<h3>{t('kinds.folder.timeline')}</h3>
 				<ul>
 					{#each data.events as e (e.id)}
 						<li>
-							<a href="/timeline/{e.timeline}#event-{e.id}">{e.title}</a>
-							<span class="muted">— {e.when || e.realDate} ({t('timeline.' + e.timeline)})</span>
+							<a href="/wiki/{e.timeline.slug}#event-{e.id}">{e.title}</a>
+							<span class="muted">— {e.when || e.realDate} ({e.timeline.title})</span>
 						</li>
 					{/each}
 				</ul>
@@ -145,6 +173,21 @@
 		flex-wrap: wrap;
 		gap: 0.4rem;
 		margin-bottom: 1rem;
+	}
+	.template-note {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.5rem 1rem;
+		margin: 0 0 1.25rem;
+		max-width: var(--measure);
+	}
+	.template-note p {
+		margin: 0;
+	}
+	.board {
+		margin: 1.5rem 0 2rem;
 	}
 	.related {
 		border-top: 1px solid var(--c-border);

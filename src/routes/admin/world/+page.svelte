@@ -45,10 +45,10 @@
 		</fieldset>
 		<fieldset>
 			<legend>{t('world.alsoInclude')}</legend>
-			<label class="choice"><input type="checkbox" name="maps" checked /><span>{t('nav.maps')}</span></label>
-			<label class="choice"><input type="checkbox" name="templates" checked /><span>{t('templates.title')}</span></label>
+			<label class="choice"><input type="checkbox" name="maps" checked /><span>{t('kinds.folder.map')}</span></label>
+			<label class="choice"><input type="checkbox" name="templates" checked /><span>{t('kinds.folder.template')}</span></label>
 			<label class="choice"><input type="checkbox" name="calendar" checked /><span>{t('calendar.title')}</span></label>
-			<label class="choice"><input type="checkbox" name="timeline" checked /><span>{t('timeline.world')}</span></label>
+			<label class="choice"><input type="checkbox" name="timeline" checked /><span>{t('world.timelines')}</span></label>
 			<label class="choice"><input type="checkbox" name="themes" /><span>{t('admin.themes')}</span></label>
 		</fieldset>
 		<label class="choice secrets">
@@ -75,8 +75,8 @@
 			<ul>
 				{#each Object.entries(pv.counts) as [k, n] (k)}{#if n}<li>{t('world.done.' + k, { n })}</li>{/if}{/each}
 			</ul>
-			{#if pv.pageConflicts.length || pv.mapConflicts.length}
-				<p class="alert alert-error">{t('world.conflicts', { list: [...pv.pageConflicts, ...pv.mapConflicts].join(', ') })}</p>
+			{#if pv.pageConflicts.length}
+				<p class="alert alert-error">{t('world.conflicts', { list: pv.pageConflicts.join(', ') })}</p>
 			{/if}
 		</div>
 		<form method="post" action="?/import">

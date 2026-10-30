@@ -6,6 +6,7 @@ import { renderDoc, renderInline, type LinkTarget, type RenderOptions } from '..
 import { EMPTY_DOC, isDoc, type DocNode, type PageField, type SessionInfo } from '../content/types.ts';
 import { canView, isMaster, type Viewer } from '../access.ts';
 import type { Visibility } from '../roles.ts';
+import type { PageKind } from '../pageKinds.ts';
 import { visibleTo } from './visibility.ts';
 import { ensureTags, tagsForPages } from './taxonomy.ts';
 import { syncSessionEvent } from './timeline.ts';
@@ -48,8 +49,10 @@ export interface PageInput {
 	/** Indirizzo richiesto (da un collegamento rosso); usato solo alla creazione. */
 	slug?: string;
 	fields: PageField[];
-	/** Template usato ("b:npc", "c:3"), solo informativo. */
+	/** Da dove viene (vedi la colonna `template`), solo informativo. */
 	template?: string | null;
+	/** Tipo di pagina: alla creazione (predefinito «page»); in modifica solo tra pagina e template. */
+	kind?: PageKind;
 	/** Dati del resoconto di sessione, se la pagina lo è. */
 	session: SessionInfo | null;
 	/** Icona nell'albero; undefined = lascia quella che c'è. */
@@ -112,10 +115,15 @@ function writeTags(id: number, names: string[]) {
 	if (ids.length) db.insert(pageTags).values(ids.map((tagId) => ({ pageId: id, tagId }))).run();
 }
 
-export function createPage(input: PageInput, u: Viewer): PageRow {
+/** Un template non è un resoconto: i suoi dati di sessione dicono solo che le sue copie lo saranno. */
+const sessionOf = (kind: PageKind, session: SessionInfo | null) => (kind === 'template' ? null : session);
+
+/** `extra` scrive, nella stessa transazione, ciò che serve al tipo di pagina (mappa, cronologia). */
+export function createPage(input: PageInput, u: Viewer, extra?: (page: PageRow) => void): PageRow {
 	const doc = normalizeContent(input.content, u);
 	const now = Date.now();
 	const base = slugify(input.slug || input.title);
+	const kind = input.kind ?? 'page';
 	return getDb().transaction(() => {
 		const row = getDb()
 			.insert(pages)
@@ -132,6 +140,7 @@ export function createPage(input: PageInput, u: Viewer): PageRow {
 				template: input.template ?? null,
 				session: input.session,
 				icon: input.icon ?? null,
+				kind,
 				authorId: u.id,
 				updatedBy: u.id,
 				createdAt: now,
@@ -141,15 +150,21 @@ export function createPage(input: PageInput, u: Viewer): PageRow {
 			.get();
 		writeIndex(row.id, row.title, doc, input.fields);
 		writeTags(row.id, input.tags);
-		syncSessionEvent(row, input.session);
+		syncSessionEvent(row, sessionOf(kind, input.session));
 		writeRevision(row.id);
+		extra?.(row);
 		return row;
 	});
 }
 
+/** Pagina e template si scambiano; mappe e cronologie restano quello che sono. */
+const nextKind = (page: PageRow, want: PageKind | undefined): PageKind =>
+	want && page.kind !== want && ['page', 'template'].includes(page.kind) && ['page', 'template'].includes(want) ? want : page.kind;
+
 /** Aggiorna una pagina. `manage` = può cambiare visibilità e permessi. */
-export function updatePage(page: PageRow, input: PageInput, u: Viewer, manage: boolean): void {
+export function updatePage(page: PageRow, input: PageInput, u: Viewer, manage: boolean, extra?: () => void): void {
 	const doc = normalizeContent(input.content, u);
+	const kind = nextKind(page, input.kind);
 	getDb().transaction(() => {
 		getDb()
 			.update(pages)
@@ -162,6 +177,7 @@ export function updatePage(page: PageRow, input: PageInput, u: Viewer, manage: b
 				imageId: coverOf(input.fields),
 				session: input.session,
 				...(input.icon !== undefined ? { icon: input.icon } : {}),
+				kind,
 				updatedBy: u.id,
 				updatedAt: Math.max(Date.now(), page.updatedAt + 1),
 				...(manage ? { visibility: input.visibility, playersCanEdit: input.playersCanEdit } : {})
@@ -171,8 +187,9 @@ export function updatePage(page: PageRow, input: PageInput, u: Viewer, manage: b
 		writeIndex(page.id, input.title, doc, input.fields);
 		writeTags(page.id, input.tags);
 		const visibility = manage ? input.visibility : page.visibility;
-		syncSessionEvent({ id: page.id, title: input.title, visibility, authorId: page.authorId }, input.session);
+		syncSessionEvent({ id: page.id, title: input.title, visibility, authorId: page.authorId }, sessionOf(kind, input.session));
 		writeRevision(page.id);
+		extra?.();
 	});
 }
 
@@ -255,6 +272,9 @@ export function backlinks(slug: string, u: Viewer | null) {
 export interface ListOptions {
 	categoryIds?: number[];
 	tagId?: number;
+	kind?: PageKind;
+	/** Tutti i tipi tranne i template (es. le ultime modifiche della home). */
+	noTemplates?: boolean;
 	limit?: number;
 	offset?: number;
 	sort?: 'updated' | 'title';
@@ -264,6 +284,8 @@ export function listPages(u: Viewer | null, o: ListOptions = {}) {
 	const db = getDb();
 	const conds: SQL[] = [visibleTo(u)];
 	if (o.categoryIds) conds.push(inArray(pages.categoryId, o.categoryIds.length ? o.categoryIds : [-1]));
+	if (o.kind) conds.push(eq(pages.kind, o.kind));
+	if (o.noTemplates) conds.push(sql`${pages.kind} <> 'template'`);
 	if (o.tagId)
 		conds.push(
 			sql`${pages.id} IN (SELECT ${pageTags.pageId} FROM ${pageTags} WHERE ${pageTags.tagId} = ${o.tagId})`
@@ -275,6 +297,7 @@ export function listPages(u: Viewer | null, o: ListOptions = {}) {
 			id: pages.id,
 			slug: pages.slug,
 			title: pages.title,
+			kind: pages.kind,
 			visibility: pages.visibility,
 			updatedAt: pages.updatedAt,
 			category: categories.name,
@@ -370,7 +393,7 @@ export function restorePage(id: number) {
 	getDb().transaction(() => {
 		getDb().update(pages).set({ deletedAt: null }).where(eq(pages.id, id)).run();
 		writeIndex(id, p.title, isDoc(p.content) ? p.content : EMPTY_DOC, p.fields ?? []);
-		syncSessionEvent(p, p.session ?? null);
+		syncSessionEvent(p, sessionOf(p.kind, p.session ?? null));
 	});
 }
 

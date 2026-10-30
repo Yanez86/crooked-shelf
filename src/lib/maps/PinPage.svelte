@@ -80,7 +80,7 @@
 		{#if pin.html || pin.target || editable}
 			<div class="pin-info">
 				{#if pin.html}<p>{@html pin.html}</p>{/if}
-				{#if pin.target}<p><a href="/maps/{pin.target.slug}">{t('maps.openMap', { title: pin.target.title })}</a></p>{/if}
+				{#if pin.target}<p><a href="/wiki/{pin.target.slug}">{t('maps.openMap', { title: pin.target.title })}</a></p>{/if}
 				{#if editable}<p><button class="btn btn-small btn-ghost" type="button" onclick={() => edit(pin!.id)}>{t('maps.editPin')}</button></p>{/if}
 			</div>
 		{/if}

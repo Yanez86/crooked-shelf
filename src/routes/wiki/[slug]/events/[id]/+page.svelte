@@ -11,12 +11,12 @@
 <svelte:head><title>{t('timeline.edit')}</title></svelte:head>
 
 <h1>{t('timeline.edit')}</h1>
-<p><a href="/timeline/{data.timeline}">← {t('timeline.' + data.timeline)}</a></p>
+<p><a href="/wiki/{data.timeline.slug}">← {data.timeline.title}</a></p>
 <FormError error={form?.error} />
 {#key form}
 	<EventForm
 		values={form?.values ?? data.values}
-		timeline={data.timeline}
+		timeline={data.timeline.mode}
 		months={data.months}
 		visibilities={data.visibilities}
 		pageTitles={data.pageTitles}
