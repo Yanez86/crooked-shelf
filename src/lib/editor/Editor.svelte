@@ -305,7 +305,7 @@
 		background: var(--c-surface);
 	}
 	.editor:focus-within {
-		outline: 3px solid var(--c-focus);
+		outline: var(--focus-width) solid var(--c-focus);
 		outline-offset: 2px;
 	}
 	.toolbar {

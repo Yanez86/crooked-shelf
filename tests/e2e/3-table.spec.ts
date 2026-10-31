@@ -127,7 +127,8 @@ test('cestino', async () => {
 	await admin.getByRole('button', { name: 'Elimina la pagina' }).click();
 	await admin.getByRole('link', { name: /nel cestino/ }).click();
 
-	await expect(admin.locator('main')).toContainText('Pagina da cestinare');
+	const row = admin.locator('main li', { hasText: 'Pagina da cestinare' });
+	await expect(row).toContainText(/creata da .+ il .+, ultima modifica /);
 	await axe(admin, 'cestino');
 	await admin.getByRole('button', { name: /^Recupera ?: Pagina da cestinare$/ }).click();
 	await expect(admin.getByRole('heading', { level: 1, name: 'Pagina da cestinare' })).toBeVisible();
@@ -176,6 +177,8 @@ test('bacheche: sono pagine', async ({ browser }) => {
 	await expect(col('Domande').getByRole('article')).toHaveCount(2);
 
 	// Trascinamento.
+	// Scheda e colonna insieme sullo schermo: a metà trascinamento la pagina non scorre.
+	await admin.setViewportSize({ width: 1280, height: 1200 });
 	await admin.getByRole('heading', { level: 1 }).scrollIntoViewIfNeeded();
 	await admin.getByRole('article', { name: 'Dove dorme il drago?' }).dragTo(col('Risolto').getByRole('heading', { level: 2 }));
 	await expect(col('Risolto').getByRole('article', { name: 'Dove dorme il drago?' })).toBeVisible();
@@ -233,6 +236,21 @@ test('editor dei temi', async () => {
 	await expect(admin.locator('html')).toHaveAttribute('data-theme', 'custom-1');
 	await admin.goto('/wiki/locanda-del-grifone');
 	await axe(admin, 'tema personalizzato');
+
+	// Lo sfondo: si carica, sta dietro la pagina e si toglie, e allora il file sparisce.
+	await admin.goto('/admin/themes/custom-1');
+	await admin.getByLabel("Carica un'immagine").setInputFiles('tests/fixtures/city.png');
+	await admin.getByRole('button', { name: 'Salva' }).click();
+	await expect(admin.getByRole('status').first()).toContainText('Modifiche salvate');
+	const bg = await admin.getByRole('img', { name: 'Sfondo attuale' }).getAttribute('src');
+	await admin.goto('/wiki/locanda-del-grifone');
+	expect(await admin.locator('.backdrop').evaluate((el) => getComputedStyle(el).backgroundImage)).toContain(bg!);
+	await axe(admin, 'tema con sfondo');
+	await admin.goto('/admin/themes/custom-1');
+	await admin.getByLabel('Togli lo sfondo').check();
+	await admin.getByRole('button', { name: 'Salva' }).click();
+	await expect(admin.getByRole('img', { name: 'Sfondo attuale' })).toHaveCount(0);
+	expect((await admin.request.get(bg!)).status()).toBe(404);
 
 	// Esporta e reimporta.
 	const res = await admin.request.get('/admin/themes/custom-1/export');

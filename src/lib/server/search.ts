@@ -1,4 +1,5 @@
 import { getSqlite } from './db/index.ts';
+import { campaignId } from './campaigns.ts';
 import { isMaster, type Viewer } from '../access.ts';
 
 /** Trasforma il testo cercato in una query FTS5 sicura: ogni parola è un prefisso, tutte obbligatorie. */
@@ -36,11 +37,11 @@ export function searchPages(q: string, u: Viewer | null, limit = 30): SearchHit[
 				snippet(pages_fts, 1, @o, @c, '…', 24) AS body_snip
 				${master ? `, snippet(pages_fts, 2, @o, @c, '…', 24) AS secret_snip` : ''}
 			FROM pages_fts JOIN pages p ON p.id = pages_fts.rowid
-			WHERE pages_fts MATCH @match AND p.deleted_at IS NULL AND ${vis}
+			WHERE pages_fts MATCH @match AND p.campaign_id = @campaign AND p.deleted_at IS NULL AND ${vis}
 			ORDER BY bm25(pages_fts, 10.0, 1.0, 1.0)
 			LIMIT @limit`
 		)
-		.all({ match, o: MARK_OPEN, c: MARK_CLOSE, uid: u?.id ?? 0, limit }) as {
+		.all({ match, o: MARK_OPEN, c: MARK_CLOSE, uid: u?.id ?? 0, campaign: campaignId(), limit }) as {
 		slug: string;
 		title: string;
 		body_snip: string;

@@ -1,4 +1,5 @@
 import { getDb, schema } from './db/index.ts';
+import { currentCampaign } from './campaigns.ts';
 import { DEFAULT_LOCALE } from '../i18n/index.ts';
 import { isCalendar, preset, type Calendar } from '../calendar.ts';
 import type { Theme } from '../themes.ts';
@@ -8,8 +9,6 @@ export interface SiteSettings {
 	defaultLocale: string;
 	/** Visitori senza account: spento di default. */
 	allowVisitors: boolean;
-	/** Calendario del mondo; finché non viene scelto si usa il gregoriano. */
-	calendar: Calendar | null;
 	/** Temi creati dall'Admin (id "custom-N"). */
 	themes: Theme[];
 	/** Id dei plugin accesi. */
@@ -20,7 +19,6 @@ const DEFAULTS: SiteSettings = {
 	siteName: 'Crooked Shelf',
 	defaultLocale: DEFAULT_LOCALE,
 	allowVisitors: false,
-	calendar: null,
 	themes: [],
 	plugins: []
 };
@@ -51,10 +49,12 @@ export function saveSettings(patch: Partial<SiteSettings>) {
 
 export const resetSettingsCache = () => (cache = undefined);
 
-/** Calendario del mondo di gioco. */
+export const isHomePage = (id: number) => currentCampaign().homePageId === id;
+
+/** Calendario del mondo di gioco della campagna. */
 export function getCalendar(): Calendar {
-	const s = getSettings();
-	return isCalendar(s.calendar) ? s.calendar : preset('gregorian', s.defaultLocale);
+	const cal = currentCampaign().calendar;
+	return isCalendar(cal) ? cal : preset('gregorian', getSettings().defaultLocale);
 }
 
 export const customThemes = (): Theme[] => (Array.isArray(getSettings().themes) ? getSettings().themes : []);

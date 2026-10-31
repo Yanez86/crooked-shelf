@@ -19,12 +19,20 @@ export function dataDir(): string {
 export function migrate(conn: Database.Database, upTo = MIGRATIONS.length) {
 	const current = conn.pragma('user_version', { simple: true }) as number;
 	for (let v = current; v < upTo; v++) {
-		conn.transaction(() => {
-			const m = MIGRATIONS[v];
-			if (typeof m === 'string') conn.exec(m);
-			else m(conn);
-			conn.pragma(`user_version = ${v + 1}`);
-		})();
+		const m = MIGRATIONS[v];
+		const rebuild = typeof m === 'object';
+		// Dentro una transazione questo PRAGMA non ha effetto.
+		if (rebuild) conn.pragma('foreign_keys = OFF');
+		try {
+			conn.transaction(() => {
+				if (typeof m === 'string') conn.exec(m);
+				else if (typeof m === 'function') m(conn);
+				else m.rebuild(conn);
+				conn.pragma(`user_version = ${v + 1}`);
+			})();
+		} finally {
+			if (rebuild) conn.pragma('foreign_keys = ON');
+		}
 	}
 }
 

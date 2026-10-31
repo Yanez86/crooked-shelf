@@ -14,15 +14,14 @@
 		categorySlug: string | null;
 		tags: { name: string; slug: string; color: string }[];
 	}
-	/** lead: la prima pagina in evidenza (la home). */
-	let { rows, lead = false }: { rows: Row[]; lead?: boolean } = $props();
+	let { rows }: { rows: Row[] } = $props();
 	const t = getT();
 	const locale = $derived(page.data.locale as string);
 </script>
 
-<ul class="list-plain page-list" class:lead>
-	{#each rows as r, i (r.slug)}
-		<li class="card" class:first={lead && i === 0}>
+<ul class="list-plain page-list">
+	{#each rows as r (r.slug)}
+		<li class="card">
 			<h3><a class="card-link" href="/wiki/{r.slug}">{r.title}</a></h3>
 			<p class="muted row-meta">
 				{#if r.category}
@@ -74,7 +73,7 @@
 		outline: none;
 	}
 	.card:has(.card-link:focus-visible) {
-		outline: 3px solid var(--c-focus);
+		outline: var(--focus-width) solid var(--c-focus);
 		outline-offset: 2px;
 	}
 	/* I collegamenti dentro la scheda restano cliccabili sopra il collegamento grande. */
@@ -82,13 +81,6 @@
 	.tags {
 		position: relative;
 		z-index: 1;
-	}
-	.first {
-		border-top: 4px solid var(--c-primary);
-		padding-block: 1.25rem;
-	}
-	.first h3 {
-		font-size: var(--fs-lg);
 	}
 	.row-meta {
 		display: flex;

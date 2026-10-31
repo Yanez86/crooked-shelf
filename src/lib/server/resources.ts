@@ -1,5 +1,6 @@
 import { and, eq, sql, type SQL } from 'drizzle-orm';
 import { getDb, schema } from './db/index.ts';
+import { campaignId, ofCampaign } from './campaigns.ts';
 import { str } from './forms.ts';
 import { deleteFile } from './files.ts';
 import { isMaster, type Viewer } from '../access.ts';
@@ -41,7 +42,7 @@ function select(where: SQL) {
 		})
 		.from(resources)
 		.innerJoin(files, eq(files.id, resources.fileId))
-		.where(where)
+		.where(and(ofCampaign(resources), where))
 		.all()
 		.map((r): Resource => ({ ...r, kind: kindOf(r.file.mime) }));
 }
@@ -60,14 +61,14 @@ export function createResource(input: ResourceInput, fileId: string, userId: num
 	const now = Date.now();
 	return getDb()
 		.insert(resources)
-		.values({ ...input, fileId, createdBy: userId, createdAt: now, updatedAt: now })
+		.values({ ...input, campaignId: campaignId(), fileId, createdBy: userId, createdAt: now, updatedAt: now })
 		.returning({ id: resources.id })
 		.get().id;
 }
 
 /** Con `fileId` il file cambia: quello vecchio si elimina. */
 export function updateResource(id: number, input: ResourceInput, fileId?: string) {
-	const old = getDb().select({ fileId: resources.fileId }).from(resources).where(eq(resources.id, id)).get();
+	const old = getDb().select({ fileId: resources.fileId }).from(resources).where(and(ofCampaign(resources), eq(resources.id, id))).get();
 	if (!old) return;
 	getDb()
 		.update(resources)
@@ -78,7 +79,7 @@ export function updateResource(id: number, input: ResourceInput, fileId?: string
 }
 
 export function deleteResource(id: number) {
-	const r = getDb().delete(resources).where(eq(resources.id, id)).returning({ fileId: resources.fileId }).get();
+	const r = getDb().delete(resources).where(and(ofCampaign(resources), eq(resources.id, id))).returning({ fileId: resources.fileId }).get();
 	if (r) deleteFile(r.fileId);
 }
 

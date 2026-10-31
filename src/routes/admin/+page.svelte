@@ -14,16 +14,18 @@
 <FormError error={form && 'error' in form ? form.error : null} />
 <FormOk message={form && 'ok' in form ? form.ok : null} />
 
-<form method="post" class="card narrow">
-	<div class="field">
-		<label for="siteName">{t('setup.siteName')}</label>
-		<input id="siteName" name="siteName" type="text" required maxlength="80" value={data.settings.siteName} />
-	</div>
-	<div class="field">
-		<label for="defaultLocale">{t('admin.defaultLocale')}</label>
-		<select id="defaultLocale" name="defaultLocale">
-			{#each data.locales as l (l.code)}<option value={l.code} selected={data.settings.defaultLocale === l.code}>{l.name}</option>{/each}
-		</select>
+<form method="post" class="card">
+	<div class="cols">
+		<div class="field">
+			<label for="siteName">{t('admin.siteName')}</label>
+			<input id="siteName" name="siteName" type="text" required maxlength="80" value={data.settings.siteName} />
+		</div>
+		<div class="field">
+			<label for="defaultLocale">{t('admin.defaultLocale')}</label>
+			<select id="defaultLocale" name="defaultLocale">
+				{#each data.locales as l (l.code)}<option value={l.code} selected={data.settings.defaultLocale === l.code}>{l.name}</option>{/each}
+			</select>
+		</div>
 	</div>
 	<label class="choice">
 		<input type="checkbox" name="allowVisitors" checked={data.settings.allowVisitors} aria-describedby="visitors-hint" />
@@ -33,7 +35,9 @@
 </form>
 
 <style>
-	.narrow {
-		max-width: 40rem;
+	.cols {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+		gap: 0 1.5rem;
 	}
 </style>

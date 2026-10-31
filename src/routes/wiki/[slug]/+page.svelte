@@ -6,8 +6,7 @@
 	import RelTime from '#lib/components/RelTime.svelte';
 	import FormOk from '#lib/components/FormOk.svelte';
 	import PageBody from '#lib/components/PageBody.svelte';
-	import { PAGE_ICONS } from '#lib/pageIcons.ts';
-	import { COVER_COLORS } from '#lib/covers.ts';
+	import PageHead from '#lib/components/PageHead.svelte';
 	import MapBoard from '#lib/components/MapBoard.svelte';
 	import TimelineBoard from '#lib/components/TimelineBoard.svelte';
 	import BoardView from '#lib/components/BoardView.svelte';
@@ -24,7 +23,7 @@
 
 <svelte:head><title>{data.page.title} · {appPage.data.siteName}</title></svelte:head>
 
-<article class="wiki-page">
+{#snippet top()}
 	{#if data.category.length}
 		<nav aria-label={t('page.breadcrumb')}>
 			<ol class="crumbs">
@@ -35,22 +34,7 @@
 		</nav>
 	{/if}
 
-	{#if data.page.cover}
-		{@const c = data.page.cover}
-		<div class="page-cover" style:background-color={c.color ? COVER_COLORS[c.color] : null}>
-			{#if c.image}<img src="/files/{c.image}" alt="" style:object-position="50% {c.y}%" />{/if}
-		</div>
-	{/if}
-	{#if data.page.icon && PAGE_ICONS[data.page.icon]}
-		<span class="page-icon" class:on-cover={!!data.page.cover} aria-hidden="true"><svg viewBox="0 0 24 24"><path d={PAGE_ICONS[data.page.icon]} /></svg></span>
-	{/if}
-
-	<header class="page-head">
-		<h1>{data.page.title}</h1>
-		{#if data.canEdit}
-			<a class="edit-pencil" href="/wiki/{data.page.slug}/edit" title={t('page.edit')}><Icon name="edit" /><span class="visually-hidden">{t('page.edit')}: {data.page.title}</span></a>
-		{/if}
-	</header>
+	<PageHead page={data.page} canEdit={data.canEdit} />
 
 	<!-- Anche l'esito dei moduli della mappa, della cronologia e della bacheca (pin, livelli, eventi, schede). -->
 	<FormOk message={appPage.url.searchParams.has('restored') ? 'history.restored' : (result?.ok ?? null)} />
@@ -59,7 +43,6 @@
 		{#if data.page.kind !== 'page'}<span class="badge kind">{t('kinds.' + data.page.kind)}</span>{/if}
 		<span class="badge">{t('visibility.' + data.page.visibility)}</span>
 		{#if data.page.hasSecret}<span class="badge"><Icon name="lock" />{t('page.hasSecret')}</span>{/if}
-		<a href="/wiki/{data.page.slug}/history">{t('history.link')}</a>
 	</p>
 
 	{#if data.tags.length}
@@ -75,11 +58,9 @@
 			{#if data.canCopy}<a class="btn btn-primary" href="/wiki/new?template={encodeURIComponent(data.page.slug)}">{t('kinds.useTemplate')}</a>{/if}
 		</div>
 	{/if}
+{/snippet}
 
-	{#if showBody}
-		<PageBody title={data.page.title} html={data.html} fields={data.fields} session={data.page.kind === 'template' ? null : data.session} {locale} />
-	{/if}
-
+{#snippet below()}
 	{#if data.mapData}
 		<section class="board" aria-label={t('kinds.map')}>
 			<MapBoard data={data.mapData} title={data.page.title} form={result} />
@@ -128,13 +109,21 @@
 		{/if}
 	</section>
 
-	{#if data.author || data.editor}
-		<footer class="page-foot">
-			<p class="muted">
-				{#if data.author}<span>{t('page.createdBy', { name: data.author })}</span>{/if}
-				{#if data.editor}<span>{t('page.lastEdit', { name: data.editor })} <RelTime ts={data.page.updatedAt} {locale} /></span>{/if}
-			</p>
-		</footer>
+	<footer class="page-foot">
+		<p class="muted">
+			{#if data.author}<span>{t('page.createdBy', { name: data.author })}</span>{/if}
+			{#if data.editor}<span>{t('page.lastEdit', { name: data.editor })} <RelTime ts={data.page.updatedAt} {locale} /></span>{/if}
+			<a href="/wiki/{data.page.slug}/history" title={t('history.link')} aria-label={t('history.link')}><Icon name="clock" /></a>
+		</p>
+	</footer>
+{/snippet}
+
+<article class="wiki-page">
+	{#if showBody}
+		<PageBody title={data.page.title} html={data.html} fields={data.fields} session={data.page.kind === 'template' ? null : data.session} {locale} head={top} foot={below} boxed={!!data.mapData && !data.blank} />
+	{:else}
+		{@render top()}
+		{@render below()}
 	{/if}
 </article>
 
@@ -151,33 +140,6 @@
 		content: '›';
 		padding: 0 0.5rem;
 		color: var(--c-muted);
-	}
-	.page-head {
-		display: flex;
-		align-items: flex-start;
-		justify-content: space-between;
-		gap: 0.5rem 1rem;
-	}
-	.page-head h1 {
-		margin-bottom: 0.25rem;
-	}
-	.edit-pencil {
-		display: inline-grid;
-		place-items: center;
-		width: 2rem;
-		height: 2rem;
-		border-radius: var(--radius);
-		color: var(--c-muted);
-		text-decoration: none;
-		font-size: 1.1rem;
-		opacity: 0.6;
-		flex-shrink: 0;
-	}
-	.edit-pencil:hover,
-	.edit-pencil:focus-visible {
-		opacity: 1;
-		color: var(--c-primary);
-		background: var(--c-surface);
 	}
 	.meta {
 		display: flex;
@@ -216,7 +178,7 @@
 		margin-top: 1rem;
 	}
 	.related h3 {
-		font-size: 1rem;
+		font-size: var(--fs-base);
 		margin: 0.75rem 0 0.25rem;
 	}
 	.backlinks {
@@ -227,7 +189,7 @@
 		font-size: var(--fs-md);
 		margin-top: 1rem;
 	}
-	/* In fondo: chi ha creato la pagina e chi l'ha modificata per ultimo. */
+	/* In fondo: chi ha creato la pagina, chi l'ha modificata per ultimo e la cronologia delle modifiche. */
 	.page-foot {
 		margin-top: 2rem;
 		border-top: 1px solid var(--c-border);
@@ -236,12 +198,22 @@
 	.page-foot p {
 		display: flex;
 		flex-wrap: wrap;
+		align-items: center;
+		gap: 0 0.5rem;
 		margin: 0.75rem 0 0;
 		font-size: var(--fs-sm);
 	}
+	.page-foot a {
+		display: inline-flex;
+		padding: 0.25rem;
+		color: inherit;
+	}
+	.page-foot a:hover {
+		color: var(--c-link);
+	}
 	/* Il punto resta in fondo alla prima riga quando sul telefono le due parti vanno a capo. */
-	.page-foot span:not(:last-child)::after {
+	.page-foot span:not(:last-of-type)::after {
 		content: '·';
-		padding: 0 0.5rem;
+		padding-left: 0.5rem;
 	}
 </style>

@@ -112,12 +112,15 @@ test('template PNG con scheda, segreto e immagine', async () => {
 });
 
 test('i template sono pagine: si modificano e si fotocopiano', async () => {
-	// Nella cartella Template dell'albero, come le altre pagine.
+	// Nella linguetta Template della barra a sinistra, che si apre da sola su un template.
 	await admin.goto('/wiki/elminster');
 	const tree = admin.getByRole('navigation', { name: TREE });
-	await tree.locator('summary', { hasText: 'Template' }).click();
+	await tree.getByRole('tab', { name: 'Template' }).click();
 	await tree.getByRole('link', { name: 'Luogo, Template' }).click();
 	await expect(admin.getByRole('heading', { level: 1, name: 'Luogo' })).toBeVisible();
+	await admin.reload();
+	await expect(tree.getByRole('tab', { name: 'Template' })).toHaveAttribute('aria-selected', 'true');
+	await tree.getByRole('tab', { name: 'Pagine' }).click();
 	await expect(admin.locator('main .meta')).toContainText('Template');
 
 	// La struttura la decide chi lo scrive: si aggiunge una sezione.
@@ -126,11 +129,13 @@ test('i template sono pagine: si modificano e si fotocopiano', async () => {
 	const editor = admin.locator('.editor-content');
 	await expect(editor).toHaveAttribute('contenteditable', 'true');
 	await editor.getByRole('heading', { name: 'Personaggi' }).click();
+	// Il primo clic arriva all'editor con un attimo di ritardo: i tasti premuti prima finirebbero a inizio documento.
+	await expect(editor.locator('.has-focus')).toHaveText('Personaggi');
 	await admin.keyboard.press('End');
 	await admin.keyboard.press('Enter');
 	await admin.keyboard.type('## Clima');
 	await admin.getByRole('button', { name: 'Salva' }).click();
-	const headings = admin.locator('.content h2');
+	const headings = admin.locator('.prose h2');
 	await expect(headings).toHaveText(['Descrizione', 'Luoghi notevoli', 'Personaggi', 'Clima', 'Segreti']);
 	await axe(admin, 'pagina template');
 	await shot(admin, '11f-template');
@@ -225,6 +230,13 @@ test('colonna a lato: si aggiunge modificando la pagina, con riquadri di testo e
 	await expect(box.getByRole('button', { name: 'Sposta su: Immagine 1' })).toBeDisabled();
 	await axe(admin, 'colonna con immagine');
 	await shot(admin, '11d-modifica-colonna');
+	// In modifica la colonna parte alla stessa altezza dell'albero e resta in vista mentre si scorre.
+	await admin.evaluate(() => scrollTo(0, 0));
+	const top = async () => (await side.boundingBox())!.y;
+	expect(await top()).toBeCloseTo((await admin.locator('#explorer').boundingBox())!.y, 0);
+	await admin.evaluate(() => scrollTo(0, 500));
+	await expect.poll(top).toBeCloseTo(16, 0);
+	await admin.evaluate(() => scrollTo(0, 0));
 	await admin.getByRole('button', { name: 'Salva' }).click();
 
 	// In lettura: immagine in cima con la didascalia, poi la scheda; nessun pulsante.
@@ -253,7 +265,7 @@ test('colonna a lato: si aggiunge modificando la pagina, con riquadri di testo e
 
 test('copertina: dalla galleria, riposizionata da tastiera, poi un colore e un file nuovo', async () => {
 	await admin.goto('/wiki/locanda-del-grifone/edit');
-	// L'icona sta sopra il titolo, come in lettura.
+	// L'icona sta a sinistra del titolo, come in lettura.
 	await admin.getByTitle('Icona', { exact: true }).click();
 	await admin.getByRole('radio', { name: 'Boccale' }).check();
 	await admin.getByTitle('Icona', { exact: true }).click();
@@ -281,10 +293,10 @@ test('copertina: dalla galleria, riposizionata da tastiera, poi un colore e un f
 	await shot(admin, '11f-copertina-modifica');
 	await admin.getByRole('button', { name: 'Salva' }).click();
 
-	// In lettura: la copertina in alto e l'icona a cavallo del bordo.
+	// In lettura: la copertina in alto e l'icona a sinistra del titolo.
 	await expect(admin.getByRole('heading', { level: 1, name: 'Locanda del Grifone' })).toBeVisible();
 	await expect(cover.locator('img')).toHaveCSS('object-position', '50% 40%');
-	await expect(admin.locator('main .page-icon.on-cover')).toBeVisible();
+	await expect(admin.locator('main .page-head .page-icon')).toBeVisible();
 	await axe(admin, 'pagina con copertina');
 	await shot(admin, '11g-pagina-con-copertina');
 
@@ -428,20 +440,57 @@ test('mappe con pin, livelli e mappe annidate', async () => {
 	await admin.getByRole('button', { name: 'Crea la mappa' }).click();
 	await expect(admin.getByRole('heading', { level: 1, name: 'Costa della Spada' })).toBeVisible();
 	await expect(admin.locator('.leaflet-image-layer')).toBeVisible();
+	// Di base l'immagine è larga come la colonna centrale.
+	expect(Math.abs((await admin.locator('.leaflet-image-layer').boundingBox())!.width - (await admin.locator('.leaflet-container').evaluate((e) => e.clientWidth)))).toBeLessThan(2);
+	// Lo zoom è in alto a destra, «Aggiungi pin» subito sotto, sulla mappa: stessa misura e stesso bordo destro di un tasto dello zoom.
+	const zoomBox = (await admin.locator('.leaflet-top.leaflet-right .leaflet-control-zoom').boundingBox())!;
+	const zoomOut = (await admin.locator('.leaflet-control-zoom-out').boundingBox())!;
+	const addBox = (await admin.getByRole('button', { name: /Aggiungi pin/ }).boundingBox())!;
+	expect(addBox.y).toBeGreaterThanOrEqual(zoomBox.y + zoomBox.height);
+	expect(addBox.y - (zoomBox.y + zoomBox.height)).toBeLessThan(16);
+	expect(Math.abs(addBox.width - zoomOut.width)).toBeLessThan(1);
+	expect(Math.abs(addBox.height - zoomOut.height)).toBeLessThan(1);
+	expect(Math.abs(addBox.x + addBox.width - (zoomOut.x + zoomOut.width))).toBeLessThan(1);
+	// L'altezza segue la forma dell'immagine: da quella di base fino al doppio, non oltre.
+	const [base, double] = await admin.locator('.leaflet-container').evaluate((e) => {
+		const ratio = e.style.aspectRatio;
+		const heights = ['4 / 1', '1 / 4'].map((r) => ((e.style.aspectRatio = r), e.getBoundingClientRect().height));
+		e.style.aspectRatio = ratio;
+		return heights;
+	});
+	expect(double).toBeCloseTo(base * 2, 0);
 	// La mappa è una pagina dell'albero.
 	await expect(admin.getByRole('navigation', { name: TREE }).getByRole('link', { name: 'Costa della Spada, Mappa' })).toHaveAttribute('aria-current', 'page');
 
-	// Livello segreto.
-	await admin.getByText('Gestisci i livelli').click();
-	await admin.getByLabel('Nuovo livello').fill('Segreti');
+	// Il livello base c'è sempre; «Nuovo livello» ne crea un altro, con nome e visibilità.
+	const layersBtn = admin.getByTitle('Livelli', { exact: true });
+	await layersBtn.click();
+	await expect(admin.getByRole('group', { name: 'Livelli' })).toContainText('Livello base');
+	const addLayer = admin.getByRole('button', { name: 'Nuovo livello' });
+	await addLayer.click();
+	const layerName = admin.getByRole('textbox', { name: 'Nome del livello' });
+	await expect(layerName).toBeFocused();
+	await layerName.fill('Segreti');
 	await admin.locator('#new-layer-vis').selectOption('master');
 	await admin.getByRole('button', { name: 'Aggiungi', exact: true }).click();
 	await expect(admin.getByRole('group', { name: 'Livelli' })).toContainText('Segreti');
+	await expect(addLayer).toBeFocused();
+	await expect(layerName).toHaveCount(0);
+	await axe(admin, 'elenco dei livelli');
+	// I livelli si aprono dal tasto subito sotto «Aggiungi pin».
+	const pinBox = (await admin.getByRole('button', { name: /Aggiungi pin/ }).boundingBox())!;
+	const layersBox = (await layersBtn.boundingBox())!;
+	expect(layersBox.y).toBeGreaterThanOrEqual(pinBox.y + pinBox.height);
+	expect(Math.abs(layersBox.x - pinBox.x)).toBeLessThan(1);
+	await layersBtn.click();
 
-	const pinForm = admin.getByRole('region', { name: /^(Nuovo|Modifica) pin$/ });
-	// Pin al centro (senza mouse) collegato a una pagina.
-	await admin.getByRole('button', { name: 'Pin al centro della vista' }).click();
+	const pinForm = admin.getByRole('dialog', { name: /^(Nuovo|Modifica) pin$/ });
+	// Da tastiera il pin nasce al centro della vista. Questo è collegato a una pagina.
+	await admin.getByRole('button', { name: /Aggiungi pin/ }).focus();
+	await admin.keyboard.press('Enter');
 	await expect(pinForm.getByLabel('Nome', { exact: true })).toBeFocused();
+	// Se non si sceglie altro, il pin va nel livello base.
+	await expect(pinForm.getByLabel('Livello', { exact: true }).locator('option:checked')).toHaveText('Livello base');
 	await pinForm.getByLabel('Nome', { exact: true }).fill('Waterdeep');
 	await pinForm.getByLabel('Pagina collegata').fill('Locanda del Grifone');
 	await pinForm.getByLabel('Simbolo').selectOption('city');
@@ -457,6 +506,11 @@ test('mappe con pin, livelli e mappe annidate', async () => {
 	};
 	let mapBox = await box();
 	await admin.mouse.click(mapBox.x + mapBox.width * 0.3, mapBox.y + mapBox.height * 0.6);
+	// Il pin si vede già, e il popup chiede i dati.
+	await expect(admin.locator('.leaflet-marker-icon')).toHaveCount(2);
+	await expect(pinForm.getByLabel('Nome', { exact: true })).toBeFocused();
+	await axe(admin, 'mappa: popup del pin');
+	await admin.screenshot({ path: `${SHOTS}/14a-mappa-popup-del-pin.png` });
 	await pinForm.getByLabel('Nome', { exact: true }).fill('Covo dei Zhentarim');
 	await pinForm.getByLabel('Livello', { exact: true }).selectOption({ label: 'Segreti' });
 	await pinForm.getByRole('button', { name: 'Salva' }).click();
@@ -466,9 +520,11 @@ test('mappe con pin, livelli e mappe annidate', async () => {
 	await expect(admin.getByRole('table')).toContainText('Covo dei Zhentarim');
 
 	// Spegnere un livello nasconde i suoi pin.
+	await layersBtn.click();
 	await admin.getByRole('checkbox', { name: /Segreti/ }).uncheck();
 	await expect(admin.locator('.leaflet-marker-icon')).toHaveCount(1);
 	await admin.getByRole('checkbox', { name: /Segreti/ }).check();
+	await layersBtn.click();
 
 	// Il pin si trova dall'elenco; Invio apre la sua pagina sopra la mappa, Esc la chiude.
 	await admin.getByRole('button', { name: /^Mostra ?: Waterdeep$/ }).click();
@@ -492,7 +548,7 @@ test('mappe con pin, livelli e mappe annidate', async () => {
 	await pinPage.getByRole('button', { name: 'Modifica pin' }).click();
 	await expect(pinPage).toBeHidden();
 	await expect(pinForm.getByLabel('Nome', { exact: true })).toHaveValue('Waterdeep');
-	await pinForm.getByRole('button', { name: 'Annulla' }).click();
+	await pinForm.getByRole('button', { name: 'Chiudi' }).click();
 
 	// Clic fuori dalla finestra: si chiude.
 	await waterdeep.click();
@@ -507,8 +563,10 @@ test('mappe con pin, livelli e mappe annidate', async () => {
 
 	// Righello. I pin si spengono: dove cadono dipende dalla finestra, e un clic su un pin non misura.
 	// Anche il fumetto del Covo deve sparire: Leaflet lo dissolve per un attimo, e intanto prende i clic.
-	const layers = [admin.getByRole('checkbox', { name: 'Senza livello' }), admin.getByRole('checkbox', { name: /Segreti/ })];
+	const layers = [admin.getByRole('checkbox', { name: 'Livello base' }), admin.getByRole('checkbox', { name: /Segreti/ })];
+	await layersBtn.click();
 	for (const l of layers) await l.uncheck();
+	await layersBtn.click();
 	await expect(admin.locator('.leaflet-marker-icon')).toHaveCount(0);
 	await expect(admin.locator('.leaflet-popup')).toHaveCount(0);
 	await admin.getByRole('button', { name: /Misura/ }).click();
@@ -523,7 +581,9 @@ test('mappe con pin, livelli e mappe annidate', async () => {
 	for (const p of points) await admin.mouse.click(p.x, p.y);
 	await expect(admin.getByRole('status').filter({ hasText: 'Distanza' }), `sotto i clic: ${under.join(' | ')}`).toContainText('km');
 	await admin.getByRole('button', { name: /Misura/ }).click();
+	await layersBtn.click();
 	for (const l of layers) await l.check();
+	await layersBtn.click();
 	await expect(admin.locator('.leaflet-marker-icon')).toHaveCount(2);
 
 	await axe(admin, 'mappa');
@@ -548,6 +608,18 @@ test('mappe con pin, livelli e mappe annidate', async () => {
 	await admin.goto('/maps/costa-della-spada');
 	await shot(admin, '15-mappa-telefono');
 	await admin.setViewportSize({ width: 1280, height: 800 });
+});
+
+test('la descrizione della mappa si scrive in modifica e sta in un riquadro sopra la mappa', async () => {
+	await admin.goto('/wiki/costa-della-spada');
+	await expect(admin.locator('.prose.panel')).toHaveCount(0);
+	await admin.goto('/wiki/costa-della-spada/edit');
+	await admin.getByRole('textbox', { name: 'Descrizione' }).fill('Dove finisce il Nord.');
+	await admin.getByRole('button', { name: 'Salva' }).click();
+	await admin.waitForURL('/wiki/costa-della-spada');
+	const box = admin.locator('.prose.panel');
+	await expect(box).toHaveText('Dove finisce il Nord.');
+	expect((await box.boundingBox())!.y).toBeLessThan((await admin.locator('.leaflet-container').boundingBox())!.y);
 });
 
 test('galleria: tutte le immagini della campagna', async () => {
@@ -593,6 +665,11 @@ test('il giocatore non vede pin, livelli ed eventi segreti', async ({ browser })
 	await expect(p.locator('main')).not.toContainText('Covo dei Zhentarim');
 	await expect(p.locator('main')).not.toContainText('Segreti');
 	await expect(p.getByRole('button', { name: /Aggiungi pin/ })).toHaveCount(0);
+	// Il livello base è di tutti.
+	await p.getByTitle('Livelli', { exact: true }).click();
+	await expect(p.getByRole('group', { name: 'Livelli' })).toContainText('Livello base');
+	await expect(p.getByRole('button', { name: 'Nuovo livello' })).toHaveCount(0);
+	await p.getByTitle('Livelli', { exact: true }).click();
 	const move = await p.request.patch('/api/maps/1/pins/1', { data: { x: 1, y: 1 } });
 	expect(move.status()).toBe(404);
 

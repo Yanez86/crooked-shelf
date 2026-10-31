@@ -1,6 +1,7 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
-import { getDeletedPage, listTrash, purgePage, restorePage } from '#lib/server/pages.ts';
+import { isMaster } from '#lib/access.ts';
+import { getDeletedPage, listTrash, listTrashedFolders, purgeFolder, purgePage, restoreFolder, restorePage } from '#lib/server/pages.ts';
 
 function allowed(id: number, u: NonNullable<App.Locals['user']>) {
 	return listTrash(u).some((p) => p.id === id) ? getDeletedPage(id) : undefined;
@@ -8,7 +9,7 @@ function allowed(id: number, u: NonNullable<App.Locals['user']>) {
 
 export const load: PageServerLoad = ({ locals, url }) => {
 	if (!locals.user) redirect(303, `/login?next=${encodeURIComponent(url.pathname)}`);
-	return { pages: listTrash(locals.user) };
+	return { pages: listTrash(locals.user), folders: isMaster(locals.user) ? listTrashedFolders() : [] };
 };
 
 export const actions: Actions = {
@@ -27,5 +28,17 @@ export const actions: Actions = {
 		if (f.get('confirm') !== 'on') return fail(400, { error: 'errors.confirm' });
 		purgePage(p.id);
 		return { ok: 'trash.purged' };
+	},
+	restoreFolder: async ({ request, locals }) => {
+		if (!isMaster(locals.user)) return fail(403, { error: 'errors.forbidden' });
+		restoreFolder(Number((await request.formData()).get('id')));
+		return { ok: 'trash.folderRestored' };
+	},
+	purgeFolder: async ({ request, locals }) => {
+		if (!isMaster(locals.user)) return fail(403, { error: 'errors.forbidden' });
+		const f = await request.formData();
+		if (f.get('confirm') !== 'on') return fail(400, { error: 'errors.confirm' });
+		purgeFolder(Number(f.get('id')));
+		return { ok: 'trash.folderPurged' };
 	}
 };

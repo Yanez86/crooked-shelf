@@ -6,7 +6,7 @@
 <svelte:head><title>{t('admin.export')}</title></svelte:head>
 
 <h2>{t('admin.export')}</h2>
-<section class="card narrow">
+<section class="card">
 	<p>{t('export.intro')}</p>
 	<ul>
 		<li>{t('export.point1')}</li>
@@ -15,9 +15,3 @@
 	</ul>
 	<a class="btn btn-primary" href="/admin/export/download" download>{t('export.download')}</a>
 </section>
-
-<style>
-	.narrow {
-		max-width: 44rem;
-	}
-</style>

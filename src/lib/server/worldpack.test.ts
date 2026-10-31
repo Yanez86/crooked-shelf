@@ -4,15 +4,18 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { strFromU8, strToU8, unzipSync, zipSync } from 'fflate';
 import { useMemoryDb, schema } from './db/index.ts';
-import { resetSettingsCache, saveSettings, getCalendar } from './settings.ts';
+import { resetSettingsCache, getCalendar, customThemes } from './settings.ts';
+import { storeTheme } from './themesAdmin.ts';
+import { FIRST_CAMPAIGN, saveCampaign } from './campaigns.ts';
 import { createPage, getPageBySlug, listPages, pageCover } from './pages.ts';
 import { createCategory } from './taxonomy.ts';
 import { createMap, listMaps, pinsOf, saveLayer, layersOf, savePin } from './maps.ts';
-import { saveImage } from './files.ts';
+import { getFile, saveImage } from './files.ts';
 import { saveEvent, listEvents, setTimelineMode, getTimeline, listTimelines } from './timeline.ts';
 import { listTemplates } from './templates.ts';
 import { exportMarkdown, exportWorld, importPack, previewPack, readPack, type ExportOptions } from './worldpack.ts';
 import { preset } from '../calendar.ts';
+import { THEMES } from '../themes.ts';
 import type { DocNode } from '../content/types.ts';
 
 const admin = { id: 1, role: 'admin' as const };
@@ -29,7 +32,7 @@ beforeEach(() => {
 });
 
 function buildWorld() {
-	saveSettings({ calendar: preset('harptos', 'it') });
+	saveCampaign(FIRST_CAMPAIGN, { calendar: preset('harptos', 'it') });
 	const cat = createCategory('Luoghi', null);
 	const img = saveImage(readFileSync('tests/fixtures/city.png'), 'city.png', 1);
 	if (!img.ok) throw new Error('img');
@@ -122,6 +125,25 @@ describe('pacchetto mondo', () => {
 		expect(JSON.stringify(getPageBySlug('costa')!.content)).toContain('La costa.');
 		expect(listTemplates(admin).map((t) => t.title)).toEqual(['PNG']);
 		expect(listPages(admin).total).toBe(8);
+	});
+
+	it("porta con sé l'immagine di sfondo dei temi", () => {
+		const img = saveImage(readFileSync('tests/fixtures/city.png'), 'cielo.png', 1);
+		if (!img.ok) throw new Error('img');
+		storeTheme({ name: 'Cielo', scheme: 'dark', colors: THEMES[1].colors, background: img.file.id }, null);
+		const bytes = exportWorld(all, admin);
+		process.env.CS_DATA_DIR = mkdtempSync(join(tmpdir(), 'cs-pack2-'));
+		db = useMemoryDb();
+		resetSettingsCache();
+		db.insert(schema.users).values({ id: 1, username: 'b', displayName: 'B', passwordHash: 'x', role: 'admin', createdAt: 0 }).run();
+
+		const r = readPack(bytes);
+		if (!r.ok) throw new Error(r.error);
+		importPack(r.pack, { conflict: 'rename', calendar: false }, admin);
+		const [theme] = customThemes();
+		expect(theme.background).toBeTruthy();
+		expect(theme.background).not.toBe(img.file.id);
+		expect(getFile(theme.background!)?.name).toBe(`${img.file.id}.png`);
 	});
 
 	it('legge i pacchetti della 0.10 e precedenti: mappe, eventi e template a parte', () => {

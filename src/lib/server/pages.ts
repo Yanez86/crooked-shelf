@@ -8,11 +8,14 @@ import { canView, isMaster, type Viewer } from '../access.ts';
 import type { Visibility } from '../roles.ts';
 import type { PageKind } from '../pageKinds.ts';
 import { visibleTo } from './visibility.ts';
-import { ensureTags, tagsForPages } from './taxonomy.ts';
+import { campaignId, ofCampaign } from './campaigns.ts';
+import { isHomePage } from './settings.ts';
+import { ensureTags, pageTree, syncBranch, tagsForPages } from './taxonomy.ts';
 import { syncSessionEvent } from './timeline.ts';
 import { hasRule } from './rules/index.ts';
 import { getFile } from './files.ts';
 import type { PageCover } from '../covers.ts';
+import { childrenOf, locate, type TreeNode } from '../tree.ts';
 
 const { pages, pageTags, pageLinks, users, categories, pageRevisions } = schema;
 
@@ -24,13 +27,13 @@ export function getPageBySlug(slug: string): PageRow | undefined {
 	return getDb()
 		.select()
 		.from(pages)
-		.where(and(eq(pages.slug, slug), sql`${pages.deletedAt} IS NULL`))
+		.where(and(ofCampaign(pages), eq(pages.slug, slug), sql`${pages.deletedAt} IS NULL`))
 		.get();
 }
 
 function slugTaken(slug: string, excludeId?: number) {
 	// Anche le pagine eliminate tengono il loro indirizzo, per poterle ripristinare.
-	const hit = getDb().select({ id: pages.id }).from(pages).where(eq(pages.slug, slug)).get();
+	const hit = getDb().select({ id: pages.id }).from(pages).where(and(ofCampaign(pages), eq(pages.slug, slug))).get();
 	return !!hit && hit.id !== excludeId;
 }
 
@@ -143,6 +146,7 @@ export function createPage(input: PageInput, u: Viewer, extra?: (page: PageRow) 
 		const row = getDb()
 			.insert(pages)
 			.values({
+				campaignId: campaignId(),
 				slug: uniquePageSlug(base),
 				title: input.title,
 				content: doc,
@@ -181,6 +185,8 @@ const nextKind = (page: PageRow, want: PageKind | undefined): PageKind =>
 export function updatePage(page: PageRow, input: PageInput, u: Viewer, manage: boolean, extra?: () => void): void {
 	const doc = normalizeContent(input.content, u);
 	const kind = nextKind(page, input.kind);
+	// Scegliere un'altra cartella la porta fuori dalla pagina che la conteneva.
+	const moved = input.categoryId !== page.categoryId;
 	getDb().transaction(() => {
 		getDb()
 			.update(pages)
@@ -197,10 +203,12 @@ export function updatePage(page: PageRow, input: PageInput, u: Viewer, manage: b
 				kind,
 				updatedBy: u.id,
 				updatedAt: Math.max(Date.now(), page.updatedAt + 1),
-				...(manage ? { visibility: input.visibility, playersCanEdit: input.playersCanEdit } : {})
+				...(manage ? { visibility: input.visibility, playersCanEdit: input.playersCanEdit } : {}),
+				...(moved ? { parentPageId: null } : {})
 			})
 			.where(eq(pages.id, page.id))
 			.run();
+		if (moved) syncBranch(page.id, input.categoryId);
 		writeIndex(page.id, input.title, doc, input.fields);
 		writeTags(page.id, input.tags);
 		const visibility = manage ? input.visibility : page.visibility;
@@ -210,9 +218,11 @@ export function updatePage(page: PageRow, input: PageInput, u: Viewer, manage: b
 	});
 }
 
-export function deletePage(id: number) {
+/** La home non si elimina: per cambiarla si sceglie un'altra pagina. */
+export function deletePage(id: number, at = Date.now()) {
+	if (isHomePage(id)) return;
 	getDb().transaction(() => {
-		getDb().update(pages).set({ deletedAt: Date.now() }).where(eq(pages.id, id)).run();
+		getDb().update(pages).set({ deletedAt: at }).where(eq(pages.id, id)).run();
 		getDb().delete(pageLinks).where(eq(pageLinks.fromPageId, id)).run();
 		getSqlite().prepare('DELETE FROM pages_fts WHERE rowid = ?').run(id);
 		syncSessionEvent({ id, title: '', visibility: 'personal', authorId: null }, null);
@@ -249,7 +259,7 @@ export function resolverFor(slugs: string[], u: Viewer | null): (slug: string) =
 				body: sql<string | null>`(SELECT substr(body, 1, 400) FROM pages_fts WHERE rowid = ${pages.id})`
 			})
 			.from(pages)
-			.where(and(inArray(pages.slug, slugs), sql`${pages.deletedAt} IS NULL`))
+			.where(and(ofCampaign(pages), inArray(pages.slug, slugs), sql`${pages.deletedAt} IS NULL`))
 			.all();
 		for (const r of rows) {
 			const visible = canView({ ...r, playersCanEdit: false, hasSecret: false }, u);
@@ -286,15 +296,25 @@ export function backlinks(slug: string, u: Viewer | null) {
 		.all();
 }
 
+export function getPageById(id: number): PageRow | undefined {
+	return getDb()
+		.select()
+		.from(pages)
+		.where(and(ofCampaign(pages), eq(pages.id, id), sql`${pages.deletedAt} IS NULL`))
+		.get();
+}
+
 export interface ListOptions {
 	categoryIds?: number[];
 	tagId?: number;
 	kind?: PageKind;
 	/** Tutti i tipi tranne i template (es. le ultime modifiche della home). */
 	noTemplates?: boolean;
+	/** Una pagina da lasciare fuori (es. la home dai propri elenchi). */
+	exclude?: number | null;
 	limit?: number;
 	offset?: number;
-	sort?: 'updated' | 'title';
+	sort?: 'updated' | 'created' | 'title';
 }
 
 export function listPages(u: Viewer | null, o: ListOptions = {}) {
@@ -303,6 +323,7 @@ export function listPages(u: Viewer | null, o: ListOptions = {}) {
 	if (o.categoryIds) conds.push(inArray(pages.categoryId, o.categoryIds.length ? o.categoryIds : [-1]));
 	if (o.kind) conds.push(eq(pages.kind, o.kind));
 	if (o.noTemplates) conds.push(sql`${pages.kind} <> 'template'`);
+	if (o.exclude) conds.push(sql`${pages.id} <> ${o.exclude}`);
 	if (o.tagId)
 		conds.push(
 			sql`${pages.id} IN (SELECT ${pageTags.pageId} FROM ${pageTags} WHERE ${pageTags.tagId} = ${o.tagId})`
@@ -314,8 +335,10 @@ export function listPages(u: Viewer | null, o: ListOptions = {}) {
 			id: pages.id,
 			slug: pages.slug,
 			title: pages.title,
+			icon: pages.icon,
 			kind: pages.kind,
 			visibility: pages.visibility,
+			createdAt: pages.createdAt,
 			updatedAt: pages.updatedAt,
 			category: categories.name,
 			categorySlug: categories.slug,
@@ -325,7 +348,7 @@ export function listPages(u: Viewer | null, o: ListOptions = {}) {
 		.leftJoin(categories, eq(categories.id, pages.categoryId))
 		.leftJoin(users, eq(users.id, pages.updatedBy))
 		.where(where)
-		.orderBy(o.sort === 'title' ? sql`${pages.title} COLLATE NOCASE` : desc(pages.updatedAt))
+		.orderBy(o.sort === 'title' ? sql`${pages.title} COLLATE NOCASE` : desc(o.sort === 'created' ? pages.createdAt : pages.updatedAt))
 		.limit(o.limit ?? 50)
 		.offset(o.offset ?? 0)
 		.all();
@@ -384,14 +407,29 @@ export function pageMeta(page: PageRow) {
 
 // --- Cestino ---
 
-/** Pagine eliminate che chi guarda può recuperare: il Master tutte (tranne le personali altrui), il giocatore le sue. */
+/**
+ * Pagine eliminate che chi guarda può recuperare: il Master tutte (tranne le personali altrui), il giocatore le sue.
+ * Per il Master, quelle finite nel cestino con una cartella stanno nella cartella: tornano con lei.
+ */
 export function listTrash(u: Viewer) {
 	const mine = sql`${pages.authorId} = ${u.id}`;
-	const cond = isMaster(u) ? sql`(${pages.visibility} <> 'personal' OR ${mine})` : sql`(${mine} AND ${pages.hasSecret} = 0)`;
+	const cond = isMaster(u)
+		? sql`(${pages.visibility} <> 'personal' OR ${mine}) AND ${pages.deletedAt} NOT IN (SELECT ${categories.deletedAt} FROM ${categories} WHERE ${categories.campaignId} = ${campaignId()} AND ${categories.deletedAt} IS NOT NULL)`
+		: sql`(${mine} AND ${pages.hasSecret} = 0)`;
 	return getDb()
-		.select({ id: pages.id, slug: pages.slug, title: pages.title, deletedAt: pages.deletedAt, visibility: pages.visibility })
+		.select({
+			id: pages.id,
+			slug: pages.slug,
+			title: pages.title,
+			deletedAt: pages.deletedAt,
+			visibility: pages.visibility,
+			createdAt: pages.createdAt,
+			updatedAt: pages.updatedAt,
+			author: users.displayName
+		})
 		.from(pages)
-		.where(and(sql`${pages.deletedAt} IS NOT NULL`, cond))
+		.leftJoin(users, eq(users.id, pages.authorId))
+		.where(and(ofCampaign(pages), sql`${pages.deletedAt} IS NOT NULL`, cond))
 		.orderBy(desc(pages.deletedAt))
 		.all();
 }
@@ -400,7 +438,7 @@ export function getDeletedPage(id: number) {
 	return getDb()
 		.select()
 		.from(pages)
-		.where(and(eq(pages.id, id), sql`${pages.deletedAt} IS NOT NULL`))
+		.where(and(ofCampaign(pages), eq(pages.id, id), sql`${pages.deletedAt} IS NOT NULL`))
 		.get();
 }
 
@@ -419,6 +457,57 @@ export function purgePage(id: number) {
 	getDb().transaction(() => {
 		getSqlite().prepare('DELETE FROM pages_fts WHERE rowid = ?').run(id);
 		getDb().delete(pages).where(and(eq(pages.id, id), sql`${pages.deletedAt} IS NOT NULL`)).run();
+	});
+}
+
+/**
+ * Sposta nel cestino una cartella con tutto quello che contiene e che chi la sposta può eliminare:
+ * il resto (le pagine personali altrui) esce dalla cartella. Tutti con la stessa ora, per farli tornare insieme.
+ */
+export function trashFolder(id: number, u: Viewer) {
+	const folder = locate(pageTree(u).items, `folder-${id}`)?.node;
+	if (folder?.type !== 'folder') return;
+	const at = Date.now();
+	const walk = (n: TreeNode) => {
+		if (n.type === 'folder') getDb().update(categories).set({ deletedAt: at }).where(eq(categories.id, n.id)).run();
+		else if (n.type === 'page' && n.canTrash) deletePage(n.id, at);
+		childrenOf(n).forEach(walk);
+	};
+	getDb().transaction(() => walk(folder));
+}
+
+const pagesTrashedAt = (at: number) => getDb().select({ id: pages.id }).from(pages).where(and(ofCampaign(pages), eq(pages.deletedAt, at))).all();
+
+/** Le cartelle nel cestino, senza quelle che stanno dentro un'altra finita lì con lei. */
+export function listTrashedFolders() {
+	const all = getDb().select().from(categories).where(and(ofCampaign(categories), sql`${categories.deletedAt} IS NOT NULL`)).orderBy(desc(categories.deletedAt)).all();
+	const top = all.filter((c) => !all.some((p) => p.id === c.parentId && p.deletedAt === c.deletedAt));
+	return top.map((c) => ({
+		id: c.id,
+		name: c.name,
+		deletedAt: c.deletedAt,
+		pages: pagesTrashedAt(c.deletedAt!).length
+	}));
+}
+
+const trashedFolder = (id: number) => getDb().select().from(categories).where(and(ofCampaign(categories), eq(categories.id, id), sql`${categories.deletedAt} IS NOT NULL`)).get();
+
+export function restoreFolder(id: number) {
+	const c = trashedFolder(id);
+	if (!c) return;
+	getDb().transaction(() => {
+		for (const p of pagesTrashedAt(c.deletedAt!)) restorePage(p.id);
+		getDb().update(categories).set({ deletedAt: null }).where(and(ofCampaign(categories), eq(categories.deletedAt, c.deletedAt!))).run();
+	});
+}
+
+/** Elimina per sempre la cartella e ciò che è finito nel cestino con lei. */
+export function purgeFolder(id: number) {
+	const c = trashedFolder(id);
+	if (!c) return;
+	getDb().transaction(() => {
+		for (const p of pagesTrashedAt(c.deletedAt!)) purgePage(p.id);
+		getDb().delete(categories).where(and(ofCampaign(categories), eq(categories.deletedAt, c.deletedAt!))).run();
 	});
 }
 

@@ -1,8 +1,9 @@
 import { error, redirect } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { canView } from '#lib/access.ts';
 import { getDb, schema } from '#lib/server/db/index.ts';
+import { ofCampaign } from '#lib/server/campaigns.ts';
 
 /** Gli indirizzi delle bacheche della 0.10 e precedenti: ora le bacheche sono pagine. */
 export const GET: RequestHandler = ({ params, locals }) => {
@@ -13,7 +14,7 @@ export const GET: RequestHandler = ({ params, locals }) => {
 				.select({ slug: schema.pages.slug, visibility: schema.pages.visibility, authorId: schema.pages.authorId, deletedAt: schema.pages.deletedAt })
 				.from(schema.boards)
 				.innerJoin(schema.pages, eq(schema.pages.id, schema.boards.pageId))
-				.where(eq(schema.boards.id, id))
+				.where(and(ofCampaign(schema.pages), eq(schema.boards.id, id)))
 				.get()
 		: undefined;
 	if (!p || p.deletedAt !== null || !canView({ ...p, playersCanEdit: false, hasSecret: false }, locals.user)) error(404, 'Not found');

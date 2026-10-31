@@ -30,7 +30,7 @@
 <FormOk message={page.url.searchParams.has('saved') ? 'common.saved' : data.imported ? 'themes.imported' : null} />
 
 <div class="layout">
-	<form method="post" class="card">
+	<form method="post" enctype="multipart/form-data" class="card">
 		<div class="field">
 			<label for="name">{t('common.name')}</label>
 			<input id="name" name="name" type="text" required maxlength="40" bind:value={name} />
@@ -49,6 +49,18 @@
 						<label for="c-{k}">{t('themes.tokens.' + k)}<br /><span id="h-{k}" class="hint">{colors[k]}</span></label>
 					</div>
 				{/each}
+			</div>
+		</fieldset>
+		<fieldset>
+			<legend>{t('themes.background')}</legend>
+			{#if data.theme.background}
+				<img class="bg-current" src="/files/{data.theme.background}" alt={t('themes.backgroundCurrent')} />
+				<label class="choice"><input type="checkbox" name="removeBackground" /><span>{t('themes.backgroundRemove')}</span></label>
+			{/if}
+			<div class="field">
+				<label for="background">{t('themes.backgroundFile')}</label>
+				<input id="background" name="background" type="file" accept="image/png,image/jpeg,image/webp,image/gif" aria-describedby="background-hint" />
+				<p id="background-hint" class="hint">{t('themes.backgroundHint')}</p>
 			</div>
 		</fieldset>
 		<p role="status" class:bad={failing > 0} class="summary">
@@ -97,8 +109,11 @@
 	}
 	.colors {
 		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
+		grid-template-columns: repeat(auto-fill, minmax(11.5rem, 1fr));
 		gap: 0.5rem 1rem;
+	}
+	.side section:first-child h3 {
+		margin-top: 0;
 	}
 	.color {
 		display: flex;
@@ -117,6 +132,13 @@
 	.color label {
 		font-weight: 600;
 		font-size: var(--fs-sm);
+	}
+	.bg-current {
+		display: block;
+		max-width: 100%;
+		max-height: 10rem;
+		margin-bottom: 0.5rem;
+		border-radius: var(--radius);
 	}
 	.summary {
 		font-weight: 700;

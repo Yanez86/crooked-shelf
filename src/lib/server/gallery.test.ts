@@ -1,3 +1,4 @@
+import type { TreeNode } from '../tree.ts';
 import { beforeEach, describe, expect, it } from 'vitest';
 import Database from 'better-sqlite3';
 import { useMemoryDb, schema } from './db/index.ts';
@@ -149,12 +150,8 @@ describe('albero nella barra laterale', () => {
 		createPage({ ...base, title: 'Bartolo' }, master);
 
 		const forAlice = pageTree(alice);
-		expect(forAlice.folders.map((f) => [f.name, f.pages.map((p) => p.title)])).toEqual([['Luoghi', ['Waterdeep']]]);
-		expect(forAlice.pages.map((p) => p.title)).toEqual(['Bartolo']);
-		const forMaster = pageTree(master);
-		expect(forMaster.folders.map((f) => [f.name, f.pages.map((p) => p.title)])).toEqual([
-			['Luoghi', ['Covo', 'Waterdeep']],
-			['Segreti', []]
-		]);
+		const shape = (list: TreeNode[]): unknown[] => list.map((n) => (n.type === 'folder' ? [n.name, shape(n.items)] : n.type === 'page' ? n.title : '---'));
+		expect(shape(pageTree(alice).items)).toEqual([['Luoghi', ['Waterdeep']], 'Bartolo']);
+		expect(shape(pageTree(master).items)).toEqual([['Luoghi', ['Covo', 'Waterdeep']], ['Segreti', []], 'Bartolo']);
 	});
 });

@@ -133,7 +133,7 @@
 {/snippet}
 
 {#if open}
-	<section class="side" aria-label={t('fields.column')}>
+	<section class="side panel" aria-label={t('fields.column')}>
 		{@render children?.()}
 		{#each rows as row, i (row.key)}
 			{#if row.image !== undefined}
@@ -210,16 +210,11 @@
 <style>
 	/* Come la colonna della pagina: un riquadro a sé, staccato dal testo. */
 	.side {
-		width: 20rem;
+		width: var(--side-col);
 		max-width: 100%;
 		display: flex;
 		flex-direction: column;
 		gap: 1rem;
-		background: var(--c-surface);
-		border: 1px solid var(--c-border);
-		border-top: 4px solid var(--c-primary);
-		border-radius: var(--radius);
-		padding: 1rem;
 	}
 	.open {
 		display: grid;

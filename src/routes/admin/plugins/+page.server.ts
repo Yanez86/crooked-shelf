@@ -3,6 +3,7 @@ import { requireAdmin } from '#lib/server/guard.ts';
 import { allPlugins, enabledPlugins, pluginDirs, reloadPlugins, setPluginEnabled } from '#lib/server/plugins.ts';
 import { installPluginTemplates } from '#lib/server/templates.ts';
 import { getSettings } from '#lib/server/settings.ts';
+import { inCampaign } from '#lib/server/campaigns.ts';
 
 export const load: PageServerLoad = () => {
 	const on = new Set(enabledPlugins().map((p) => p.id));
@@ -30,8 +31,8 @@ export const actions: Actions = {
 		if (!allPlugins().some((p) => p.id === id)) return { ok: null };
 		const on = f.get('on') === '1';
 		setPluginEnabled(id, on);
-		// I template del plugin diventano pagine (nella lingua della wiki) e restano anche a plugin spento.
-		if (on) installPluginTemplates(id, getSettings().defaultLocale, locals.user!);
+		// I template del plugin diventano pagine di ogni campagna (nella lingua della wiki) e restano anche a plugin spento.
+		if (on) for (const c of locals.campaigns) inCampaign(c, () => installPluginTemplates(id, getSettings().defaultLocale, locals.user!));
 		return { ok: on ? 'plugins.enabled' : 'plugins.disabled' };
 	},
 	reload: async ({ locals }) => {

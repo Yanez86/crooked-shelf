@@ -1,11 +1,12 @@
 import { hash, verify } from '@node-rs/argon2';
 import { createHash, randomBytes } from 'node:crypto';
-import { and, eq, gt, isNull, lt, sql } from 'drizzle-orm';
+import { and, desc, eq, gt, isNull, lt, sql } from 'drizzle-orm';
 import type { Cookies } from '@sveltejs/kit';
 import { getDb, schema } from './db/index.ts';
+import { addMember } from './campaigns.ts';
 import type { Role } from '../roles.ts';
 
-const { users, sessions, invites } = schema;
+const { users, sessions, invites, campaigns } = schema;
 
 export const SESSION_COOKIE = 'cs_session';
 const DAY = 24 * 60 * 60 * 1000;
@@ -84,8 +85,20 @@ export async function redeemInvite(token: string, input: Omit<NewUser, 'role'> &
 		const inv = findInvite(token);
 		if (!inv) return null;
 		const id = insertUser({ ...input, role: inv.role }, passwordHash);
+		if (inv.campaignId) addMember(inv.campaignId, id);
 		markInviteUsed(inv.id, id);
 		return id;
+	});
+}
+
+/** Chi ha già un account entra nella campagna dell'invito, col ruolo di giocatore. Restituisce la campagna. */
+export function joinInvite(token: string, userId: number): number | null {
+	return getDb().transaction(() => {
+		const inv = findInvite(token);
+		if (!inv?.campaignId) return null;
+		addMember(inv.campaignId, userId);
+		markInviteUsed(inv.id, userId);
+		return inv.campaignId;
 	});
 }
 
@@ -151,12 +164,12 @@ export function clearSessionCookie(cookies: Cookies) {
 
 // --- Inviti ---
 
-export function createInvite(role: Role, createdBy: number, days: number): string {
+export function createInvite(role: Role, createdBy: number, days: number, campaignId: number | null): string {
 	const token = newToken();
 	const now = Date.now();
 	getDb()
 		.insert(invites)
-		.values({ tokenHash: sha256(token), role, createdBy, createdAt: now, expiresAt: now + days * DAY })
+		.values({ tokenHash: sha256(token), role, createdBy, createdAt: now, expiresAt: now + days * DAY, campaignId })
 		.run();
 	return token;
 }
@@ -167,6 +180,32 @@ export function findInvite(token: string) {
 		.from(invites)
 		.where(and(eq(invites.tokenHash, sha256(token)), isNull(invites.usedAt), gt(invites.expiresAt, Date.now())))
 		.get();
+}
+
+/** Gli inviti ancora validi: tutti, o quelli di una campagna. */
+export function activeInvites(campaignId?: number) {
+	return getDb()
+		.select({
+			id: invites.id,
+			role: invites.role,
+			createdAt: invites.createdAt,
+			expiresAt: invites.expiresAt,
+			by: users.displayName,
+			campaign: campaigns.name
+		})
+		.from(invites)
+		.leftJoin(users, eq(users.id, invites.createdBy))
+		.leftJoin(campaigns, eq(campaigns.id, invites.campaignId))
+		.where(and(isNull(invites.usedAt), gt(invites.expiresAt, Date.now()), campaignId ? eq(invites.campaignId, campaignId) : undefined))
+		.orderBy(desc(invites.createdAt))
+		.all();
+}
+
+export function revokeInvite(id: number, campaignId?: number) {
+	getDb()
+		.delete(invites)
+		.where(and(eq(invites.id, id), isNull(invites.usedAt), campaignId ? eq(invites.campaignId, campaignId) : undefined))
+		.run();
 }
 
 export function markInviteUsed(id: number, userId: number) {

@@ -1,8 +1,9 @@
-import { sqliteTable, text, integer, real, primaryKey, index } from 'drizzle-orm/sqlite-core';
+import { sqliteTable, text, integer, real, primaryKey, index, uniqueIndex } from 'drizzle-orm/sqlite-core';
 
 import { ROLES, VISIBILITIES } from '../../roles.ts';
 import { PAGE_KINDS, TIMELINE_MODES } from '../../pageKinds.ts';
 import type { PageField, SessionInfo } from '../../content/types.ts';
+import type { Calendar } from '../../calendar.ts';
 
 export const users = sqliteTable('users', {
 	id: integer('id').primaryKey({ autoIncrement: true }),
@@ -15,6 +16,33 @@ export const users = sqliteTable('users', {
 	icon: text('icon'),
 	createdAt: integer('created_at').notNull()
 });
+
+/** Una campagna: la sua wiki (pagine, cartelle, tag, risorse) sta tutta dietro `campaignId`, le righe legate a una pagina dietro la pagina. */
+export const campaigns = sqliteTable('campaigns', {
+	id: integer('id').primaryKey({ autoIncrement: true }),
+	name: text('name').notNull(),
+	/** Il Master: uno solo per campagna. */
+	masterId: integer('master_id').references(() => users.id, { onDelete: 'set null' }),
+	/** La pagina che fa da home. */
+	homePageId: integer('home_page_id'),
+	/** Calendario del mondo; finché non viene scelto si usa il gregoriano. */
+	calendar: text('calendar', { mode: 'json' }).$type<Calendar | null>(),
+	createdAt: integer('created_at').notNull()
+});
+
+/** I giocatori di una campagna. */
+export const campaignMembers = sqliteTable(
+	'campaign_members',
+	{
+		campaignId: integer('campaign_id')
+			.notNull()
+			.references(() => campaigns.id, { onDelete: 'cascade' }),
+		userId: integer('user_id')
+			.notNull()
+			.references(() => users.id, { onDelete: 'cascade' })
+	},
+	(t) => [primaryKey({ columns: [t.campaignId, t.userId] })]
+);
 
 export const sessions = sqliteTable('sessions', {
 	id: text('id').primaryKey(),
@@ -32,7 +60,9 @@ export const invites = sqliteTable('invites', {
 	createdAt: integer('created_at').notNull(),
 	expiresAt: integer('expires_at').notNull(),
 	usedAt: integer('used_at'),
-	usedBy: integer('used_by').references(() => users.id, { onDelete: 'set null' })
+	usedBy: integer('used_by').references(() => users.id, { onDelete: 'set null' }),
+	/** Dove entra chi lo usa; null per gli inviti da Master o Admin, che non stanno in una campagna. */
+	campaignId: integer('campaign_id').references(() => campaigns.id, { onDelete: 'cascade' })
 });
 
 export const settings = sqliteTable('settings', {
@@ -42,24 +72,50 @@ export const settings = sqliteTable('settings', {
 
 export const categories = sqliteTable('categories', {
 	id: integer('id').primaryKey({ autoIncrement: true }),
+	campaignId: integer('campaign_id')
+		.notNull()
+		.references(() => campaigns.id),
 	name: text('name').notNull(),
-	slug: text('slug').notNull().unique(),
+	slug: text('slug').notNull(),
 	parentId: integer('parent_id'),
-	description: text('description').notNull().default('')
+	description: text('description').notNull().default(''),
+	/** La pagina che la contiene nell'albero; intanto `parentId` è null. */
+	parentPageId: integer('parent_page_id'),
+	/** Posizione nell'albero; null = mai spostata. */
+	sort: integer('sort'),
+	/** Nel cestino, insieme a ciò che conteneva: cartelle e pagine di quel momento hanno lo stesso `deletedAt`. */
+	deletedAt: integer('deleted_at')
+}, (t) => [uniqueIndex('categories_slug').on(t.campaignId, t.slug)]);
+
+/** Le righe che separano le voci dell'albero. Senza `categoryId` e `parentPageId` stanno alla radice. */
+export const treeDividers = sqliteTable('tree_dividers', {
+	id: integer('id').primaryKey({ autoIncrement: true }),
+	campaignId: integer('campaign_id')
+		.notNull()
+		.references(() => campaigns.id),
+	categoryId: integer('category_id'),
+	parentPageId: integer('parent_page_id'),
+	sort: integer('sort')
 });
 
 export const tags = sqliteTable('tags', {
 	id: integer('id').primaryKey({ autoIncrement: true }),
-	name: text('name').notNull().unique(),
-	slug: text('slug').notNull().unique(),
+	campaignId: integer('campaign_id')
+		.notNull()
+		.references(() => campaigns.id),
+	name: text('name').notNull(),
+	slug: text('slug').notNull(),
 	color: text('color').notNull().default('gray')
-});
+}, (t) => [uniqueIndex('tags_name').on(t.campaignId, t.name), uniqueIndex('tags_slug').on(t.campaignId, t.slug)]);
 
 export const pages = sqliteTable(
 	'pages',
 	{
 		id: integer('id').primaryKey({ autoIncrement: true }),
-		slug: text('slug').notNull().unique(),
+		campaignId: integer('campaign_id')
+			.notNull()
+			.references(() => campaigns.id),
+		slug: text('slug').notNull(),
 		title: text('title').notNull(),
 		content: text('content', { mode: 'json' }).notNull(),
 		visibility: text('visibility', { enum: VISIBILITIES }).notNull(),
@@ -84,9 +140,13 @@ export const pages = sqliteTable(
 		kind: text('kind', { enum: PAGE_KINDS }).notNull().default('page'),
 		coverImageId: text('cover_image_id').references(() => files.id, { onDelete: 'set null' }),
 		coverColor: text('cover_color'),
-		coverY: integer('cover_y').notNull().default(50)
+		coverY: integer('cover_y').notNull().default(50),
+		/** La pagina che la contiene nell'albero: `categoryId` resta quello della pagina che la contiene. */
+		parentPageId: integer('parent_page_id'),
+		/** Posizione nell'albero; null = mai spostata. */
+		sort: integer('sort')
 	},
-	(t) => [index('pages_category').on(t.categoryId), index('pages_updated').on(t.updatedAt), index('pages_kind').on(t.kind)]
+	(t) => [uniqueIndex('pages_slug').on(t.campaignId, t.slug), index('pages_category').on(t.categoryId), index('pages_updated').on(t.updatedAt), index('pages_kind').on(t.kind)]
 );
 
 export const pageTags = sqliteTable(
@@ -259,6 +319,9 @@ export const boardCards = sqliteTable('board_cards', {
 
 export const resources = sqliteTable('resources', {
 	id: integer('id').primaryKey({ autoIncrement: true }),
+	campaignId: integer('campaign_id')
+		.notNull()
+		.references(() => campaigns.id),
 	title: text('title').notNull(),
 	description: text('description').notNull().default(''),
 	fileId: text('file_id')

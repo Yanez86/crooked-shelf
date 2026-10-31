@@ -141,8 +141,9 @@ test('pagine con lo stesso titolo: si sceglie quale collegare, e mappa e cronolo
 
 	await admin.goto('/maps/costa-della-spada');
 	await expect(admin.locator('.leaflet-marker-icon').first()).toBeVisible();
-	await admin.getByRole('button', { name: 'Pin al centro della vista' }).click();
-	const pinForm = admin.getByRole('region', { name: 'Nuovo pin' });
+	await admin.getByRole('button', { name: /Aggiungi pin/ }).focus();
+	await admin.keyboard.press('Enter');
+	const pinForm = admin.getByRole('dialog', { name: 'Nuovo pin' });
 	await expect(pinForm.locator('#pin-pages option[value="Elminster (elminster-2)"]')).toHaveCount(1);
 	await pinForm.getByLabel('Nome', { exact: true }).fill('Torre del mago');
 	await pinForm.getByLabel('Pagina collegata').fill('Elminster (elminster-2)');
@@ -151,7 +152,7 @@ test('pagine con lo stesso titolo: si sceglie quale collegare, e mappa e cronolo
 	await expect(admin.getByRole('row', { name: /Torre del mago/ }).getByRole('link', { name: 'Elminster' })).toHaveAttribute('href', '/wiki/elminster-2');
 	// Riaprendo il pin la scelta è ancora quella.
 	await admin.getByRole('button', { name: /^Modifica ?: Torre del mago$/ }).click();
-	await expect(admin.getByRole('region', { name: 'Modifica pin' }).getByLabel('Pagina collegata')).toHaveValue('Elminster (elminster-2)');
+	await expect(admin.getByRole('dialog', { name: 'Modifica pin' }).getByLabel('Pagina collegata')).toHaveValue('Elminster (elminster-2)');
 
 	// Lo stesso per gli eventi.
 	await admin.goto('/timeline/campaign');

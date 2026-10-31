@@ -21,36 +21,38 @@
 			<label for="pack-name">{t('world.name')}</label>
 			<input id="pack-name" name="name" type="text" maxlength="80" value="" placeholder={t('world.namePlaceholder')} />
 		</div>
-		<fieldset>
-			<legend>{t('world.pages')}</legend>
-			<label class="choice"><input type="radio" name="pages" value="all" bind:group={pagesMode} /><span>{t('world.allPages')}</span></label>
-			<label class="choice"><input type="radio" name="pages" value="some" bind:group={pagesMode} /><span>{t('world.somePages')}</span></label>
-			{#if pagesMode === 'some'}
-				<div class="cols">
-					<fieldset>
-						<legend>{t('nav.categories')}</legend>
-						{#each data.categories as c (c.id)}
-							<label class="choice"><input type="checkbox" name="category" value={c.id} /><span>{c.label} <span class="muted">({c.count})</span></span></label>
-						{:else}<p class="muted">—</p>{/each}
-					</fieldset>
-					<fieldset>
-						<legend>{t('nav.tags')}</legend>
-						{#each data.tags as tg (tg.id)}
-							<label class="choice"><input type="checkbox" name="tag" value={tg.id} /><span>{tg.name} <span class="muted">({tg.count})</span></span></label>
-						{:else}<p class="muted">—</p>{/each}
-					</fieldset>
-				</div>
-			{/if}
-			<p class="hint">{t('world.pagesHint')}</p>
-		</fieldset>
-		<fieldset>
-			<legend>{t('world.alsoInclude')}</legend>
-			<label class="choice"><input type="checkbox" name="maps" checked /><span>{t('kinds.folder.map')}</span></label>
-			<label class="choice"><input type="checkbox" name="templates" checked /><span>{t('kinds.folder.template')}</span></label>
-			<label class="choice"><input type="checkbox" name="calendar" checked /><span>{t('calendar.title')}</span></label>
-			<label class="choice"><input type="checkbox" name="timeline" checked /><span>{t('world.timelines')}</span></label>
-			<label class="choice"><input type="checkbox" name="themes" /><span>{t('admin.themes')}</span></label>
-		</fieldset>
+		<div class="cols">
+			<fieldset>
+				<legend>{t('world.pages')}</legend>
+				<label class="choice"><input type="radio" name="pages" value="all" bind:group={pagesMode} /><span>{t('world.allPages')}</span></label>
+				<label class="choice"><input type="radio" name="pages" value="some" bind:group={pagesMode} /><span>{t('world.somePages')}</span></label>
+				{#if pagesMode === 'some'}
+					<div class="cols">
+						<fieldset>
+							<legend>{t('nav.categories')}</legend>
+							{#each data.categories as c (c.id)}
+								<label class="choice"><input type="checkbox" name="category" value={c.id} /><span>{c.label} <span class="muted">({c.count})</span></span></label>
+							{:else}<p class="muted">—</p>{/each}
+						</fieldset>
+						<fieldset>
+							<legend>{t('nav.tags')}</legend>
+							{#each data.tags as tg (tg.id)}
+								<label class="choice"><input type="checkbox" name="tag" value={tg.id} /><span>{tg.name} <span class="muted">({tg.count})</span></span></label>
+							{:else}<p class="muted">—</p>{/each}
+						</fieldset>
+					</div>
+				{/if}
+				<p class="hint">{t('world.pagesHint')}</p>
+			</fieldset>
+			<fieldset>
+				<legend>{t('world.alsoInclude')}</legend>
+				<label class="choice"><input type="checkbox" name="maps" checked /><span>{t('kinds.folder.map')}</span></label>
+				<label class="choice"><input type="checkbox" name="templates" checked /><span>{t('kinds.folder.template')}</span></label>
+				<label class="choice"><input type="checkbox" name="calendar" checked /><span>{t('calendar.title')}</span></label>
+				<label class="choice"><input type="checkbox" name="timeline" checked /><span>{t('world.timelines')}</span></label>
+				<label class="choice"><input type="checkbox" name="themes" /><span>{t('admin.themes')}</span></label>
+			</fieldset>
+		</div>
 		<label class="choice secrets">
 			<input type="checkbox" name="secrets" aria-describedby="secrets-hint" />
 			<span>{t('world.secrets')}<br /><span id="secrets-hint" class="hint">{t('world.secretsHint')}</span></span>
@@ -107,13 +109,6 @@
 </section>
 
 <style>
-	section {
-		margin-bottom: 1.5rem;
-		max-width: 48rem;
-	}
-	h3 {
-		margin-top: 0;
-	}
 	.cols {
 		display: grid;
 		grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));

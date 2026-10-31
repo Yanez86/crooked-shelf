@@ -8,7 +8,8 @@ import { getMapOfPage, listMaps, updateMap } from '#lib/server/maps.ts';
 import { getTimeline, setTimelineMode } from '#lib/server/timeline.ts';
 import { saveImage } from '#lib/server/files.ts';
 import { categoryTree, listTags } from '#lib/server/taxonomy.ts';
-import { getCalendar } from '#lib/server/settings.ts';
+import { getCalendar, isHomePage } from '#lib/server/settings.ts';
+import { setHomePage } from '#lib/server/templates.ts';
 import { getFile } from '#lib/server/files.ts';
 import { canCreateKind, TIMELINE_MODES, type TimelineMode } from '#lib/pageKinds.ts';
 
@@ -52,6 +53,8 @@ export const load: PageServerLoad = ({ params, locals, url }) => {
 		canManage: canManage(page, locals.user),
 		canSecret: isMaster(locals.user),
 		canTemplate: canCreateKind('template', locals.user),
+		canHome: isMaster(locals.user) && page.kind === 'page',
+		isHome: isHomePage(page.id),
 		knownTags: listTags(locals.user, true).map((t) => t.name)
 	};
 };
@@ -69,6 +72,10 @@ export const actions: Actions = {
 		if (!r.ok) return fail(400, { error: r.error, values: r.values, extra });
 		// Solo chi può fare template trasforma una pagina in template (e viceversa).
 		if (r.input.kind !== page.kind && !canCreateKind('template', u)) r.input.kind = page.kind;
+		// La home: la sceglie il Master tra le pagine normali, e deve poterla vedere chi apre il sito. Una volta home, resta una pagina.
+		if (isHomePage(page.id)) r.input.kind = 'page';
+		const home = isHomePage(page.id) || (f.get('home') === 'on' && isMaster(u) && page.kind === 'page' && r.input.kind === 'page');
+		if (home && r.input.visibility !== 'public' && r.input.visibility !== 'players') return fail(400, { error: 'errors.homeVisibility', values: r.values, extra });
 		// Qualcun altro ha salvato nel frattempo: non sovrascriviamo il suo lavoro.
 		if (Number(f.get('updatedAt')) !== page.updatedAt) {
 			return fail(409, { error: 'errors.conflict', values: { ...r.input, tags: r.input.tags.join(', '), slug: '', template: r.input.template ?? null, kind: page.kind }, extra });
@@ -88,6 +95,10 @@ export const actions: Actions = {
 			if (m.error) return fail(400, { error: m.error, values: r.values, extra });
 			after = () => updateMap(map.id, m.input, file);
 		} else if (page.kind === 'timeline' && isMaster(u) && f.has('mode')) after = () => setTimelineMode(page.id, mode);
+		else if (home) {
+			r.input.categoryId = null;
+			after = () => setHomePage(page.id);
+		}
 
 		updatePage(page, r.input, u, canManage(page, u), after);
 		redirect(303, `/wiki/${page.slug}`);
@@ -95,7 +106,7 @@ export const actions: Actions = {
 	delete: async ({ params, request, locals }) => {
 		if (!locals.user) return fail(401, { error: 'errors.forbidden', values: null, extra: null });
 		const page = editable(params.slug, locals.user);
-		if (!canManage(page, locals.user)) return fail(403, { error: 'errors.forbidden', values: null, extra: null });
+		if (!canManage(page, locals.user) || isHomePage(page.id)) return fail(403, { error: 'errors.forbidden', values: null, extra: null });
 		if ((await request.formData()).get('confirm') !== 'on') return fail(400, { error: 'errors.confirm', values: null, extra: null });
 		deletePage(page.id);
 		redirect(303, '/wiki?deleted=1');

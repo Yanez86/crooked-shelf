@@ -1,9 +1,10 @@
 import { and, eq, sql } from 'drizzle-orm';
 import { getDb, schema } from './db/index.ts';
-import { createPage, getPageBySlug, type PageRow } from './pages.ts';
-import { createCategory, getCategoryBySlug } from './taxonomy.ts';
+import { createPage, getPageById, getPageBySlug, type PageRow } from './pages.ts';
+import { campaignId, currentCampaign, inCampaign, insertCampaign, ofCampaign, saveCampaign, type CampaignRow } from './campaigns.ts';
+import { createCategory, getCategoryBySlug, syncBranch } from './taxonomy.ts';
 import { setTimelineMode } from './timeline.ts';
-import { pluginTemplates } from './plugins.ts';
+import { enabledPlugins, pluginTemplates } from './plugins.ts';
 import { visibleTo } from './visibility.ts';
 import { BUILTIN_TEMPLATES, builtinTemplate, SESSION_TEMPLATE, type TemplateData } from '../templates.ts';
 import { stripSecrets } from '../content/extract.ts';
@@ -71,13 +72,41 @@ function createTemplatePage(tp: TemplateData, origin: string | null, categoryId:
 	);
 }
 
+function createHomePage(u: Viewer): PageRow {
+	const page = createPage(
+		{ title: currentCampaign().name, content: EMPTY_DOC, visibility: 'public', playersCanEdit: false, categoryId: null, tags: [], fields: [], session: null },
+		u
+	);
+	saveCampaign(campaignId(), { homePageId: page.id });
+	return page;
+}
+
 /**
- * Le pagine di partenza di una wiki nuova, nella sua lingua: i template preinstallati nella cartella Template
+ * La home è una pagina come le altre, si modifica dalla sua matita. Se manca (wiki nate prima di questa
+ * versione, oppure finita nel cestino quando si poteva) la crea il primo Master o Admin che apre la home.
+ */
+export function homePage(u: Viewer | null): PageRow | null {
+	const id = currentCampaign().homePageId;
+	const page = id ? getPageById(id) : undefined;
+	if (page) return page;
+	return u && isMaster(u) ? createHomePage(u) : null;
+}
+
+/** La home è una sola: quella di prima torna una pagina come le altre. Sta alla radice, con le pagine annidate dentro di lei. */
+export function setHomePage(id: number) {
+	saveCampaign(campaignId(), { homePageId: id });
+	getDb().update(pages).set({ categoryId: null, parentPageId: null }).where(eq(pages.id, id)).run();
+	syncBranch(id, null);
+}
+
+/**
+ * Le pagine di partenza di una campagna nuova, nella sua lingua: la home, i template preinstallati nella cartella Template
  * e le due cronologie (del mondo e della campagna).
  */
 export function seedWiki(locale: string, u: Viewer) {
 	const t = (k: string) => translate(locale, k);
 	getDb().transaction(() => {
+		createHomePage(u);
 		const folder = templateFolder(locale);
 		for (const id of BUILTIN_TEMPLATES) createTemplatePage(builtinTemplate(id, locale), `b:${id}`, folder, u);
 		for (const mode of TIMELINE_MODES)
@@ -99,6 +128,16 @@ export function seedWiki(locale: string, u: Viewer) {
 	});
 }
 
+/** Una campagna nuova, già pronta per il suo Master: pagine di partenza e template dei plugin accesi. */
+export function newCampaign(name: string, master: Viewer, locale: string): CampaignRow {
+	const c = insertCampaign(name, master.id);
+	inCampaign(c, () => {
+		seedWiki(locale, master);
+		for (const p of enabledPlugins()) installPluginTemplates(p.id, locale, master);
+	});
+	return c;
+}
+
 /**
  * Accendendo un plugin, i suoi template diventano pagine della cartella Template (una volta sola: se una pagina
  * viene da quel template, anche nel cestino, non se ne crea un'altra). Da lì sono pagine della wiki come le altre.
@@ -108,7 +147,7 @@ export function installPluginTemplates(pluginId: string, locale: string, u: View
 	let added = 0;
 	getDb().transaction(() => {
 		for (const tp of list) {
-			const done = getDb().select({ id: pages.id }).from(pages).where(and(eq(pages.kind, 'template'), eq(pages.template, tp.key))).get();
+			const done = getDb().select({ id: pages.id }).from(pages).where(and(ofCampaign(pages), eq(pages.kind, 'template'), eq(pages.template, tp.key))).get();
 			if (done) continue;
 			createTemplatePage({ name: tp.name, fields: tp.fields, content: tp.content, session: tp.session, icon: null }, tp.key, templateFolder(locale), u);
 			added++;
