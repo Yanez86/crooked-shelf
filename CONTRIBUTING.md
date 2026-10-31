@@ -11,6 +11,10 @@ npm ci
 npm run dev        # wiki su http://localhost:5173
 ```
 
+## Si lavora su `main`
+
+Chi ha accesso al repository lavora direttamente su `main`: niente branch né pull request. La CI gira solo dopo il push, quindi i controlli qui sotto vanno lanciati prima.
+
 ## Prima di proporre una modifica
 
 ```bash
