@@ -154,6 +154,49 @@ test('pagine, collegamenti e segreti', async () => {
 	}, { visibility: 'Solo Master' });
 });
 
+test('i collegamenti tra le pagine si aprono in un popup', async () => {
+	await admin.goto('/wiki/locanda-del-grifone');
+	const url = admin.url();
+	const link = admin.locator('.content').getByRole('link', { name: 'Bartolo Pancia' });
+	const popup = admin.getByRole('dialog', { name: 'Bartolo Pancia' });
+	const frame = admin.frameLocator('dialog iframe');
+
+	// Tutta la pagina, senza intestazione né albero. La pagina sotto resta dov'è.
+	await link.click();
+	await expect(frame.getByRole('heading', { level: 1, name: 'Bartolo Pancia' })).toBeVisible();
+	await expect(frame.locator('header.site-header, #explorer')).toHaveCount(0);
+	await expect(admin).toHaveURL(url);
+	await axe(admin, 'pagina in popup');
+	await shot(admin, '03-pagina-popup');
+	await popup.getByRole('button', { name: 'Chiudi' }).click();
+	await expect(popup).toBeHidden();
+
+	// Dentro il popup si naviga senza aprirne altri.
+	const backlink = frame.getByRole('region', { name: 'Pagine che collegano qui' }).getByRole('link', { name: 'Locanda del Grifone' });
+	const locanda = frame.getByRole('heading', { level: 1, name: 'Locanda del Grifone' });
+	await link.click();
+	await backlink.click();
+	await expect(locanda).toBeVisible();
+	await frame.locator('.content .wikilink', { hasText: 'Bartolo Pancia' }).click();
+	await expect(frame.getByRole('heading', { level: 1, name: 'Bartolo Pancia' })).toBeVisible();
+	await expect(frame.locator('dialog')).toHaveCount(0);
+
+	// Sulla schermata principale va la pagina aperta adesso, non quella di partenza.
+	await backlink.click();
+	await expect(locanda).toBeVisible();
+	await frame.getByRole('navigation', { name: 'Percorso della categoria' }).getByRole('link').first().click();
+	await expect(locanda).toHaveCount(0);
+	await popup.getByRole('button', { name: 'Apri la pagina intera' }).click();
+	await expect(popup).toBeHidden();
+	await expect(admin).toHaveURL(/\/wiki\?category=/);
+
+	await admin.goto('/wiki/locanda-del-grifone');
+	await link.click();
+	await popup.getByRole('button', { name: 'Apri la pagina intera' }).click();
+	await expect(admin).toHaveURL(/\/wiki\/bartolo-pancia$/);
+	await expect(admin.getByRole('heading', { level: 1, name: 'Bartolo Pancia' })).toBeVisible();
+});
+
 test('albero delle cartelle e delle pagine', async () => {
 	await admin.goto('/wiki/locanda-del-grifone');
 	const tree = admin.getByRole('navigation', { name: TREE });
@@ -177,17 +220,26 @@ test('albero delle cartelle e delle pagine', async () => {
 	await expect(tree.getByRole('link', { name: 'Bartolo Pancia' })).toHaveAttribute('aria-current', 'page');
 	// Le cartelle aperte restano aperte.
 	await expect(locanda).toBeVisible();
-	// Niente barra orizzontale e niente sezioni sopra l'albero: le sezioni della wiki stanno nel menu del profilo.
-	await expect(admin.locator('#explorer').getByRole('navigation', { name: 'Navigazione principale' })).toHaveCount(0);
+	// Niente barra orizzontale e niente sezioni: il menu del profilo ha solo Profilo, Campagna, Amministrazione ed Esci.
+	await expect(admin.getByRole('navigation', { name: 'Navigazione principale' })).toHaveCount(0);
 	await admin.locator('.user-menu summary').click();
-	const sections = admin.locator('.user-menu').getByRole('navigation', { name: 'Navigazione principale' });
-	await expect(sections.getByRole('link', { name: 'Galleria' })).toBeVisible();
-	await expect(sections.getByRole('link', { name: 'Cartelle' })).toBeVisible();
+	await expect(admin.locator('.user-menu .panel').getByRole('link')).toHaveText(['Profilo', 'Campagna', 'Amministrazione']);
+	await expect(admin.locator('.user-menu .panel').getByRole('button', { name: /Esci/ })).toBeVisible();
 	await admin.locator('.user-menu summary').click();
+	// Il Cestino è sempre l'ultima voce della barra, anche sulla linguetta Risorse.
+	await expect(tree.getByRole('link').last()).toHaveAttribute('href', '/trash');
+	await tree.getByRole('tab', { name: 'Risorse' }).click();
+	await expect(tree.getByRole('link').last()).toHaveAttribute('href', '/trash');
+	// I template preparati con la wiki stanno nella loro linguetta, con il pulsante per farne uno nuovo.
+	await tree.getByRole('tab', { name: 'Template' }).click();
+	await expect(tree.getByRole('link', { name: 'Luogo, Template' })).toBeVisible();
+	await expect(tree.getByRole('link', { name: 'Nuovo template' })).toHaveAttribute('href', '/wiki/new?kind=template');
+	await expect(tree.getByRole('link').last()).toHaveAttribute('href', '/trash');
+	await tree.getByRole('tab', { name: 'Pagine' }).click();
 	await expect(admin.locator('#explorer').getByRole('link', { name: 'Nuova pagina' })).toHaveAttribute('href', '/wiki/new');
-	// Anche le cronologie e i template preparati con la wiki sono pagine dell'albero.
+	// Anche le cronologie preparate con la wiki sono pagine dell'albero; i template no.
 	await expect(tree.getByRole('link', { name: 'Cronologia del mondo, Cronologia' })).toBeVisible();
-	await expect(tree.locator('summary', { hasText: 'Template' })).toBeVisible();
+	await expect(tree.locator('summary', { hasText: 'Template' })).toHaveCount(0);
 	await axe(admin, 'albero');
 	await shot(admin, '02b-albero');
 
@@ -199,6 +251,154 @@ test('albero delle cartelle e delle pagine', async () => {
 	await expect(toggle).toHaveAttribute('aria-expanded', 'true');
 	await expect(locanda).toBeVisible();
 	await shot(admin, '02c-albero-telefono');
+	await admin.setViewportSize({ width: 1280, height: 800 });
+});
+
+test("l'albero si riordina trascinando, ha i divisori e il cestino", async () => {
+	await admin.setViewportSize({ width: 1280, height: 900 });
+	await newPage(admin, 'Riga Uno', async (p) => p.keyboard.type('Uno.'));
+	await newPage(admin, 'Riga Due', async (p) => p.keyboard.type('Due.'));
+	expect((await admin.request.post('/api/categories', { data: { name: 'Scaffale' } })).ok()).toBe(true);
+	await admin.goto('/wiki/riga-uno');
+	const tree = admin.getByRole('navigation', { name: TREE });
+	const uno = tree.getByRole('link', { name: 'Riga Uno' });
+	const due = tree.getByRole('link', { name: 'Riga Due' });
+
+	// Una pagina si lascia dentro un'altra pagina, e ci resta anche ricaricando.
+	await due.dragTo(uno);
+	const nested = tree.locator('li', { has: admin.locator('.page-row', { hasText: 'Riga Uno' }) });
+	await expect(nested.getByRole('link', { name: 'Riga Due' })).toBeVisible();
+	await admin.reload();
+	await expect(nested.getByRole('link', { name: 'Riga Due' })).toBeVisible();
+	await axe(admin, 'pagina dentro una pagina');
+
+	// La freccia apre e chiude; il titolo porta alla pagina.
+	const arrow = tree.getByRole('button', { name: 'Contenuto di Riga Uno' });
+	await arrow.click();
+	await expect(nested.getByRole('link', { name: 'Riga Due' })).toHaveCount(0);
+	await arrow.click();
+
+	// Da tastiera: Alt e freccia a sinistra la riporta fuori, e il fuoco resta su di lei.
+	await nested.getByRole('link', { name: 'Riga Due' }).focus();
+	await admin.keyboard.press('Alt+ArrowLeft');
+	await expect(nested.getByRole('link', { name: 'Riga Due' })).toHaveCount(0);
+	await expect(due).toBeFocused();
+
+	// Il divisorio nasce in fondo; si sposta come il resto e si elimina dalla sua crocetta.
+	await tree.getByRole('button', { name: 'Nuovo divisorio' }).click();
+	const line = tree.locator('.divider');
+	await expect(line).toHaveCount(1);
+	await expect(line.getByRole('button', { name: 'Elimina il divisorio' })).toBeFocused();
+	await line.dragTo(tree.locator('summary', { hasText: 'Scaffale' }), { targetPosition: { x: 20, y: 2 } });
+	await expect(tree.locator('.level.root > li').filter({ hasText: 'Scaffale' }).locator('xpath=preceding-sibling::li[1]')).toHaveClass(/divider/);
+	await axe(admin, 'divisorio');
+	await shot(admin, '02c-albero-riordinato');
+	await line.hover();
+	await line.getByRole('button', { name: 'Elimina il divisorio' }).click();
+	await expect(line).toHaveCount(0);
+
+	// Il cestino compare passando sulla riga.
+	const trashDue = tree.getByRole('button', { name: 'Sposta nel cestino: Riga Due' });
+	await expect(trashDue).toHaveCSS('opacity', '0');
+	await due.hover();
+	await expect(trashDue).toHaveCSS('opacity', '1');
+	await shot(admin, '02d-cestino-albero');
+	await trashDue.click();
+	await expect(due).toHaveCount(0);
+
+	// La pagina che stai leggendo: si torna all'elenco.
+	await uno.hover();
+	await tree.getByRole('button', { name: 'Sposta nel cestino: Riga Uno' }).click();
+	await expect(admin).toHaveURL(/\/wiki\?deleted=1/);
+
+	await tree.locator('summary', { hasText: 'Scaffale' }).hover();
+	await tree.getByRole('button', { name: 'Sposta nel cestino: Scaffale' }).click();
+	await expect(tree.locator('summary', { hasText: 'Scaffale' })).toHaveCount(0);
+
+	await admin.goto('/trash');
+	await expect(admin.locator('li', { hasText: 'Scaffale' })).toContainText('cartella');
+	await axe(admin, 'cestino con le cartelle');
+	await admin.getByRole('button', { name: /Recupera.*Scaffale/ }).click();
+	await expect(tree.locator('summary', { hasText: 'Scaffale' })).toBeVisible();
+
+	// Si elimina per sempre con una conferma, anche la cartella: il cestino resta vuoto per chi viene dopo.
+	await tree.locator('summary', { hasText: 'Scaffale' }).hover();
+	await tree.getByRole('button', { name: 'Sposta nel cestino: Scaffale' }).click();
+	await expect(tree.locator('summary', { hasText: 'Scaffale' })).toHaveCount(0);
+	await admin.goto('/trash');
+	for (const name of ['Scaffale', 'Riga Uno', 'Riga Due']) {
+		await admin.getByRole('checkbox', { name: new RegExp(`Sono sicuro.*${name}`) }).check();
+		await admin.getByRole('button', { name: new RegExp(`Elimina per sempre.*${name}`) }).click();
+		await expect(admin.locator('main').getByText(name, { exact: true })).toHaveCount(0);
+	}
+	await expect(admin.getByText('Il cestino è vuoto.')).toBeVisible();
+});
+
+test('la home è una pagina: si modifica con la sua matita, i riquadri vanno a destra', async () => {
+	await admin.goto('/');
+	await admin.getByRole('link', { name: 'Modifica: Le Cronache di Faerûn' }).click();
+	await expect(admin).toHaveURL(/\/wiki\/[^/]+\/edit$/);
+	const editor = admin.locator('.editor-content');
+	await expect(editor).toHaveAttribute('contenteditable', 'true');
+	await editor.click();
+	await expect(editor.locator('.has-focus')).toHaveCount(1);
+	await admin.keyboard.type('Una campagna nella Costa della Spada.');
+	// Un riquadro, come nelle altre pagine.
+	await admin.getByRole('button', { name: 'Aggiungi la colonna a lato' }).click();
+	await admin.getByRole('region', { name: 'Colonna a lato' }).getByRole('button', { name: 'Testo', exact: true }).click();
+	await admin.getByLabel('Nome del campo 1').fill('Sessioni');
+	await admin.getByLabel('Valore del campo 1').fill('Il martedì sera');
+	await admin.getByRole('button', { name: 'Salva' }).click();
+
+	await expect(admin).toHaveURL(/\/$/);
+	await expect(admin.getByRole('complementary', { name: 'Scheda' }).getByText('Il martedì sera')).toBeVisible();
+	const presentation = admin.getByText('Una campagna nella Costa della Spada.');
+	const recent = admin.getByRole('region', { name: 'Modificate di recente' });
+	const added = admin.getByRole('region', { name: 'Aggiunte di recente' });
+	await expect(presentation).toBeVisible();
+	await expect(recent.getByRole('link', { name: 'Bartolo Pancia' })).toBeVisible();
+	await expect(added.getByRole('link', { name: 'Bartolo Pancia' })).toBeVisible();
+	// La home non compare nei propri elenchi; dall'albero si torna qui.
+	await expect(recent.getByRole('link', { name: 'Le Cronache di Faerûn' })).toHaveCount(0);
+	expect((await recent.boundingBox())!.x).toBeGreaterThan((await presentation.boundingBox())!.x + 200);
+	// Le due colonne partono alla stessa altezza; la matita sta dentro la colonna centrale.
+	const left = (await admin.locator('#explorer').boundingBox())!;
+	const right = (await admin.getByRole('complementary', { name: 'Scheda' }).boundingBox())!;
+	expect(right.y).toBe(left.y);
+	const pencil = (await admin.getByRole('link', { name: 'Modifica: Le Cronache di Faerûn' }).boundingBox())!;
+	expect(pencil.x + pencil.width).toBeLessThan(right.x);
+	await axe(admin, 'home');
+	await shot(admin, '02d-home');
+
+	// La freccia nasconde la colonna a destra e il riquadro centrale prende il suo posto; la scelta resta anche ricaricando.
+	const middle = admin.locator('.content.panel');
+	const hideSide = admin.getByRole('button', { name: 'Nascondi la colonna a destra' });
+	const showSide = admin.getByRole('button', { name: 'Mostra la colonna a destra' });
+	const narrow = (await middle.boundingBox())!.width;
+	await hideSide.click();
+	await expect(recent).toBeHidden();
+	await expect(showSide).toBeFocused();
+	expect((await middle.boundingBox())!.width).toBeGreaterThan(narrow + 200);
+	await admin.reload();
+	await expect(recent).toBeHidden();
+	await showSide.click();
+	await expect(recent).toBeVisible();
+	await expect(hideSide).toBeFocused();
+	expect((await middle.boundingBox())!.width).toBe(narrow);
+
+	// Senza colonna a destra non c'è la freccia, e il riquadro centrale arriva in fondo.
+	await admin.goto('/wiki');
+	await expect(hideSide).toHaveCount(0);
+	expect((await admin.locator('.column.panel').boundingBox())!.width).toBe((await admin.locator('#main').boundingBox())!.width);
+	await admin.goto('/');
+
+	await admin.getByRole('navigation', { name: TREE }).getByRole('link', { name: 'Le Cronache di Faerûn' }).click();
+	await expect(presentation).toBeVisible();
+
+	await admin.setViewportSize({ width: 390, height: 844 });
+	await expect(recent).toBeVisible();
+	expect((await recent.boundingBox())!.y).toBeGreaterThan((await presentation.boundingBox())!.y);
+	await shot(admin, '02e-home-telefono');
 	await admin.setViewportSize({ width: 1280, height: 800 });
 });
 
@@ -360,7 +560,7 @@ test('temi: contrasti e accessibilità', async () => {
 test('la barra a sinistra si può tenere chiusa', async () => {
 	const save = async (choice: string) => {
 		await admin.goto('/preferences');
-		await admin.getByLabel('Barra a sinistra').selectOption({ label: choice });
+		await admin.getByLabel('Barra a sinistra', { exact: true }).selectOption({ label: choice });
 		await admin.getByRole('button', { name: 'Salva' }).first().click();
 		await expect(admin.getByRole('status').first()).toContainText('Preferenze salvate');
 	};
@@ -379,20 +579,46 @@ test('la barra a sinistra si può tenere chiusa', async () => {
 	await expect(tree).toBeVisible();
 	await expect(toggle).toBeHidden();
 
-	// Profilo e Amministrazione: la barra è chiusa, anche arrivandoci dal menu del profilo; si apre col pulsante.
-	await admin.locator('.user-menu summary').click();
-	await admin.locator('.user-menu').getByRole('link', { name: 'Profilo', exact: true }).click();
-	await expect(admin).toHaveURL(/\/profile$/);
+	// La freccia la nasconde e la riporta accanto alla pagina; la scelta resta anche ricaricando.
+	const hide = admin.getByRole('button', { name: 'Nascondi la barra a sinistra' });
+	const show = admin.getByRole('button', { name: 'Mostra la barra a sinistra' });
+	await hide.click();
 	await expect(tree).toBeHidden();
-	await expect(toggle).toBeVisible();
+	await expect(show).toBeFocused();
+	await admin.reload();
+	await expect(tree).toBeHidden();
+	await expect(toggle).toBeHidden();
+	await show.click();
+	await expect(tree).toBeVisible();
+	await expect(hide).toBeFocused();
+
+	// Profilo, aperto come pagina: la barra parte nascosta; si apre e si richiude con la freccia.
+	await admin.goto('/profile');
+	await expect(tree).toBeHidden();
+	await expect(toggle).toBeHidden();
+	await show.click();
+	await expect(tree).toBeVisible();
+	await expect(hide).toBeFocused();
+	await hide.click();
+	await expect(tree).toBeHidden();
+	await expect(show).toBeFocused();
+
+	// Amministrazione: la barra è chiusa e si apre col pulsante.
 	for (const url of ['/admin', '/admin/themes']) {
 		await admin.goto(url);
 		await expect(tree).toBeHidden();
+		await expect(toggle).toBeVisible();
 	}
-	await admin.locator('.user-menu summary').click();
-	await admin.getByRole('navigation', { name: 'Navigazione principale' }).getByRole('link', { name: 'Pagine', exact: true }).click();
-	await expect(admin).toHaveURL(/\/wiki$/);
+	await admin.goto('/wiki');
 	await expect(tree).toBeVisible();
+});
+
+test('utenti: la tabella scorre dentro il suo riquadro, anche sul telefono', async () => {
+	await admin.setViewportSize({ width: 390, height: 844 });
+	await admin.goto('/admin/users');
+	await axe(admin, 'utenti');
+	expect(await admin.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBe(0);
+	await admin.setViewportSize({ width: 1280, height: 720 });
 });
 
 test('tastiera: link per saltare al contenuto', async () => {

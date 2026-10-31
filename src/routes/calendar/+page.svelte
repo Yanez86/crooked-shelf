@@ -126,7 +126,6 @@
 	.edit {
 		margin-top: 2rem;
 		border-top: 1px solid var(--c-border);
-		max-width: 48rem;
 	}
 	.preset {
 		display: flex;

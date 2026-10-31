@@ -29,6 +29,8 @@
 		cancelHref,
 		months,
 		canTemplate = false,
+		canHome = false,
+		isHome = false,
 		multipart = false,
 		settings
 	}: {
@@ -58,6 +60,10 @@
 		months: CalMonth[];
 		/** Chi può fare template sceglie se la pagina lo è (solo tra pagina e template). */
 		canTemplate?: boolean;
+		/** Chi può sceglie se la pagina diventa la home. */
+		canHome?: boolean;
+		/** La pagina è la home: resta fuori dalle cartelle e resta una pagina. */
+		isHome?: boolean;
 		/** Il modulo porta un file (l'immagine di una mappa). */
 		multipart?: boolean;
 		/** Impostazioni del tipo di pagina (mappa, cronologia), sotto i dati della pagina. */
@@ -80,108 +86,132 @@
 	{#if values.slug}<input type="hidden" name="slug" value={values.slug} />{/if}
 	{#if values.template}<input type="hidden" name="template" value={values.template} />{/if}
 
-	<!-- Copertina e icona come in lettura: l'icona sta a cavallo del bordo della copertina. -->
-	<CoverEdit bind:this={coverEdit} bind:cover bind:picking={pickingCover} />
-	<details class="icon-pick">
-		<summary class="page-icon" class:on-cover={!!cover && !pickingCover} title={t('page.icon')}>
-			{#if PAGE_ICONS[icon]}
-				<svg viewBox="0 0 24 24" aria-hidden="true"><path d={PAGE_ICONS[icon]} /></svg>
-			{:else}
-				<Icon name="none" />
-			{/if}
-			<span class="visually-hidden">{t('page.icon')}</span>
-		</summary>
-		<fieldset class="icons">
-			<legend class="visually-hidden">{t('page.icon')}</legend>
-			<label class="icon-choice" title={t('page.noIcon')}>
-				<input type="radio" name="icon" value="" bind:group={icon} />
-				<Icon name="none" /><span class="visually-hidden">{t('page.noIcon')}</span>
-			</label>
-			{#each Object.entries(PAGE_ICONS) as [name, d] (name)}
-				<label class="icon-choice" title={t(`page.icons.${name}`)}>
-					<input type="radio" name="icon" value={name} bind:group={icon} />
-					<svg viewBox="0 0 24 24" aria-hidden="true"><path {d} /></svg><span class="visually-hidden">{t(`page.icons.${name}`)}</span>
-				</label>
-			{/each}
-		</fieldset>
-	</details>
+	<div class="body with-side">
+		<div class="main-col panel">
+			<div class="top">
+				<CoverEdit bind:this={coverEdit} bind:cover bind:picking={pickingCover} />
 
-	<header class="page-head">
-		<label class="visually-hidden" for="title">{t('page.title')}</label>
-		<input id="title" name="title" type="text" required maxlength="200" value={values.title} placeholder={t('page.title')} class="title-input editable" />
-		<!-- Dove in lettura c'è la matita, e come la matita: solo un segno. Senza copertina, accanto c'è l'icona per aggiungerla. -->
-		<div class="head-actions">
-			{#if !cover}
-				<button
-					id="cover-add"
-					class="icon-action"
-					type="button"
-					title={t('cover.add')}
-					aria-expanded={pickingCover}
-					aria-controls="cover-picker"
-					onclick={(e) => coverEdit?.openPicker(e)}
-				>
-					<Icon name="image" /><span class="visually-hidden">{t('cover.add')}</span>
-				</button>
-			{/if}
-			<a class="icon-action" href={cancelHref} title={t('common.cancel')}><Icon name="close" /><span class="visually-hidden">{t('common.cancel')}</span></a>
-			<button class="icon-action save" type="submit" title={submitLabel}><Icon name="check" /><span class="visually-hidden">{submitLabel}</span></button>
-		</div>
-	</header>
+				<!-- Copertina e icona come in lettura: l'icona sta a sinistra del titolo. -->
+				<header class="page-head">
+					<details class="icon-pick">
+						<summary class="page-icon" title={t('page.icon')}>
+							{#if PAGE_ICONS[icon]}
+								<svg viewBox="0 0 24 24" aria-hidden="true"><path d={PAGE_ICONS[icon]} /></svg>
+							{:else}
+								<Icon name="none" />
+							{/if}
+							<span class="visually-hidden">{t('page.icon')}</span>
+						</summary>
+						<fieldset class="icons">
+							<legend class="visually-hidden">{t('page.icon')}</legend>
+							<label class="icon-choice" title={t('page.noIcon')}>
+								<input type="radio" name="icon" value="" bind:group={icon} />
+								<Icon name="none" /><span class="visually-hidden">{t('page.noIcon')}</span>
+							</label>
+							{#each Object.entries(PAGE_ICONS) as [name, d] (name)}
+								<label class="icon-choice" title={t(`page.icons.${name}`)}>
+									<input type="radio" name="icon" value={name} bind:group={icon} />
+									<svg viewBox="0 0 24 24" aria-hidden="true"><path {d} /></svg><span class="visually-hidden">{t(`page.icons.${name}`)}</span>
+								</label>
+							{/each}
+						</fieldset>
+					</details>
+					<label class="visually-hidden" for="title">{t('page.title')}</label>
+					<input id="title" name="title" type="text" required maxlength="200" value={values.title} placeholder={t('page.title')} class="title-input editable" />
+					<!-- Dove in lettura c'è la matita, e come la matita: solo un segno. Senza copertina, accanto c'è l'icona per aggiungerla. -->
+					<div class="head-actions">
+						{#if !cover}
+							<button
+								id="cover-add"
+								class="icon-action"
+								type="button"
+								title={t('cover.add')}
+								aria-expanded={pickingCover}
+								aria-controls="cover-picker"
+								onclick={(e) => coverEdit?.openPicker(e)}
+							>
+								<Icon name="image" /><span class="visually-hidden">{t('cover.add')}</span>
+							</button>
+						{/if}
+						<a class="icon-action" href={cancelHref} title={t('common.cancel')}><Icon name="close" /><span class="visually-hidden">{t('common.cancel')}</span></a>
+						<button class="icon-action save" type="submit" title={submitLabel}><Icon name="check" /><span class="visually-hidden">{submitLabel}</span></button>
+					</div>
+				</header>
 
-	<div class="meta">
-		<label class="chip">
-			<span>{t('page.category')}</span>
-			<select name="categoryId">
-				<option value="">{t('page.noCategory')}</option>
-				{#each categories as c (c.id)}
-					<option value={c.id} selected={values.categoryId === c.id}>{c.label}</option>
-				{/each}
-			</select>
-		</label>
-		<label class="chip grow">
-			<span>{t('page.tags')}</span>
-			<input name="tags" type="text" value={values.tags} title={t('page.tagsHint')} placeholder={t('page.tagsHint')} list="known-tags" autocomplete="off" />
-		</label>
-		<datalist id="known-tags">
-			{#each knownTags as tag (tag)}<option value={tag}></option>{/each}
-		</datalist>
-		{#if canManage}
-			<fieldset class="chip visibility">
-				<legend class="visually-hidden">{t('page.visibility')}</legend>
-				{#each visibilities as v (v)}
-					<label title={t('visibility.' + v + 'Hint')}>
-						<input type="radio" name="visibility" value={v} checked={values.visibility === v} />
-						<span>{t('visibility.' + v)}</span>
+				<div class="meta">
+					{#if !isHome}
+						<label class="chip">
+							<span>{t('page.category')}</span>
+							<select name="categoryId">
+								<option value="">{t('page.noCategory')}</option>
+								{#each categories as c (c.id)}
+									<option value={c.id} selected={values.categoryId === c.id}>{c.label}</option>
+								{/each}
+							</select>
+						</label>
+					{/if}
+					<label class="chip grow">
+						<span>{t('page.tags')}</span>
+						<input name="tags" type="text" value={values.tags} title={t('page.tagsHint')} placeholder={t('page.tagsHint')} list="known-tags" autocomplete="off" />
 					</label>
-				{/each}
-			</fieldset>
-			<label class="chip">
-				<input type="checkbox" name="playersCanEdit" checked={values.playersCanEdit} />
-				<span>{t('page.playersCanEdit')}</span>
-			</label>
-		{:else}
-			<input type="hidden" name="visibility" value={values.visibility} />
-			{#if values.playersCanEdit}<input type="hidden" name="playersCanEdit" value="on" />{/if}
-		{/if}
-		{#if canTemplate && (kind === 'page' || kind === 'template')}
-			<input type="hidden" name="kindSwitch" value="1" />
-			<label class="chip" title={t('kinds.asTemplateHint')}>
-				<input type="checkbox" name="asTemplate" bind:checked={asTemplate} />
-				<span>{t('kinds.asTemplate')}</span>
-			</label>
-		{/if}
-		{#if asTemplate || (!canTemplate && kind === 'template')}
-			<label class="chip">
-				<input type="checkbox" name="sessionTemplate" checked={!!values.session} />
-				<span>{t('kinds.sessionTemplate')}</span>
-			</label>
-		{/if}
-	</div>
+					<datalist id="known-tags">
+						{#each knownTags as tag (tag)}<option value={tag}></option>{/each}
+					</datalist>
+					{#if canManage}
+						<fieldset class="chip visibility">
+							<legend class="visually-hidden">{t('page.visibility')}</legend>
+							{#each visibilities as v (v)}
+								<label title={t('visibility.' + v + 'Hint')}>
+									<input type="radio" name="visibility" value={v} checked={values.visibility === v} />
+									<span>{t('visibility.' + v)}</span>
+								</label>
+							{/each}
+						</fieldset>
+						<label class="chip">
+							<input type="checkbox" name="playersCanEdit" checked={values.playersCanEdit} />
+							<span>{t('page.playersCanEdit')}</span>
+						</label>
+					{:else}
+						<input type="hidden" name="visibility" value={values.visibility} />
+						{#if values.playersCanEdit}<input type="hidden" name="playersCanEdit" value="on" />{/if}
+					{/if}
+					{#if canTemplate && !isHome && (kind === 'page' || kind === 'template')}
+						<input type="hidden" name="kindSwitch" value="1" />
+						<label class="chip" title={t('kinds.asTemplateHint')}>
+							<input type="checkbox" name="asTemplate" bind:checked={asTemplate} />
+							<span>{t('kinds.asTemplate')}</span>
+						</label>
+					{/if}
+					{#if canHome && !asTemplate}
+						<label class="chip" title={t(isHome ? 'page.homeCurrent' : 'page.homeHint')}>
+							<input type="checkbox" name="home" checked={isHome} disabled={isHome} />
+							<span>{t('page.home')}</span>
+						</label>
+					{/if}
+					{#if asTemplate || (!canTemplate && kind === 'template')}
+						<label class="chip">
+							<input type="checkbox" name="sessionTemplate" checked={!!values.session} />
+							<span>{t('kinds.sessionTemplate')}</span>
+						</label>
+					{/if}
+				</div>
 
-	{#if settings}<div class="settings">{@render settings()}</div>{/if}
+				{#if settings}<div class="settings">{@render settings()}</div>{/if}
+			</div>
 
-	<div class="body">
+			<div class="content">
+				<!-- Nella mappa il testo è la descrizione, nel riquadro sopra l'immagine: qui si dice. -->
+				{#if kind === 'map'}
+					<strong id="content-label">{t('common.description')}</strong>
+					<p class="hint">{t('maps.descriptionHint')}</p>
+				{:else}
+					<span class="visually-hidden" id="content-label">{t('page.content')}</span>
+				{/if}
+				<span class="visually-hidden" id="content-hint">{t('editor.hint')}</span>
+				<Editor content={values.content} {canSecret} labelId="content-label" describedBy="content-hint" inline />
+			</div>
+		</div>
+
 		<div class="side">
 			<SideColumn fields={values.fields} fixed={!!values.session && kind !== 'template'}>
 				{#if values.session && kind !== 'template'}
@@ -202,17 +232,13 @@
 				{/if}
 			</SideColumn>
 		</div>
-
-		<div class="content">
-			<span class="visually-hidden" id="content-label">{t('page.content')}</span>
-			<span class="visually-hidden" id="content-hint">{t('editor.hint')}</span>
-			<Editor content={values.content} {canSecret} labelId="content-label" describedBy="content-hint" inline />
-		</div>
 	</div>
 </form>
 
 <style>
+	/* Salva e Annulla stanno dove in lettura c'è la matita, sul bordo destro del testo. */
 	.page-head {
+		max-width: var(--measure);
 		display: flex;
 		flex-wrap: wrap;
 		align-items: center;
@@ -255,7 +281,7 @@
 	}
 	/* Titolo, blocchi e riquadri: tratteggiati finché non ci si scrive dentro. */
 	.title-input {
-		flex: 1 1 16rem;
+		flex: 1 1 14rem;
 		min-width: 0;
 		font-family: var(--font-head);
 		font-size: var(--fs-2xl);
@@ -277,11 +303,10 @@
 		position: relative;
 		width: fit-content;
 	}
-	/* La stessa casella della pagina (.page-icon), tratteggiata finché non si sceglie. */
+	/* La stessa icona della pagina (.page-icon): senza bordo, come in lettura. */
 	.icon-pick summary {
 		list-style: none;
-		border-style: dashed;
-		border-color: var(--c-control);
+		border-radius: var(--radius);
 		cursor: pointer;
 	}
 	.icon-pick summary::-webkit-details-marker {
@@ -289,8 +314,7 @@
 	}
 	.icon-pick[open] summary,
 	.icon-pick summary:hover {
-		border-color: var(--c-primary);
-		background: var(--c-surface);
+		background: var(--c-surface2);
 	}
 	.icons {
 		position: absolute;
@@ -328,8 +352,8 @@
 		stroke-linejoin: round;
 	}
 	.icon-pick summary svg {
-		width: 62%;
-		height: 62%;
+		width: 80%;
+		height: 80%;
 	}
 	.icon-pick summary :global(.icon) {
 		width: 45%;
@@ -419,26 +443,37 @@
 		background: var(--c-surface2);
 		font-weight: 700;
 	}
-	/* Come la pagina: testo a sinistra, colonna a destra (o solo il «+» per aggiungerla). */
+	/* Come la pagina: testo a sinistra, colonna a destra (o solo il «+» per aggiungerla).
+	   La colonna parte dall'alto e resta in vista mentre si scorre il testo; se è più lunga dello schermo scorre da sola. */
 	.body {
 		display: grid;
 		grid-template-columns: minmax(0, 1fr) auto;
 		align-items: start;
 		gap: 1.5rem 2rem;
-		margin: 1.5rem 0 2rem;
+		margin: 0 0 2rem;
 	}
-	.content {
-		grid-column: 1;
-		grid-row: 1;
+	.main-col {
 		min-width: 0;
 	}
+	.top,
+	.content {
+		min-width: 0;
+	}
+	.content {
+		margin-top: 1.5rem;
+	}
 	.side {
-		grid-column: 2;
-		grid-row: 1;
 		display: flex;
 		flex-direction: column;
 		align-items: flex-end;
 		min-width: 0;
+		position: sticky;
+		top: calc(1rem - 5px);
+		max-height: calc(100vh - 2rem + 10px);
+		overflow-y: auto;
+		/* Spazio per il contorno del fuoco, che lo scorrimento altrimenti taglierebbe. */
+		margin: -5px;
+		padding: 5px;
 	}
 	.session {
 		margin: 0;
@@ -447,16 +482,30 @@
 		.body {
 			grid-template-columns: minmax(0, 1fr);
 		}
+		/* Senza riquadro: la colonna sta tra il titolo e il testo, come in lettura. */
+		.main-col {
+			display: contents;
+		}
+		.top {
+			grid-row: 1;
+		}
+		.content {
+			grid-row: 3;
+			margin-top: 0;
+		}
 		.side {
-			grid-column: 1;
+			grid-row: 2;
+			width: auto;
 			align-items: stretch;
+			position: static;
+			max-height: none;
+			overflow-y: visible;
+			margin: 0;
+			padding: 0;
 		}
 		/* Sul telefono il «+» resta a destra, sopra il testo. */
 		.side > :global(.open) {
 			align-self: flex-end;
-		}
-		.content {
-			grid-row: 2;
 		}
 	}
 </style>

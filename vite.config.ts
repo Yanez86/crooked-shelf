@@ -27,7 +27,8 @@ export default defineConfig({
 					'object-src': ['none'],
 					'base-uri': ['self'],
 					'form-action': ['self'],
-					'frame-ancestors': ['none']
+					// Non 'none': Profilo e Amministrazione si aprono in un iframe della wiki stessa (PanelDialog).
+					'frame-ancestors': ['self']
 				}
 			}
 		})

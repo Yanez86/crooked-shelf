@@ -15,10 +15,13 @@
 
 	let view: ReturnType<typeof MapView> | undefined = $state();
 	let pinPage: ReturnType<typeof PinPage> | undefined = $state();
-	// Livelli accesi: 0 = pin senza livello.
+	// Livelli accesi: 0 = livello base, i pin senza un livello scelto. C'è sempre ed è di tutti.
 	let hidden = $state<number[]>([]);
 	let showLabels = $state(false);
 	let adding = $state(false);
+	let addingLayer = $state(false);
+	let addLayerBtn = $state<HTMLButtonElement>();
+	let layerInput = $state<HTMLInputElement>();
 	let measuring = $state(false);
 	let distance = $state<number | null>(null);
 	let status = $state('');
@@ -37,8 +40,15 @@
 		visibility: string;
 	}
 	let draft = $state<Draft | null>(null);
+	let pinDialog = $state<HTMLDialogElement>();
+
+	// Il popup si apre quando compare; il fuoco va da solo sul primo campo.
+	$effect(() => pinDialog?.showModal());
+	$effect(() => layerInput?.focus());
 
 	const visiblePins = $derived(data.pins.filter((p) => !hidden.includes(p.layerId ?? 0)));
+	// Il pin appena posizionato si vede già sulla mappa, sotto il popup.
+	const mapPins = $derived(draft && !draft.id ? [...visiblePins, { ...draft, id: 0, html: '', page: null, target: null }] : visiblePins);
 	const layerName = (id: number | null) => (id ? (data.layers.find((l) => l.id === id)?.name ?? '') : t('maps.noLayer'));
 
 	function toggleLayer(id: number, on: boolean) {
@@ -49,7 +59,18 @@
 		adding = false;
 		draft = { id: null, x, y, label: '', description: '', icon: 'pin', color: 'red', page: '', targetMapId: null, layerId: null, visibility: 'players' };
 		status = t('maps.pinPlaced', { x: Math.round(x), y: Math.round(y) });
-		queueMicrotask(() => document.getElementById('pin-label')?.focus());
+	}
+
+	// Col mouse si sceglie il punto sulla mappa; da tastiera (clic con `detail` a 0) il pin nasce al centro della vista.
+	function addPin(e: MouseEvent) {
+		if (e.detail === 0) {
+			const c = view?.center();
+			if (c) newDraft(c.x, c.y);
+			return;
+		}
+		adding = !adding;
+		measuring = false;
+		status = adding ? t('maps.addHint') : '';
 	}
 
 	function editPin(id: number) {
@@ -68,7 +89,6 @@
 			layerId: p.layerId,
 			visibility: p.visibility
 		};
-		queueMicrotask(() => document.getElementById('pin-label')?.focus());
 	}
 
 	async function movePin(id: number, x: number, y: number) {
@@ -96,29 +116,13 @@
 	</nav>
 {/if}
 
-<FormError error={form?.error ?? null} />
+{#if !draft}<FormError error={form?.error ?? null} />{/if}
 
 <div class="tools">
-	{#if data.layers.length}
-		<fieldset class="layers">
-			<legend>{t('maps.layers')}</legend>
-			<label class="choice"><input type="checkbox" checked={!hidden.includes(0)} onchange={(e) => toggleLayer(0, e.currentTarget.checked)} /><span>{t('maps.noLayer')}</span></label>
-			{#each data.layers as l (l.id)}
-				<label class="choice">
-					<input type="checkbox" checked={!hidden.includes(l.id)} onchange={(e) => toggleLayer(l.id, e.currentTarget.checked)} />
-					<span>{l.name} {#if l.visibility === 'master'}<span class="badge">{t('visibility.master')}</span>{/if}</span>
-				</label>
-			{/each}
-		</fieldset>
-	{/if}
 	<div class="buttons">
 		<label class="choice"><input type="checkbox" bind:checked={showLabels} /><span>{t('maps.showLabels')}</span></label>
 		{#if data.map.scale}
 			<button class="btn btn-small btn-ghost" type="button" aria-pressed={measuring} onclick={() => { measuring = !measuring; adding = false; distance = null; status = measuring ? t('maps.measureHint') : ''; }}><Icon name="ruler" />{t('maps.measure')}</button>
-		{/if}
-		{#if data.canEdit}
-			<button class="btn btn-small" type="button" aria-pressed={adding} onclick={() => { adding = !adding; measuring = false; status = adding ? t('maps.addHint') : ''; }}><Icon name="markerPlus" />{t('maps.addPin')}</button>
-			<button class="btn btn-small btn-ghost" type="button" onclick={() => { const c = view?.center(); if (c) newDraft(c.x, c.y); }}>{t('maps.addCenter')}</button>
 		{/if}
 	</div>
 </div>
@@ -128,38 +132,97 @@
 	{#if distance !== null}{t('maps.distance', { d: fmtDistance(distance) })}{/if}
 </p>
 
-<MapView
-	bind:this={view}
-	src="/files/{data.map.fileId}"
-	width={data.map.width}
-	height={data.map.height}
-	{title}
-	pins={visiblePins}
-	editable={data.canEdit}
-	{adding}
-	{measuring}
-	{showLabels}
-	scale={data.map.scale}
-	unit={data.map.unit}
-	onpick={newDraft}
-	onmove={movePin}
-	onedit={editPin}
-	onmeasure={(d) => (distance = d)}
-	onopen={(p) => pinPage?.show(p)}
-/>
-<p class="hint">{t('maps.keyboardHint')}</p>
+<div class="map-wrap">
+	<MapView
+		bind:this={view}
+		src="/files/{data.map.fileId}"
+		width={data.map.width}
+		height={data.map.height}
+		{title}
+		pins={mapPins}
+		editable={data.canEdit}
+		{adding}
+		{measuring}
+		{showLabels}
+		scale={data.map.scale}
+		unit={data.map.unit}
+		onpick={newDraft}
+		onmove={movePin}
+		onedit={editPin}
+		onmeasure={(d) => (distance = d)}
+		onopen={(p) => pinPage?.show(p)}
+	/>
+	<!-- Sulla mappa: chi non può aggiungere pin ha «Livelli» subito sotto lo zoom. -->
+	<div class="map-tools">
+		{#if data.canEdit}
+			<button class="btn add-pin" type="button" title={t('maps.addPin')} aria-label={t('maps.addPin')} aria-pressed={adding} onclick={addPin}><Icon name="markerPlus" /></button>
+		{/if}
+		<details class="layers-menu">
+			<summary class="btn" title={t('maps.layers')}><Icon name="layers" /><span class="visually-hidden">{t('maps.layers')}</span></summary>
+			<div class="layers">
+				<fieldset>
+					<legend class="visually-hidden">{t('maps.layers')}</legend>
+					<label class="choice"><input type="checkbox" checked={!hidden.includes(0)} onchange={(e) => toggleLayer(0, e.currentTarget.checked)} /><span>{t('maps.noLayer')}</span></label>
+					{#each data.layers as l (l.id)}
+						<label class="choice">
+							<input type="checkbox" checked={!hidden.includes(l.id)} onchange={(e) => toggleLayer(l.id, e.currentTarget.checked)} />
+							<span>{l.name} {#if l.visibility === 'master'}<span class="badge">{t('visibility.master')}</span>{/if}</span>
+						</label>
+					{/each}
+				</fieldset>
+				{#if data.canEdit}
+					<button
+						bind:this={addLayerBtn}
+						class="btn btn-small btn-ghost add-layer"
+						type="button"
+						aria-expanded={addingLayer}
+						onclick={() => (addingLayer = !addingLayer)}
+					>
+						<Icon name="plus" />{t('maps.newLayer')}
+					</button>
+					{#if addingLayer}
+						<form
+							method="post"
+							action="?/layer"
+							class="new-layer"
+							use:enhance={() =>
+								async ({ result, update }) => {
+									await update();
+									if (result.type === 'success') {
+										addingLayer = false;
+										addLayerBtn?.focus();
+									}
+								}}
+						>
+							<label class="visually-hidden" for="new-layer">{t('maps.layerName')}</label>
+							<input bind:this={layerInput} id="new-layer" name="name" type="text" required maxlength="60" placeholder={t('maps.layerName')} />
+							<label class="visually-hidden" for="new-layer-vis">{t('page.visibility')}</label>
+							<select id="new-layer-vis" name="visibility">
+								<option value="players">{t('visibility.players')}</option>
+								<option value="master">{t('visibility.master')}</option>
+							</select>
+							<button class="btn btn-small" type="submit">{t('categories.add')}</button>
+						</form>
+					{/if}
+				{/if}
+			</div>
+		</details>
+	</div>
+</div>
+<p class="hint">{t('maps.keyboardHint')}{#if data.canEdit} {t('maps.keyboardAddHint')}{/if}</p>
 <PinPage bind:this={pinPage} editable={data.canEdit} onedit={editPin} />
 
 {#if draft && data.editData}
-	<section class="card pin-form" aria-labelledby="pin-form-title">
+	<dialog bind:this={pinDialog} class="pin-form" aria-labelledby="pin-form-title" onclose={() => (draft = null)}>
 		<h2 id="pin-form-title">{draft.id ? t('maps.editPin') : t('maps.newPin')}</h2>
+		<FormError error={form?.error ?? null} />
 		<form
 			method="post"
 			action="?/pin"
 			use:enhance={() =>
 				async ({ result, update }) => {
 					await update({ reset: false });
-					if (result.type === 'success') draft = null;
+					if (result.type === 'success') pinDialog?.close();
 				}}
 		>
 			{#if draft.id}<input type="hidden" name="id" value={draft.id} />{/if}
@@ -224,16 +287,17 @@
 			</div>
 			<div class="actions">
 				<button class="btn btn-primary" type="submit">{t('common.save')}</button>
-				<button class="btn" type="button" onclick={() => (draft = null)}>{t('common.cancel')}</button>
 			</div>
 		</form>
 		{#if draft.id}
-			<form method="post" action="?/deletePin" use:enhance={() => async ({ update }) => { await update(); draft = null; }}>
+			<form method="post" action="?/deletePin" use:enhance={() => async ({ update }) => { await update(); pinDialog?.close(); }}>
 				<input type="hidden" name="id" value={draft.id} />
 				<button class="btn btn-danger btn-small" type="submit">{t('maps.deletePin')}</button>
 			</form>
 		{/if}
-	</section>
+		<!-- In fondo al codice, in alto a destra a schermo: così il fuoco parte dal primo campo. -->
+		<button class="btn btn-ghost pin-close" type="button" title={t('common.close')} aria-label={t('common.close')} onclick={() => pinDialog?.close()}><Icon name="close" /></button>
+	</dialog>
 {/if}
 
 <section aria-labelledby="pins-title">
@@ -286,7 +350,7 @@
 	</section>
 {/if}
 
-{#if data.canEdit}
+{#if data.canEdit && data.layers.length}
 	<details class="disclosure layers-admin">
 		<summary class="btn"><Icon name="cog" />{t('maps.manageLayers')}</summary>
 		{#each data.layers as l (l.id)}
@@ -308,16 +372,6 @@
 				</form>
 			</div>
 		{/each}
-		<form method="post" action="?/layer" use:enhance class="inline card">
-			<label for="new-layer">{t('maps.newLayer')}</label>
-			<input id="new-layer" name="name" type="text" required maxlength="60" />
-			<label class="visually-hidden" for="new-layer-vis">{t('page.visibility')}</label>
-			<select id="new-layer-vis" name="visibility">
-				<option value="players">{t('visibility.players')}</option>
-				<option value="master">{t('visibility.master')}</option>
-			</select>
-			<button class="btn btn-small" type="submit">{t('categories.add')}</button>
-		</form>
 	</details>
 {/if}
 
@@ -344,11 +398,34 @@
 		gap: 0.5rem 1.5rem;
 		align-items: flex-start;
 	}
+	/* L'elenco si apre a sinistra del tasto: sotto, su una mappa bassa, uscirebbe dal riquadro. */
 	.layers {
+		position: absolute;
+		top: 0;
+		right: calc(100% + 0.25rem);
 		display: flex;
-		flex-wrap: wrap;
-		gap: 0 1rem;
+		flex-direction: column;
+		gap: 0.25rem;
+		width: max-content;
+		min-width: 12rem;
+		max-width: min(18rem, 70vw);
 		margin: 0;
+		padding: 0.5rem 0.75rem;
+		border: 1px solid var(--c-border);
+		background: var(--c-surface);
+	}
+	.layers fieldset {
+		margin: 0;
+		padding: 0;
+		border: 0;
+	}
+	.add-layer {
+		align-self: flex-start;
+	}
+	.new-layer {
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
 	}
 	.buttons {
 		display: flex;
@@ -356,6 +433,35 @@
 		gap: 0.5rem;
 		align-items: center;
 	}
+	.map-wrap {
+		position: relative;
+	}
+	/* Sulla mappa, sotto i due tasti dello zoom e grandi come uno di loro (2.75rem, a 14px dal bordo con la cornice della barra). */
+	.map-tools {
+		position: absolute;
+		z-index: 1;
+		top: 7rem;
+		right: 14px;
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
+	}
+	.add-pin,
+	.layers-menu summary {
+		width: 2.75rem;
+		height: 2.75rem;
+		padding: 0;
+	}
+	.layers-menu {
+		position: relative;
+	}
+	.layers-menu summary {
+		list-style: none;
+	}
+	.layers-menu summary::-webkit-details-marker {
+		display: none;
+	}
+	.layers-menu[open] summary,
 	.btn[aria-pressed='true'] {
 		background: var(--c-primary);
 		border-color: var(--c-primary);
@@ -367,11 +473,28 @@
 		font-weight: 600;
 	}
 	.pin-form {
-		margin: 1.5rem 0;
-		border: 2px solid var(--c-primary);
+		width: min(100% - 2rem, 40rem);
+		max-width: none;
+		max-height: calc(100dvh - 2rem);
+		padding: 1.25rem;
+		color: var(--c-text);
+		background: var(--c-bg);
+		border: 1px solid var(--c-border);
+		border-top: 4px solid var(--c-primary);
+		border-radius: var(--radius);
+		overscroll-behavior: contain;
+	}
+	.pin-form::backdrop {
+		background: rgb(0 0 0 / 0.6);
 	}
 	.pin-form h2 {
 		margin-top: 0;
+	}
+	.pin-close {
+		position: absolute;
+		top: 0.5rem;
+		right: 0.5rem;
+		padding: 0;
 	}
 	.cols {
 		display: grid;

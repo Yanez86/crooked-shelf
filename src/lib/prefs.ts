@@ -1,6 +1,10 @@
 import { THEME_IDS } from './themes.ts';
 
 export const PREFS_COOKIE = 'cs_prefs';
+/** Barra a sinistra nascosta con la freccia: un cookie, così il server la sa già e ricaricando non lampeggia. */
+export const TREE_COOKIE = 'cs_tree_hidden';
+/** Lo stesso per la colonna a destra delle pagine. */
+export const SIDE_COOKIE = 'cs_side_hidden';
 
 /** Preferenze di lettura: nel profilo per chi ha fatto l'accesso, nel cookie per gli altri. */
 export interface Prefs {

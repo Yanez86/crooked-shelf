@@ -43,7 +43,6 @@
 
 <style>
 	.search-form {
-		max-width: 40rem;
 		margin-bottom: 1.5rem;
 	}
 	.row {
@@ -65,9 +64,6 @@
 	}
 	.hits p {
 		margin: 0;
-	}
-	.empty {
-		max-width: 40rem;
 	}
 	.empty p {
 		margin-top: 0;

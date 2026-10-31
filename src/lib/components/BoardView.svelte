@@ -207,12 +207,19 @@
 		padding-bottom: 1rem;
 		align-items: flex-start;
 	}
+	/* Si dividono il riquadro centrale: tre colonne ci stanno senza scorrere. Sul telefono una per schermata. */
 	.column {
-		flex: 0 0 min(19rem, 85vw);
+		flex: 1 0 10rem;
+		min-width: 0;
 		background: var(--c-surface2);
 		border: 1px solid var(--c-border);
 		border-radius: var(--radius);
 		padding: 0.5rem 0.75rem 0.75rem;
+	}
+	@container (max-width: 44rem) {
+		.column {
+			flex: 0 0 min(19rem, 85vw);
+		}
 	}
 	.column h2 {
 		font-size: var(--fs-md);

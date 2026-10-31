@@ -95,7 +95,7 @@
 		<div class="viewer-inner">
 			<div class="viewer-bar">
 				<span>{t('gallery.viewer', { n: index + 1, total })}</span>
-				<button class="btn btn-small" type="button" onclick={() => viewer.close()}><Icon name="close" />{t('common.close')}</button>
+				<button class="btn btn-small btn-ghost" type="button" title={t('common.close')} aria-label={t('common.close')} onclick={() => viewer.close()}><Icon name="close" /></button>
 			</div>
 			<img src={shown.url} alt={shown.alt} width={shown.width} height={shown.height} />
 			<ul class="list-plain viewer-sources">

@@ -78,9 +78,6 @@
 {/if}
 
 <style>
-	.kind-settings {
-		max-width: 44rem;
-	}
 	.kind-settings .hint {
 		margin: 0 0 0.5rem 1.9rem;
 	}

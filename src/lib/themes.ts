@@ -30,6 +30,8 @@ export interface Theme {
 	name?: string;
 	scheme: 'light' | 'dark';
 	colors: ThemeColors;
+	/** Immagine di sfondo: id del file caricato. Finisce nel CSS, quindi la mette solo il server: checkTheme non la fa passare. */
+	background?: string;
 }
 
 export const THEMES: Theme[] = [
@@ -117,7 +119,9 @@ function vars(t: Theme) {
 	return (
 		Object.entries(t.colors)
 			.map(([k, v]) => `${cssName(k)}:${v};`)
-			.join('') + `color-scheme:${t.scheme};`
+			.join('') +
+		`color-scheme:${t.scheme};` +
+		(t.background ? `--bg-image:url(/files/${t.background});` : '')
 	);
 }
 

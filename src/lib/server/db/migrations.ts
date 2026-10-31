@@ -1,9 +1,11 @@
 import type Database from 'better-sqlite3';
 import { boardPagesMigration, pageKindsMigration } from './pageKinds.ts';
+import { campaignsMigration } from './campaigns.ts';
 
 // Migrazioni in ordine: SQL, oppure una funzione per quelle che devono anche tradurre o convertire dati.
+// `rebuild` è per quelle che rifanno una tabella a cui altre sono legate (girano a chiavi esterne spente).
 // Non modificare quelle già pubblicate: aggiungine una nuova in fondo.
-export const MIGRATIONS: (string | ((db: Database.Database) => void))[] = [
+export const MIGRATIONS: (string | ((db: Database.Database) => void) | { rebuild: (db: Database.Database) => void })[] = [
 	`
 	CREATE TABLE users (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -291,5 +293,24 @@ export const MIGRATIONS: (string | ((db: Database.Database) => void))[] = [
 	ALTER TABLE pages ADD COLUMN cover_y INTEGER NOT NULL DEFAULT 50;
 	`,
 	// Le bacheche diventano pagine «bacheca».
-	boardPagesMigration
+	boardPagesMigration,
+	// Albero ordinato a mano: cartelle e pagine si annidano anche dentro una pagina, più i divisori.
+	`
+	ALTER TABLE pages ADD COLUMN parent_page_id INTEGER REFERENCES pages(id) ON DELETE SET NULL;
+	ALTER TABLE pages ADD COLUMN sort INTEGER;
+	ALTER TABLE categories ADD COLUMN parent_page_id INTEGER REFERENCES pages(id) ON DELETE SET NULL;
+	ALTER TABLE categories ADD COLUMN sort INTEGER;
+	CREATE TABLE tree_dividers (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		category_id INTEGER REFERENCES categories(id) ON DELETE CASCADE,
+		parent_page_id INTEGER REFERENCES pages(id) ON DELETE CASCADE,
+		sort INTEGER
+	);
+	`,
+	// Le cartelle vanno nel cestino come le pagine.
+	`
+	ALTER TABLE categories ADD COLUMN deleted_at INTEGER;
+	`,
+	// Più campagne nella stessa installazione, ognuna col suo Master.
+	{ rebuild: campaignsMigration }
 ];

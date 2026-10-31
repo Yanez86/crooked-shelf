@@ -14,6 +14,7 @@ export const load: PageServerLoad = () => ({
 			id: users.id,
 			username: users.username,
 			displayName: users.displayName,
+			icon: users.icon,
 			role: users.role,
 			disabled: users.disabled,
 			createdAt: users.createdAt

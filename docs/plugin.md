@@ -48,7 +48,7 @@ I plugin sono spenti finché l'Admin non li accende. Un plugin installato con lo
 
 ## Tema
 
-Gli stessi colori dell'editor dei temi, in formato `#rrggbb`. Il tema viene **rifiutato** se qualche testo non è leggibile (contrasto WCAG AA). Il modo più semplice: crealo nell'editor dei temi e usa «Esporta».
+Gli stessi colori dell'editor dei temi, in formato `#rrggbb`. Il tema viene **rifiutato** se qualche testo non è leggibile (contrasto WCAG AA). Il modo più semplice: crealo nell'editor dei temi e usa «Esporta». L'immagine di sfondo dell'editor non vale per i temi dei plugin.
 
 ```json
 { "name": "Gotico", "scheme": "dark", "colors": { "bg": "#14111a", "text": "#efe9f5", "…": "…" } }
@@ -68,7 +68,7 @@ Gli stessi colori dell'editor dei temi, in formato `#rrggbb`. Il tema viene **ri
 
 `content` è il formato dell'editor: il modo più semplice per ottenerlo è creare il template nella wiki (Nuova pagina › Nuovo template) e copiarlo da un pacchetto mondo esportato (in `pages.json`, la pagina con `"kind": "template"`).
 
-Accendendo il plugin, i suoi template diventano pagine della cartella Template della wiki (una volta sola): da lì si modificano come ogni pagina, e restano anche se il plugin si spegne.
+Accendendo il plugin, i suoi template diventano pagine della wiki, nella linguetta Template della barra a sinistra (una volta sola): da lì si modificano come ogni pagina, e restano anche se il plugin si spegne.
 
 ## Calendario
 

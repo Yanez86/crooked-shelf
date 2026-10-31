@@ -4,7 +4,6 @@
 	},
 	"nav": {
 		"skip": "Vai al contenuto",
-		"main": "Navigazione principale",
 		"home": "Home",
 		"pages": "Pagine",
 		"categories": "Categorie",
@@ -14,26 +13,37 @@
 		"admin": "Amministrazione",
 		"logout": "Esci",
 		"login": "Accedi",
-		"gallery": "Galleria",
 		"resources": "Risorse",
 		"rules": "Regole",
-		"boards": "Bacheche",
-		"folders": "Cartelle"
+		"boards": "Bacheche"
 	},
 	"tree": {
 		"label": "Pagine e risorse",
 		"title": "Menu e pagine",
+		"hide": "Nascondi la barra a sinistra",
+		"show": "Mostra la barra a sinistra",
 		"empty": "Ancora nessuna pagina.",
+		"noTemplates": "Ancora nessun template.",
 		"emptyFolder": "Cartella vuota",
 		"expandAll": "Apri tutte le cartelle",
 		"collapseAll": "Chiudi tutte le cartelle",
 		"newFolder": "Nuova cartella",
 		"folderName": "Nome della nuova cartella",
 		"folderError": "Non sono riuscito a creare la cartella. Riprova.",
+		"newDivider": "Nuovo divisorio",
+		"deleteDivider": "Elimina il divisorio",
+		"inside": "Contenuto di {title}",
+		"dividerAdded": "Divisorio aggiunto in fondo: trascinalo dove serve.",
+		"dividerRemoved": "Divisorio eliminato.",
+		"moved": "Spostato.",
+		"actionError": "Non ci sono riuscito. Riprova.",
+		"trash": "Sposta nel cestino",
+		"trashed": "Spostato nel cestino.",
 		"tabs": "Cosa mostrare",
 		"tab": {
 			"pages": "Pagine",
-			"resources": "Risorse"
+			"resources": "Risorse",
+			"templates": "Template"
 		}
 	},
 	"footer": {
@@ -67,6 +77,7 @@
 		"title": "Qualcosa non va",
 		"generic": "Dati non validi. Controlla il modulo e riprova.",
 		"forbidden": "Non hai il permesso di farlo.",
+		"homeVisibility": "La home deve poterla vedere chi apre il sito: scegli Pubblica o Giocatori.",
 		"username": "Il nome utente deve avere da 3 a 32 caratteri: lettere, numeri, punto, trattino o trattino basso.",
 		"usernameTaken": "Questo nome utente è già in uso.",
 		"passwordShort": "La password deve avere almeno 10 caratteri.",
@@ -112,7 +123,10 @@
 		"title": "Unisciti alla wiki",
 		"intro": "Sei stato invitato come {role}. Scegli nome utente e password.",
 		"invalid": "Questo invito non è valido: forse è scaduto o è già stato usato.",
-		"submit": "Crea l'account"
+		"submit": "Crea l'account",
+		"join": "Entra nella campagna",
+		"joinIntro": "Sei stato invitato a giocare in «{campaign}».",
+		"haveAccount": "Hai già un account? Accedi per entrare in «{campaign}»."
 	},
 	"roles": {
 		"admin": "Admin",
@@ -151,6 +165,11 @@
 		"edit": "Modifica tema",
 		"scheme": "Tipo",
 		"colors": "Colori",
+		"background": "Immagine di sfondo",
+		"backgroundCurrent": "Sfondo attuale",
+		"backgroundFile": "Carica un'immagine",
+		"backgroundHint": "PNG, JPEG, WebP o GIF, fino a 25 MB. Sta dietro i riquadri e si vede solo su schermi larghi; meglio se scura e poco dettagliata. Non è inclusa in «Esporta», ma lo è nel pacchetto mondo.",
+		"backgroundRemove": "Togli lo sfondo",
 		"preview": "Anteprima",
 		"pair": "Testo / sfondo",
 		"ratio": "Contrasto",
@@ -227,8 +246,8 @@
 		"emptyText": "Ogni grande campagna comincia da una pagina. Scrivi un luogo, un personaggio o il resoconto della prima sessione.",
 		"firstPage": "Crea la prima pagina",
 		"recent": "Modificate di recente",
+		"added": "Aggiunte di recente",
 		"allPages": "Tutte le pagine ({n})",
-		"manageCategories": "Tutte le categorie",
 		"world": "Il mondo"
 	},
 	"list": {
@@ -305,6 +324,9 @@
 		"noBacklinks": "Nessuna pagina collega ancora a questa.",
 		"breadcrumb": "Percorso della categoria",
 		"missing": "pagina da creare",
+		"home": "Pagina home",
+		"homeHint": "La pagina iniziale del sito, in cima alla barra a sinistra e fuori dalle cartelle. Può essercene una sola: prende il posto di quella attuale.",
+		"homeCurrent": "Questa è la home: per cambiarla, scegli come home un'altra pagina.",
 		"deleteTitle": "Eliminare la pagina",
 		"deleteConfirm": "Sì, voglio eliminare «{title}»",
 		"delete": "Elimina la pagina",
@@ -410,6 +432,7 @@
 	},
 	"admin": {
 		"settings": "Impostazioni",
+		"user": "Utente",
 		"users": "Utenti",
 		"invites": "Inviti",
 		"defaultLocale": "Lingua predefinita",
@@ -439,7 +462,16 @@
 		"plugins": "Plugin",
 		"backup": "Backup",
 		"world": "Pacchetto mondo",
-		"export": "Esporta in Markdown"
+		"export": "Esporta in Markdown",
+		"campaigns": "Campagne",
+		"campaign": "Campagna",
+		"campaignsIntro": "Ogni campagna è una wiki a sé, con un solo Master. Il Master invita i suoi giocatori dalla pagina Campagna. Esportazione e pacchetti mondo riguardano la campagna in cui ti trovi.",
+		"newCampaign": "Nuova campagna",
+		"campaignCreated": "Campagna creata.",
+		"campaignPlayers": "Giocatori: {n}",
+		"siteName": "Nome del sito",
+		"campaignDeleted": "Campagna eliminata.",
+		"noCampaigns": "Non c'è nessuna campagna: creane una qui sotto per ricominciare."
 	},
 	"files": {
 		"empty": "Scegli un file da caricare.",
@@ -494,6 +526,8 @@
 		}
 	},
 	"fields": {
+		"hide": "Nascondi la colonna a destra",
+		"show": "Mostra la colonna a destra",
 		"title": "Scheda",
 		"hint": "Informazioni brevi mostrate in un riquadro a lato, es. «Allineamento: Caotico buono». Nei valori puoi scrivere [[Pagina]].",
 		"label": "Nome del campo {n}",
@@ -735,15 +769,15 @@
 		"path": "Percorso delle mappe",
 		"layers": "Livelli",
 		"layer": "Livello",
-		"noLayer": "Senza livello",
+		"noLayer": "Livello base",
 		"showLabels": "Mostra i nomi",
 		"measure": "Misura",
 		"measureHint": "Clicca due o più punti sulla mappa per misurare la distanza.",
 		"distance": "Distanza: {d}",
 		"addPin": "Aggiungi pin",
 		"addHint": "Clicca sulla mappa nel punto in cui vuoi il pin.",
-		"addCenter": "Pin al centro della vista",
-		"pinPlaced": "Nuovo pin in posizione {x}, {y}: compila il modulo qui sotto.",
+		"keyboardAddHint": "Invio su «Aggiungi pin» crea un pin al centro della vista.",
+		"pinPlaced": "Nuovo pin in posizione {x}, {y}.",
 		"pinMoved": "Pin spostato.",
 		"pinAdded": "Pin aggiunto.",
 		"pinSaved": "Pin salvato.",
@@ -772,9 +806,10 @@
 		"children": "Mappe contenute",
 		"noChildren": "Nessuna mappa dentro questa.",
 		"newChild": "Nuova mappa qui dentro",
+		"descriptionHint": "Facoltativa: compare in un riquadro sopra la mappa.",
 		"manageLayers": "Gestisci i livelli",
 		"newLayer": "Nuovo livello",
-		"layerDeleted": "Livello eliminato: i suoi pin restano senza livello.",
+		"layerDeleted": "Livello eliminato: i suoi pin passano al livello base.",
 		"icons": {
 			"pin": "Punto",
 			"city": "Città",
@@ -840,13 +875,18 @@
 	},
 	"trash": {
 		"title": "Cestino",
-		"intro": "Le pagine eliminate restano qui finché non le elimini per sempre.",
+		"intro": "Le pagine e le cartelle eliminate restano qui finché non le elimini per sempre.",
 		"empty": "Il cestino è vuoto.",
 		"deletedOn": "eliminata il",
+		"meta": "creata da {author} il {created}, ultima modifica {updated}",
+		"metaNoAuthor": "creata il {created}, ultima modifica {updated}",
 		"restore": "Recupera",
 		"purge": "Elimina per sempre",
 		"confirm": "Sono sicuro",
 		"purged": "Pagina eliminata per sempre.",
+		"folder": "cartella, pagine: {n}",
+		"folderRestored": "Cartella recuperata, con le sue pagine.",
+		"folderPurged": "Cartella eliminata per sempre, con le sue pagine.",
 		"goTo": "Cambiato idea? La pagina è nel cestino."
 	},
 	"boards": {
@@ -1012,5 +1052,22 @@
 		"sessionTemplate": "Le copie sono resoconti di sessione",
 		"fromTemplate": "Parti da un template",
 		"choose": "Che pagina vuoi fare?"
+	},
+	"campaign": {
+		"title": "Campagna",
+		"switch": "Cambia campagna",
+		"none": "Non fai ancora parte di nessuna campagna. Chiedi al Master il link di invito.",
+		"name": "Nome della campagna",
+		"master": "Master",
+		"players": "Giocatori",
+		"noPlayers": "Ancora nessun giocatore.",
+		"remove": "Rimuovi",
+		"removed": "Giocatore rimosso dalla campagna.",
+		"inviteIntro": "Ogni link vale una volta. Chi non ha un account lo crea; chi lo ha già entra nella campagna col suo.",
+		"delete": "Elimina la campagna",
+		"deleteWarning": "Spariscono per sempre, per tutti, pagine, mappe, cronologie, bacheche, risorse e immagini della campagna. Non si può annullare.",
+		"deleteConfirm": "Per confermare scrivi «{name}»",
+		"deleteSubmit": "Elimina per sempre",
+		"deleteMismatch": "Il nome scritto non corrisponde: la campagna non è stata eliminata."
 	}
 }

@@ -7,7 +7,7 @@
 	import LinkPreview from '../components/LinkPreview.svelte';
 	import type { ViewPin } from './MapView.svelte';
 
-	/** La pagina collegata a un pin, in sovraimpressione sulla mappa. Si chiude con Esc, con Chiudi o cliccando fuori. */
+	/** La pagina collegata a un pin, in sovraimpressione sulla mappa. Si chiude con Esc, con la X o cliccando fuori. */
 	let { editable = false, onedit }: { editable?: boolean; onedit?: (id: number) => void } = $props();
 	const t = getT();
 	const locale = $derived(page.data.locale as string);
@@ -74,7 +74,7 @@
 			<h1 id="pin-page-title">{view?.title ?? pin.page.title}</h1>
 			<div class="acts">
 				<a class="btn btn-small" href="/wiki/{pin.page.slug}">{t('maps.fullPage')}</a>
-				<button class="btn btn-small" type="button" onclick={() => dlg?.close()}><Icon name="close" />{t('common.close')}</button>
+				<button class="btn btn-small btn-ghost" type="button" title={t('common.close')} aria-label={t('common.close')} onclick={() => dlg?.close()}><Icon name="close" /></button>
 			</div>
 		</header>
 

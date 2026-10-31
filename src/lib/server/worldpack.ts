@@ -5,7 +5,8 @@ import { getFile, readFile, saveImage } from './files.ts';
 import { createPage, getPageBySlug, pageCover, pageMeta, uniquePageSlug, updatePage, type PageInput, type PageRow } from './pages.ts';
 import { cleanFields } from './pageForm.ts';
 import { categoryWithDescendants, createCategory, listCategories, categoryPath } from './taxonomy.ts';
-import { getCalendar, getSettings, saveSettings, customThemes } from './settings.ts';
+import { getCalendar, getSettings, customThemes } from './settings.ts';
+import { campaignId, ofCampaign, saveCampaign } from './campaigns.ts';
 import { getTimeline, listEvents, listTimelines, recomputeSortKeys, saveEvent, setTimelineMode, type EventVisibility } from './timeline.ts';
 import { createMap, getMap, getMapOfPage, saveLayer, savePin, updateMap } from './maps.ts';
 import { importTemplate } from './templates.ts';
@@ -147,7 +148,7 @@ const kindOf = (p: { kind?: unknown }): PageKind => (isPageKind(p.kind) ? p.kind
 
 function exportablePages(o: ExportOptions, u: Viewer): PageRow[] {
 	const db = getDb();
-	const rows = db.select().from(pages).where(sql`${pages.deletedAt} IS NULL`).orderBy(asc(pages.title)).all();
+	const rows = db.select().from(pages).where(and(ofCampaign(pages), sql`${pages.deletedAt} IS NULL`)).orderBy(asc(pages.title)).all();
 	const cats = new Set(o.categoryIds.flatMap((id) => categoryWithDescendants(id)));
 	const tagged = new Set(
 		o.tagIds.length
@@ -182,7 +183,7 @@ export function exportWorld(o: ExportOptions, u: Viewer): Uint8Array {
 
 	const list = exportablePages(o, u);
 	const titles = new Map(list.map((p) => [p.slug, p.title]));
-	const slugOfPage = new Map(db.select({ id: pages.id, slug: pages.slug }).from(pages).all().map((p) => [p.id, p.slug]));
+	const slugOfPage = new Map(db.select({ id: pages.id, slug: pages.slug }).from(pages).where(ofCampaign(pages)).all().map((p) => [p.id, p.slug]));
 	const slugOfMap = (mapId: number | null) => {
 		const m = mapId ? getMap(mapId) : undefined;
 		return m ? (slugOfPage.get(m.pageId) ?? null) : null;
@@ -296,7 +297,8 @@ export function exportWorld(o: ExportOptions, u: Viewer): Uint8Array {
 	if (o.calendar) out['calendar.json'] = json(getCalendar());
 
 	if (o.themes) {
-		out['themes.json'] = json(customThemes().map(({ name, scheme, colors }) => ({ name, scheme, colors })));
+		out['themes.json'] = json(customThemes().map(({ name, scheme, colors, background }) => ({ name, scheme, colors, background })));
+		for (const t of customThemes()) if (t.background) fileIds.add(t.background);
 		counts.themes = customThemes().length;
 	}
 
@@ -575,7 +577,7 @@ export function importPack(pack: Pack, opts: { conflict: Conflict; calendar: boo
 				const r = fromText(toText(c));
 				if (r.ok) {
 					const cal = { ...r.cal, today: c.today ?? null };
-					saveSettings({ calendar: cal });
+					saveCampaign(campaignId(), { calendar: cal });
 					recomputeSortKeys(cal);
 				}
 			}
@@ -584,10 +586,10 @@ export function importPack(pack: Pack, opts: { conflict: Conflict; calendar: boo
 		}
 	}
 
-	for (const t of part<unknown>(pack, 'themes.json')) {
+	for (const t of part<{ background?: string }>(pack, 'themes.json')) {
 		const r = checkTheme(t);
 		if (r.ok) {
-			storeTheme(r.theme, null);
+			storeTheme({ ...r.theme, background: fileMap.get(String(t?.background)) }, null);
 			done.themes++;
 		}
 	}
@@ -601,7 +603,7 @@ export function exportMarkdown(u: Viewer): Uint8Array {
 	const all = getDb()
 		.select()
 		.from(pages)
-		.where(sql`${pages.deletedAt} IS NULL`)
+		.where(and(ofCampaign(pages), sql`${pages.deletedAt} IS NULL`))
 		.all()
 		.filter((p) => canView(p, u));
 	const titles = new Map(all.map((p) => [p.slug, p.title]));

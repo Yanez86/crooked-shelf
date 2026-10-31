@@ -220,7 +220,6 @@
 		transform: rotate(45deg);
 	}
 	.add {
-		max-width: 48rem;
 		margin: 0 0 1.5rem;
 	}
 	.add[open] {

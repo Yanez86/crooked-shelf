@@ -1,7 +1,8 @@
 import { fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { isMaster } from '#lib/access.ts';
-import { getCalendar, saveSettings } from '#lib/server/settings.ts';
+import { getCalendar } from '#lib/server/settings.ts';
+import { campaignId, saveCampaign } from '#lib/server/campaigns.ts';
 import { recomputeSortKeys } from '#lib/server/timeline.ts';
 import { formatDate, fromText, preset, PRESETS, toText, yearDays, type CalendarText, type Preset } from '#lib/calendar.ts';
 import { pluginCalendars } from '#lib/server/plugins.ts';
@@ -28,7 +29,7 @@ export const actions: Actions = {
 		const text = Object.fromEntries(TEXT_KEYS.map((k) => [k, String(f.get(k) ?? '').slice(0, 5000)])) as unknown as CalendarText;
 		const r = fromText(text);
 		if (!r.ok) return fail(400, { error: r.error, line: r.line ?? null, text });
-		saveSettings({ calendar: r.cal });
+		saveCampaign(campaignId(), { calendar: r.cal });
 		recomputeSortKeys(r.cal);
 		return { ok: 'calendar.saved' };
 	},

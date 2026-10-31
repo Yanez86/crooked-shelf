@@ -147,15 +147,18 @@
 				crs: L.CRS.Simple,
 				minZoom: -6,
 				maxZoom: 4,
-				zoomSnap: 0.25,
+				zoomSnap: 0,
 				zoomDelta: 0.5,
 				maxBounds: bounds.pad(0.25),
 				attributionControl: false,
+				zoomControl: false,
 				keyboard: true
 			});
+			L.control.zoom({ position: 'topright' }).addTo(map);
 			L.imageOverlay(src, bounds, { alt: '' }).addTo(map);
-			map.fitBounds(bounds);
-			map.setMinZoom(map.getZoom() - 1);
+			map.setMinZoom(map.getBoundsZoom(bounds) - 1);
+			// Di base l'immagine è larga come la colonna: se è più alta della mappa, il resto si raggiunge trascinando o rimpicciolendo.
+			map.setView(bounds.getCenter(), map.getScaleZoom(map.getSize().x / width, 0));
 			pinLayer = L.layerGroup().addTo(map);
 			measureLayer = L.layerGroup().addTo(map);
 			map.getContainer().setAttribute('aria-label', t('maps.mapLabel', { title }));
@@ -204,13 +207,14 @@
 </script>
 
 <!-- Leaflet rende la mappa raggiungibile con Tab: frecce per spostarsi, + e − per lo zoom. -->
-<div class="map" bind:this={el}></div>
+<div class="map" style:aspect-ratio="{width} / {height}" bind:this={el}></div>
 
 <style>
 	.map {
 		width: 100%;
-		height: min(70vh, 40rem);
-		min-height: 20rem;
+		/* L'altezza segue l'immagine larga come la colonna: si allunga fino al doppio di quella di base, se l'immagine è alta abbastanza. */
+		min-height: max(20rem, min(70vh, 40rem));
+		max-height: min(140vh, 80rem);
 		border: 2px solid var(--c-control);
 		border-radius: var(--radius);
 		background: var(--c-surface2);
@@ -250,7 +254,7 @@
 		stroke-linejoin: round;
 	}
 	.map :global(.leaflet-marker-icon:focus-visible) {
-		outline: 3px solid var(--c-focus);
+		outline: var(--focus-width) solid var(--c-focus);
 		outline-offset: 3px;
 		border-radius: var(--radius);
 	}
@@ -267,7 +271,7 @@
 		color: var(--c-text);
 	}
 	.map :global(.leaflet-popup-content) {
-		font-size: 1rem;
+		font-size: var(--fs-base);
 		line-height: 1.5;
 	}
 	.map :global(.leaflet-popup-content p) {

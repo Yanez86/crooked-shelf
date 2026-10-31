@@ -64,7 +64,8 @@
 			if (a) show(a);
 		};
 		const onBlur = (e: FocusEvent) => {
-			if (target(e) === link) hide();
+			const a = target(e);
+			if (a && a === link) hide();
 		};
 		const onKey = (e: KeyboardEvent) => {
 			if (e.key === 'Escape') hide();

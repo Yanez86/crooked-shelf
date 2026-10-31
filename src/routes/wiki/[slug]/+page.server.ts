@@ -1,4 +1,4 @@
-import { error } from '@sveltejs/kit';
+import { error, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { canEdit, canView, isMaster } from '#lib/access.ts';
 import { backlinks, getPageBySlug, pageCover, pageMeta } from '#lib/server/pages.ts';
@@ -9,7 +9,7 @@ import { eventsForPage } from '#lib/server/timeline.ts';
 import { mapActions, mapView } from '#lib/server/mapPage.ts';
 import { addEvent, timelineView } from '#lib/server/timelinePage.ts';
 import { boardActions, boardView } from '#lib/server/boardPage.ts';
-import { getCalendar } from '#lib/server/settings.ts';
+import { getCalendar, isHomePage } from '#lib/server/settings.ts';
 import { formatDate } from '#lib/calendar.ts';
 import { canCreateKind } from '#lib/pageKinds.ts';
 
@@ -22,6 +22,7 @@ function visiblePage(slug: string, u: App.Locals['user']) {
 
 export const load: PageServerLoad = ({ params, locals, url }) => {
 	const page = visiblePage(params.slug, locals.user);
+	if (isHomePage(page.id)) redirect(303, '/');
 	const meta = pageMeta(page);
 	const cal = getCalendar();
 	const when = (e: { year: number | null; month: number | null; day: number | null; approx: string }) =>

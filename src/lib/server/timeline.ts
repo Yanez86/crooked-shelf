@@ -3,6 +3,7 @@ import { alias } from 'drizzle-orm/sqlite-core';
 import { getDb, schema } from './db/index.ts';
 import { getCalendar } from './settings.ts';
 import { visibleTo } from './visibility.ts';
+import { pageInCampaign } from './campaigns.ts';
 import { dayNumber, validDate, type Calendar } from '../calendar.ts';
 import { canView, isMaster, type Viewer } from '../access.ts';
 import type { TimelineMode } from '../pageKinds.ts';
@@ -59,7 +60,7 @@ export function listTimelines(u: Viewer | null, mode?: TimelineMode) {
 
 /** Gli eventi di una cronologia; in quelle della campagna anche le voci dei resoconti di sessione. */
 const eventsOf = (tl: TimelineRef): SQL =>
-	tl.mode === 'campaign' ? or(eq(ev.timelineId, tl.id), eq(ev.source, 'session'))! : eq(ev.timelineId, tl.id);
+	tl.mode === 'campaign' ? or(eq(ev.timelineId, tl.id), and(eq(ev.source, 'session'), pageInCampaign(ev.pageId)))! : eq(ev.timelineId, tl.id);
 
 export function listEvents(tl: TimelineRef, u: Viewer | null) {
 	const order =
@@ -189,10 +190,10 @@ export function syncSessionEvent(page: Pick<PageRow, 'id' | 'title' | 'visibilit
 			.run();
 }
 
-/** Dopo un cambio di calendario l'ordine degli eventi va ricalcolato. */
+/** Dopo un cambio di calendario l'ordine degli eventi della campagna va ricalcolato. */
 export function recomputeSortKeys(cal: Calendar) {
 	const db = getDb();
-	const rows = db.select({ id: ev.id, year: ev.year, month: ev.month, day: ev.day }).from(ev).all();
+	const rows = db.select({ id: ev.id, year: ev.year, month: ev.month, day: ev.day }).from(ev).where(or(pageInCampaign(ev.timelineId), pageInCampaign(ev.pageId))).all();
 	db.transaction((tx) => {
 		for (const r of rows) {
 			const d = r.year === null ? null : { year: r.year, month: r.month, day: r.day };

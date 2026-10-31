@@ -1,11 +1,14 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { useMemoryDb, schema } from './db/index.ts';
-import { resetSettingsCache, saveSettings } from './settings.ts';
+import { resetSettingsCache } from './settings.ts';
+import { FIRST_CAMPAIGN, saveCampaign } from './campaigns.ts';
 import { createPage, deletePage, getPageBySlug, updatePage } from './pages.ts';
 import { checkEvent, listEvents, saveEvent, recomputeSortKeys, setTimelineMode, getTimeline, type EventInput } from './timeline.ts';
 import { createMap, getMap, mapsForPage, pinsOf, saveLayer, savePin, layersOf, validParentMap, listMaps, mapPath } from './maps.ts';
 import { preset } from '../calendar.ts';
-import { listTemplates, getTemplatePage, seedWiki, templateCopy } from './templates.ts';
+import { homePage, listTemplates, getTemplatePage, seedWiki, setHomePage, templateCopy } from './templates.ts';
+import { createCategory, moveTreeNode, pageTree } from './taxonomy.ts';
+import { locate } from '../tree.ts';
 import { builtinTemplate } from '../templates.ts';
 import { extract } from '../content/extract.ts';
 import type { TimelineMode } from '../pageKinds.ts';
@@ -22,7 +25,7 @@ beforeEach(() => {
 		[2, 'player']
 	] as const)
 		db.insert(schema.users).values({ id, username: 'u' + id, displayName: 'U' + id, passwordHash: 'x', role, createdAt: 0 }).run();
-	saveSettings({ calendar: preset('harptos', 'it') });
+	saveCampaign(FIRST_CAMPAIGN, { calendar: preset('harptos', 'it') });
 });
 
 /** Una pagina «cronologia» del mondo o della campagna. */
@@ -174,6 +177,45 @@ describe('template', () => {
 		expect(npc).toMatchObject({ kind: 'template', icon: 'person', template: 'b:npc' });
 		expect(getTimeline(getPageBySlug('cronologia-del-mondo')!.id)!.mode).toBe('world');
 		expect(getTimeline(getPageBySlug('cronologia-della-campagna')!.id)!.mode).toBe('campaign');
+	});
+
+	it('la home è una pagina: nasce con la wiki, e se manca la ricrea solo chi la può scrivere', () => {
+		seedWiki('it', master);
+		const home = homePage(alice)!;
+		expect(home).toMatchObject({ kind: 'page', visibility: 'public' });
+		expect(homePage(master)!.id).toBe(home.id);
+		// Non si elimina: se manca è perché viene da una versione di prima.
+		deletePage(home.id);
+		expect(homePage(alice)!.id).toBe(home.id);
+		saveCampaign(FIRST_CAMPAIGN, { homePageId: 0 });
+		expect(homePage(alice)).toBeNull();
+		const again = homePage(master)!;
+		expect(again.id).not.toBe(home.id);
+		expect(homePage(alice)!.id).toBe(again.id);
+	});
+
+	it('la home è una sola, sta in cima all\'albero fuori dalle cartelle e non si sposta', () => {
+		seedWiki('it', master);
+		const first = homePage(master)!;
+		const folder = createCategory('Luoghi', null);
+		const page = createPage({ ...base, title: 'Nuova home', categoryId: folder.id }, master);
+		const inside = createPage({ ...base, title: 'Dentro', categoryId: folder.id }, master);
+		expect(moveTreeNode(master, `page-${inside.id}`, { parent: `page-${page.id}`, before: null })).toBe(true);
+
+		setHomePage(page.id);
+		expect(homePage(alice)!.id).toBe(page.id);
+		expect(getPageBySlug(page.slug)).toMatchObject({ categoryId: null, parentPageId: null });
+		expect(getPageBySlug(inside.slug)).toMatchObject({ categoryId: null, parentPageId: page.id });
+		const { items } = pageTree(master);
+		expect(items[0]).toMatchObject({ id: page.id, home: true, canTrash: false });
+		expect(locate(items, `page-${first.id}`)!.node).toMatchObject({ canTrash: true });
+		expect(locate(items, `page-${first.id}`)!.node).not.toMatchObject({ home: true });
+		expect(moveTreeNode(master, `page-${page.id}`, { parent: `folder-${folder.id}`, before: null })).toBe(false);
+
+		// Una home finita in una cartella con una versione di prima: l'albero la riporta in cima.
+		expect(moveTreeNode(master, `page-${first.id}`, { parent: `folder-${folder.id}`, before: null })).toBe(true);
+		saveCampaign(FIRST_CAMPAIGN, { homePageId: first.id });
+		expect(pageTree(master).items[0]).toMatchObject({ id: first.id, home: true });
 	});
 
 	it('la fotocopia porta blocchi, colonna e icona; i segreti solo al Master', () => {

@@ -1,7 +1,8 @@
 import { isMaster, type Viewer } from './access.ts';
+import { iconPath } from './icons.ts';
 
 /**
- * Tipi di pagina. Tutte stanno nell'albero a sinistra e si aprono in /wiki/<indirizzo>:
+ * Tipi di pagina. Tutte stanno nella barra a sinistra (i template nella loro linguetta) e si aprono in /wiki/<indirizzo>:
  * - `page`: una pagina normale, bianca o fotocopiata da un template;
  * - `template`: una pagina da fotocopiare, con la struttura (blocchi, colonna a lato, icona) decisa da chi la scrive;
  * - `map`: una pagina con una mappa (pin, livelli, mappe annidate);
@@ -22,7 +23,7 @@ export type TimelineMode = (typeof TIMELINE_MODES)[number];
 
 /** Icona nell'albero per le pagine senza un'icona scelta (stesso disegno a tratto di PAGE_ICONS). */
 export const KIND_ICONS: Record<Exclude<PageKind, 'page'>, string> = {
-	template: 'M8.5 7.5h11v13.75h-11zM5.5 17H4.5V2.75h11v1.75M11 11.5h6M11 14.5h6M11 17.5h4',
+	template: iconPath('template'),
 	map: 'M9 4 3 6v14l6-2 6 2 6-2V4l-6 2zM9 4v14M15 6v14',
 	timeline: 'M6 2.5h12M6 21.5h12M7.5 2.5c0 4.5 9 5 9 9.5s-9 5-9 9.5M16.5 2.5c0 4.5-9 5-9 9.5s9 5 9 9.5',
 	board: 'M3.5 4.5h17v15h-17zM7 8h4v4H7zM13.5 8H17M13.5 11h3M7 15.5h10'

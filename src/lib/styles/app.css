@@ -15,15 +15,22 @@
 	--line: 1.6;
 	--radius: 0;
 	--space: 1rem;
-	--measure: 72ch;
+	/* Il contenuto segue la larghezza della colonna. Un valore in ch (es. 72ch) limiterebbe la lunghezza delle righe. */
+	--measure: none;
+	--side-col: 20rem;
 	/* Scala dei caratteri (rapporto ~1.2): usare solo questi valori. */
-	--fs-sm: 0.875rem;
-	--fs-base: 1rem;
-	--fs-md: 1.2rem;
-	--fs-lg: 1.45rem;
-	--fs-xl: 1.75rem;
-	--fs-2xl: 2.1rem;
+	--fs-sm: 0.8125rem;
+	--fs-base: 0.9375rem;
+	--fs-md: 1.125rem;
+	--fs-lg: 1.375rem;
+	--fs-xl: 1.625rem;
+	--fs-2xl: 2rem;
+	/* Il contorno del fuoco serve a chi si muove con la tastiera: col mouse sparisce (data-pointer, dal layout). */
+	--focus-width: 3px;
 	font-size: calc(100% * var(--font-scale, 1));
+}
+:root[data-pointer] {
+	--focus-width: 0;
 }
 
 :root[data-font='atkinson'] {
@@ -45,6 +52,7 @@ body {
 	background: var(--c-bg);
 	color: var(--c-text);
 	font-family: var(--font-body);
+	font-size: var(--fs-base);
 	line-height: var(--line);
 	-webkit-text-size-adjust: 100%;
 }
@@ -89,7 +97,7 @@ a:hover {
 }
 
 :focus-visible {
-	outline: 3px solid var(--c-focus);
+	outline: var(--focus-width) solid var(--c-focus);
 	outline-offset: 2px;
 }
 
@@ -194,6 +202,48 @@ mark {
 /* Con l'albero delle pagine a sinistra serve più spazio. */
 .container.wide {
 	max-width: 90rem;
+}
+/* Il riquadro delle colonne: albero a sinistra, testo al centro, colonna a destra. */
+.panel {
+	background: var(--c-surface);
+	border: 1px solid var(--c-border);
+	border-top: 4px solid var(--c-primary);
+	border-radius: var(--radius);
+	padding: 1rem;
+}
+/* Le colonne di soli elenchi: l'albero a sinistra e, nella home, le ultime pagine a destra. */
+.side-panel {
+	position: sticky;
+	top: 1rem;
+	max-height: calc(100vh - 2rem);
+	overflow-y: auto;
+	font-size: var(--fs-sm);
+	line-height: 1.35;
+	/* Le righe hanno già 0.4rem ai lati: il testo sta a 1rem dal bordo, come nella colonna a destra. */
+	padding-inline: 0.6rem;
+}
+/* Una sola colonna al centro, uguale per Profilo e Amministrazione: le pagine qui dentro non scelgono la larghezza. */
+.center-column {
+	max-width: 64rem;
+	margin-inline: auto;
+}
+.center-column > h2 {
+	margin-top: 0;
+}
+.center-column > p {
+	max-width: var(--measure);
+}
+.center-column > .card {
+	margin-bottom: 1.5rem;
+}
+.center-column .card > :first-child {
+	margin-top: 0;
+}
+.center-column .card > :last-child {
+	margin-bottom: 0;
+}
+.center-column .card tbody tr:last-child > * {
+	border-bottom: 0;
 }
 
 /* --- Moduli --- */
@@ -481,6 +531,8 @@ a.badge:hover {
 }
 
 table.data {
+	/* Riferimento per i .visually-hidden delle celle: senza, in una tabella che scorre fanno sforare la pagina. */
+	position: relative;
 	border-collapse: collapse;
 	width: 100%;
 }
@@ -489,7 +541,20 @@ table.data td {
 	text-align: left;
 	padding: 0.5rem 0.6rem;
 	border-bottom: 1px solid var(--c-border);
-	vertical-align: top;
+	vertical-align: middle;
+}
+table.data thead th {
+	font-size: var(--fs-sm);
+	color: var(--c-muted);
+	border-bottom: 2px solid var(--c-control);
+}
+/* Il testo resta a sinistra; caselle al centro della colonna, azioni in fondo a destra. */
+table.data .col-center {
+	text-align: center;
+}
+table.data .col-end {
+	text-align: right;
+	white-space: nowrap;
 }
 
 /* --- Copertina e icona della pagina (uguali in lettura e in modifica) --- */
@@ -510,39 +575,26 @@ table.data td {
 .page-icon {
 	display: grid;
 	place-items: center;
-	width: 4rem;
-	height: 4rem;
-	margin-top: 0.75rem;
-	background: var(--c-surface);
-	border: 1px solid var(--c-border);
+	flex-shrink: 0;
+	/* Alta come una riga del titolo. */
+	width: 1.25em;
+	height: 1.25em;
+	font-size: var(--fs-2xl);
 	color: var(--c-primary);
 }
 .page-icon svg {
-	width: 62%;
-	height: 62%;
+	width: 80%;
+	height: 80%;
 	fill: none;
 	stroke: currentColor;
 	stroke-width: 1.5;
 	stroke-linecap: round;
 	stroke-linejoin: round;
 }
-/* Sulla copertina: più grande, a cavallo del bordo in basso, staccata dall'immagine col colore dello sfondo. */
-.page-icon.on-cover {
-	position: relative;
-	width: 5.5rem;
-	height: 5.5rem;
-	margin: -2.75rem 0 0 1.5rem;
-	box-shadow: 0 0 0 4px var(--c-bg);
-}
 /* Sul telefono la copertina va da un bordo all'altro dello schermo. */
 @media (max-width: 48rem) {
 	.page-cover {
 		margin-inline: calc(-1 * var(--space));
-	}
-	.page-icon.on-cover {
-		width: 4.5rem;
-		height: 4.5rem;
-		margin: -2.25rem 0 0;
 	}
 }
 

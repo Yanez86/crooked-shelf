@@ -1,9 +1,11 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { useMemoryDb, schema } from './db/index.ts';
-import { backlinks, createPage, findPageChoice, getPageBySlug, listPages, pageChoices, pageMeta, renderPage, suggestPages, updatePage } from './pages.ts';
+import { eq } from 'drizzle-orm';
+import { getDb, useMemoryDb, schema } from './db/index.ts';
+import { backlinks, createPage, deletePage, findPageChoice, getPageById, getPageBySlug, listPages, listTrash, listTrashedFolders, pageChoices, pageMeta, purgeFolder, renderPage, restoreFolder, restorePage, suggestPages, trashFolder, updatePage } from './pages.ts';
 import { searchPages } from './search.ts';
-import { categoryTree, createCategory, listTags, pageTree } from './taxonomy.ts';
+import { categoryPath, categoryTree, createCategory, createDivider, listCategories, listTags, moveTreeNode, pageTree } from './taxonomy.ts';
 import { readPageForm } from './pageForm.ts';
+import type { Viewer } from '../access.ts';
 import type { DocNode } from '../content/types.ts';
 
 const master = { id: 1, role: 'master' as const };
@@ -48,7 +50,7 @@ describe('pagine', () => {
 		const r = readPageForm(form('claws'), master, cal);
 		if (!r.ok) throw new Error(r.error);
 		const row = createPage(r.input, master);
-		expect(pageTree(alice).pages).toEqual([{ slug: 'drago', title: 'Drago', icon: 'claws', kind: 'page' }]);
+		expect(pageTree(alice).items).toMatchObject([{ type: 'page', slug: 'drago', title: 'Drago', icon: 'claws', kind: 'page' }]);
 		updatePage(row, { ...base, title: 'Drago', content: doc(p('y')) }, master, true);
 		expect(getPageBySlug('drago')!.icon).toBe('claws');
 	});
@@ -59,6 +61,16 @@ describe('pagine', () => {
 		expect(backlinks('bartolo', alice).map((b) => b.title)).toEqual(['Locanda del Grifone']);
 		const html = renderPage(getPageBySlug('locanda-del-grifone')!, alice, labels).html;
 		expect(html).toContain('href="/wiki/bartolo" data-title="Bartolo" data-excerpt="Il locandiere">Bartolo</a>');
+	});
+
+	it('ordina per data di creazione, a prescindere dalle modifiche', () => {
+		const db = getDb();
+		for (const [i, title] of ['Vecchia', 'Nuova'].entries()) {
+			createPage({ ...base, title, content: doc(p(title)) }, master);
+			db.update(schema.pages).set({ createdAt: i + 1, updatedAt: 10 - i }).where(eq(schema.pages.title, title)).run();
+		}
+		expect(listPages(master).rows.map((r) => r.title)).toEqual(['Vecchia', 'Nuova']);
+		expect(listPages(master, { sort: 'created' }).rows.map((r) => r.title)).toEqual(['Nuova', 'Vecchia']);
 	});
 
 	it("l'anteprima del collegamento non mostra i segreti", () => {
@@ -154,5 +166,91 @@ describe('pagine', () => {
 		expect(categoryTree(alice).flat[0].count).toBe(1);
 		expect(categoryTree(master).flat[0].count).toBe(2);
 		expect(listTags(alice).map((t) => t.name)).toEqual(['Città', 'Nord']);
+	});
+});
+
+describe('riordino e cestino nell\'albero', () => {
+	const base = { content: doc(), visibility: 'players' as const, playersCanEdit: false, categoryId: null, tags: [], fields: [], session: null };
+	const titles = (u: Viewer = master) => pageTree(u).items.map((n) => (n.type === 'folder' ? n.name : n.type === 'page' ? n.title : '---'));
+	const key = (id: number) => `page-${id}`;
+
+	it('ordina cartelle, pagine e divisori nella stessa lista', () => {
+		const a = createPage({ ...base, title: 'Alba' }, master);
+		const b = createPage({ ...base, title: 'Bosco' }, master);
+		const c = createCategory('Luoghi', null);
+		const line = createDivider();
+		expect(titles()).toEqual(['Luoghi', 'Alba', 'Bosco', '---']);
+		expect(moveTreeNode(master, `divider-${line.id}`, { parent: null, before: key(b.id) })).toBe(true);
+		expect(moveTreeNode(master, key(b.id), { parent: null, before: `folder-${c.id}` })).toBe(true);
+		expect(titles()).toEqual(['Bosco', 'Luoghi', 'Alba', '---']);
+	});
+
+	it('una pagina dentro una pagina prende la sua cartella, e la segue quando cambia', () => {
+		const luoghi = createCategory('Luoghi', null);
+		const fazioni = createCategory('Fazioni', null);
+		const citta = createPage({ ...base, title: 'Città', categoryId: luoghi.id }, master);
+		const porto = createPage({ ...base, title: 'Porto' }, master);
+		expect(moveTreeNode(master, key(porto.id), { parent: key(citta.id), before: null })).toBe(true);
+		expect(getPageById(porto.id)).toMatchObject({ parentPageId: citta.id, categoryId: luoghi.id });
+		updatePage(getPageById(citta.id)!, { ...base, title: 'Città', categoryId: fazioni.id }, master, true);
+		expect(getPageById(porto.id)).toMatchObject({ parentPageId: citta.id, categoryId: fazioni.id });
+		// Scelta un'altra cartella dal modulo, la pagina esce da quella che la conteneva.
+		updatePage(getPageById(porto.id)!, { ...base, title: 'Porto', categoryId: luoghi.id }, master, true);
+		expect(getPageById(porto.id)).toMatchObject({ parentPageId: null, categoryId: luoghi.id });
+	});
+
+	it('non accetta un posto impossibile, né voci che non si vedono', () => {
+		const a = createCategory('A', null);
+		const b = createCategory('B', a.id);
+		expect(moveTreeNode(master, `folder-${a.id}`, { parent: `folder-${b.id}`, before: null })).toBe(false);
+		expect(moveTreeNode(master, 'page-999', { parent: null, before: null })).toBe(false);
+		const nota = createPage({ ...base, visibility: 'personal', title: 'Nota' }, alice);
+		expect(moveTreeNode(master, key(nota.id), { parent: null, before: null })).toBe(false);
+	});
+
+	it('una pagina nel cestino lascia le sue alla cartella; recuperata le riprende', () => {
+		const citta = createPage({ ...base, title: 'Città' }, master);
+		const porto = createPage({ ...base, title: 'Porto' }, master);
+		moveTreeNode(master, key(porto.id), { parent: key(citta.id), before: null });
+		deletePage(citta.id);
+		expect(titles()).toEqual(['Porto']);
+		restorePage(citta.id);
+		expect(titles()).toEqual(['Città']);
+	});
+
+	it('una cartella va nel cestino con quello che contiene e torna intera', () => {
+		const luoghi = createCategory('Luoghi', null);
+		const regni = createCategory('Regni', luoghi.id);
+		const citta = createPage({ ...base, title: 'Città', categoryId: regni.id }, master);
+		const nota = createPage({ ...base, visibility: 'personal', title: 'Nota', categoryId: luoghi.id }, alice);
+		createPage({ ...base, title: 'Fuori' }, master);
+
+		trashFolder(luoghi.id, master);
+		expect(titles()).toEqual(['Fuori']);
+		expect(listCategories()).toEqual([]);
+		expect(categoryPath(regni.id)).toEqual([]);
+		expect(listTrashedFolders()).toMatchObject([{ name: 'Luoghi', pages: 1 }]);
+		// Le pagine della cartella non compaiono una per una: tornano con lei.
+		expect(listTrash(master)).toEqual([]);
+		// La pagina personale di Alice non è del Master: resta sua, fuori dalla cartella.
+		expect(getPageById(nota.id)).toBeDefined();
+		expect(titles(alice)).toContain('Nota');
+
+		restoreFolder(luoghi.id);
+		expect(listTrashedFolders()).toEqual([]);
+		expect(listCategories().map((c) => c.name)).toEqual(['Luoghi', 'Regni']);
+		expect(getPageById(citta.id)).toBeDefined();
+		expect(titles()).toEqual(['Luoghi', 'Fuori']);
+	});
+
+	it('eliminata per sempre, la cartella porta via solo ciò che era nel cestino con lei', () => {
+		const luoghi = createCategory('Luoghi', null);
+		const citta = createPage({ ...base, title: 'Città', categoryId: luoghi.id }, master);
+		const nota = createPage({ ...base, visibility: 'personal', title: 'Nota', categoryId: luoghi.id }, alice);
+		trashFolder(luoghi.id, master);
+		purgeFolder(luoghi.id);
+		expect(listTrashedFolders()).toEqual([]);
+		expect(getDb().select().from(schema.pages).where(eq(schema.pages.id, citta.id)).get()).toBeUndefined();
+		expect(getPageById(nota.id)).toMatchObject({ categoryId: null });
 	});
 });

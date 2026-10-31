@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { page } from '$app/state';
 	import { getT } from '#lib/i18n/index.ts';
 	import FormError from '#lib/components/FormError.svelte';
 	import type { PageProps } from './$types';
@@ -15,10 +16,15 @@
 	{#if !data.valid}
 		<div class="alert alert-error" role="alert"><span>{t('invite.invalid')}</span></div>
 		<p><a href="/login">{t('auth.loginTitle')}</a></p>
+	{:else if data.loggedIn}
+		<p>{t('invite.joinIntro', { campaign: data.campaign ?? '' })}</p>
+		<FormError error={form?.error} />
+		<form method="post" action="?/join"><button class="btn btn-primary" type="submit">{t('invite.join')}</button></form>
 	{:else}
 		<p>{t('invite.intro', { role: t('roles.' + data.role) })}</p>
+		{#if data.campaign}<p>{t('invite.haveAccount', { campaign: data.campaign })} <a href="/login?next={encodeURIComponent(page.url.pathname)}">{t('auth.loginTitle')}</a></p>{/if}
 		<FormError error={form?.error} />
-		<form method="post" class="card">
+		<form method="post" action="?/register" class="card">
 			<div class="field">
 				<label for="username">{t('auth.username')}</label>
 				<input id="username" name="username" type="text" required autocomplete="username" aria-describedby="username-hint" value={v?.username ?? ''} />

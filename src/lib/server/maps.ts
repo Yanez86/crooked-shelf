@@ -3,6 +3,7 @@ import { getDb, schema } from './db/index.ts';
 import { slugify } from '../slug.ts';
 import { canView, isMaster, type Viewer } from '../access.ts';
 import { visibleTo } from './visibility.ts';
+import { ofCampaign, pageInCampaign } from './campaigns.ts';
 import type { PageRow } from './pages.ts';
 
 const { maps, mapLayers, mapPins, pages } = schema;
@@ -30,7 +31,7 @@ export function listMaps(u: Viewer | null) {
 }
 
 export function getMap(id: number) {
-	return getDb().select().from(maps).where(eq(maps.id, id)).get();
+	return getDb().select().from(maps).where(and(eq(maps.id, id), pageInCampaign(maps.pageId))).get();
 }
 
 export function getMapOfPage(pageId: number) {
@@ -43,7 +44,7 @@ export function pageOfOldMapSlug(slug: string) {
 		.select({ slug: pages.slug, visibility: pages.visibility, authorId: pages.authorId, deletedAt: pages.deletedAt })
 		.from(maps)
 		.innerJoin(pages, eq(pages.id, maps.pageId))
-		.where(eq(maps.slug, slug))
+		.where(and(ofCampaign(pages), eq(maps.slug, slug)))
 		.get();
 }
 
@@ -224,7 +225,7 @@ export function mapsForPage(slug: string, u: Viewer | null) {
 		.innerJoin(maps, eq(maps.id, mapPins.mapId))
 		.innerJoin(pages, eq(pages.id, maps.pageId))
 		.leftJoin(mapLayers, eq(mapLayers.id, mapPins.layerId))
-		.where(eq(mapPins.pageSlug, slug))
+		.where(and(ofCampaign(pages), eq(mapPins.pageSlug, slug)))
 		.all();
 	const out = new Map<string, string>();
 	for (const r of rows)

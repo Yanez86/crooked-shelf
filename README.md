@@ -21,6 +21,7 @@
 - **Temi** (chiaro, scuro e quelli creati da te) e **accessibilità** WCAG 2.2 AA: testo fino al 200%, caratteri per la dislessia, uso completo da tastiera.
 - **Italiano e inglese**, altre lingue con un file o un plugin.
 - **Plugin** di soli dati: temi, template, calendari, lingue, regole.
+- **Più campagne nella stessa installazione**, ognuna con il suo Master, i suoi giocatori e una wiki tutta sua.
 - **I tuoi dati restano tuoi**: backup completo, esportazione in Markdown (compatibile con Obsidian), **pacchetto mondo** `.shelf` per portare mappe e regole della casa in un'altra campagna.
 
 ## Avvio rapido

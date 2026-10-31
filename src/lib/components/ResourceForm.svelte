@@ -45,9 +45,3 @@
 		<a class="btn" href={cancelHref}>{t('common.cancel')}</a>
 	</div>
 </form>
-
-<style>
-	form {
-		max-width: 44rem;
-	}
-</style>

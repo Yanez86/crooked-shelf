@@ -43,7 +43,6 @@
 	}
 	.description {
 		white-space: pre-line;
-		max-width: 44rem;
 	}
 	img {
 		display: block;

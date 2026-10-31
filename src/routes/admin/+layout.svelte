@@ -7,6 +7,7 @@
 	const t = getT();
 	const links = [
 		['/admin', 'admin.settings'],
+		['/admin/campaigns', 'admin.campaigns'],
 		['/admin/users', 'admin.users'],
 		['/admin/invites', 'admin.invites'],
 		['/admin/themes', 'admin.themes'],
@@ -17,16 +18,18 @@
 	];
 </script>
 
-<h1>{t('nav.admin')}</h1>
-<nav aria-label={t('nav.admin')} class="subnav">
-	<ul class="list-plain">
-		{#each links as [href, key] (href)}
-			<li><a {href} aria-current={page.url.pathname === href || (href !== '/admin' && page.url.pathname.startsWith(href + '/')) ? 'page' : undefined}>{t(key)}</a></li>
-		{/each}
-	</ul>
-</nav>
+<div class="center-column">
+	<h1>{t('nav.admin')}</h1>
+	<nav aria-label={t('nav.admin')} class="subnav">
+		<ul class="list-plain">
+			{#each links as [href, key] (href)}
+				<li><a {href} aria-current={page.url.pathname === href || (href !== '/admin' && page.url.pathname.startsWith(href + '/')) ? 'page' : undefined}>{t(key)}</a></li>
+			{/each}
+		</ul>
+	</nav>
 
-{@render children()}
+	{@render children()}
+</div>
 
 <style>
 	.subnav ul {
@@ -44,6 +47,9 @@
 		text-decoration: none;
 		color: var(--c-text);
 		border-bottom: 3px solid transparent;
+	}
+	.subnav a:hover {
+		background: var(--c-surface2);
 	}
 	.subnav a[aria-current='page'] {
 		border-bottom-color: var(--c-primary);
