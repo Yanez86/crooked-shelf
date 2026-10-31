@@ -100,7 +100,7 @@
 										<button id="move-{card.id}-{d.dir}" class="mini" type="submit" {disabled} aria-label="{t(d.key)}: {card.title}" title={t(d.key)}><Icon name={d.icon} /></button>
 									</form>
 								{/each}
-								<button class="mini" type="button" aria-expanded={editing === card.id} onclick={() => (editing = editing === card.id ? null : card.id)}>
+								<button class="mini" type="button" title={t('page.edit')} aria-expanded={editing === card.id} onclick={() => (editing = editing === card.id ? null : card.id)}>
 									<Icon name="edit" /><span class="visually-hidden">{t('page.edit')}: {card.title}</span>
 								</button>
 							</div>
@@ -122,7 +122,7 @@
 										</select>
 									</div>
 									<div class="actions">
-										<button class="btn btn-small btn-primary" type="submit">{t('common.save')}</button>
+										<button class="btn btn-small btn-primary" type="submit"><Icon name="save" />{t('common.save')}</button>
 									</div>
 								</form>
 								<form method="post" action="?/deleteCard" use:enhance>
@@ -168,7 +168,7 @@
 						<input type="hidden" name="id" value={col.id} />
 						<label class="visually-hidden" for="cn-{col.id}">{t('boards.columnName')}</label>
 						<input id="cn-{col.id}" name="title" type="text" required maxlength="60" value={col.title} />
-						<button class="btn btn-small" type="submit">{t('common.save')}</button>
+						<button class="btn btn-small" type="submit"><Icon name="save" />{t('common.save')}</button>
 					</form>
 					<div class="inline">
 						<form method="post" action="?/shiftColumn" use:enhance>

@@ -15,12 +15,12 @@
 - **Ruoli**: Admin, Master, Giocatore; accesso solo su invito, visitatori spenti di default.
 - **Mappe**: pagine con un'immagine, pin collegati a pagine e ad altre mappe, livelli, pin segreti, righello.
 - **Cronologie**: pagine del mondo o della campagna, quante ne vuoi, con **calendari fantasy** (Harptos, inventati…); i resoconti di sessione entrano da soli.
-- **Regole D&D 5.5**: `@incantesimo[Fireball]` diventa un link a D&D Beyond con l'anteprima del testo SRD 5.2.
+- **Regole D&D 5.5**: `@incantesimo[Fireball]` mostra l'anteprima del testo SRD 5.2; con il plugin D&D Beyond diventa anche un link al sito.
 - **Bacheche** degli appunti: pagine con schede in colonne, personali o del gruppo.
 - **Versioni** di ogni pagina, cestino.
 - **Temi** (chiaro, scuro e quelli creati da te) e **accessibilità** WCAG 2.2 AA: testo fino al 200%, caratteri per la dislessia, uso completo da tastiera.
 - **Italiano e inglese**, altre lingue con un file o un plugin.
-- **Plugin** di soli dati: temi, template, calendari, lingue, regole.
+- **Plugin** di soli dati: temi, template, calendari, lingue, regole, link a siti esterni.
 - **Più campagne nella stessa installazione**, ognuna con il suo Master, i suoi giocatori e una wiki tutta sua.
 - **I tuoi dati restano tuoi**: backup completo, esportazione in Markdown (compatibile con Obsidian), **pacchetto mondo** `.shelf` per portare mappe e regole della casa in un'altra campagna.
 

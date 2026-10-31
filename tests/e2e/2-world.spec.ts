@@ -81,8 +81,10 @@ test('template PNG con scheda, segreto e immagine', async () => {
 	await editor.getByRole('heading', { name: 'Aspetto' }).click();
 	await admin.keyboard.press('End');
 	await admin.keyboard.press('Enter');
-	admin.once('dialog', (d) => d.accept('Ritratto di un vecchio mago con la barba'));
 	await admin.locator('input[type=file]').setInputFiles('tests/fixtures/city.png');
+	const alt = admin.getByRole('dialog', { name: /Descrivi l'immagine/ });
+	await alt.getByRole('textbox').fill('Ritratto di un vecchio mago con la barba');
+	await alt.getByRole('button', { name: 'Salva' }).click();
 	await expect(admin.getByRole('status').filter({ hasText: 'Immagine inserita' })).toBeVisible();
 	await expect(editor.locator('img')).toHaveAttribute('alt', 'Ritratto di un vecchio mago con la barba');
 	await axe(admin, 'editor con template');

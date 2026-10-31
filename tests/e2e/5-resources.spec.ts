@@ -76,7 +76,8 @@ test('linguette dell\'albero: pagine e risorse', async () => {
 
 	await resources.click();
 	await expect(resources).toHaveAttribute('aria-selected', 'true');
-	await expect(tree.getByRole('tabpanel', { name: 'Risorse' })).toContainText('Ancora nessuna risorsa.');
+	// Le immagini delle pagine dei test precedenti ci sono già, anche senza aver caricato risorse.
+	await expect(tree.getByRole('tabpanel', { name: 'Risorse' }).locator('summary', { hasText: 'Immagini' })).toBeVisible();
 	await expect(locanda).toBeHidden();
 	await expect(tree.getByRole('link', { name: 'Carica una risorsa' })).toBeVisible();
 
@@ -123,9 +124,18 @@ test('il Master carica una musica, un ritratto e una dispensa segreta', async ()
 	await shot(admin, '40-risorsa');
 
 	await admin.goto('/resources');
-	await expect(admin.locator('main').getByRole('heading', { level: 2 })).toHaveText(['Immagini (1)', 'Audio (1)', 'Altri file (1)']);
+	await expect(admin.locator('main').getByRole('heading', { level: 2 })).toHaveText([/^Immagini \(\d+\)$/, 'Audio (1)', 'Altri file (1)']);
 	await axe(admin, 'elenco delle risorse');
 	await shot(admin, '41-risorse');
+
+	// Un'immagine della wiki ha la sua scheda: dice dove compare e non si modifica.
+	await admin.locator('main h3 a').filter({ hasNotText: 'Ritratto di Elminster' }).first().click();
+	await admin.waitForURL(/\/resources\/[^/]*[^\d/][^/]*$/);
+	await expect(admin.locator('main img')).toBeVisible();
+	await expect(admin.locator('main ul a[href^="/wiki/"]').first()).toBeVisible();
+	await expect(admin.getByRole('link', { name: 'Modifica la risorsa' })).toHaveCount(0);
+	await expect(panel.locator('a[aria-current="page"]')).toHaveCount(1);
+	await axe(admin, 'immagine della wiki');
 
 	await admin.goto('/gallery?show=resources');
 	await expect(admin.locator('main').getByRole('status')).toHaveText('1 immagini');

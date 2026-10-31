@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { getT } from '#lib/i18n/index.ts';
+	import Icon from '#lib/components/Icon.svelte';
 	import DeleteCampaign from '#lib/components/DeleteCampaign.svelte';
 	import Invites from '#lib/components/Invites.svelte';
 	import type { PageProps } from './$types';
@@ -21,7 +22,7 @@
 				<input id="campaign-name" name="name" type="text" required maxlength="80" value={data.campaign.name} />
 			</div>
 			<p>{t('campaign.master')}: <strong>{data.master ?? '—'}</strong></p>
-			<button class="btn btn-primary" type="submit">{t('common.save')}</button>
+			<button class="btn btn-primary" type="submit"><Icon name="save" />{t('common.save')}</button>
 		</form>
 
 		<h2>{t('campaign.players')}</h2>

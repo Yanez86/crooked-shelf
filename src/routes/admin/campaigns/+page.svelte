@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { getT } from '#lib/i18n/index.ts';
+	import Icon from '#lib/components/Icon.svelte';
 	import DeleteCampaign from '#lib/components/DeleteCampaign.svelte';
 	import FormError from '#lib/components/FormError.svelte';
 	import FormOk from '#lib/components/FormOk.svelte';
@@ -32,7 +33,7 @@
 			</select>
 		</div>
 		<p class="field muted">{t('admin.campaignPlayers', { n: c.players })}</p>
-		<div class="field"><button class="btn" type="submit">{t('common.save')}<span class="visually-hidden"> {c.name}</span></button></div>
+		<div class="field"><button class="btn" type="submit"><Icon name="save" />{t('common.save')}<span class="visually-hidden"> {c.name}</span></button></div>
 	</form>
 	<DeleteCampaign id={c.id} name={c.name} />
 {:else}

@@ -11,6 +11,7 @@ export const UI_ICONS: Record<string, string> = {
 	close: 'M6 6l12 12M18 6 6 18',
 	check: 'M5 12.5l4.5 4.5L19 7.5',
 	edit: 'M4 20h4L19 9l-4-4L4 16zM13.5 6.5l4 4',
+	save: 'M3.75 3.75h12.75l3.75 3.75v12.75H3.75zM8 3.75V9h7.5V3.75M7 20.25V13.5h10v6.75',
 	trash: 'M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6',
 	upload: 'M12 15V4M7.5 8.5 12 4l4.5 4.5M4.5 14.5v4.75h15V14.5',
 	move: 'M12 3v18M8 7l4-4 4 4M8 17l4 4 4-4',

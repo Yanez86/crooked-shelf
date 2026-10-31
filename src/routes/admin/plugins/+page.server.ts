@@ -14,10 +14,11 @@ export const load: PageServerLoad = () => {
 			name: p.name,
 			version: p.version,
 			description: p.description,
+			instructions: p.instructions,
 			author: p.author,
 			license: p.license,
 			enabled: on.has(p.id),
-			counts: { themes: p.themes.length, templates: p.templates.length, calendars: p.calendars.length, locales: Object.keys(p.locales).length, rules: p.rules.length },
+			counts: { themes: p.themes.length, templates: p.templates.length, calendars: p.calendars.length, locales: Object.keys(p.locales).length, rules: p.rules.length, links: p.links.length },
 			warnings: p.warnings
 		}))
 	};

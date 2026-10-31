@@ -74,7 +74,7 @@
 	const newTemplate = $derived(canManage && tab === 'templates');
 	const newLabel = $derived(t(newTemplate ? 'kinds.new.template' : 'nav.newPage'));
 	const closed = new SvelteSet<string>();
-	const currentRes = $derived(Number(/^\/resources\/(\d+)(?:\/|$)/.exec(path)?.[1]));
+	const currentRes = $derived(/^\/resources\/([^/]+)/.exec(path)?.[1]);
 
 	onMount(() => {
 		try {
@@ -372,7 +372,7 @@
 
 {#snippet resourceLeaf(r: ResourceItem)}
 	<li>
-		<a href="/resources/{r.id}" aria-current={currentRes === r.id ? 'page' : undefined}>
+		<a href="/resources/{r.id}" aria-current={currentRes === String(r.id) ? 'page' : undefined}>
 			<svg class="ico doc" viewBox="0 0 24 24" aria-hidden="true">
 				{#if r.kind === 'image'}
 					<path d={iconPath('image')} />
@@ -454,13 +454,12 @@
 						id="tree-tab-{id}"
 						aria-selected={tab === id}
 						aria-controls="tree-panel-{id}"
-						aria-label={t('tree.tab.' + id)}
-						title={t('tree.tab.' + id)}
 						tabindex={tab === id ? 0 : -1}
 						onclick={() => selectTab(id)}
 						onkeydown={tabKeys}
 					>
 						<Icon name={TAB_ICONS[id]} />
+						{t('tree.tab.' + id)}
 					</button>
 				{/each}
 			</div>
@@ -623,30 +622,33 @@
 	.tabs {
 		flex: 1;
 		display: flex;
-		justify-content: center;
 		align-self: stretch;
 		min-width: 0;
 	}
 	/* Linguette: quella aperta è sottolineata, come la voce del menu in alto. */
 	[role='tab'] {
+		flex: 1;
 		display: inline-flex;
+		flex-direction: column;
 		align-items: center;
 		min-height: var(--tool);
 		margin-bottom: -0.2rem;
-		padding: 0 0.5rem;
+		padding: 0 0.5rem 0.25rem;
 		border: 0;
 		border-bottom: 3px solid transparent;
 		background: none;
 		color: var(--c-muted);
 		font: inherit;
 		font-family: var(--font-head);
+		font-size: 0.7rem;
 		font-weight: 600;
+		line-height: 1.2;
 		cursor: pointer;
 	}
 	/* Più grandi delle altre icone; il tratto resta sottile come nel resto della barra. */
 	[role='tab'] :global(.icon) {
-		width: 1.8em;
-		height: 1.8em;
+		width: 1.6rem;
+		height: 1.6rem;
 		stroke-width: 1.25;
 	}
 	[role='tab']:hover {
@@ -655,7 +657,6 @@
 	}
 	[role='tab'][aria-selected='true'] {
 		color: var(--c-text);
-		font-weight: 700;
 		border-bottom-color: var(--c-primary);
 	}
 	.tool {
@@ -720,11 +721,6 @@
 	.close,
 	.backdrop {
 		display: none;
-	}
-	/* Sopra la riga delle linguette, che così restano al centro anche nel pannello a scomparsa. */
-	.close,
-	.hide {
-		margin-left: calc(-1 * var(--tool));
 	}
 	.level.root {
 		margin: 0;

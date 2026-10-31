@@ -176,7 +176,7 @@
 			<!-- Sul lato, piccole e di un solo colore: il nome nel suggerimento e per chi usa un lettore di schermo. -->
 			<div class="tools" role="group" aria-label={t('cover.title')}>
 				<button id="cover-change" class="tool" type="button" title={t('cover.change')} aria-expanded={picking} aria-controls="cover-picker" onclick={openPicker}>
-					<Icon name="image" /><span class="visually-hidden">{t('cover.change')}</span>
+					<Icon name="edit" /><span class="visually-hidden">{t('cover.change')}</span>
 				</button>
 				{#if cover.image}
 					<button id="cover-move" class="tool" type="button" title={t('cover.reposition')} onclick={startMoving}>

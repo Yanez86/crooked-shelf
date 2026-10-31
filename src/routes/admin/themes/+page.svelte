@@ -48,7 +48,7 @@
 				{@render swatches(th.colors)}
 				<strong>{th.name}</strong>
 				<div class="acts">
-					<a class="btn btn-small" href="/admin/themes/{th.id}">{t('page.edit')}<span class="visually-hidden">: {th.name}</span></a>
+					<a class="btn btn-small" href="/admin/themes/{th.id}" title={t('page.edit')}><Icon name="edit" /><span class="visually-hidden">{t('page.edit')}: {th.name}</span></a>
 					<a class="btn btn-small" href="/admin/themes/{th.id}/export" download>{t('themes.export')}<span class="visually-hidden">: {th.name}</span></a>
 					<form method="post" action="?/delete">
 						<input type="hidden" name="id" value={th.id} />

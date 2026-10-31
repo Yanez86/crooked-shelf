@@ -64,6 +64,64 @@ test('plugin: acceso porta tema, template, calendario e regole', async () => {
 	expect((await admin.goto('/rules/rule/riposo-in-taverna'))?.status()).toBe(404);
 });
 
+test('cliccando su un plugin si leggono scopo, istruzioni e autore', async () => {
+	await admin.goto('/admin/plugins');
+	const opener = admin.getByRole('button', { name: 'D&D Beyond', exact: true });
+	// Si apre da tutta la scheda, non solo dal nome: il pulsante la copre, e force clicca lì senza controllare cosa c'è sopra.
+	await admin.getByRole('listitem').filter({ hasText: 'D&D Beyond' }).getByText('Contiene:').click({ force: true });
+	const dialog = admin.getByRole('dialog', { name: 'D&D Beyond' });
+	await expect(dialog).toContainText('A cosa serve');
+	await expect(dialog).toContainText('Come si usa');
+	await expect(dialog).toContainText('@incantesimo[Fireball]');
+	await expect(dialog).toContainText('Crooked Shelf');
+	await expect(dialog).toContainText('AGPL-3.0');
+	await axe(admin, 'dettagli del plugin');
+	await shot(admin, '31-plugin-dettagli');
+	await admin.keyboard.press('Escape');
+	await expect(dialog).toBeHidden();
+	await expect(opener).toBeFocused();
+
+	// Dentro il popup di Amministrazione, Esc chiude solo i dettagli.
+	await admin.goto('/wiki/locanda-del-grifone');
+	await admin.locator('.user-menu summary').click();
+	await admin.locator('.user-menu .panel').getByRole('link', { name: 'Amministrazione', exact: true }).click();
+	const panel = admin.getByRole('dialog', { name: 'Amministrazione' });
+	const frame = admin.frameLocator('dialog iframe');
+	await frame.getByRole('link', { name: 'Plugin' }).click();
+	await frame.getByRole('button', { name: 'D&D Beyond', exact: true }).click();
+	await expect(frame.getByRole('dialog', { name: 'D&D Beyond' })).toBeVisible();
+	await admin.keyboard.press('Escape');
+	await expect(frame.getByRole('dialog', { name: 'D&D Beyond' })).toBeHidden();
+	await expect(panel).toBeVisible();
+	await admin.keyboard.press('Escape');
+	await expect(panel).toBeHidden();
+});
+
+test('plugin D&D Beyond: i riferimenti alle regole portano al sito', async () => {
+	const link = admin.getByRole('link', { name: /Apri su D&D Beyond/ });
+	await admin.goto('/rules/spell/fireball');
+	await expect(link).toHaveCount(0);
+
+	await admin.goto('/admin/plugins');
+	const card = admin.getByRole('listitem').filter({ hasText: 'D&D Beyond' });
+	await expect(card).toContainText('1 link');
+	await card.getByRole('button', { name: /Accendi/ }).click();
+	await expect(admin.getByRole('status').first()).toContainText('Plugin acceso');
+
+	await admin.goto('/rules/spell/fireball');
+	await expect(link).toHaveAttribute('href', 'https://www.dndbeyond.com/search?q=Fireball');
+	await admin.goto('/wiki/locanda-del-grifone/edit');
+	await admin.locator('.editor-content p').first().click();
+	await admin.keyboard.press('End');
+	await admin.keyboard.type(' @condizione[Prone|prono] ');
+	await admin.getByRole('button', { name: 'Salva' }).click();
+	await expect(admin.locator('.content').getByRole('link', { name: /^prono/ })).toHaveAttribute('href', 'https://www.dndbeyond.com/search?q=Prone');
+
+	await admin.goto('/admin/plugins');
+	await admin.getByRole('button', { name: /Spegni/ }).click();
+	await expect(admin.getByRole('status').first()).toContainText('Plugin spento');
+});
+
 test('backup completo', async () => {
 	await admin.goto('/admin/backup');
 	await axe(admin, 'backup');

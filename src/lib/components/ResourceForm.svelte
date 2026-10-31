@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { getT } from '../i18n/index.ts';
+	import Icon from './Icon.svelte';
 
 	let {
 		values,
@@ -41,7 +42,7 @@
 		{/each}
 	</fieldset>
 	<div class="actions">
-		<button class="btn btn-primary" type="submit">{submitLabel}</button>
+		<button class="btn btn-primary" type="submit">{#if submitLabel === t('common.save')}<Icon name="save" />{/if}{submitLabel}</button>
 		<a class="btn" href={cancelHref}>{t('common.cancel')}</a>
 	</div>
 </form>

@@ -46,7 +46,7 @@ test('riferimenti alle regole con anteprima SRD', async () => {
 	await admin.getByRole('button', { name: 'Salva' }).click();
 
 	const content = admin.locator('.content');
-	await expect(content.getByRole('link', { name: /^Fireball/ })).toHaveAttribute('href', 'https://www.dndbeyond.com/search?q=Fireball');
+	await expect(content.getByRole('link', { name: /^Fireball/ })).toHaveAttribute('href', '/rules/spell/fireball');
 	await expect(content.getByRole('link', { name: /^cadere prono/ })).toBeVisible();
 
 	const info = content.getByRole('button', { name: 'Anteprima: Fireball' });

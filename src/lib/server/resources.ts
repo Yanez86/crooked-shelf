@@ -29,7 +29,7 @@ function visibleTo(u: Viewer | null): SQL {
 	return isMaster(u) ? sql`1=1` : sql`${resources.visibility} IN ('public','players')`;
 }
 
-const collator = new Intl.Collator(undefined, { sensitivity: 'base', numeric: true });
+export const collator = new Intl.Collator(undefined, { sensitivity: 'base', numeric: true });
 
 function select(where: SQL) {
 	return getDb()

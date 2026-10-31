@@ -6,8 +6,9 @@ import { MIGRATIONS } from './db/migrations.ts';
 import { createPage, getPageBySlug, pageCover, renderPage, updatePage } from './pages.ts';
 import { readPageForm } from './pageForm.ts';
 import { createCategory, pageTree } from './taxonomy.ts';
-import { galleryImages } from './gallery.ts';
+import { galleryImages, resourceEntries } from './gallery.ts';
 import { createMap } from './maps.ts';
+import { createResource } from './resources.ts';
 import type { DocNode, PageField } from '../content/types.ts';
 
 const master = { id: 1, role: 'master' as const };
@@ -138,6 +139,24 @@ describe('galleria', () => {
 		const cover = galleryImages(alice).find((i) => i.id.startsWith('cover'))!;
 		expect(cover).toMatchObject({ url: '/files/coverxxxxxxxx', alt: 'Elminster', width: 40, height: 30 });
 		expect(galleryImages(alice).find((i) => i.id.startsWith('map'))!.sources).toEqual([{ kind: 'map', title: 'Faerûn', href: '/wiki/faerun' }]);
+	});
+
+	it('le immagini della wiki stanno nelle risorse, senza doppioni', () => {
+		const resource = createResource({ title: 'Ritratto', description: '', visibility: 'players' }, 'coverxxxxxxxx', 1);
+		const entries = (u: typeof master | typeof alice | null) => resourceEntries(u).map((r) => [r.id, r.title, r.kind]);
+		expect(entries(alice)).toEqual([
+			['diaryxxxxxxxx', 'diary.png', 'image'],
+			['inlinexxxxxxxx', 'inline.png', 'image'],
+			['mapxxxxxxxx', 'map.png', 'image'],
+			[resource, 'Ritratto', 'image']
+		]);
+		expect(entries(master).map(([id]) => id)).toEqual(['gmxxxxxxxx', 'inlinexxxxxxxx', 'mapxxxxxxxx', resource, 'secretxxxxxxxx']);
+		expect(entries(null)).toEqual([]);
+		expect(resourceEntries(alice).find((r) => r.id === 'inlinexxxxxxxx')!.alt).toBe('Torre di Elminster');
+		expect(resourceEntries(alice).find((r) => r.id === 'mapxxxxxxxx')).toMatchObject({
+			file: { id: 'mapxxxxxxxx', name: 'map.png', mime: 'image/png' },
+			sources: [{ kind: 'map', title: 'Faerûn', href: '/wiki/faerun' }]
+		});
 	});
 });
 

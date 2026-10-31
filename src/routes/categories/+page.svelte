@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { getT } from '#lib/i18n/index.ts';
+	import Icon from '#lib/components/Icon.svelte';
 	import FormError from '#lib/components/FormError.svelte';
 	import FormOk from '#lib/components/FormOk.svelte';
 	import type { PageProps } from './$types';
@@ -77,7 +78,7 @@
 							<label for="desc-{c.id}">{t('common.description')}</label>
 							<input id="desc-{c.id}" name="description" type="text" maxlength="500" value={c.description} />
 						</div>
-						<div class="field"><button class="btn" type="submit">{t('common.save')}</button></div>
+						<div class="field"><button class="btn" type="submit"><Icon name="save" />{t('common.save')}</button></div>
 					</form>
 					<form method="post" action="?/delete">
 						<input type="hidden" name="id" value={c.id} />

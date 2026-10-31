@@ -24,12 +24,14 @@
 <svelte:head><title>{data.page.title} · {appPage.data.siteName}</title></svelte:head>
 
 {#snippet top()}
-	{#if data.category.length}
+	<!-- Una pagina alla radice ha solo sé stessa: il titolo qui sotto basta. -->
+	{#if data.trail.length > 1}
 		<nav aria-label={t('page.breadcrumb')}>
 			<ol class="crumbs">
-				{#each data.category as c (c.slug)}
-					<li><a href="/wiki?category={encodeURIComponent(c.slug)}">{c.name}</a></li>
+				{#each data.trail.slice(0, -1) as n (n.type + n.slug)}
+					<li><a href={n.type === 'folder' ? `/wiki?category=${encodeURIComponent(n.slug)}` : `/wiki/${n.slug}`}>{n.name}</a></li>
 				{/each}
+				<li aria-current="page">{data.page.title}</li>
 			</ol>
 		</nav>
 	{/if}
@@ -137,7 +139,7 @@
 		font-size: var(--fs-sm);
 	}
 	.crumbs li + li::before {
-		content: '›';
+		content: '»';
 		padding: 0 0.5rem;
 		color: var(--c-muted);
 	}

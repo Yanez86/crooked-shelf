@@ -78,7 +78,10 @@
 		if (p.page?.missing)
 			parts.push(`<p><a class="wikilink missing" href="/wiki/new?${esc(new URLSearchParams({ title: p.label, slug: p.page.slug }).toString())}">${esc(t('maps.createPage'))}</a></p>`);
 		if (p.target) parts.push(`<p><a href="/wiki/${encodeURIComponent(p.target.slug)}">${esc(t('maps.openMap', { title: p.target.title }))}</a></p>`);
-		if (editable) parts.push(`<p><button type="button" class="btn btn-small" data-edit-pin="${p.id}">${esc(t('maps.editPin'))}</button></p>`);
+		if (editable) {
+			const label = esc(t('maps.editPin'));
+			parts.push(`<p><button type="button" class="btn btn-small" data-edit-pin="${p.id}" title="${label}" aria-label="${label}"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="${iconPath('edit')}" /></svg></button></p>`);
+		}
 		return parts.join('');
 	}
 

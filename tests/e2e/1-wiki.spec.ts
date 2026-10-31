@@ -130,7 +130,7 @@ test('pagine, collegamenti e segreti', async () => {
 	await expect(content.getByRole('link', { name: 'Bartolo Pancia' })).toHaveAttribute('href', '/wiki/bartolo-pancia');
 	await expect(content.locator('.wikilink.missing')).toContainText('Drago Rosso');
 	await expect(content.locator('.secret')).toContainText('spia degli Zhentarim');
-	await expect(admin.getByRole('navigation', { name: 'Percorso della categoria' })).toContainText('Luoghi');
+	await expect(admin.getByRole('navigation', { name: 'Percorso della pagina' })).toContainText('Luoghi');
 	await expect(admin.getByRole('link', { name: 'Taverna' })).toBeVisible();
 	// In fondo: chi l'ha creata e l'ultima modifica.
 	const foot = admin.locator('.page-foot');
@@ -184,7 +184,7 @@ test('i collegamenti tra le pagine si aprono in un popup', async () => {
 	// Sulla schermata principale va la pagina aperta adesso, non quella di partenza.
 	await backlink.click();
 	await expect(locanda).toBeVisible();
-	await frame.getByRole('navigation', { name: 'Percorso della categoria' }).getByRole('link').first().click();
+	await frame.getByRole('navigation', { name: 'Percorso della pagina' }).getByRole('link').first().click();
 	await expect(locanda).toHaveCount(0);
 	await popup.getByRole('button', { name: 'Apri la pagina intera' }).click();
 	await expect(popup).toBeHidden();
@@ -413,6 +413,47 @@ test('editor: accessibilità e telefono', async () => {
 	await shot(admin, '05-pagina-telefono');
 	await axe(admin, 'pagina telefono');
 	await admin.setViewportSize({ width: 1280, height: 800 });
+});
+
+test('editor: il cestino elimina il blocco, Annulla lo riporta', async () => {
+	await admin.goto('/wiki/new?template=none');
+	const editor = admin.locator('.editor-content');
+	await editor.click();
+	await admin.keyboard.type('Primo\nSecondo\nTerzo\nQuarto\nQuinto');
+	const onBlock = admin.locator('.block-delete');
+	for (const text of ['Primo', 'Secondo', 'Terzo', 'Quarto']) {
+		// Modifiche vicine nel tempo contano come un'azione sola.
+		await admin.waitForTimeout(600);
+		await editor.getByText(text).hover();
+		if (text === 'Primo') {
+			await axe(admin, 'cestino sul blocco');
+			await shot(admin, '03-editor-cestino');
+		}
+		await onBlock.click();
+		await expect(editor.getByText(text)).toHaveCount(0);
+	}
+
+	const undo = admin.getByRole('toolbar').getByRole('button', { name: "Annulla l'ultima azione" });
+	// Oltre le tre azioni: il limite è quello dell'editor, cento.
+	for (const text of ['Quarto', 'Terzo', 'Secondo', 'Primo']) {
+		await undo.click();
+		await expect(editor.getByText(text)).toBeVisible();
+	}
+	await editor.getByText('Quinto').click();
+
+	// Un blocco senza testo, e l'ultimo rimasto: l'editor resta con un paragrafo vuoto.
+	await admin.getByRole('toolbar').getByRole('button', { name: 'Separatore' }).click();
+	await editor.locator('hr').hover();
+	await onBlock.click();
+	await expect(editor.locator('hr')).toHaveCount(0);
+	for (const text of ['Primo', 'Secondo', 'Terzo', 'Quarto']) {
+		await editor.getByText(text).hover();
+		await onBlock.click();
+	}
+	await editor.getByText('Quinto').click();
+	await admin.getByRole('toolbar').getByRole('button', { name: 'Elimina il blocco' }).click();
+	await expect(editor).not.toContainText('Quinto');
+	await expect(editor.locator('> *')).toHaveCount(1);
 });
 
 test('modifica concorrente non sovrascrive', async ({ browser }) => {

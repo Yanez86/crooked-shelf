@@ -2,7 +2,7 @@ import { inArray, sql } from 'drizzle-orm';
 import { getDb, schema } from './db/index.ts';
 import { visibleTo } from './visibility.ts';
 import { listMaps } from './maps.ts';
-import { listResources } from './resources.ts';
+import { collator, listResources, type Resource } from './resources.ts';
 import { stripSecrets, uploadedImages } from '../content/extract.ts';
 import { EMPTY_DOC, isDoc } from '../content/types.ts';
 import { isMaster, type Viewer } from '../access.ts';
@@ -22,6 +22,9 @@ export interface GallerySource {
 export interface GalleryImage {
 	id: string;
 	url: string;
+	name: string;
+	mime: string;
+	size: number;
 	width: number;
 	height: number;
 	alt: string;
@@ -61,7 +64,7 @@ export function galleryImages(u: Viewer | null): GalleryImage[] {
 
 	if (!uses.size) return [];
 	return getDb()
-		.select({ id: files.id, width: files.width, height: files.height, createdAt: files.createdAt })
+		.select({ id: files.id, name: files.name, mime: files.mime, size: files.size, width: files.width, height: files.height, createdAt: files.createdAt })
 		.from(files)
 		.where(inArray(files.id, [...uses.keys()]))
 		.all()
@@ -70,4 +73,24 @@ export function galleryImages(u: Viewer | null): GalleryImage[] {
 			return { ...f, url: `/files/${f.id}`, alt: e.alt || e.fallback, sources: e.sources };
 		})
 		.sort((a, b) => b.createdAt - a.createdAt || a.id.localeCompare(b.id));
+}
+
+/** Una voce delle Risorse. Con l'id del file al posto del numero è un'immagine della wiki mai caricata come risorsa: si chiama come il file, dice dove compare e da qui non si modifica. */
+export type ResourceEntry = Omit<Resource, 'id'> & { id: number | string; alt?: string; sources?: GallerySource[] };
+
+/** Le risorse che chi guarda può vedere più le immagini della wiki che non lo sono già, in ordine di titolo. */
+export function resourceEntries(u: Viewer | null): ResourceEntry[] {
+	const images = galleryImages(u)
+		.filter((i) => !i.sources.some((s) => s.kind === 'resource'))
+		.map(({ id, name, mime, size, width, height, alt, sources }) => ({
+			id,
+			title: name,
+			alt,
+			description: '',
+			visibility: 'players' as const,
+			kind: 'image' as const,
+			file: { id, name, mime, size, width, height },
+			sources
+		}));
+	return [...listResources(u), ...images].sort((a, b) => collator.compare(a.title, b.title));
 }

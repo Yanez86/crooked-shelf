@@ -6,6 +6,7 @@
 	import { getT } from '../i18n/index.ts';
 	import type { DocNode } from '../content/types.ts';
 	import Icon from '../components/Icon.svelte';
+	import PromptDialog from '../components/PromptDialog.svelte';
 
 	let {
 		content,
@@ -83,7 +84,10 @@
 				}
 			},
 			onTransaction: () => tick++,
-			onUpdate: ({ editor }) => (json = JSON.stringify(editor.getJSON()))
+			onUpdate: ({ editor }) => {
+				json = JSON.stringify(editor.getJSON());
+				hovered = null;
+			}
 		});
 	});
 
@@ -114,9 +118,12 @@
 		else c.setHeading({ level: Number(v.slice(1)) as 2 | 3 | 4 }).run();
 	}
 
-	function setLink() {
+	let asking = $state.raw<{ label: string; value: string; done: (answer: string | null) => void } | null>(null);
+	const ask = (label: string, value: string) => new Promise<string | null>((done) => (asking = { label, value, done }));
+
+	async function setLink() {
 		const prev = editor!.getAttributes('link').href ?? 'https://';
-		const url = window.prompt(t('editor.linkPrompt'), prev);
+		const url = await ask(t('editor.linkPrompt'), prev);
 		if (url === null) return;
 		if (url.trim() === '') chain().extendMarkRange('link').unsetLink().run();
 		else chain().extendMarkRange('link').setLink({ href: url.trim() }).run();
@@ -156,15 +163,36 @@
 			status = t(data.error ?? 'errors.generic');
 			return;
 		}
-		const alt = window.prompt(t('editor.altPrompt'), '') ?? '';
+		const alt = (await ask(t('editor.altPrompt'), '')) ?? '';
 		chain().setImage({ src: data.url, alt: alt.trim() }).run();
 		status = t('editor.uploaded');
 	}
 
-	function editAlt() {
+	async function editAlt() {
 		const cur = editor!.getAttributes('image').alt ?? '';
-		const alt = window.prompt(t('editor.altPrompt'), cur);
+		const alt = await ask(t('editor.altPrompt'), cur);
 		if (alt !== null) chain().updateAttributes('image', { alt: alt.trim() }).run();
+	}
+
+	// Il blocco sotto il mouse, con il punto dov'è il suo angolo in alto a destra.
+	let hovered = $state.raw<{ el: HTMLElement; top: number; left: number } | null>(null);
+
+	function trackBlock(e: MouseEvent) {
+		const blocks = [...(editor?.view.dom.children ?? [])] as HTMLElement[];
+		const el = blocks.find((b) => b.contains(e.target as Node));
+		// Tra un blocco e l'altro, o sul pulsante, resta quello di prima.
+		if (!el || el === hovered?.el) return;
+		const box = el.getBoundingClientRect();
+		const area = (e.currentTarget as HTMLElement).getBoundingClientRect();
+		hovered = { el, top: box.top - area.top, left: box.right - area.left };
+	}
+
+	/** Elimina il blocco di primo livello che contiene pos (un'immagine o una linea non hanno interno: pos è subito prima). */
+	function deleteBlock(pos: number) {
+		const at = editor!.state.doc.resolve(pos);
+		const from = at.depth ? at.before(1) : pos;
+		const to = at.depth ? at.after(1) : pos + (at.nodeAfter?.nodeSize ?? 0);
+		chain().deleteRange({ from, to }).run();
 	}
 
 	function wikiLink() {
@@ -213,6 +241,9 @@
 <div class="editor" class:inline>
 	<!-- svelte-ignore a11y_interactive_supports_focus -->
 	<div class="toolbar" role="toolbar" aria-label={t('editor.toolbar')} aria-controls="{labelId}-area" bind:this={toolbar} onkeydown={toolbarKeys} onmousedown={keepFocus}>
+		{@render btn('undo', t('editor.undo'), () => chain().undo().run(), undefined, !can((e) => e.can().undo()))}
+		{@render btn('redo', t('editor.redo'), () => chain().redo().run(), undefined, !can((e) => e.can().redo()))}
+		<span class="sep" aria-hidden="true"></span>
 		<select aria-label={t('editor.blockType')} title={t('editor.blockType')} value={blockType} onchange={(e) => setBlock(e.currentTarget.value)} disabled={!editor}>
 			<option value="paragraph">¶</option>
 			<option value="h2">H2</option>
@@ -248,9 +279,8 @@
 		{#if active('image')}
 			<button type="button" title={t('editor.altEdit')} onclick={editAlt}>Alt</button>
 		{/if}
-		<span class="sep" aria-hidden="true"></span>
-		{@render btn('undo', t('editor.undo'), () => chain().undo().run(), undefined, !can((e) => e.can().undo()))}
-		{@render btn('redo', t('editor.redo'), () => chain().redo().run(), undefined, !can((e) => e.can().redo()))}
+		<!-- Il blocco dove si sta scrivendo: per chi non ha il mouse, che non vede il pulsante sul blocco. -->
+		{@render btn('trash', t('editor.deleteBlock'), () => deleteBlock(editor!.state.selection.from))}
 		<span class="sep" aria-hidden="true"></span>
 		<button type="button" title={t('editor.tips')} aria-expanded={showTips} aria-controls="{labelId}-tips" onclick={() => (showTips = !showTips)}>
 			<Icon name="markdown" /><span class="visually-hidden">{t('editor.tips')}</span>
@@ -281,6 +311,17 @@
 		</div>
 	{/if}
 
+	{#if asking}
+		<PromptDialog
+			label={asking.label}
+			value={asking.value}
+			ondone={(answer) => {
+				asking?.done(answer);
+				asking = null;
+			}}
+		/>
+	{/if}
+
 	<input
 		bind:this={fileInput}
 		type="file"
@@ -293,7 +334,23 @@
 		}}
 	/>
 	<p class="upload-status" role="status">{status}</p>
-	<div class="area" id="{labelId}-area" bind:this={host}></div>
+	<!-- svelte-ignore a11y_no_static_element_interactions (il mouse mostra solo il pulsante; da tastiera c'è quello nella barra) -->
+	<div class="area" id="{labelId}-area" bind:this={host} onmousemove={trackBlock} onmouseleave={() => (hovered = null)}>
+		{#if hovered}
+			<button
+				type="button"
+				class="block-delete"
+				title={t('editor.deleteBlock')}
+				tabindex="-1"
+				style:top="{hovered.top}px"
+				style:left="{hovered.left}px"
+				onmousedown={(e) => e.preventDefault()}
+				onclick={() => deleteBlock(editor!.view.posAtDOM(hovered!.el, 0))}
+			>
+				<Icon name="trash" /><span class="visually-hidden">{t('editor.deleteBlock')}</span>
+			</button>
+		{/if}
+	</div>
 	<input type="hidden" {name} value={json} />
 	<noscript><p class="alert alert-error">{t('editor.noscript')}</p></noscript>
 </div>
@@ -398,6 +455,30 @@
 	}
 	.tips dd {
 		margin: 0;
+	}
+	.area {
+		position: relative;
+	}
+	/* Sull'angolo del blocco: non copre il testo e ci si arriva senza uscire dal blocco. */
+	.block-delete {
+		position: absolute;
+		z-index: 1;
+		transform: translate(-50%, -50%);
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 1.75rem;
+		height: 1.75rem;
+		padding: 0;
+		border: 1px solid var(--c-danger);
+		border-radius: var(--radius);
+		background: var(--c-surface);
+		color: var(--c-danger);
+		cursor: pointer;
+	}
+	.block-delete:hover {
+		background: var(--c-danger);
+		color: var(--c-surface);
 	}
 	.area :global(.editor-content) {
 		min-height: 18rem;

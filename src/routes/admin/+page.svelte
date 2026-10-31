@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { getT } from '#lib/i18n/index.ts';
+	import Icon from '#lib/components/Icon.svelte';
 	import FormError from '#lib/components/FormError.svelte';
 	import FormOk from '#lib/components/FormOk.svelte';
 	import type { PageProps } from './$types';
@@ -31,7 +32,7 @@
 		<input type="checkbox" name="allowVisitors" checked={data.settings.allowVisitors} aria-describedby="visitors-hint" />
 		<span>{t('admin.allowVisitors')}<br /><span id="visitors-hint" class="hint">{t('admin.allowVisitorsHint')}</span></span>
 	</label>
-	<div class="actions"><button class="btn btn-primary" type="submit">{t('common.save')}</button></div>
+	<div class="actions"><button class="btn btn-primary" type="submit"><Icon name="save" />{t('common.save')}</button></div>
 </form>
 
 <style>

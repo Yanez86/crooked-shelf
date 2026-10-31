@@ -269,6 +269,10 @@ ${iconCss()}</style>`}
 			max-width: none;
 		}
 	}
+	/* Sul contenitore: il footer resta staccato anche dalla colonna più alta, spesso quella a sinistra. */
+	.shell {
+		margin-bottom: 3rem;
+	}
 	/* Nel popup il titolo sta nella barra della finestra. */
 	.shell.framed {
 		padding-top: 1rem;
@@ -317,7 +321,6 @@ ${iconCss()}</style>`}
 	}
 	main {
 		min-width: 0;
-		margin-bottom: 3rem;
 		/* Le pagine si adattano allo spazio che resta accanto all'albero. */
 		container-type: inline-size;
 	}

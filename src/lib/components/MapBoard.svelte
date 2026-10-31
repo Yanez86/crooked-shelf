@@ -42,6 +42,13 @@
 	let draft = $state<Draft | null>(null);
 	let pinDialog = $state<HTMLDialogElement>();
 
+	// I popup fatti con <details>: la X li chiude e il fuoco torna sul tasto che li apre.
+	function closeMenu(e: MouseEvent) {
+		const menu = (e.currentTarget as HTMLElement).closest('details')!;
+		menu.open = false;
+		menu.querySelector('summary')!.focus();
+	}
+
 	// Il popup si apre quando compare; il fuoco va da solo sul primo campo.
 	$effect(() => pinDialog?.showModal());
 	$effect(() => layerInput?.focus());
@@ -205,6 +212,7 @@
 						</form>
 					{/if}
 				{/if}
+				<button class="btn btn-small btn-ghost pin-close" type="button" title={t('common.close')} aria-label={t('common.close')} onclick={closeMenu}><Icon name="close" /></button>
 			</div>
 		</details>
 	</div>
@@ -286,7 +294,7 @@
 				</fieldset>
 			</div>
 			<div class="actions">
-				<button class="btn btn-primary" type="submit">{t('common.save')}</button>
+				<button class="btn btn-primary" type="submit"><Icon name="save" />{t('common.save')}</button>
 			</div>
 		</form>
 		{#if draft.id}
@@ -296,7 +304,7 @@
 			</form>
 		{/if}
 		<!-- In fondo al codice, in alto a destra a schermo: così il fuoco parte dal primo campo. -->
-		<button class="btn btn-ghost pin-close" type="button" title={t('common.close')} aria-label={t('common.close')} onclick={() => pinDialog?.close()}><Icon name="close" /></button>
+		<button class="btn btn-small btn-ghost pin-close" type="button" title={t('common.close')} aria-label={t('common.close')} onclick={() => pinDialog?.close()}><Icon name="close" /></button>
 	</dialog>
 {/if}
 
@@ -328,7 +336,7 @@
 							</td>
 							<td class="row-actions">
 								<button class="btn btn-small btn-ghost" type="button" onclick={() => view?.openPin(p.id)}>{t('maps.showOnMap')}<span class="visually-hidden">: {p.label}</span></button>
-								{#if data.canEdit}<button class="btn btn-small btn-ghost" type="button" onclick={() => editPin(p.id)}>{t('page.edit')}<span class="visually-hidden">: {p.label}</span></button>{/if}
+								{#if data.canEdit}<button class="btn btn-small btn-ghost" type="button" title={t('page.edit')} onclick={() => editPin(p.id)}><Icon name="edit" /><span class="visually-hidden">{t('page.edit')}: {p.label}</span></button>{/if}
 							</td>
 						</tr>
 					{/each}
@@ -364,7 +372,7 @@
 						<option value="players" selected={l.visibility === 'players'}>{t('visibility.players')}</option>
 						<option value="master" selected={l.visibility === 'master'}>{t('visibility.master')}</option>
 					</select>
-					<button class="btn btn-small" type="submit">{t('common.save')}<span class="visually-hidden">: {l.name}</span></button>
+					<button class="btn btn-small" type="submit"><Icon name="save" />{t('common.save')}<span class="visually-hidden">: {l.name}</span></button>
 				</form>
 				<form method="post" action="?/deleteLayer" use:enhance>
 					<input type="hidden" name="id" value={l.id} />
@@ -416,7 +424,7 @@
 	}
 	.layers fieldset {
 		margin: 0;
-		padding: 0;
+		padding: 0 2.75rem 0 0;
 		border: 0;
 	}
 	.add-layer {

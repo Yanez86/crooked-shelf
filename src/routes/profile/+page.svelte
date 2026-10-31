@@ -98,7 +98,7 @@
 					</select>
 				</div>
 			</div>
-			<button class="btn btn-primary" type="submit">{t('common.save')}</button>
+			<button class="btn btn-primary" type="submit"><Icon name="save" />{t('common.save')}</button>
 		</form>
 	</section>
 
@@ -126,7 +126,7 @@
 						<input id="displayName" name="displayName" type="text" required maxlength="60" value={user.displayName} />
 					</div>
 				</div>
-				<button class="btn btn-primary" type="submit">{t('common.save')}</button>
+				<button class="btn btn-primary" type="submit"><Icon name="save" />{t('common.save')}</button>
 			</form>
 		</section>
 

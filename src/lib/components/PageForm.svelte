@@ -71,6 +71,13 @@
 	} = $props();
 
 	const t = getT();
+
+	// La scelta dell'icona è un <details>: la X la chiude e il fuoco torna sul tasto che la apre.
+	function closeMenu(e: MouseEvent) {
+		const menu = (e.currentTarget as HTMLElement).closest('details')!;
+		menu.open = false;
+		menu.querySelector('summary')!.focus();
+	}
 	let icon = $state(untrack(() => values.icon ?? ''));
 	let cover = $state(untrack(() => values.cover ?? null));
 	let pickingCover = $state(false);
@@ -114,6 +121,7 @@
 									<svg viewBox="0 0 24 24" aria-hidden="true"><path {d} /></svg><span class="visually-hidden">{t(`page.icons.${name}`)}</span>
 								</label>
 							{/each}
+							<button class="icon-choice pick-close" type="button" title={t('common.close')} aria-label={t('common.close')} onclick={closeMenu}><Icon name="close" /></button>
 						</fieldset>
 					</details>
 					<label class="visually-hidden" for="title">{t('page.title')}</label>
@@ -134,7 +142,7 @@
 							</button>
 						{/if}
 						<a class="icon-action" href={cancelHref} title={t('common.cancel')}><Icon name="close" /><span class="visually-hidden">{t('common.cancel')}</span></a>
-						<button class="icon-action save" type="submit" title={submitLabel}><Icon name="check" /><span class="visually-hidden">{submitLabel}</span></button>
+						<button class="icon-action save" type="submit" title={submitLabel}><Icon name="save" /><span class="visually-hidden">{submitLabel}</span></button>
 					</div>
 				</header>
 
@@ -341,6 +349,12 @@
 		border: 1px solid var(--c-border);
 		border-radius: var(--radius);
 		cursor: pointer;
+	}
+	.pick-close {
+		grid-area: 1 / 8;
+		padding: 0;
+		color: inherit;
+		background: none;
 	}
 	.icon-pick svg {
 		width: 1.25rem;

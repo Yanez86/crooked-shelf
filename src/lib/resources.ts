@@ -6,7 +6,7 @@ export const kindOf = (mime: string): ResourceKind =>
 	mime.startsWith('image/') ? 'image' : mime.startsWith('audio/') ? 'audio' : 'other';
 
 export interface ResourceItem {
-	id: number;
+	id: number | string;
 	title: string;
 	kind: ResourceKind;
 }
