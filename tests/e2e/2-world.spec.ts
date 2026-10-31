@@ -560,7 +560,7 @@ test('mappe con pin, livelli e mappe annidate', async () => {
 
 	// Un pin senza pagina ha ancora il fumetto.
 	await admin.getByRole('button', { name: 'Covo dei Zhentarim', exact: true }).click();
-	await expect(admin.locator('.leaflet-popup')).toContainText('Modifica pin');
+	await expect(admin.locator('.leaflet-popup').getByRole('button', { name: 'Modifica pin' })).toBeVisible();
 	await expect(admin.getByRole('dialog')).toHaveCount(0);
 
 	// Righello. I pin si spengono: dove cadono dipende dalla finestra, e un clic su un pin non misura.
