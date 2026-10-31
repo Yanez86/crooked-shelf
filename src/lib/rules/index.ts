@@ -40,10 +40,21 @@ export const ruleKey = (name: string) => slugify(name, 'rule');
 /** Destinazione usata per "chi cita questa regola" (stessa tabella dei collegamenti tra pagine). */
 export const ruleTarget = (kind: RuleKind, name: string) => `@${kind}/${ruleKey(name)}`;
 
-/** D&D Beyond non ha un'API pubblica: si collega alla sua ricerca. */
-export function ddbUrl(_kind: RuleKind, name: string): string {
-	return `https://www.dndbeyond.com/search?q=${encodeURIComponent(name.trim())}`;
+/** Sito esterno portato da un plugin acceso: in `url`, {name} è il nome della regola. */
+export interface RuleLink {
+	site: string;
+	url: string;
 }
+
+let links: RuleLink[] = [];
+
+/** Sul server, dai plugin accesi. */
+export function setRuleLinks(l: RuleLink[]) {
+	links = l;
+}
+
+export const ruleLinks = (name: string): RuleLink[] =>
+	links.map((l) => ({ site: l.site, url: l.url.replace('{name}', encodeURIComponent(name.trim())) }));
 
 export const SRD_ATTRIBUTION =
 	'This work includes material from the System Reference Document 5.2 ("SRD 5.2") by Wizards of the Coast LLC, available at https://www.dndbeyond.com/srd. The SRD 5.2 is licensed under the Creative Commons Attribution 4.0 International License, available at https://creativecommons.org/licenses/by/4.0/legalcode.';

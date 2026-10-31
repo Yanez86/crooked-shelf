@@ -3,6 +3,7 @@
 	"name": "Esempio: atmosfera gotica",
 	"version": "1.0.0",
 	"description": "Plugin di esempio: un tema scuro, un template per le taverne, un calendario inventato e una regola della casa. Copialo per crearne uno tuo.",
+	"instructions": "1. Premi «Accendi».\n2. Tema: scegli «Gotico» nelle preferenze del tuo profilo.\n3. Template: «Taverna» compare nella linguetta Template e in Nuova pagina.\n4. Calendario: nella pagina Calendario, tra i calendari pronti, carica «Calendario di Lunargento» e premi Salva.\n5. Regola: in una pagina scrivi @regola[Riposo in taverna].\n\nPer farne uno tuo, copia la cartella plugins/esempio-gotico e segui docs/plugin.md.",
 	"author": "Crooked Shelf",
 	"license": "AGPL-3.0",
 	"contributes": {

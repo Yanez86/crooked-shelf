@@ -6,10 +6,10 @@ import { checkTheme, type Theme } from '../themes.ts';
 import { fromText, isCalendar, toText, type Calendar } from '../calendar.ts';
 import { isDoc, type DocNode } from '../content/types.ts';
 import { setExtraLocales, type Dict } from '../i18n/index.ts';
-import { RULE_KINDS, type RuleKind } from '../rules/index.ts';
+import { RULE_KINDS, setRuleLinks, type RuleKind, type RuleLink } from '../rules/index.ts';
 
 /**
- * Plugin: cartelle con un plugin.json e file JSON (temi, template, calendari, lingue, regole).
+ * Plugin: cartelle con un plugin.json e file JSON (temi, template, calendari, lingue, regole, link a siti esterni).
  * Solo dati, nessun codice: installarli non dà accesso al server. Si accendono da Amministrazione › Plugin.
  *
  * Cartelle lette: `plugins/` accanto al programma (esempi inclusi) e `<CS_DATA_DIR>/plugins` (quelli installati).
@@ -34,7 +34,10 @@ export interface Plugin {
 	id: string;
 	name: string;
 	version: string;
+	/** A cosa serve. */
 	description: string;
+	/** Come si usa: una riga per passo. */
+	instructions: string;
 	author: string;
 	license: string;
 	dir: string;
@@ -43,11 +46,13 @@ export interface Plugin {
 	calendars: { name: string; calendar: Calendar }[];
 	locales: Record<string, Dict>;
 	rules: PluginRule[];
+	links: RuleLink[];
 	/** Problemi trovati nei file (il resto del plugin funziona). */
 	warnings: string[];
 }
 
 const ID = /^[a-z0-9][a-z0-9-]{1,40}$/;
+const LINK_URL = /^https:\/\/[^\s"'<>]*\{name\}[^\s"'<>]*$/;
 let cache: Plugin[] | null = null;
 let version = 0;
 
@@ -83,6 +88,7 @@ function loadOne(dir: string): Plugin | null {
 		name: text(m.name || id, 80),
 		version: text(m.version, 20),
 		description: text(m.description, 500),
+		instructions: text(m.instructions, 5000),
 		author: text(m.author, 80),
 		license: text(m.license, 40),
 		dir,
@@ -91,9 +97,12 @@ function loadOne(dir: string): Plugin | null {
 		calendars: [],
 		locales: {},
 		rules: [],
+		links: [],
 		warnings: []
 	};
-	const each = (key: string, fn: (data: unknown, file: string) => void) => {
+	if (!p.description) p.warnings.push('plugin.json: description');
+	if (!p.instructions) p.warnings.push('plugin.json: instructions');
+	const each =(key: string, fn: (data: unknown, file: string) => void) => {
 		for (const file of list(c[key])) {
 			try {
 				fn(readJson(dir, file), String(file));
@@ -146,6 +155,12 @@ function loadOne(dir: string): Plugin | null {
 			p.rules.push({ k: k as RuleKind, i: text(e.key ?? e.i, 120) || name, n: name, s: text(e.summary ?? e.s, 300), t: text(e.text ?? e.t, 20000) });
 		}
 	});
+	each('links', (data) => {
+		const l = data as Record<string, unknown>;
+		const url = text(l.url, 500);
+		if (!l.site || !LINK_URL.test(url)) throw new Error('invalid link');
+		p.links.push({ site: text(l.site, 60), url });
+	});
 	return p;
 }
 
@@ -165,6 +180,7 @@ export function allPlugins(): Plugin[] {
 	}
 	cache = [...found.values()].sort((a, b) => a.name.localeCompare(b.name));
 	setExtraLocales(mergeLocales(enabledPlugins()));
+	setRuleLinks(enabledPlugins().flatMap((p) => p.links));
 	return cache;
 }
 

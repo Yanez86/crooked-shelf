@@ -2,7 +2,7 @@ import type { LayoutServerLoad } from './$types';
 import { getSettings } from '#lib/server/settings.ts';
 import { extraThemes } from '#lib/server/plugins.ts';
 import { pageTree } from '#lib/server/taxonomy.ts';
-import { listResources } from '#lib/server/resources.ts';
+import { resourceEntries } from '#lib/server/gallery.ts';
 import { extraLocale } from '#lib/i18n/index.ts';
 import { themeCss } from '#lib/themes.ts';
 import { SIDE_COOKIE, TREE_COOKIE } from '#lib/prefs.ts';
@@ -28,6 +28,6 @@ export const load: LayoutServerLoad = ({ locals, cookies, request, depends }) =>
 		// Traduzioni dei plugin per la lingua in uso (il browser non le ha nel pacchetto).
 		localeExtra: extraLocale(locals.locale),
 		tree: tree ? pageTree(u) : null,
-		resources: tree ? listResources(u).map(({ id, title, kind }) => ({ id, title, kind })) : null
+		resources: tree ? resourceEntries(u).map(({ id, title, kind }) => ({ id, title, kind })) : null
 	};
 };

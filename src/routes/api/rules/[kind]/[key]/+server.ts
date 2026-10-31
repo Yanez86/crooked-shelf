@@ -1,7 +1,7 @@
 import { error, json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { getRule, ruleHtml } from '#lib/server/rules/index.ts';
-import { ddbUrl, ruleTarget } from '#lib/rules/index.ts';
+import { ruleLinks, ruleTarget } from '#lib/rules/index.ts';
 import { backlinks } from '#lib/server/pages.ts';
 
 /** Anteprima di una regola: testo SRD e regole della casa che la citano. */
@@ -14,7 +14,7 @@ export const GET: RequestHandler = ({ params, locals }) => {
 		name: e.n,
 		summary: e.s,
 		html: ruleHtml(e),
-		ddb: ddbUrl(e.k, e.n),
+		links: ruleLinks(e.n),
 		pages: backlinks(ruleTarget(e.k, e.n), locals.user)
 	});
 };

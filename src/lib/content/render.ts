@@ -1,7 +1,7 @@
 import { CALLOUT_KINDS, type DocNode } from './types.ts';
 import { INLINE_LINK } from './extract.ts';
 import { slugify } from '../slug.ts';
-import { ddbUrl, parseRuleKind, ruleKey, type RuleKind } from '../rules/index.ts';
+import { parseRuleKind, ruleKey, ruleLinks, type RuleKind } from '../rules/index.ts';
 import { iconPath } from '../icons.ts';
 
 export interface LinkTarget {
@@ -160,13 +160,19 @@ export function renderDoc(doc: DocNode, opt: RenderOptions): string {
 
 type LinkOpts = Pick<RenderOptions, 'resolve' | 'labels' | 'hasRule'>;
 
-/** Riferimento a una regola: link a D&D Beyond e, se c'è il testo SRD, il pulsante dell'anteprima. */
+/** Riferimento a una regola: link al sito di un plugin acceso, se no alla scheda della regola; se c'è il testo, il pulsante dell'anteprima. */
 function ruleRefHtml(kind: RuleKind, name: string, label: string | null, opt: LinkOpts): string {
 	const key = ruleKey(name);
+	const known = opt.hasRule?.(kind, key);
+	const url = ruleLinks(name)[0]?.url;
 	const ext = opt.labels.external ? `<span class="visually-hidden"> ${esc(opt.labels.external)}</span>` : '';
-	const link = `<a class="ruleref-link" href="${esc(ddbUrl(kind, name))}" rel="noopener noreferrer nofollow" target="_blank">${esc(label ?? name)}${ext}</a>`;
+	const link = url
+		? `<a class="ruleref-link" href="${esc(url)}" rel="noopener noreferrer nofollow" target="_blank">${esc(label ?? name)}${ext}</a>`
+		: known
+			? `<a class="ruleref-link" href="/rules/${kind}/${esc(key)}">${esc(label ?? name)}</a>`
+			: esc(label ?? name);
 	const info =
-		opt.hasRule?.(kind, key) && opt.labels.preview
+		known && opt.labels.preview
 			? `<button type="button" class="rule-info" data-rule="${kind}/${esc(key)}" aria-label="${esc(opt.labels.preview.replace('{name}', label ?? name))}" aria-expanded="false" aria-haspopup="dialog"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="${iconPath('info')}"/></svg></button>`
 			: '';
 	return `<span class="ruleref">${link}${info}</span>`;

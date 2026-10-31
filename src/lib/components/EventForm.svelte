@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { getT } from '../i18n/index.ts';
+	import Icon from './Icon.svelte';
 	import WorldDateInput from './WorldDateInput.svelte';
 	import type { CalMonth } from '../calendar.ts';
 	import type { WorldDate } from '../content/types.ts';
@@ -74,7 +75,7 @@
 			</label>
 		{/each}
 	</fieldset>
-	<button class="btn btn-primary" type="submit">{submitLabel}</button>
+	<button class="btn btn-primary" type="submit">{#if submitLabel === t('common.save')}<Icon name="save" />{/if}{submitLabel}</button>
 </form>
 
 <style>

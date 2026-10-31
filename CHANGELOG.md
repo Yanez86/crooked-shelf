@@ -6,6 +6,14 @@ Questo file è anche la pagina «Novità» della wiki (`/changelog`).
 ## 0.11.0 — 2026-10-30
 
 ### Modifiche
+- Sopra il titolo di una pagina, al posto della categoria, c'è il percorso per arrivarci: cartella » pagina » sottopagina. Ogni voce porta lì.
+- Pulsanti uguali ovunque: per modificare c'è sempre la matita, Salva ha il dischetto a sinistra e ogni popup si chiude con la X, compresi la scelta dell'icona, i livelli della mappa e le domande dell'editor su collegamenti e testo alternativo, che prima erano finestre del browser.
+- Risorse: tra le Immagini ci sono anche tutte quelle usate nella wiki (copertine, colonna a lato, testo delle pagine, mappe), con il nome del file e l'elenco di dove compaiono.
+- D&D Beyond diventa un plugin incluso, spento di base: per riavere i link al sito accendilo da Amministrazione › Plugin. Senza plugin, `@incantesimo[Fireball]` porta alla scheda della regola, o resta testo se la voce non è nell'elenco. Altri plugin possono aggiungere link ad altri siti.
+- Plugin: ogni plugin dice a cosa serve e come si usa. Cliccandolo si apre una finestra con scopo, istruzioni, autore, licenza e contenuto.
+- Barra a sinistra: sotto le icone delle linguette c'è il nome: Pagine, Risorse, Template.
+- Editor: passando col mouse su un blocco compare un cestino che lo elimina per intero; lo stesso comando è nella barra, per il blocco in cui si sta scrivendo.
+- Editor: Annulla e Ripeti sono i primi pulsanti della barra.
 - I collegamenti tra le pagine si aprono in un popup con tutta la pagina, senza la barra a sinistra. In alto a destra, accanto alla X, un tasto la porta sulla schermata principale.
 - Temi: un tema può avere un'immagine di sfondo, ferma dietro i riquadri mentre la pagina scorre. Si carica nell'editor dei temi e sugli schermi stretti non compare, perché lì il testo non ha un riquadro sotto. Il pacchetto mondo la porta con sé, «Esporta» no.
 - Mappe: creando o modificando una mappa si può scrivere una descrizione, che compare in un riquadro sopra la mappa.

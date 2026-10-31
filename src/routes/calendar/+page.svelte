@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { getT } from '#lib/i18n/index.ts';
+	import Icon from '#lib/components/Icon.svelte';
 	import FormError from '#lib/components/FormError.svelte';
 	import FormOk from '#lib/components/FormOk.svelte';
 	import type { PageProps } from './$types';
@@ -111,7 +112,7 @@
 						<div class="field"><label for="todayDay">{t('calendar.day')}</label><input id="todayDay" name="todayDay" type="number" min="1" value={text.todayDay} /></div>
 					</div>
 				</fieldset>
-				<button class="btn btn-primary" type="submit">{t('common.save')}</button>
+				<button class="btn btn-primary" type="submit"><Icon name="save" />{t('common.save')}</button>
 			</form>
 		{/key}
 	</section>

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildTree, keyPlace, placeAt, treePaths, treeTemplates, withoutTemplates, type TreeNode } from './tree.ts';
+import { buildTree, keyPlace, pageTrail, placeAt, treePaths, treeTemplates, withoutTemplates, type TreeNode } from './tree.ts';
 
 const cats = [
 	{ id: 1, name: 'Luoghi', slug: 'luoghi', parentId: null },
@@ -21,6 +21,14 @@ const shape = (list: TreeNode[]): unknown[] =>
 	list.flatMap((n) => (n.type === 'divider' ? ['---'] : [n.type === 'folder' ? n.name : n.title, ...(n.items.length ? [shape(n.items)] : [])]));
 
 describe('albero delle pagine', () => {
+	it('il percorso di una pagina attraversa cartelle e pagine, e salta quelle nascoste', () => {
+		const nested = [...pages, { id: 7, slug: 'porto', title: 'Porto', categoryId: 2, parentPageId: 1 }, { id: 8, slug: 'molo', title: 'Molo', categoryId: 2, parentPageId: 7 }];
+		const names = (list: typeof nested) => pageTrail(buildTree(cats, list, false), 8).map((n) => n.name);
+		expect(names(nested)).toEqual(['Luoghi', 'Città', 'Waterdeep', 'Porto', 'Molo']);
+		expect(names(nested.filter((p) => p.id !== 7))).toEqual(['Luoghi', 'Città', 'Molo']);
+		expect(pageTrail(buildTree(cats, nested, false), 99)).toEqual([]);
+	});
+
 	it('cartelle e sottocartelle in ordine, pagine senza categoria alla radice', () => {
 		expect(shape(buildTree(cats, pages, false).items)).toEqual([
 			'Fazioni',

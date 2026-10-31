@@ -14,8 +14,11 @@ import { getFile, saveImage } from './files.ts';
 import { saveEvent, listEvents, setTimelineMode, getTimeline, listTimelines } from './timeline.ts';
 import { listTemplates } from './templates.ts';
 import { exportMarkdown, exportWorld, importPack, previewPack, readPack, type ExportOptions } from './worldpack.ts';
+import { hasRule } from './rules/index.ts';
 import { preset } from '../calendar.ts';
 import { THEMES } from '../themes.ts';
+import { inlineLinks, stripSecrets } from '../content/extract.ts';
+import { ruleTarget, type RuleKind } from '../rules/index.ts';
 import type { DocNode } from '../content/types.ts';
 
 const admin = { id: 1, role: 'admin' as const };
@@ -195,6 +198,30 @@ describe('pacchetto mondo', () => {
 		expect(getPageBySlug('costa-2')!.kind).toBe('map');
 		const loc = getPageBySlug('locanda-2')!;
 		expect(loc.fields).toEqual([{ label: '', value: '', image: loc.imageId }, { label: 'Oste', value: '[[Bartolo]]' }]);
+	});
+
+	it("l'avventura di esempio si importa con tutti i collegamenti e i prompt, e non anticipa nulla ai giocatori", () => {
+		const dir = 'examples/la-campana-sommersa';
+		const r = readPack(readFileSync(`${dir}/la-campana-sommersa.shelf`));
+		if (!r.ok) throw new Error(r.error);
+		expect(importPack(r.pack, { conflict: 'rename', calendar: false }, admin)).toMatchObject({ pages: 11, categories: 5 });
+		const prompts = readFileSync(`${dir}/prompt-immagini.md`, 'utf8');
+		const pages = JSON.parse(strFromU8(r.pack.entries['pages.json'])) as { slug: string; title: string }[];
+		const refs = (n: DocNode): DocNode[] => [...(n.type === 'wikiLink' || n.type === 'ruleRef' ? [n] : []), ...(n.content ?? []).flatMap(refs)];
+		for (const { slug, title } of pages) {
+			const page = getPageBySlug(slug)!;
+			const content = page.content as DocNode;
+			expect(prompts).toContain(`## ${title}\n`);
+			const links = [
+				...refs(content).map((n) => (n.type === 'wikiLink' ? String(n.attrs!.target) : ruleTarget(n.attrs!.kind as RuleKind, String(n.attrs!.name)))),
+				...page.fields!.flatMap((f) => inlineLinks(f.value))
+			];
+			for (const l of links) {
+				const rule = /^@(\w+)\/(.+)$/.exec(l);
+				expect(rule ? hasRule(rule[1] as RuleKind, rule[2]) : !!getPageBySlug(l), `${title}: ${l}`).toBe(true);
+			}
+			if (page.visibility !== 'master') expect(JSON.stringify([stripSecrets(content), page.fields])).not.toMatch(/Oddone|paratie si aprirono/);
+		}
 	});
 
 	it('rifiuta file che non sono pacchetti', () => {

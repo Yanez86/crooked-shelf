@@ -153,6 +153,15 @@ export function locate(list: TreeNode[], key: string, parent: string | null = nu
 	return null;
 }
 
+/** Il percorso di una pagina, dalla radice fino a lei: cartelle e pagine si alternano come nell'albero. */
+export function pageTrail(tree: Tree, id: number) {
+	const trail: { type: 'folder' | 'page'; name: string; slug: string }[] = [];
+	for (let hit = locate(tree.items, `page-${id}`); hit; hit = hit.parent ? locate(tree.items, hit.parent) : null) {
+		if (hit.node.type !== 'divider') trail.unshift({ type: hit.node.type, name: labelOf(hit.node), slug: hit.node.slug });
+	}
+	return trail;
+}
+
 /** `key` può finire dentro `parent`? Non in un divisorio, non in sé stessa né in ciò che contiene. */
 export function canHold(tree: Tree, key: string, parent: string | null): boolean {
 	if (parent === null) return true;

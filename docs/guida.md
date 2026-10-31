@@ -26,7 +26,7 @@ Una installazione può contenere più campagne. Ognuna è una wiki a sé: pagine
 
 Tutta la wiki si raggiunge dalla barra a sinistra (in alto non c'è più il menu orizzontale):
 
-- in cima tre linguette a icona: **Pagine** (il foglio), **Risorse** (l'immagine: immagini, audio e altri file, vedi sotto) e **Template** (i fogli sovrapposti: tutti i template, in ordine di titolo);
+- in cima tre linguette, ognuna con l'icona e il nome sotto: **Pagine** (il foglio), **Risorse** (l'immagine: immagini, audio e altri file, vedi sotto) e **Template** (i fogli sovrapposti: tutti i template, in ordine di titolo);
 - sotto, le icone: **Nuova pagina**, **Nuova cartella** e **Nuovo divisorio** (o **Carica una risorsa**, nelle Risorse; **Nuovo template**, nei Template), chiudi tutto e apri tutto;
 - l'**albero**: le categorie sono cartelle che si aprono e si chiudono con un clic (o con Invio da tastiera); dentro ci sono le sottocartelle e le pagine di ogni tipo (pagine, mappe, cronologie, bacheche), ognuna con la sua icona. Le pagine senza categoria stanno in fondo, alla radice. La cartella della pagina che stai leggendo si apre da sola.
 - **Nuova cartella** (l'icona della cartella col «+», per Master e Admin): la cartella compare subito in cima all'albero col nome da scrivere; Invio la crea, Esc la lascia perdere. Rinominarle si fa in **Cartelle**, all'indirizzo `/categories`.
@@ -78,6 +78,8 @@ Ogni cosa della wiki è una **pagina**, nell'albero a sinistra, con un indirizzo
 
 Con i pulsanti della barra inserisci immagini (con la descrizione per chi non vede), tabelle, riquadri «Nota», «Consiglio», «Attenzione» e il **Segreto del Master**: un riquadro che i giocatori non vedono e non trovano neanche cercando.
 
+Passando col mouse su un blocco compare in alto a destra il cestino, che lo elimina per intero; il cestino nella barra elimina invece il blocco in cui stai scrivendo. Il primo pulsante della barra annulla l'ultima azione (come Ctrl+Z).
+
 Da tastiera: con Tab entri nella barra, con le frecce ti muovi tra i comandi, con Esc esci dall'editor.
 
 Un collegamento a una pagina che non esiste è **rosso tratteggiato**: cliccandolo la crei.
@@ -102,7 +104,9 @@ Immagini, musica e altri file della campagna: dispense, ritratti, sottofondi per
 
 Il Master le carica con «Carica una risorsa»: immagini (PNG, JPEG, WebP o GIF, fino a 25 MB), audio (MP3, OGG, WAV, FLAC o M4A) o qualsiasi altro file, fino a 90 MB. Se non scrive un titolo si usa il nome del file. Come per le mappe sceglie chi le vede: pubbliche, giocatori o solo Master.
 
-Le immagini si guardano e l'audio si ascolta direttamente nella wiki, anche dal telefono; gli altri file (PDF compresi) si scaricano. Con «Modifica la risorsa» si cambiano titolo, descrizione, visibilità e file, o la si elimina.
+Tra le Immagini ci sono anche tutte quelle usate nella wiki, cioè copertine, colonna a lato, testo delle pagine e mappe, senza doverle caricare di nuovo: ognuno vede solo quelle che può vedere. Compaiono con il nome del file; la loro scheda dice dove compaiono e non si modifica da qui: si cambiano nella pagina che le usa.
+
+Le immagini si guardano e l'audio si ascolta direttamente nella wiki, anche dal telefono; gli altri file (PDF compresi) si scaricano. Con la matita si cambiano titolo, descrizione, visibilità e file, o la si elimina.
 
 Le risorse entrano nel backup, ma non ancora nel pacchetto mondo.
 
@@ -119,7 +123,7 @@ Gli eventi si vedono in elenco o sulla linea del tempo; ognuno appartiene alla s
 
 ## Regole
 
-Pagina **Regole**: 999 voci dell'SRD 5.2 (in inglese) da cercare e citare. Nelle pagine, `@incantesimo[Fireball]` diventa un link a D&D Beyond con il pulsante **i** per l'anteprima. Ogni regola mostra le pagine che la citano: le vostre regole della casa restano collegate.
+Pagina **Regole**: 999 voci dell'SRD 5.2 (in inglese) da cercare e citare. Nelle pagine, `@incantesimo[Fireball]` diventa un link alla scheda della regola con il pulsante **i** per l'anteprima. Accendendo il plugin **D&D Beyond** (Amministrazione › Plugin), il link porta invece alla ricerca di D&D Beyond. Ogni regola mostra le pagine che la citano: le vostre regole della casa restano collegate.
 
 ## Bacheche
 
@@ -148,5 +152,5 @@ Tutta la wiki si usa da tastiera e con i lettori di schermo; i colori rispettano
 ## Amministrazione
 
 - **Temi**: copia un tema e cambia i colori; si salva solo se il testo resta leggibile. Un tema può avere un'immagine di sfondo, che sta dietro i riquadri e si vede solo sugli schermi larghi. Esporta e importa come file (solo i colori: lo sfondo viaggia col pacchetto mondo).
-- **Plugin**: accendi e spegni i plugin installati (vedi [plugin.md](plugin.md)).
+- **Plugin**: accendi e spegni i plugin installati; cliccandone uno si apre una finestra con scopo, istruzioni, autore e contenuto (per crearne uno, vedi [plugin.md](plugin.md)).
 - **Backup**, **Pacchetto mondo**, **Esporta in Markdown**: vedi [installazione.md](installazione.md#backup-e-ripristino).

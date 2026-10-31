@@ -16,7 +16,7 @@
 		name: string;
 		summary: string;
 		html: string;
-		ddb: string;
+		links: { site: string; url: string }[];
 		pages: { slug: string; title: string }[];
 	}
 
@@ -87,7 +87,7 @@
 
 {#if open}
 	<div class="rule-pop" role="dialog" aria-labelledby="rule-pop-title" bind:this={box} style="top:{pos.top}px;left:{pos.left}px">
-		<button type="button" class="close" aria-label={t('common.close')} onclick={() => close()}><Icon name="close" /></button>
+		<button type="button" class="close" title={t('common.close')} aria-label={t('common.close')} onclick={() => close()}><Icon name="close" /></button>
 		{#if data}
 			<h2 id="rule-pop-title" tabindex="-1" bind:this={heading}>{data.name}</h2>
 			<p class="summary">{data.summary}</p>
@@ -97,9 +97,11 @@
 					{#each data.pages as p, i (p.slug)}{i ? ', ' : ''}<a href="/wiki/{p.slug}">{p.title}</a>{/each}
 				</p>
 			{/if}
-			<p class="links">
-				<a href={data.ddb} target="_blank" rel="noopener noreferrer nofollow">{t('rules.openDdb')}<span class="visually-hidden"> {t('rules.external')}</span></a>
-			</p>
+			{#each data.links as l}
+				<p class="links">
+					<a href={l.url} target="_blank" rel="noopener noreferrer nofollow">{t('rules.openOn', { site: l.site })}<span class="visually-hidden"> {t('rules.external')}</span></a>
+				</p>
+			{/each}
 			<p class="attr">{t('rules.srdShort')}</p>
 		{:else}
 			<h2 id="rule-pop-title" tabindex="-1" bind:this={heading}>{failed ? t('errors.generic') : '…'}</h2>

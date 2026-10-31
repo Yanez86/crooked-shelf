@@ -3,7 +3,8 @@ import type { Actions, PageServerLoad } from './$types';
 import { canEdit, canView, isMaster } from '#lib/access.ts';
 import { backlinks, getPageBySlug, pageCover, pageMeta } from '#lib/server/pages.ts';
 import { pageView } from '#lib/server/pageView.ts';
-import { categoryPath } from '#lib/server/taxonomy.ts';
+import { pageTree } from '#lib/server/taxonomy.ts';
+import { pageTrail } from '#lib/tree.ts';
 import { mapsForPage } from '#lib/server/maps.ts';
 import { eventsForPage } from '#lib/server/timeline.ts';
 import { mapActions, mapView } from '#lib/server/mapPage.ts';
@@ -48,7 +49,7 @@ export const load: PageServerLoad = ({ params, locals, url }) => {
 		canCopy: page.kind === 'template' && canCreateKind('page', locals.user),
 		maps: mapsForPage(page.slug, locals.user),
 		events: eventsForPage(page.id, locals.user).map((e) => ({ id: e.id, title: e.title, when: when(e), realDate: e.realDate, timeline: e.timeline })),
-		category: categoryPath(page.categoryId),
+		trail: pageTrail(pageTree(locals.user), page.id),
 		tags: meta.tags,
 		author: meta.author,
 		editor: meta.editor,

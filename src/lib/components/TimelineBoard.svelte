@@ -96,7 +96,7 @@
 	<p class="tags">
 		{#if e.session}<span class="badge">{t('timeline.session')}</span>{/if}
 		{#if e.visibility !== 'players'}<span class="badge">{t('visibility.' + e.visibility)}</span>{/if}
-		{#if e.canEdit}<a class="edit" href="/wiki/{slug}/events/{e.id}">{t('page.edit')}<span class="visually-hidden">: {e.title}</span></a>{/if}
+		{#if e.canEdit}<a class="btn btn-small btn-ghost" href="/wiki/{slug}/events/{e.id}" title={t('page.edit')}><Icon name="edit" /><span class="visually-hidden">{t('page.edit')}: {e.title}</span></a>{/if}
 	</p>
 {/snippet}
 
@@ -188,9 +188,6 @@
 		gap: 0.4rem;
 		align-items: center;
 		margin: 0;
-	}
-	.edit {
-		font-size: var(--fs-sm);
 	}
 	.line {
 		overflow-x: auto;

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { getT } from '#lib/i18n/index.ts';
+	import Icon from '#lib/components/Icon.svelte';
 	import TagBadge from '#lib/components/TagBadge.svelte';
 	import FormError from '#lib/components/FormError.svelte';
 	import FormOk from '#lib/components/FormOk.svelte';
@@ -54,7 +55,7 @@
 					</td>
 					<td><a href="/wiki?tag={encodeURIComponent(tag.slug)}">{tag.count}</a></td>
 					<td class="row-actions">
-						<button class="btn btn-small" type="submit" form="tag-{tag.id}">{t('common.save')}<span class="visually-hidden">: {tag.name}</span></button>
+						<button class="btn btn-small" type="submit" form="tag-{tag.id}"><Icon name="save" />{t('common.save')}<span class="visually-hidden">: {tag.name}</span></button>
 						<form method="post" action="?/delete">
 							<input type="hidden" name="id" value={tag.id} />
 							<button class="btn btn-small btn-danger" type="submit">{t('common.delete')}<span class="visually-hidden">: {tag.name}</span></button>

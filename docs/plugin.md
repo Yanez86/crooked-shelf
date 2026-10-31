@@ -11,8 +11,9 @@ Un plugin può aggiungere:
 | Calendari pronti | `calendars` |
 | Lingue o traduzioni | `locales` |
 | Regole consultabili con `@` | `rules` |
+| Link delle regole a un sito esterno | `links` |
 
-L'esempio completo è in [`plugins/esempio-gotico`](../plugins/esempio-gotico): copialo e cambialo.
+L'esempio completo è in [`plugins/esempio-gotico`](../plugins/esempio-gotico): copialo e cambialo. [`plugins/dndbeyond`](../plugins/dndbeyond) è l'integrazione con D&D Beyond, fatta con un solo `links`.
 
 ## Installare
 
@@ -29,7 +30,8 @@ I plugin sono spenti finché l'Admin non li accende. Un plugin installato con lo
 	"id": "il-mio-plugin",
 	"name": "Il mio plugin",
 	"version": "1.0.0",
-	"description": "Cosa aggiunge.",
+	"description": "A cosa serve.",
+	"instructions": "1. Premi «Accendi».\n2. Come si usa, passo per passo.",
 	"author": "Il tuo nome",
 	"license": "CC-BY-4.0",
 	"contributes": {
@@ -37,12 +39,14 @@ I plugin sono spenti finché l'Admin non li accende. Un plugin installato con lo
 		"templates": ["templates/nave.json"],
 		"calendars": ["calendars/calendario.json"],
 		"locales": { "es": "locales/es.json" },
-		"rules": ["rules/regole.json"]
+		"rules": ["rules/regole.json"],
+		"links": ["links/sito.json"]
 	}
 }
 ```
 
 - `id`: lettere minuscole, numeri e trattini.
+- `description` e `instructions`: ogni plugin deve dire a cosa serve e come si usa. In `instructions`, `\n` va a capo. Si leggono cliccando sul plugin, insieme ad autore, licenza e contenuto; se mancano, la pagina Plugin lo segnala.
 - I percorsi sono relativi alla cartella del plugin e non possono uscirne.
 - Un file non valido viene ignorato e segnalato nella pagina Plugin; il resto del plugin funziona.
 
@@ -91,3 +95,13 @@ Un elenco di voci consultabili con `@` e nella pagina Regole:
 `kind` è uno tra `spell`, `monster`, `condition`, `item`, `feat`, `species`, `class`, `background`, `rule`. Una voce con lo stesso nome di una dell'SRD la sostituisce (utile per traduzioni o varianti).
 
 Attenzione alle licenze: includi solo testi tuoi o con licenza libera.
+
+## Link
+
+Porta i riferimenti `@regola` a un sito esterno. `{name}` diventa il nome della regola:
+
+```json
+{ "site": "D&D Beyond", "url": "https://www.dndbeyond.com/search?q={name}" }
+```
+
+`url` deve iniziare con `https://` e contenere `{name}`. Il riferimento nella pagina usa il primo link dei plugin accesi; l'anteprima e la scheda della regola li mostrano tutti, con il pulsante «Apri su `site`». Senza link, il riferimento porta alla scheda della regola, o resta testo se la voce non esiste.

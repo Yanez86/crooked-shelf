@@ -66,7 +66,7 @@
 		<p role="status" class:bad={failing > 0} class="summary">
 			{failing ? t('themes.failing', { n: failing }) : t('themes.allGood')}
 		</p>
-		<button class="btn btn-primary" type="submit">{t('common.save')}</button>
+		<button class="btn btn-primary" type="submit"><Icon name="save" />{t('common.save')}</button>
 	</form>
 
 	<div class="side">
@@ -76,7 +76,7 @@
 				<p class="pv-title">{name}</p>
 				<p>{t('themes.sampleText')} <a href="#prev-title">{t('themes.sampleLink')}</a> · <span class="pv-missing">{t('themes.sampleMissing')}</span></p>
 				<p class="pv-muted">{t('themes.sampleMuted')}</p>
-				<span class="pv-btn">{t('common.save')}</span>
+				<span class="pv-btn"><Icon name="save" />{t('common.save')}</span>
 				<div class="pv-secret"><strong><Icon name="lock" /> {t('editor.secret')}</strong><br />{t('themes.sampleSecret')}</div>
 				<div class="pv-note">{t('editor.note')}</div>
 				<input class="pv-input" type="text" value="Waterdeep" aria-label={t('themes.sampleInput')} readonly />

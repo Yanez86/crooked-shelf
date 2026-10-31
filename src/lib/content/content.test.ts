@@ -3,6 +3,7 @@ import { extract, stripSecrets } from './extract.ts';
 import { renderDoc, safeHref, type RenderOptions } from './render.ts';
 import type { DocNode } from './types.ts';
 import { slugify } from '../slug.ts';
+import { setRuleLinks } from '../rules/index.ts';
 
 const p = (...content: DocNode[]): DocNode => ({ type: 'paragraph', content });
 const txt = (text: string, marks?: DocNode['marks']): DocNode => ({ type: 'text', text, marks });
@@ -121,15 +122,30 @@ describe('riferimenti alle regole', () => {
 	const ruleLabels = { ...labels, preview: 'Anteprima: {name}', external: '(sito esterno)' };
 	const hasRule = (k: string, key: string) => k === 'spell' && key === 'fireball';
 
-	it('nodo dell\'editor: link a D&D Beyond e anteprima se il testo SRD esiste', () => {
+	it('nodo dell\'editor: link alla scheda e anteprima se il testo SRD esiste', () => {
 		const html = renderDoc(
 			{ type: 'doc', content: [p({ type: 'ruleRef', attrs: { kind: 'spell', name: 'Fireball', label: 'Palla di fuoco' } })] },
 			{ showSecrets: false, resolve, labels: ruleLabels, hasRule }
 		);
-		expect(html).toContain('href="https://www.dndbeyond.com/search?q=Fireball"');
+		expect(html).toContain('href="/rules/spell/fireball"');
+		expect(html).not.toContain('target="_blank"');
 		expect(html).toContain('>Palla di fuoco<');
 		expect(html).toContain('data-rule="spell/fireball"');
 		expect(html).toContain('aria-label="Anteprima: Palla di fuoco"');
+	});
+
+	it('con un plugin di link acceso il riferimento porta al sito esterno', () => {
+		setRuleLinks([{ site: 'Sito', url: 'https://sito.test/?a=1&q={name}' }]);
+		const html = renderInline('@incantesimo[Mage Armor] e @mostro[Beholder]', { resolve, labels: ruleLabels, hasRule });
+		setRuleLinks([]);
+		expect(html).toContain('href="https://sito.test/?a=1&amp;q=Mage%20Armor"');
+		expect(html).toContain('href="https://sito.test/?a=1&amp;q=Beholder"');
+		expect(html).toContain('(sito esterno)');
+	});
+
+	it('senza plugin, una voce che non esiste resta testo', () => {
+		const html = renderInline('@mostro[Beholder|il tiranno]', { resolve, labels: ruleLabels, hasRule });
+		expect(html).toBe('<span class="ruleref">il tiranno</span>');
 	});
 
 	it('nel testo semplice, con alias italiani; niente anteprima se manca il testo', () => {

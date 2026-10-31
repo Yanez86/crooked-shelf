@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { getT } from '#lib/i18n/index.ts';
+	import Icon from '#lib/components/Icon.svelte';
 	import FormError from '#lib/components/FormError.svelte';
 	import FormOk from '#lib/components/FormOk.svelte';
 	import UserIcon from '#lib/components/UserIcon.svelte';
@@ -51,7 +52,7 @@
 							<span class="visually-hidden">{t('admin.disabled')}: {u.username}</span>
 						</label>
 					</td>
-					<td class="col-end"><button class="btn btn-small" type="submit" form="user-{u.id}">{t('common.save')}<span class="visually-hidden">: {u.username}</span></button></td>
+					<td class="col-end"><button class="btn btn-small" type="submit" form="user-{u.id}"><Icon name="save" />{t('common.save')}<span class="visually-hidden">: {u.username}</span></button></td>
 				</tr>
 			{/each}
 		</tbody>

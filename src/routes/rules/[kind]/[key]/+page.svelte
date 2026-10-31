@@ -31,7 +31,9 @@
 	<p>{t('rules.cite')} <code>{data.syntax}</code></p>
 </section>
 
-<p><a class="btn" href={data.ddb} target="_blank" rel="noopener noreferrer nofollow">{t('rules.openDdb')}<span class="visually-hidden"> {t('rules.external')}</span></a></p>
+{#each data.links as l}
+	<p><a class="btn" href={l.url} target="_blank" rel="noopener noreferrer nofollow">{t('rules.openOn', { site: l.site })}<span class="visually-hidden"> {t('rules.external')}</span></a></p>
+{/each}
 <p class="attr muted">{t('rules.attribution')}</p>
 
 <style>
