@@ -5,6 +5,8 @@ export const PREFS_COOKIE = 'cs_prefs';
 export const TREE_COOKIE = 'cs_tree_hidden';
 /** Lo stesso per la colonna a destra delle pagine. */
 export const SIDE_COOKIE = 'cs_side_hidden';
+/** Sul telefono le pagine si aprono al loro posto: un popup a tutto schermo non si chiude col tasto Indietro. */
+export const onPhone = () => matchMedia('(max-width: 48rem)').matches;
 
 /** Preferenze di lettura: nel profilo per chi ha fatto l'accesso, nel cookie per gli altri. */
 export interface Prefs {

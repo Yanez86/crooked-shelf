@@ -25,6 +25,10 @@
 	--fs-lg: 1.375rem;
 	--fs-xl: 1.625rem;
 	--fs-2xl: 2rem;
+	/* I campi scritti in piccolo: sul telefono non scendono sotto i 16px (vedi in fondo). */
+	--fs-field: var(--fs-sm);
+	/* L'altezza di ciò che resta fermo in cima allo schermo: sul telefono l'intestazione. */
+	--sticky-top: 0px;
 	/* Il contorno del fuoco serve a chi si muove con la tastiera: col mouse sparisce (data-pointer, dal layout). */
 	--focus-width: 3px;
 	font-size: calc(100% * var(--font-scale, 1));
@@ -110,6 +114,7 @@ pre {
 }
 code {
 	padding: 0.1em 0.3em;
+	overflow-wrap: anywhere;
 }
 pre {
 	padding: 0.75rem 1rem;
@@ -257,6 +262,8 @@ legend {
 	flex-direction: column;
 	gap: 0.3rem;
 	margin-bottom: 1.1rem;
+	/* Una voce lunga in un elenco non allarga il campo oltre lo schermo. */
+	min-width: 0;
 }
 .hint {
 	color: var(--c-muted);
@@ -329,6 +336,8 @@ input[type='color']::-moz-color-swatch {
 	border-radius: var(--radius);
 }
 fieldset {
+	/* Di base un fieldset è largo almeno come il suo contenuto, anche più dello schermo. */
+	min-width: 0;
 	border: 1px solid var(--c-border);
 	border-radius: var(--radius);
 	padding: 0.75rem 1rem;
@@ -755,4 +764,73 @@ table.data .col-end {
 	background: var(--c-primary);
 	border-color: var(--c-primary);
 	color: var(--c-on-primary);
+}
+
+/* --- Col dito --- */
+
+/* Telefono, anche in orizzontale, e tablet: il testo sta a 16px, si legge senza avvicinare lo schermo.
+   Sotto i 16px, poi, Safari ingrandisce la pagina a ogni tocco su un campo. */
+@media (max-width: 48rem), (pointer: coarse) {
+	:root {
+		--fs-sm: 0.8125rem;
+		--fs-base: 1rem;
+		--fs-md: 1.125rem;
+		--fs-lg: 1.375rem;
+		--fs-xl: 1.625rem;
+		--fs-2xl: 2rem;
+		--fs-field: max(1rem, 16px);
+	}
+	body {
+		-webkit-tap-highlight-color: color-mix(in srgb, var(--c-primary) 15%, transparent);
+	}
+	input[type='checkbox'] {
+		width: 1.25rem;
+		height: 1.25rem;
+	}
+	.choice {
+		padding-block: 0.4rem;
+	}
+	.btn-small {
+		min-height: 2.5rem;
+	}
+	.prose p,
+	.prose li {
+		text-wrap: pretty;
+	}
+}
+
+/* Sul telefono l'intestazione resta in vista: tutto ciò che è fermo in cima, e le ancore, stanno sotto di lei. */
+@media (max-width: 48rem) {
+	:root:has(.site-header) {
+		--sticky-top: 3.6rem;
+		scroll-padding-top: calc(var(--sticky-top) + 0.75rem);
+	}
+	.card {
+		padding: 0.875rem 1rem;
+	}
+	/* Una pagina senza testo (spesso la home): niente vuoto tra il titolo e quello che segue. */
+	.prose:has(> p:only-child:empty) {
+		display: none;
+	}
+	/* Un riquadro dentro un riquadro toglie spazio al contenuto: qui basta la legenda. */
+	.card fieldset {
+		border: 0;
+		padding: 0;
+		margin-inline: 0;
+	}
+	.card legend {
+		padding: 0;
+	}
+	.prose ul,
+	.prose ol {
+		padding-left: 1.4rem;
+	}
+	.prose blockquote {
+		margin-inline: 0;
+		padding-inline: 0.875rem;
+	}
+	.callout,
+	.secret {
+		padding-inline: 0.875rem;
+	}
 }

@@ -16,6 +16,7 @@ export const UI_ICONS: Record<string, string> = {
 	upload: 'M12 15V4M7.5 8.5 12 4l4.5 4.5M4.5 14.5v4.75h15V14.5',
 	move: 'M12 3v18M8 7l4-4 4 4M8 17l4 4 4-4',
 	menu: 'M4 6.5h16M4 12h16M4 17.5h16',
+	search: 'M10.5 4a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13zM15.25 15.25 20 20',
 	none: 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM5.64 18.36 18.36 5.64',
 	// Frecce
 	arrowLeft: 'M19 12H5M11 6l-6 6 6 6',

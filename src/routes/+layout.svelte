@@ -9,7 +9,7 @@
 	import { page } from '$app/state';
 	import { tick, untrack } from 'svelte';
 	import { registerLocale, setI18n, translate } from '#lib/i18n/index.ts';
-	import { TREE_COOKIE } from '#lib/prefs.ts';
+	import { TREE_COOKIE, onPhone } from '#lib/prefs.ts';
 	import RulePopover from '#lib/components/RulePopover.svelte';
 	import LinkPreview from '#lib/components/LinkPreview.svelte';
 	import PanelDialog from '#lib/components/PanelDialog.svelte';
@@ -62,11 +62,20 @@
 	const collapsed = $derived(beside && hiddenHere);
 
 	let treeOpen = $state(false);
+	let searchOpen = $state(false);
 	$effect(() => {
 		path;
 		treeOpen = false;
 		profileTree = false;
+		searchOpen = false;
 	});
+
+	// Sul telefono la ricerca sta chiusa dietro la lente: aprendola si può scrivere subito.
+	async function toggleSearch() {
+		searchOpen = !searchOpen;
+		await tick();
+		document.getElementById(searchOpen ? 'site-search' : 'search-toggle')?.focus();
+	}
 
 	// Il fuoco passa alla freccia opposta: quella appena premuta non c'è più.
 	async function hideTree(hidden: boolean) {
@@ -80,9 +89,10 @@
 	}
 
 	// I collegamenti tra le pagine si aprono in un popup. Dentro il popup si naviga e basta; Ctrl e Cmd aprono come sempre una nuova scheda.
+	// Sul telefono il popup coprirebbe tutto lo schermo e il tasto Indietro non lo chiuderebbe: si apre la pagina.
 	let linked = $state<{ href: string; title: string } | null>(null);
 	function openLinked(e: MouseEvent) {
-		if (framed || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
+		if (framed || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey || onPhone()) return;
 		// [data-wikilink] è il collegamento nell'editor, .missing porta a creare la pagina.
 		const a = (e.target as HTMLElement).closest<HTMLAnchorElement>('a.wikilink:not(.missing, [data-wikilink])');
 		if (!a) return;
@@ -133,7 +143,28 @@ ${iconCss()}</style>`}
 			</a>
 
 			{#if !bare}
-				<form class="search" role="search" method="get" action="/search">
+				<button
+					id="search-toggle"
+					class="btn search-toggle"
+					type="button"
+					aria-expanded={searchOpen}
+					aria-controls="site-search-form"
+					aria-label={t('search.label')}
+					title={t('search.label')}
+					onclick={toggleSearch}
+				>
+					<Icon name={searchOpen ? 'close' : 'search'} />
+				</button>
+				<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+				<form
+					id="site-search-form"
+					class="search"
+					class:open={searchOpen}
+					role="search"
+					method="get"
+					action="/search"
+					onkeydown={(e) => e.key === 'Escape' && searchOpen && toggleSearch()}
+				>
 					<label for="site-search" class="visually-hidden">{t('search.label')}</label>
 					<input
 						id="site-search"
@@ -226,19 +257,22 @@ ${iconCss()}</style>`}
 		flex: 1;
 		min-width: 0;
 	}
-	.tree-toggle {
+	.tree-toggle,
+	.search-toggle {
 		display: none;
 	}
 	/* Barra chiusa: il pulsante c'è anche sullo schermo grande. */
 	.tree-toggle.undocked {
 		display: inline-flex;
 	}
-	.tree-toggle {
+	.tree-toggle,
+	.search-toggle {
 		width: 2.75rem;
 		padding: 0;
 		justify-content: center;
 	}
-	.tree-toggle :global(.icon) {
+	.tree-toggle :global(.icon),
+	.search-toggle :global(.icon) {
 		width: 1.4rem;
 		height: 1.4rem;
 	}
@@ -249,24 +283,55 @@ ${iconCss()}</style>`}
 	.site-footer .bare {
 		text-align: center;
 	}
-	/* Telefono: pulsante della barra, marchio e profilo sulla prima riga, ricerca sotto. */
+	/* Telefono: una sola riga sempre in vista, con la barra, il marchio, la lente e il profilo. La ricerca si apre sotto.
+	   Il nome in Archivo stretto: una campagna dal nome lungo ci sta quasi sempre per intero. */
 	@media (max-width: 48rem) {
+		.site-header {
+			position: sticky;
+			top: 0;
+			z-index: 20;
+			margin-bottom: 0.75rem;
+			border-top: 3px solid var(--c-primary);
+		}
 		.header-inner {
-			gap: 0.5rem;
+			gap: 0 0.25rem;
+			padding: 0.25rem 0.5rem;
 		}
 		.brand {
 			flex: 1;
 			min-width: 0;
+			gap: 0.45rem;
+			font-size: var(--fs-md);
+			font-stretch: 80%;
+		}
+		.brand img {
+			width: 1.75rem;
+			height: 1.75rem;
 		}
 		.brand span {
 			overflow: hidden;
 			text-overflow: ellipsis;
 			white-space: nowrap;
 		}
+		.header-inner.bare .brand {
+			flex: none;
+			margin-inline: auto;
+		}
+		.tree-toggle,
+		.search-toggle {
+			display: inline-flex;
+			border-color: transparent;
+			background: none;
+		}
 		.search {
+			display: none;
 			order: 3;
 			flex-basis: 100%;
 			max-width: none;
+			padding-bottom: 0.25rem;
+		}
+		.search.open {
+			display: flex;
 		}
 	}
 	/* Sul contenitore: il footer resta staccato anche dalla colonna più alta, spesso quella a sinistra. */

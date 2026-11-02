@@ -68,4 +68,15 @@
 	.empty p {
 		margin-top: 0;
 	}
+	@container (max-width: 44rem) {
+		.hits {
+			gap: 0;
+			border-top: 1px solid var(--c-border);
+		}
+		.hits .card {
+			padding: 0.75rem 0;
+			background: none;
+			border-width: 0 0 1px;
+		}
+	}
 </style>

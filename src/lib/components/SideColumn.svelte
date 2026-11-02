@@ -353,7 +353,7 @@
 		font-weight: 600;
 	}
 	.caption {
-		font-size: var(--fs-sm);
+		font-size: var(--fs-field);
 	}
 	.tools {
 		position: absolute;
@@ -432,5 +432,29 @@
 		color: var(--c-link);
 		text-decoration: underline;
 		cursor: pointer;
+	}
+	/* Col dito i comandi crescono e stanno in fila, accanto al nome del riquadro: in colonna ogni riquadro sarebbe alto il triplo. */
+	@media (max-width: 48rem), (pointer: coarse) {
+		.box {
+			min-height: 0;
+			padding: 0.4rem 0.5rem;
+		}
+		.box:has(.box-label) .box-label {
+			padding-right: 7.25rem;
+		}
+		.tools {
+			flex-direction: row;
+		}
+		.tool {
+			width: 2.25rem;
+			height: 2.25rem;
+		}
+		.on-tool {
+			width: 2.5rem;
+			height: 2.5rem;
+		}
+		.add {
+			min-height: 2.75rem;
+		}
 	}
 </style>

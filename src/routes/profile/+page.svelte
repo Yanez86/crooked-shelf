@@ -217,7 +217,7 @@
 	}
 	.themes {
 		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
+		grid-template-columns: repeat(auto-fill, minmax(min(18rem, 100%), 1fr));
 		gap: 0.5rem;
 	}
 	.theme-choice {
@@ -242,7 +242,7 @@
 	}
 	.cols {
 		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
+		grid-template-columns: repeat(auto-fill, minmax(min(18rem, 100%), 1fr));
 		gap: 0 1.5rem;
 	}
 </style>

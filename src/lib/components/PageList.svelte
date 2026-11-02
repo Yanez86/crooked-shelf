@@ -96,4 +96,18 @@
 		gap: 0.35rem;
 		margin-top: 0.5rem;
 	}
+	/* Nello spazio stretto una pila di riquadri uguali pesa: righe separate da un filetto. */
+	@container (max-width: 44rem) {
+		.page-list {
+			gap: 0;
+			border-top: 1px solid var(--c-border);
+		}
+		.card,
+		.card:hover {
+			padding: 0.75rem 0;
+			background: none;
+			border-width: 0 0 1px;
+			border-color: var(--c-border);
+		}
+	}
 </style>

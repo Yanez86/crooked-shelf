@@ -93,4 +93,22 @@
 		margin: 0 0 0.25rem;
 		font-size: var(--fs-sm);
 	}
+	/* Nello spazio stretto due miniature per riga: si vede quello che c'è senza scorrere a lungo. */
+	@container (max-width: 44rem) {
+		.grid {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+			gap: 0.5rem;
+		}
+		.grid li {
+			padding: 0.5rem;
+		}
+		.thumb img {
+			height: auto;
+			aspect-ratio: 4 / 3;
+		}
+		.grid h3 {
+			font-size: var(--fs-base);
+			overflow-wrap: anywhere;
+		}
+	}
 </style>

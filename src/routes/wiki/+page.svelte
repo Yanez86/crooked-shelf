@@ -35,7 +35,7 @@
 <div class="head">
 	<h1>{heading}</h1>
 	{#if appPage.data.user}
-		<a class="btn btn-primary" href="/wiki/new{data.category ? `?category=${data.category.id}` : data.kind && data.kind !== 'page' ? `?kind=${data.kind}` : ''}"><Icon name="plus" />{t('nav.newPage')}</a>
+		<a class="btn btn-primary" href="/wiki/new{data.category ? `?category=${data.category.id}` : data.kind && data.kind !== 'page' ? `?kind=${data.kind}` : ''}"><Icon name="plus" /><span class="new-label">{t('nav.newPage')}</span></a>
 	{/if}
 </div>
 {#if data.category?.description}<p>{data.category.description}</p>{/if}
@@ -123,5 +123,46 @@
 		gap: 1rem;
 		align-items: center;
 		margin-top: 1.5rem;
+	}
+	/* Nello spazio stretto i filtri stanno a due a due, così l'elenco parte subito; Nuova pagina resta accanto al titolo, col solo «+». */
+	@container (max-width: 44rem) {
+		.head {
+			flex-wrap: nowrap;
+		}
+		.head h1 {
+			margin-bottom: 0.25rem;
+		}
+		.head .btn {
+			flex: none;
+			padding: 0;
+		}
+		.new-label {
+			position: absolute;
+			width: 1px;
+			height: 1px;
+			overflow: hidden;
+			clip: rect(0 0 0 0);
+			white-space: nowrap;
+		}
+		.filters {
+			display: grid;
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+			gap: 0 0.75rem;
+			padding: 0;
+			background: none;
+			border: 0;
+		}
+		.filters .field {
+			margin-bottom: 0.6rem;
+		}
+		.filters label {
+			font-size: var(--fs-sm);
+		}
+		.filters select {
+			width: 100%;
+		}
+		.filters .submit {
+			grid-column: 1 / -1;
+		}
 	}
 </style>

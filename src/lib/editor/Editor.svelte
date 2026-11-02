@@ -374,7 +374,7 @@
 		border-bottom: 1px solid var(--c-border);
 		background: var(--c-surface2);
 		position: sticky;
-		top: 0;
+		top: var(--sticky-top);
 		z-index: 2;
 	}
 	.table-tools {
@@ -383,7 +383,7 @@
 	.toolbar button,
 	.toolbar select {
 		font: inherit;
-		font-size: var(--fs-sm);
+		font-size: var(--fs-field);
 		min-height: 2.5rem;
 		min-width: 2.5rem;
 		padding: 0.2rem 0.55rem;
@@ -645,5 +645,18 @@
 	.inline .area :global(.editor-content.ProseMirror-focused > .has-focus) {
 		outline: 2px solid var(--c-primary);
 		background: var(--c-surface);
+	}
+	/* Col dito non c'è il passaggio del mouse, e una pagina intera di tratteggi si legge male: si vede solo il blocco in cui si scrive. */
+	@media (max-width: 48rem) {
+		.inline .area :global(.editor-content > *) {
+			outline-color: transparent;
+		}
+	}
+	@media (max-width: 48rem), (pointer: coarse) {
+		.inline .toolbar button,
+		.inline .toolbar select {
+			min-height: 2.5rem;
+			min-width: 2.5rem;
+		}
 	}
 </style>

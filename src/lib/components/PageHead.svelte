@@ -66,4 +66,12 @@
 		color: var(--c-primary);
 		background: var(--c-surface);
 	}
+	@media (max-width: 48rem), (pointer: coarse) {
+		.edit-pencil {
+			width: 2.75rem;
+			height: 2.75rem;
+			margin-right: -0.6rem;
+			opacity: 1;
+		}
+	}
 </style>

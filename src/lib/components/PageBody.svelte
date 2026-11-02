@@ -256,7 +256,7 @@
 			padding-top: 1rem;
 		}
 		figure img {
-			max-width: 22rem;
+			max-height: 60vh;
 		}
 		.content {
 			grid-row: 2;
@@ -294,5 +294,41 @@
 	}
 	.side dd:last-child {
 		margin-bottom: 0;
+	}
+	/* Nello spazio stretto la scheda è come quella di un mostro nel manuale: nome e valore sulla stessa riga, tra due filetti del colore del tema. */
+	@container (max-width: 44rem) {
+		.body {
+			gap: 1rem;
+		}
+		.foot {
+			margin-top: 1rem;
+		}
+		.side.panel {
+			padding: 0.25rem 0;
+			background: none;
+			border-width: 3px 0 0;
+			border-bottom: 1px solid var(--c-primary);
+		}
+		.side dl {
+			display: grid;
+			grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+		}
+		.side dt,
+		.side dd {
+			margin: 0;
+			padding: 0.4rem 0;
+		}
+		.side dd {
+			padding-left: 0.75rem;
+		}
+		.side dt:not(:first-child),
+		.side dt:not(:first-child) + dd {
+			border-top: 1px solid var(--c-border);
+		}
+		.side dt {
+			font-size: var(--fs-sm);
+			line-height: 1.85;
+			color: var(--c-muted);
+		}
 	}
 </style>

@@ -201,9 +201,12 @@
 
 <style>
 	.board {
+		/* Riferimento per i .visually-hidden delle schede: senza, fanno sforare la pagina. */
+		position: relative;
 		display: flex;
 		gap: 1rem;
 		overflow-x: auto;
+		scroll-snap-type: x proximity;
 		padding-bottom: 1rem;
 		align-items: flex-start;
 	}
@@ -219,6 +222,7 @@
 	@container (max-width: 44rem) {
 		.column {
 			flex: 0 0 min(19rem, 85vw);
+			scroll-snap-align: start;
 		}
 	}
 	.column h2 {

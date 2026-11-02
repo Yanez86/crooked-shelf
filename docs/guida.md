@@ -38,7 +38,7 @@ La **home** è la pagina iniziale del sito, nata con la wiki: dalla matita si sc
 
 In fondo alla barra, su entrambe le linguette, c'è sempre il **Cestino**. Le altre sezioni della wiki (Pagine, cioè l'elenco con i filtri, Tag, Galleria, Regole, Calendario, Cartelle) non hanno una voce di menu: si aprono dal loro indirizzo (`/wiki`, `/tags`, `/gallery`, `/rules`, `/calendar`, `/categories`).
 
-Sul telefono la barra si apre con il pulsante in alto a sinistra («Menu e pagine») e si chiude con Esc, con × o toccando fuori. Sul computer la freccia in cima alla barra la nasconde e la freccia opposta la riapre; il browser se lo ricorda. Una freccia uguale, in cima alla colonna a destra delle pagine quando c'è, fa lo stesso con quella colonna. Il riquadro centrale occupa lo spazio che le colonne lasciano libero. Chi preferisce la pagina più larga la tiene chiusa anche sul computer (Profilo › «Barra a sinistra»). Nel Profilo la barra parte nascosta e si apre con la freccia, in Amministrazione è chiusa e si apre col pulsante.
+Sul telefono l'intestazione è una sola riga che resta in vista mentre scorri: il pulsante a sinistra («Menu e pagine») apre la barra, che si chiude con Esc, con × o toccando fuori; la lente apre la ricerca. Col dito i cestini accanto alle righe non ci sono: una pagina si elimina dalla sua modifica, una cartella da Categorie. Sul computer la freccia in cima alla barra la nasconde e la freccia opposta la riapre; il browser se lo ricorda. Una freccia uguale, in cima alla colonna a destra delle pagine quando c'è, fa lo stesso con quella colonna. Il riquadro centrale occupa lo spazio che le colonne lasciano libero. Chi preferisce la pagina più larga la tiene chiusa anche sul computer (Profilo › «Barra a sinistra»). Nel Profilo la barra parte nascosta e si apre con la freccia, in Amministrazione è chiusa e si apre col pulsante.
 
 ## Pagine
 
@@ -84,7 +84,7 @@ Da tastiera: con Tab entri nella barra, con le frecce ti muovi tra i comandi, co
 
 Un collegamento a una pagina che non esiste è **rosso tratteggiato**: cliccandolo la crei.
 
-Un collegamento a una pagina che esiste la apre in un popup, con tutto il suo contenuto e la pagina di partenza che resta sotto. In alto a destra ci sono i tasti per portarla sulla schermata principale e per chiudere il popup. Con Ctrl (Cmd sul Mac) si apre invece in una nuova scheda.
+Un collegamento a una pagina che esiste la apre in un popup, con tutto il suo contenuto e la pagina di partenza che resta sotto. In alto a destra ci sono i tasti per portarla sulla schermata principale e per chiudere il popup. Con Ctrl (Cmd sul Mac) si apre invece in una nuova scheda. Sul telefono niente popup: si apre la pagina, e il tasto Indietro riporta a quella di prima.
 
 ## Mappe
 
@@ -133,7 +133,7 @@ Le bacheche sono pagine: **Nuova pagina › Nuova bacheca**, con le colonne di p
 
 In alto a destra c'è il tuo profilo: la tua icona, il tuo nome e il tuo grado (Admin, Master o Giocatore). Cliccandoci si apre il menu con **Profilo**, **Amministrazione** (solo per l'Admin) ed **Esci**; sul telefono in alto resta solo l'icona, e nome e grado si leggono nel menu.
 
-**Profilo** e **Amministrazione** si aprono in un popup sopra la wiki: lo chiudi con Esc, con la X o cliccando fuori, e sotto ritrovi la pagina che stavi leggendo. Con Ctrl+clic si aprono come pagine, in un'altra scheda.
+**Profilo** e **Amministrazione** si aprono in un popup sopra la wiki: lo chiudi con Esc, con la X o cliccando fuori, e sotto ritrovi la pagina che stavi leggendo. Con Ctrl+clic si aprono come pagine, in un'altra scheda. Sul telefono si aprono direttamente come pagine.
 
 Nel **Profilo** ci sono le preferenze di lettura (sotto), l'icona da scegliere tra quelle delle pagine (una corona, un cappello da mago, delle spade…), il nome visualizzato e la password. Chi non ha fatto l'accesso trova solo le preferenze, salvate nel browser.
 

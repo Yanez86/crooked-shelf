@@ -795,8 +795,11 @@
 		background: none;
 		color: var(--c-danger);
 	}
+	/* Col dito niente cestino accanto a ogni riga: è facile toccarlo per sbaglio. Le pagine si eliminano dalla modifica, le cartelle da Categorie. */
 	@media (hover: none) {
-		.tool.trash,
+		.tool.trash {
+			display: none;
+		}
 		.divider .tool {
 			opacity: 1;
 		}
@@ -970,9 +973,9 @@
 	@media (max-width: 60rem) {
 		/* Col dito servono righe più alte. */
 		.explorer {
-			--row: 1.75rem;
-			--row-pad: 0.2rem;
-			--tool: 2rem;
+			--row: 2.5rem;
+			--row-pad: 0.25rem;
+			--tool: 2.5rem;
 			position: fixed;
 			inset: 0 auto 0 0;
 			z-index: 30;
@@ -993,6 +996,10 @@
 			transform: none;
 			visibility: visible;
 			transition: transform 0.2s ease;
+		}
+		summary,
+		a {
+			align-items: center;
 		}
 		.close {
 			display: inline-flex;

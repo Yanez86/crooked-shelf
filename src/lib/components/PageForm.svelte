@@ -217,6 +217,7 @@
 				{/if}
 				<span class="visually-hidden" id="content-hint">{t('editor.hint')}</span>
 				<Editor content={values.content} {canSecret} labelId="content-label" describedBy="content-hint" inline />
+				<button class="btn btn-primary save-bar" type="submit"><Icon name="save" />{submitLabel}</button>
 			</div>
 		</div>
 
@@ -419,7 +420,7 @@
 	}
 	.chip select,
 	.chip input[type='text'] {
-		font-size: var(--fs-sm);
+		font-size: var(--fs-field);
 		min-height: 2rem;
 		padding: 0.15rem 0.3rem;
 		border: 0;
@@ -492,7 +493,42 @@
 	.session {
 		margin: 0;
 	}
+	.save-bar {
+		display: none;
+	}
+	@media (max-width: 48rem), (pointer: coarse) {
+		.icon-action {
+			width: 2.75rem;
+			height: 2.75rem;
+		}
+	}
 	@container (max-width: 44rem) {
+		/* Il testo è lungo e Salva in cima sarebbe lontano: qui segue il pollice mentre si scorre. */
+		.save-bar {
+			display: flex;
+			position: sticky;
+			bottom: 0.75rem;
+			width: 100%;
+			margin-top: 1.5rem;
+			box-shadow: 0 2px 10px rgb(0 0 0 / 0.3);
+		}
+		.icon-action.save {
+			display: none;
+		}
+		.title-input {
+			flex-basis: 9rem;
+			font-size: var(--fs-xl);
+		}
+		.icons {
+			grid-template-columns: repeat(6, 2.75rem);
+		}
+		.icon-choice {
+			width: 2.75rem;
+			height: 2.75rem;
+		}
+		.pick-close {
+			grid-area: 1 / 6;
+		}
 		.body {
 			grid-template-columns: minmax(0, 1fr);
 		}

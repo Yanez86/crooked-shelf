@@ -217,7 +217,7 @@
 		</details>
 	</div>
 </div>
-<p class="hint">{t('maps.keyboardHint')}{#if data.canEdit} {t('maps.keyboardAddHint')}{/if}</p>
+<p class="hint keys">{t('maps.keyboardHint')}{#if data.canEdit} {t('maps.keyboardAddHint')}{/if}</p>
 <PinPage bind:this={pinPage} editable={data.canEdit} onedit={editPin} />
 
 {#if draft && data.editData}
@@ -394,6 +394,12 @@
 	.crumbs {
 		margin-bottom: 0.75rem;
 		font-size: var(--fs-sm);
+	}
+	/* I tasti della mappa, dove la tastiera non c'è. */
+	@media (hover: none) {
+		.keys {
+			display: none;
+		}
 	}
 	.crumbs li + li::before {
 		content: '›';

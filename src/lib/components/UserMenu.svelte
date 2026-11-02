@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { getT } from '../i18n/index.ts';
+	import { onPhone } from '../prefs.ts';
 	import type { Role } from '../roles.ts';
 	import UserIcon from './UserIcon.svelte';
 	import PanelDialog from './PanelDialog.svelte';
@@ -31,8 +32,8 @@
 	let panel = $state<{ href: string; title: string } | null>(null);
 
 	function openPanel(e: MouseEvent, href: string, title: string) {
-		// Ctrl+clic e simili: la pagina intera, in un'altra scheda.
-		if (e.ctrlKey || e.metaKey || e.shiftKey) return;
+		// Ctrl+clic e simili: la pagina intera, in un'altra scheda. Sul telefono la pagina al suo posto.
+		if (e.ctrlKey || e.metaKey || e.shiftKey || onPhone()) return;
 		e.preventDefault();
 		close(true);
 		panel = { href, title };

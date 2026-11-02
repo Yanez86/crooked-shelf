@@ -171,6 +171,11 @@
 	.board {
 		margin: 1.5rem 0 2rem;
 	}
+	@container (max-width: 44rem) {
+		.board {
+			margin-top: 0;
+		}
+	}
 	.related {
 		border-top: 1px solid var(--c-border);
 		max-width: var(--measure);

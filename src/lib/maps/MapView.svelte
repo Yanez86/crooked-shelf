@@ -224,6 +224,13 @@
 		/* I livelli di Leaflet (z-index 400 e oltre) restano dentro la mappa: la barra a sinistra, aperta sul telefono, le passa sopra. */
 		isolation: isolate;
 	}
+	/* Sul telefono resta dello schermo per scorrere la pagina: su una mappa alta come lui il dito sposterebbe solo la mappa. */
+	@media (max-width: 48rem) {
+		.map {
+			min-height: 18rem;
+			max-height: 65vh;
+		}
+	}
 	.map:global(.picking) {
 		cursor: crosshair;
 	}
