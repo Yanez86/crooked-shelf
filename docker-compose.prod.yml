@@ -1,0 +1,40 @@
+# Crooked Shelf su un server su internet, con HTTPS automatico (Caddy).
+#   1. punta il dominio (record A) all'IP del server;
+#   2. cp .env.example .env  e scrivi il tuo dominio in CS_DOMAIN;
+#   3. docker compose -f docker-compose.prod.yml up -d --build
+# Sul server devono essere aperte le porte 80 e 443. Guida: docs/installazione.md.
+services:
+  crooked-shelf:
+    build: .
+    image: crooked-shelf:latest
+    restart: unless-stopped
+    # Nessuna porta pubblicata: dall'esterno si passa solo da Caddy.
+    volumes:
+      - crooked-shelf-data:/data
+    environment:
+      CS_ORIGIN: "https://${CS_DOMAIN:?scrivi il dominio in CS_DOMAIN nel file .env}"
+      CS_TRUST_PROXY: "1"
+      TZ: "${TZ:-Europe/Rome}"
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    depends_on:
+      - crooked-shelf
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      CS_DOMAIN: "${CS_DOMAIN:?scrivi il dominio in CS_DOMAIN nel file .env}"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      # Certificati HTTPS: restano tra un riavvio e l'altro.
+      - caddy-data:/data
+      - caddy-config:/config
+
+volumes:
+  # Stesso volume di docker-compose.yml: passando da uno all'altro i dati restano.
+  crooked-shelf-data:
+  caddy-data:
+  caddy-config:

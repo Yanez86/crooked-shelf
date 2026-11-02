@@ -1,0 +1,6 @@
+# Usato da docker-compose.prod.yml. Il dominio arriva da CS_DOMAIN nel file .env.
+# Caddy ottiene e rinnova da solo il certificato HTTPS.
+{$CS_DOMAIN} {
+	encode zstd gzip
+	reverse_proxy crooked-shelf:3000
+}

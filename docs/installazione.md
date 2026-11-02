@@ -58,17 +58,48 @@ Per farlo ripartire da solo all'accensione del computer si può usare `systemd` 
 
 ## 3. Su internet, con HTTPS
 
-Per rendere la wiki raggiungibile da fuori casa serve un dominio (es. `wiki.esempio.it`) e un "proxy" che gestisca HTTPS. Il più semplice è [Caddy](https://caddyserver.com/), che ottiene il certificato da solo.
+Per rendere la wiki raggiungibile da fuori casa servono un server sempre acceso con un IP pubblico (per esempio un piccolo VPS da pochi euro al mese) e un dominio (es. `wiki.esempio.it`). Nel repository c'è già tutto il necessario: `docker-compose.prod.yml` avvia la wiki insieme a [Caddy](https://caddyserver.com/), che gestisce HTTPS e ottiene e rinnova da solo il certificato.
 
-`Caddyfile`:
+Il server deve avere almeno 2 GB di RAM (per costruire l'immagine) e le porte **80** e **443** aperte, sia nel firewall del fornitore sia in quello del sistema.
 
-```
-wiki.esempio.it {
-	reverse_proxy localhost:3000
-}
-```
+1. Dal sito dove hai comprato il dominio, crea un record **A** (es. `wiki`) che punta all'IP del server.
+2. Sul server installa Docker e scarica Crooked Shelf:
 
-E in `docker-compose.yml` togli il `#` da queste righe:
+   ```bash
+   curl -fsSL https://get.docker.com | sh
+   git clone https://github.com/yanez86/crooked-shelf.git /opt/crooked-shelf
+   cd /opt/crooked-shelf
+   ```
+
+3. Scrivi il dominio nel file `.env`:
+
+   ```bash
+   cp .env.example .env
+   nano .env          # CS_DOMAIN=wiki.esempio.it
+   ```
+
+4. Avvia:
+
+   ```bash
+   docker compose -f docker-compose.prod.yml up -d --build
+   ```
+
+5. Apri **subito** `https://wiki.esempio.it` e crea la wiki e l'account amministratore: finché non lo fai, chiunque apra l'indirizzo può farlo al posto tuo.
+
+La wiki non è esposta direttamente: dall'esterno si passa solo da Caddy, e `CS_ORIGIN` e `CS_TRUST_PROXY` sono già impostati.
+
+| Cosa | Comando |
+|---|---|
+| Vedere i messaggi | `docker compose -f docker-compose.prod.yml logs -f` |
+| Aggiornare a una nuova versione | `git pull` e poi `docker compose -f docker-compose.prod.yml up -d --build` |
+| Fermare | `docker compose -f docker-compose.prod.yml stop` |
+
+Consigli per una wiki affidabile:
+
+- attiva i **backup automatici del server** offerti dal fornitore e, ogni tanto, scarica anche il backup della wiki (vedi [Backup e ripristino](#backup-e-ripristino)) su un disco tuo;
+- accedi al server con una chiave SSH e lascia che il sistema installi da solo gli aggiornamenti di sicurezza (su Ubuntu: `apt install unattended-upgrades`).
+
+Se usi già un altro proxy (nginx, Caddy installato a mano…), resta valido `docker-compose.yml`: punta il proxy a `localhost:3000` e togli il `#` da queste righe:
 
 ```yaml
 CS_ORIGIN: "https://wiki.esempio.it"
@@ -117,7 +148,7 @@ Senza `CS_ORIGIN` la wiki usa l'indirizzo con cui viene raggiunta, in `http`: co
 node tools/restore.mjs crooked-shelf-backup-2026-10-29.zip ./data --force
 ```
 
-**Ripristino con Docker**, dalla cartella dove si trova il file di backup:
+**Ripristino con Docker**, dalla cartella di Crooked Shelf con il file di backup copiato lì (con `docker-compose.prod.yml` aggiungi `-f docker-compose.prod.yml` dopo ogni `docker compose`):
 
 ```bash
 docker compose stop
