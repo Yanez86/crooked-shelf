@@ -59,7 +59,13 @@
 		{#each [...CHOICES, 'waiting'] as k (k)}
 			{#if o.answers[k as Answer | 'waiting'].length}
 				<dt>{t('schedule.answers.' + k)}</dt>
-				<dd>{o.answers[k as Answer | 'waiting'].map((p) => p.displayName).join(', ')}</dd>
+				<dd>
+					<ul class="list-plain people">
+						{#each o.answers[k as Answer | 'waiting'] as p (p.id)}
+							<li><UserIcon icon={p.icon} avatar={p.avatar} size="1.5rem" />{p.displayName}</li>
+						{/each}
+					</ul>
+				</dd>
 			{/if}
 		{/each}
 	</dl>
@@ -287,10 +293,10 @@
 		pointer-events: none;
 	}
 	.master :global(.user-icon) {
-		border: 2px solid var(--c-primary);
+		border-color: var(--c-primary);
 	}
 	.remote :global(.user-icon) {
-		border: 2px solid var(--c-note-border);
+		border-color: var(--c-note-border);
 	}
 	/* La croce sopra tutta la figura. */
 	.no .mark {
@@ -363,6 +369,16 @@
 	.facts dd {
 		margin: 0;
 		overflow-wrap: anywhere;
+	}
+	.people {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.25rem 0.75rem;
+	}
+	.people li {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.35rem;
 	}
 	.wishes li + li {
 		margin-top: 0.75rem;
