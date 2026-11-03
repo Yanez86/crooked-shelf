@@ -2,6 +2,7 @@
 	import Icon from '#lib/components/Icon.svelte';
 	import { page } from '$app/state';
 	import { getT } from '#lib/i18n/index.ts';
+	import { canWrite } from '#lib/access.ts';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
@@ -34,7 +35,7 @@
 	{:else}
 		<div class="card empty">
 			<p class="muted">{t('search.emptyHint')}</p>
-			{#if page.data.user}
+			{#if canWrite(page.data.user)}
 				<a class="btn btn-primary" href="/wiki/new?title={encodeURIComponent(data.q)}"><Icon name="plus" />{t('search.create', { q: data.q })}</a>
 			{/if}
 		</div>

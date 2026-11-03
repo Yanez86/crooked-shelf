@@ -122,6 +122,20 @@ describe('pagine', () => {
 		expect(getPageBySlug('diario')!.visibility).toBe('players');
 	});
 
+	it('nella vista giocatore il Master non vede le sue pagine personali, neanche cercando o nel cestino', () => {
+		const asPlayer = { ...master, role: 'player' as const, asPlayer: true };
+		createPage({ ...base, visibility: 'personal', title: 'Appunti del Master', content: doc(p('idee segrete')) }, master);
+		const vecchia = createPage({ ...base, visibility: 'personal', title: 'Vecchia nota', content: doc(p('x')) }, master);
+		deletePage(vecchia.id);
+		expect(listPages(master).rows.map((r) => r.title)).toEqual(['Appunti del Master']);
+		expect(listPages(asPlayer).rows).toEqual([]);
+		expect(pageTree(asPlayer).items).toEqual([]);
+		expect(searchPages('idee', master).map((h) => h.title)).toEqual(['Appunti del Master']);
+		expect(searchPages('idee', asPlayer)).toEqual([]);
+		expect(listTrash(master).map((r) => r.title)).toEqual(['Vecchia nota']);
+		expect(listTrash(asPlayer)).toEqual([]);
+	});
+
 	it('pagine con lo stesso titolo: nei suggerimenti hanno anche l’indirizzo e si possono scegliere', () => {
 		createPage({ ...base, title: 'Elminster', content: doc(p('a')) }, master);
 		expect(createPage({ ...base, title: 'Elminster', content: doc(p('b')) }, master).slug).toBe('elminster-2');

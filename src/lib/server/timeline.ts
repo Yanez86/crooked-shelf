@@ -5,7 +5,7 @@ import { getCalendar } from './settings.ts';
 import { visibleTo } from './visibility.ts';
 import { pageInCampaign } from './campaigns.ts';
 import { dayNumber, validDate, type Calendar } from '../calendar.ts';
-import { canView, isMaster, type Viewer } from '../access.ts';
+import { canView, canWrite, isMaster, type Viewer } from '../access.ts';
 import type { TimelineMode } from '../pageKinds.ts';
 import type { SessionInfo, WorldDate } from '../content/types.ts';
 import type { PageRow } from './pages.ts';
@@ -31,10 +31,10 @@ export const canSeeEvent = (e: { visibility: string }, u: Viewer | null) =>
 
 /** Chi può modificare un evento: Master/Admin, oppure chi l'ha scritto (eventi della campagna). */
 export const canEditEvent = (e: Pick<EventRow, 'createdBy' | 'source' | 'visibility'>, u: Viewer | null) =>
-	!!u && e.source === 'manual' && (isMaster(u) || (e.createdBy === u.id && e.visibility !== 'master'));
+	canWrite(u) && e.source === 'manual' && (isMaster(u) || (e.createdBy === u.id && e.visibility !== 'master'));
 
 /** Il Master scrive nella cronologia del mondo; in quella della campagna anche i giocatori. */
-export const canAdd = (mode: TimelineMode, u: Viewer | null) => !!u && (mode === 'campaign' || isMaster(u));
+export const canAdd = (mode: TimelineMode, u: Viewer | null) => canWrite(u) && (mode === 'campaign' || isMaster(u));
 
 export const sortKey = (cal: Calendar, d: WorldDate | null) => (d ? dayNumber(cal, d) : null);
 

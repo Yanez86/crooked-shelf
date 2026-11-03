@@ -23,6 +23,8 @@ export interface SessionUser {
 	prefs: Record<string, string>;
 	/** Nome di un'icona delle pagine; senza, la sagoma di una persona. */
 	icon: string | null;
+	/** Vista giocatore (la imposta hooks.server.ts): vedi Viewer. */
+	asPlayer?: boolean;
 }
 
 const sha256 = (s: string) => createHash('sha256').update(s).digest('hex');

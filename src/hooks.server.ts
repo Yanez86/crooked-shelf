@@ -1,4 +1,4 @@
-import { redirect } from '@sveltejs/kit';
+import { error, redirect } from '@sveltejs/kit';
 import type { Handle } from '@sveltejs/kit/hooks';
 import {
 	SESSION_COOKIE,
@@ -19,6 +19,9 @@ import { fromAcceptLanguage, isLocale, DEFAULT_LOCALE } from '#lib/i18n/index.ts
 const OPEN = ['/login', '/setup', '/invite/', '/mcp'];
 // Quello che resta a chi ha un account ma non è in nessuna campagna.
 const WITHOUT_CAMPAIGN = ['/campaign', '/profile', '/logout'];
+// Nella vista giocatore si guarda soltanto: si scrive solo per tornare alla propria vista o cambiare campagna, nel proprio profilo e per uscire.
+const AS_PLAYER_WRITES = ['/campaign', '/profile', '/logout'];
+const READS = ['GET', 'HEAD', 'OPTIONS'];
 
 function readCookiePrefs(raw: string | undefined): Record<string, unknown> | null {
 	if (!raw) return null;
@@ -58,8 +61,12 @@ export const handle: Handle = async ({ event, resolve }) => {
 	const campaign = locals.campaign ?? NO_CAMPAIGN;
 	if (locals.user) locals.user.role = roleIn(campaign, locals.user);
 	// Vista giocatore: il ruolo cambia per tutta la richiesta, così anche il server tiene per sé i segreti, come per un vero giocatore.
+	// Ed è un giocatore qualunque: non ha scritto niente e non scrive (vedi authorKey e canWrite in access.ts).
 	locals.asPlayer = !mcp && isMaster(locals.user) && cookies.get(AS_PLAYER_COOKIE) === '1';
-	if (locals.asPlayer) locals.user!.role = 'player';
+	if (locals.asPlayer) {
+		locals.user!.role = 'player';
+		locals.user!.asPlayer = true;
+	}
 
 	locals.prefs = cleanPrefs(
 		locals.user ? locals.user.prefs : readCookiePrefs(cookies.get(PREFS_COOKIE)),
@@ -83,6 +90,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 		const start = locals.user.role === 'admin' ? '/admin/campaigns' : '/campaign';
 		if (path !== start && !WITHOUT_CAMPAIGN.includes(path)) redirect(303, start);
 	}
+	if (locals.asPlayer && !READS.includes(event.request.method) && !AS_PLAYER_WRITES.includes(path)) error(403, 'Forbidden');
 
 	const p = locals.prefs;
 	const attrs = `data-theme="${p.theme}" data-font="${p.font}" data-spacing="${p.spacing}" data-motion="${p.motion}" style="--font-scale:${Number(p.fontSize) / 100}"`;

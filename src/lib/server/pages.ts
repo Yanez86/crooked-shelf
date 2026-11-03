@@ -4,7 +4,7 @@ import { slugify } from '../slug.ts';
 import { extract, stripSecrets } from '../content/extract.ts';
 import { renderDoc, renderInline, type LinkTarget, type RenderOptions } from '../content/render.ts';
 import { EMPTY_DOC, isDoc, type DocNode, type PageField, type SessionInfo } from '../content/types.ts';
-import { canView, isMaster, type Viewer } from '../access.ts';
+import { authorKey, canView, isMaster, type Viewer } from '../access.ts';
 import type { Visibility } from '../roles.ts';
 import type { PageKind } from '../pageKinds.ts';
 import { visibleTo } from './visibility.ts';
@@ -412,7 +412,7 @@ export function pageMeta(page: PageRow) {
  * Per il Master, quelle finite nel cestino con una cartella stanno nella cartella: tornano con lei.
  */
 export function listTrash(u: Viewer) {
-	const mine = sql`${pages.authorId} = ${u.id}`;
+	const mine = sql`${pages.authorId} = ${authorKey(u)}`;
 	const cond = isMaster(u)
 		? sql`(${pages.visibility} <> 'personal' OR ${mine}) AND ${pages.deletedAt} NOT IN (SELECT ${categories.deletedAt} FROM ${categories} WHERE ${categories.campaignId} = ${campaignId()} AND ${categories.deletedAt} IS NOT NULL)`
 		: sql`(${mine} AND ${pages.hasSecret} = 0)`;

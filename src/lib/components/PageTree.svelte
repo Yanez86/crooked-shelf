@@ -4,7 +4,7 @@
 	import { SvelteSet } from 'svelte/reactivity';
 	import { page } from '$app/state';
 	import { getT } from '../i18n/index.ts';
-	import { allowedVisibilities, isMaster } from '../access.ts';
+	import { allowedVisibilities, canWrite, isMaster } from '../access.ts';
 	import type { Visibility } from '../roles.ts';
 	import { iconPath } from '../icons.ts';
 	import Icon from './Icon.svelte';
@@ -24,6 +24,8 @@
 	const t = getT();
 	const canManage = $derived(isMaster(page.data.user));
 	const user = $derived(page.data.user);
+	// Nella vista giocatore non si creano pagine.
+	const canNew = $derived(canWrite(user));
 
 	// Cartelle aperte: quelle che portano alla pagina che stai leggendo, più quelle che hai aperto tu
 	// (ricordate in questo browser).
@@ -598,9 +600,9 @@
 				</button>
 			{/if}
 		</div>
-		{#if user || foldable}
+		{#if canNew || foldable}
 			<div class="explorer-tools">
-				{#if user}
+				{#if canNew}
 					<a
 						class="tool new-page"
 						href={newTemplate ? '/wiki/new?kind=template' : '/wiki/new'}

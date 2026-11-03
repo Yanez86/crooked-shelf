@@ -1,6 +1,6 @@
 import { getSqlite } from './db/index.ts';
 import { campaignId } from './campaigns.ts';
-import { isMaster, type Viewer } from '../access.ts';
+import { authorKey, isMaster, type Viewer } from '../access.ts';
 
 /** Trasforma il testo cercato in una query FTS5 sicura: ogni parola è un prefisso, tutte obbligatorie. */
 export function ftsQuery(q: string, columns: string[]): string | null {
@@ -41,7 +41,7 @@ export function searchPages(q: string, u: Viewer | null, limit = 30): SearchHit[
 			ORDER BY bm25(pages_fts, 10.0, 1.0, 1.0)
 			LIMIT @limit`
 		)
-		.all({ match, o: MARK_OPEN, c: MARK_CLOSE, uid: u?.id ?? 0, campaign: campaignId(), limit }) as {
+		.all({ match, o: MARK_OPEN, c: MARK_CLOSE, uid: u ? authorKey(u) : 0, campaign: campaignId(), limit }) as {
 		slug: string;
 		title: string;
 		body_snip: string;

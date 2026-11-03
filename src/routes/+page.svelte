@@ -5,6 +5,7 @@
 	import PageHead from '#lib/components/PageHead.svelte';
 	import { page } from '$app/state';
 	import { getT } from '#lib/i18n/index.ts';
+	import { canWrite } from '#lib/access.ts';
 	import { pageIcon } from '#lib/tree.ts';
 	import type { PageProps } from './$types';
 
@@ -53,7 +54,7 @@
 		<section class="card empty">
 			<h2>{t('home.emptyTitle')}</h2>
 			<p>{t('home.emptyText')}</p>
-			{#if user}<a class="btn btn-primary" href="/wiki/new"><Icon name="plus" />{t('home.firstPage')}</a>{/if}
+			{#if canWrite(user)}<a class="btn btn-primary" href="/wiki/new"><Icon name="plus" />{t('home.firstPage')}</a>{/if}
 		</section>
 		{#if data.world.length}
 			<h2>{t('home.world')}</h2>

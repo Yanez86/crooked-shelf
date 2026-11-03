@@ -1095,6 +1095,7 @@
 		"switch": "Switch campaign",
 		"asPlayer": "View as player",
 		"asPlayerOn": "You are seeing the wiki as a player sees it.",
+		"asPlayerReadOnly": "In player view you can only look: go back to your view to write.",
 		"asMaster": "Back to your view",
 		"none": "You aren't part of a campaign yet. Ask your Master for an invite link.",
 		"name": "Campaign name",

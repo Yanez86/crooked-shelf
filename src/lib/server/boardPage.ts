@@ -1,5 +1,5 @@
 import { error, fail } from '@sveltejs/kit';
-import { canEdit, canView, type Viewer } from '../access.ts';
+import { canEdit, canView, canWrite, type Viewer } from '../access.ts';
 import {
 	addCard,
 	addColumn,
@@ -43,7 +43,7 @@ export function boardView(page: PageRow, u: Viewer | null, locale: string) {
 	return {
 		id: b.id,
 		// Le schede le usa chi ha fatto l'accesso e vede la pagina; le colonne le cambia chi può modificare la pagina.
-		canUse: !!u,
+		canUse: canWrite(u),
 		canManage: canEdit(page, u),
 		colors: [...CARD_COLORS],
 		columns: columns.map((c) => ({
@@ -61,7 +61,7 @@ export function boardView(page: PageRow, u: Viewer | null, locale: string) {
 
 /** La bacheca della pagina, se chi scrive può usarla (o gestirla, con `manage`). */
 export function usableBoard(page: PageRow | undefined, u: Viewer | null, manage = false) {
-	if (!page || page.kind !== 'board' || !u || !canView(page, u)) error(404, 'Not found');
+	if (!page || page.kind !== 'board' || !canWrite(u) || !canView(page, u)) error(404, 'Not found');
 	if (manage && !canEdit(page, u)) error(403, 'Forbidden');
 	const b = boardOfPage(page.id);
 	if (!b) error(404, 'Not found');

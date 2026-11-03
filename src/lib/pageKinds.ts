@@ -1,4 +1,4 @@
-import { isMaster, type Viewer } from './access.ts';
+import { canWrite, isMaster, type Viewer } from './access.ts';
 import { iconPath } from './icons.ts';
 
 /**
@@ -15,7 +15,7 @@ export type PageKind = (typeof PAGE_KINDS)[number];
 export const isPageKind = (v: unknown): v is PageKind => typeof v === 'string' && (PAGE_KINDS as readonly string[]).includes(v);
 
 /** Template, mappe e cronologie li crea il Master; pagine e bacheche chiunque abbia fatto l'accesso. */
-export const canCreateKind = (kind: PageKind, u: Viewer | null) => !!u && (kind === 'page' || kind === 'board' || isMaster(u));
+export const canCreateKind = (kind: PageKind, u: Viewer | null) => canWrite(u) && (kind === 'page' || kind === 'board' || isMaster(u));
 
 /** Cronologia del mondo (per data nel mondo, la scrive il Master) o della campagna (per data di gioco, anche i giocatori; ci entrano i resoconti di sessione). */
 export const TIMELINE_MODES = ['world', 'campaign'] as const;

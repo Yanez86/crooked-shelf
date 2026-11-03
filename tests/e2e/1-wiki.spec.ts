@@ -586,9 +586,22 @@ test('il Master vede la wiki come un giocatore, e torna indietro', async ({ brow
 	expect((await m.request.get('/wiki/piano-del-cattivo')).status()).toBe(404);
 	await axe(m, 'vista giocatore');
 
+	// Un giocatore qualunque non ha scritto niente: nessuna matita sulle pagine del Master, neanche sulla home, e niente pagine nuove.
+	await expect(m.getByRole('link', { name: /^Modifica/ })).toHaveCount(0);
+	await m.goto('/');
+	await expect(m.getByRole('heading', { level: 1, name: 'Le Cronache di Faerûn' })).toBeVisible();
+	await expect(m.getByRole('link', { name: /^Modifica/ })).toHaveCount(0);
+	await expect(m.getByRole('link', { name: 'Nuova pagina' })).toHaveCount(0);
+	expect((await m.request.get('/wiki/locanda-del-grifone/edit')).status()).toBe(404);
+	await m.goto('/wiki/new');
+	await expect(m.getByText('Nella vista giocatore si guarda soltanto')).toBeVisible();
+
 	await m.getByRole('button', { name: 'Torna alla tua vista' }).click();
+	await expect(m.getByRole('heading', { level: 1, name: 'Nuova pagina' })).toBeVisible();
+	await m.goto('/wiki/locanda-del-grifone');
 	await expect(m.locator('.content .secret')).toContainText('spia degli Zhentarim');
 	await expect(m.getByText('Stai vedendo la wiki come la vede un giocatore.')).toHaveCount(0);
+	await expect(m.getByRole('link', { name: 'Modifica: Locanda del Grifone' })).toBeVisible();
 	await m.context().close();
 });
 

@@ -2,6 +2,7 @@
 	import Icon from '#lib/components/Icon.svelte';
 	import { page as appPage } from '$app/state';
 	import { getT } from '#lib/i18n/index.ts';
+	import { canWrite } from '#lib/access.ts';
 	import PageList from '#lib/components/PageList.svelte';
 	import FormOk from '#lib/components/FormOk.svelte';
 	import type { PageProps } from './$types';
@@ -34,7 +35,7 @@
 
 <div class="head">
 	<h1>{heading}</h1>
-	{#if appPage.data.user}
+	{#if canWrite(appPage.data.user)}
 		<a class="btn btn-primary" href="/wiki/new{data.category ? `?category=${data.category.id}` : data.kind && data.kind !== 'page' ? `?kind=${data.kind}` : ''}"><Icon name="plus" /><span class="new-label">{t('nav.newPage')}</span></a>
 	{/if}
 </div>

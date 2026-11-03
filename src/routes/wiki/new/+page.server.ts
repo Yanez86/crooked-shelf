@@ -1,6 +1,6 @@
-import { fail, redirect } from '@sveltejs/kit';
+import { error, fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
-import { allowedVisibilities, isMaster } from '#lib/access.ts';
+import { allowedVisibilities, canWrite, isMaster } from '#lib/access.ts';
 import { createPage, type PageRow } from '#lib/server/pages.ts';
 import { readPageForm } from '#lib/server/pageForm.ts';
 import { readMapForm } from '#lib/server/mapForm.ts';
@@ -19,6 +19,8 @@ const OTHER_KINDS = ['board', 'timeline', 'template', 'map'] as const;
 
 export const load: PageServerLoad = ({ locals, url }) => {
 	if (!locals.user) redirect(303, `/login?next=${encodeURIComponent(url.pathname + url.search)}`);
+	// Nella vista giocatore non si crea niente (ci si arriva anche dai collegamenti a pagine che non ci sono).
+	if (!canWrite(locals.user)) error(403, 'Forbidden');
 	const u = locals.user;
 	const title = (url.searchParams.get('title') ?? '').slice(0, 200);
 	const slug = slugify(url.searchParams.get('slug') ?? '', '');

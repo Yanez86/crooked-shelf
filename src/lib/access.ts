@@ -5,6 +5,8 @@ export type { Role, Visibility };
 export interface Viewer {
 	id: number;
 	role: Role;
+	/** Vista giocatore: il Master guarda la wiki come un giocatore qualunque (vedi hooks.server.ts). */
+	asPlayer?: boolean;
 }
 
 export interface PageAccessInfo {
@@ -17,6 +19,15 @@ export interface PageAccessInfo {
 /** Master e Admin vedono e scrivono i contenuti segreti. */
 export const isMaster = (u: Viewer | null | undefined) => u?.role === 'admin' || u?.role === 'master';
 export const isAdmin = (u: Viewer | null | undefined) => u?.role === 'admin';
+
+/**
+ * Chi conta come autore. Nella vista giocatore nessuno: il Master è un giocatore qualunque, che non ha scritto
+ * niente, quindi non vede le sue pagine personali e non ha i diritti di chi le ha scritte (0 non è l'id di nessuno).
+ */
+export const authorKey = (u: Viewer) => (u.asPlayer ? 0 : u.id);
+
+/** La vista giocatore è solo da guardare: non si crea, non si modifica e non si sposta niente. */
+export const canWrite = (u: Viewer | null | undefined): u is Viewer => !!u && !u.asPlayer;
 
 /** Visibilità che un utente può assegnare a una pagina. */
 export function allowedVisibilities(u: Viewer | null): Visibility[] {
@@ -33,12 +44,12 @@ export function canView(p: PageAccessInfo, u: Viewer | null): boolean {
 		case 'master':
 			return isMaster(u);
 		case 'personal':
-			return !!u && p.authorId === u.id;
+			return !!u && p.authorId === authorKey(u);
 	}
 }
 
 export function canEdit(p: PageAccessInfo, u: Viewer | null): boolean {
-	if (!u || !canView(p, u)) return false;
+	if (!canWrite(u) || !canView(p, u)) return false;
 	if (isMaster(u)) return true;
 	// Un giocatore non modifica pagine con segreti che non può vedere.
 	if (p.hasSecret) return false;
@@ -47,7 +58,5 @@ export function canEdit(p: PageAccessInfo, u: Viewer | null): boolean {
 
 /** Cambiare visibilità e permessi: Master/Admin o l'autore. */
 export function canManage(p: PageAccessInfo, u: Viewer | null): boolean {
-	return !!u && (isMaster(u) || (p.authorId === u.id && !p.hasSecret));
+	return canWrite(u) && (isMaster(u) || (p.authorId === u.id && !p.hasSecret));
 }
-
-export const canCreate = (u: Viewer | null) => !!u;
