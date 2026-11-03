@@ -8,7 +8,7 @@ import { canEdit, canManage, isMaster, type Viewer } from '../access.ts';
 import { TAG_COLORS, type TagColor } from '../roles.ts';
 import { buildTree, canHold, locate, nodeKey, type Tree, type TreePlace } from '../tree.ts';
 
-const { categories, tags, pageTags, pages, treeDividers } = schema;
+const { campaignMembers, categories, tags, pageTags, pages, treeDividers } = schema;
 
 export interface CategoryNode {
 	id: number;
@@ -82,6 +82,10 @@ const HOME_ROW = { categoryId: null, parentPageId: null, sort: 0, home: true, ca
 
 function readTree(where: SQL, keepEmpty: boolean, u: Viewer | null = null): Tree {
 	const db = getDb();
+	const atTable = new Set(
+		db.select({ id: campaignMembers.userId }).from(campaignMembers).where(eq(campaignMembers.campaignId, campaignId())).all().map((m) => m.id)
+	);
+	const pc = currentCampaign().pcFolderId;
 	const rows = db
 		.select({
 			id: pages.id,
@@ -95,19 +99,23 @@ function readTree(where: SQL, keepEmpty: boolean, u: Viewer | null = null): Tree
 			visibility: pages.visibility,
 			authorId: pages.authorId,
 			playersCanEdit: pages.playersCanEdit,
-			hasSecret: pages.hasSecret
+			hasSecret: pages.hasSecret,
+			sheetOf: pages.sheetOf
 		})
 		.from(pages)
 		.where(where)
 		.all()
-		.map(({ visibility, ...p }) => ({
+		.map(({ visibility, sheetOf, ...p }) => ({
 			...p,
-			canTrash: canEdit({ ...p, visibility }, u) && canManage({ ...p, visibility }, u),
+			canTrash: canEdit({ ...p, visibility }, u) && canManage({ ...p, visibility }, u) && !(sheetOf !== null && atTable.has(sheetOf)),
+			// Le schede giocatore stanno nella cartella PG: lo sa anche chi trascina.
+			...(sheetOf !== null && { sheet: true }),
 			// Ai giocatori la visibilità non serve: l'icona per cambiarla è solo del Master.
 			...(isMaster(u) && { visibility, mine: p.authorId === u!.id }),
 			...(isHomePage(p.id) && HOME_ROW)
 		}));
-	return buildTree(listCategories(), rows, keepEmpty, db.select().from(treeDividers).where(ofCampaign(treeDividers)).all());
+	const cats = listCategories().map((c) => (c.id === pc ? { ...c, pc: true } : c));
+	return buildTree(cats, rows, keepEmpty, db.select().from(treeDividers).where(ofCampaign(treeDividers)).all());
 }
 
 /** Cartelle e pagine visibili per l'albero a sinistra. Il Master vede anche le cartelle vuote. */
@@ -183,6 +191,9 @@ export function getCategoryBySlug(slug: string) {
 	return getDb().select().from(categories).where(and(ofCampaign(categories), eq(categories.slug, slug), alive)).get();
 }
 
+/** La cartella PG della campagna, con le schede giocatore: si rinomina e si sposta, ma non si elimina. */
+export const isPcFolder = (id: number) => currentCampaign().pcFolderId === id;
+
 export function getCategory(id: number) {
 	return getDb().select().from(categories).where(and(ofCampaign(categories), eq(categories.id, id), alive)).get();
 }
@@ -220,11 +231,11 @@ export function updateCategory(id: number, name: string, parentId: number | null
 		.run();
 }
 
-/** Le sottocategorie passano al genitore, le pagine restano senza categoria. */
+/** Le sottocategorie passano al genitore, le pagine restano senza categoria. La cartella PG non si elimina. */
 export function deleteCategory(id: number) {
 	const db = getDb();
 	const c = getCategory(id);
-	if (!c) return;
+	if (!c || isPcFolder(id)) return;
 	db.transaction((tx) => {
 		tx.update(categories).set({ parentId: c.parentId, parentPageId: c.parentPageId }).where(eq(categories.parentId, id)).run();
 		tx.delete(categories).where(eq(categories.id, id)).run();

@@ -38,6 +38,21 @@ const SPEC: Record<BuiltinTemplate, { fields: string[]; sections: string[]; icon
 	houserule: { fields: ['replaces'], sections: ['rule', 'why'], icon: 'book' }
 };
 
+/**
+ * Il template di partenza delle schede giocatore: due sezioni e niente di un sistema di gioco in particolare.
+ * Lo crea la wiki insieme alla cartella PG (sheets.ts); il Master lo modifica o ne sceglie un altro.
+ */
+export function sheetTemplate(locale: string): TemplateData {
+	const t = (k: string) => translate(locale, k);
+	return {
+		name: t('sheets.template'),
+		fields: [],
+		content: { type: 'doc', content: [h(t('templates.s.character')), p(), h(t('templates.s.notes')), p()] },
+		session: false,
+		icon: 'shield'
+	};
+}
+
 export function builtinTemplate(id: BuiltinTemplate, locale: string): TemplateData {
 	const t = (k: string) => translate(locale, k);
 	const spec = SPEC[id];

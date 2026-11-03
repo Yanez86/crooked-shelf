@@ -11,6 +11,7 @@ import {
 import { getSettings } from '#lib/server/settings.ts';
 import { AS_PLAYER_COOKIE, CAMPAIGN_COOKIE, NO_CAMPAIGN, campaignsFor, inCampaign, roleIn } from '#lib/server/campaigns.ts';
 import { allPlugins, extraThemes } from '#lib/server/plugins.ts';
+import { ensureSheets } from '#lib/server/sheets.ts';
 import { isAdmin, isMaster } from '#lib/access.ts';
 import { cleanPrefs, PREFS_COOKIE } from '#lib/prefs.ts';
 import { fromAcceptLanguage, isLocale, DEFAULT_LOCALE } from '#lib/i18n/index.ts';
@@ -95,11 +96,18 @@ export const handle: Handle = async ({ event, resolve }) => {
 
 	const p = locals.prefs;
 	const attrs = `data-theme="${p.theme}" data-font="${p.font}" data-spacing="${p.spacing}" data-motion="${p.motion}" style="--font-scale:${Number(p.fontSize) / 100}"`;
-	const response = await inCampaign(campaign, () =>
-		resolve(event, {
+	const response = await inCampaign(campaign, () => {
+		// Cartella PG e schede dei giocatori: se manca qualcosa (campagna di prima, giocatore appena entrato) si prepara ora.
+		// Se non ci riesce la wiki va avanti lo stesso: ci riprova alla richiesta dopo.
+		try {
+			ensureSheets(settings.defaultLocale);
+		} catch (e) {
+			console.error('Schede giocatore:', e);
+		}
+		return resolve(event, {
 			transformPageChunk: ({ html }) => html.replace('%cs.lang%', locals.locale).replace('%cs.attrs%', attrs)
-		})
-	);
+		});
+	});
 	response.headers.set('X-Content-Type-Options', 'nosniff');
 	response.headers.set('Referrer-Policy', 'same-origin');
 	// Non DENY: Profilo, Amministrazione e pagine collegate si aprono in un iframe della wiki stessa (PanelDialog).

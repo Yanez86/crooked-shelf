@@ -19,7 +19,8 @@
 					title: data.title,
 					slug: data.slug,
 					content: (data.start?.content ?? EMPTY_DOC) as DocNode,
-					visibility: data.kind === 'timeline' ? 'public' : 'players',
+					// Dentro una scheda giocatore si parte dagli appunti per sé.
+					visibility: data.inside ? 'personal' : data.kind === 'timeline' ? 'public' : 'players',
 					playersCanEdit: false,
 					categoryId: data.categoryId,
 					tags: '',
@@ -103,7 +104,8 @@
 			months={data.months}
 			multipart={kind === 'map'}
 			submitLabel={kind === 'map' ? t('maps.create') : t('page.create')}
-			cancelHref="/wiki"
+			cancelHref={data.inside ? `/wiki/${data.inside.slug}` : '/wiki'}
+			inside={data.inside ?? undefined}
 			settings={kind === 'map' || kind === 'timeline' || kind === 'board' ? settings : undefined}
 		/>
 	{/key}

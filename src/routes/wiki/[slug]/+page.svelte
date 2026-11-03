@@ -43,6 +43,7 @@
 
 	<p class="meta muted">
 		{#if data.page.kind !== 'page'}<span class="badge kind">{t('kinds.' + data.page.kind)}</span>{/if}
+		{#if data.sheet}<span class="badge kind">{t('sheets.of', { name: data.sheet.player })}</span>{/if}
 		<span class="badge">{t('visibility.' + data.page.visibility)}</span>
 		{#if data.page.hasSecret}<span class="badge"><Icon name="lock" />{t('page.hasSecret')}</span>{/if}
 	</p>
@@ -51,6 +52,14 @@
 		<ul class="list-plain tags" aria-label={t('page.tags')}>
 			{#each data.tags as tag (tag.slug)}<li><TagBadge {tag} /></li>{/each}
 		</ul>
+	{/if}
+
+	{#if data.sheet}
+		<!-- La scheda di un giocatore: lui e il Master ci mettono dentro le pagine che servono (gli appunti per sé partono Personali). -->
+		<div class="template-note card">
+			<p>{data.sheet.mine ? t('sheets.noteMine') : t('sheets.note', { name: data.sheet.player })}</p>
+			{#if data.sheet.canNest}<a class="btn" href="/wiki/new?in={data.sheet.id}"><Icon name="plus" />{t('sheets.newInside')}</a>{/if}
+		</div>
 	{/if}
 
 	{#if data.page.kind === 'template'}

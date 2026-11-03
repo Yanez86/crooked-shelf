@@ -325,5 +325,13 @@ export const MIGRATIONS: (string | ((db: Database.Database) => void) | { rebuild
 	// Il token scrive solo se chi lo crea lo chiede: quelli che c'erano restano in lettura.
 	`
 	ALTER TABLE api_tokens ADD COLUMN can_write INTEGER NOT NULL DEFAULT 0;
+	`,
+	// Schede giocatore: una pagina per giocatore nella cartella PG della campagna, fatta col template scelto dal Master.
+	// Cartella, template e schede li prepara la wiki alla prima richiesta (vedi sheets.ts): servono le traduzioni e l'indice di ricerca.
+	`
+	ALTER TABLE campaigns ADD COLUMN pc_folder_id INTEGER;
+	ALTER TABLE campaigns ADD COLUMN sheet_template_id INTEGER;
+	ALTER TABLE pages ADD COLUMN sheet_of INTEGER REFERENCES users(id) ON DELETE SET NULL;
+	CREATE UNIQUE INDEX pages_sheet ON pages(campaign_id, sheet_of) WHERE sheet_of IS NOT NULL;
 	`
 ];

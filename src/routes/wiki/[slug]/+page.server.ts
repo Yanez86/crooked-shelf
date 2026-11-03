@@ -13,6 +13,7 @@ import { boardActions, boardView } from '#lib/server/boardPage.ts';
 import { getCalendar, isHomePage } from '#lib/server/settings.ts';
 import { formatDate } from '#lib/calendar.ts';
 import { canCreateKind } from '#lib/pageKinds.ts';
+import { sheetInfo } from '#lib/server/sheets.ts';
 
 /** 404 anche per le pagine nascoste: non riveliamo che esistono. */
 function visiblePage(slug: string, u: App.Locals['user']) {
@@ -47,6 +48,8 @@ export const load: PageServerLoad = ({ params, locals, url }) => {
 		boardData: page.kind === 'board' ? boardView(page, locals.user, locals.locale) : null,
 		// Un template si fotocopia da qui; una nuova mappa può nascere dentro questa.
 		canCopy: page.kind === 'template' && canCreateKind('page', locals.user),
+		// Una scheda giocatore: di chi è, e il pulsante per metterci dentro una pagina nuova.
+		sheet: sheetInfo(page, locals.user),
 		maps: mapsForPage(page.slug, locals.user),
 		events: eventsForPage(page.id, locals.user).map((e) => ({ id: e.id, title: e.title, when: when(e), realDate: e.realDate, timeline: e.timeline })),
 		trail: pageTrail(pageTree(locals.user), page.id),

@@ -39,6 +39,7 @@
 		canTemplate={data.canTemplate}
 		canHome={data.canHome}
 		isHome={data.isHome}
+		sheet={data.sheet}
 		multipart={kind === 'map'}
 		submitLabel={t('common.save')}
 		cancelHref="/wiki/{data.page.slug}"
@@ -53,7 +54,7 @@
 	{/if}
 {/snippet}
 
-{#if data.canManage && !data.isHome}
+{#if data.canDelete}
 	<section class="danger-zone" aria-labelledby="danger-title">
 		<h2 id="danger-title">{t('page.deleteTitle')}</h2>
 		<form method="post" action="?/delete">

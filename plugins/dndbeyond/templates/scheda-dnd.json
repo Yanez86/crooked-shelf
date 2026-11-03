@@ -1,0 +1,122 @@
+{
+	"name": "Scheda D&D",
+	"description": "La scheda di un personaggio di D&D 5.5, col link alla sua scheda su D&D Beyond.",
+	"fields": [
+		"Specie",
+		"Classe",
+		"Livello",
+		"Background",
+		"Allineamento"
+	],
+	"content": {
+		"type": "doc",
+		"content": [
+			{
+				"type": "heading",
+				"attrs": {
+					"level": 2
+				},
+				"content": [
+					{
+						"type": "text",
+						"text": "D&D Beyond"
+					}
+				]
+			},
+			{
+				"type": "paragraph",
+				"content": [
+					{
+						"type": "text",
+						"text": "La mia scheda su D&D Beyond",
+						"marks": [
+							{
+								"type": "link",
+								"attrs": {
+									"href": "https://www.dndbeyond.com/characters"
+								}
+							}
+						]
+					}
+				]
+			},
+			{
+				"type": "callout",
+				"attrs": {
+					"kind": "tip"
+				},
+				"content": [
+					{
+						"type": "paragraph",
+						"content": [
+							{
+								"type": "text",
+								"text": "Apri la tua scheda su D&D Beyond, copia l'indirizzo e mettilo nel link qui sopra (selezionalo e premi il pulsante del link)."
+							}
+						]
+					}
+				]
+			},
+			{
+				"type": "heading",
+				"attrs": {
+					"level": 2
+				},
+				"content": [
+					{
+						"type": "text",
+						"text": "Aspetto"
+					}
+				]
+			},
+			{
+				"type": "paragraph"
+			},
+			{
+				"type": "heading",
+				"attrs": {
+					"level": 2
+				},
+				"content": [
+					{
+						"type": "text",
+						"text": "Storia"
+					}
+				]
+			},
+			{
+				"type": "paragraph"
+			},
+			{
+				"type": "heading",
+				"attrs": {
+					"level": 2
+				},
+				"content": [
+					{
+						"type": "text",
+						"text": "Obiettivi"
+					}
+				]
+			},
+			{
+				"type": "paragraph"
+			},
+			{
+				"type": "heading",
+				"attrs": {
+					"level": 2
+				},
+				"content": [
+					{
+						"type": "text",
+						"text": "Appunti"
+					}
+				]
+			},
+			{
+				"type": "paragraph"
+			}
+		]
+	}
+}

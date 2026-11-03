@@ -6,7 +6,7 @@ import { createCategory, getCategoryBySlug, syncBranch } from './taxonomy.ts';
 import { setTimelineMode } from './timeline.ts';
 import { enabledPlugins, pluginTemplates } from './plugins.ts';
 import { visibleTo } from './visibility.ts';
-import { BUILTIN_TEMPLATES, builtinTemplate, SESSION_TEMPLATE, type TemplateData } from '../templates.ts';
+import { BUILTIN_TEMPLATES, builtinTemplate, SESSION_TEMPLATE, sheetTemplate, type TemplateData } from '../templates.ts';
 import { stripSecrets } from '../content/extract.ts';
 import { EMPTY_DOC, isDoc, type DocNode, type PageField } from '../content/types.ts';
 import { canView, isMaster, type Viewer } from '../access.ts';
@@ -70,6 +70,19 @@ function createTemplatePage(tp: TemplateData, origin: string | null, categoryId:
 		},
 		u
 	);
+}
+
+/** Origine del template di partenza delle schede giocatore (colonna `template`). */
+export const SHEET_TEMPLATE_ORIGIN = 'b:sheet';
+
+/** Il template «Scheda giocatore» nella cartella Template: quello che c'è già (anche nel cestino), o uno nuovo. */
+export function ensureSheetTemplate(locale: string, u: Viewer): PageRow {
+	const found = getDb()
+		.select()
+		.from(pages)
+		.where(and(ofCampaign(pages), eq(pages.kind, 'template'), eq(pages.template, SHEET_TEMPLATE_ORIGIN)))
+		.get();
+	return found ?? createTemplatePage(sheetTemplate(locale), SHEET_TEMPLATE_ORIGIN, templateFolder(locale), u);
 }
 
 function createHomePage(u: Viewer): PageRow {

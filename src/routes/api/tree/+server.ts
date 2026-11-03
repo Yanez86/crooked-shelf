@@ -1,7 +1,7 @@
 import { error, json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { canEdit, canManage, isMaster } from '#lib/access.ts';
-import { deletePage, getPageById, trashFolder } from '#lib/server/pages.ts';
+import { deletePage, getPageById, lockedSheet, trashFolder } from '#lib/server/pages.ts';
 import { isHomePage } from '#lib/server/settings.ts';
 import { createDivider, deleteDivider, moveTreeNode } from '#lib/server/taxonomy.ts';
 import { nodeKey } from '#lib/tree.ts';
@@ -32,7 +32,7 @@ export const DELETE: RequestHandler = async ({ request, locals }) => {
 	const id = Number(raw);
 	if (type === 'page') {
 		const page = getPageById(id);
-		if (!page || !canEdit(page, u) || !canManage(page, u) || isHomePage(page.id)) error(403, 'Forbidden');
+		if (!page || !canEdit(page, u) || !canManage(page, u) || isHomePage(page.id) || lockedSheet(page)) error(403, 'Forbidden');
 		deletePage(page.id);
 	} else {
 		if (!isMaster(u)) error(403, 'Forbidden');

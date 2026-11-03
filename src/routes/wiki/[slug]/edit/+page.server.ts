@@ -1,7 +1,7 @@
 import { error, fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
-import { allowedVisibilities, canEdit, canManage, isMaster } from '#lib/access.ts';
-import { deletePage, getPageBySlug, pageCover, pageMeta, updatePage } from '#lib/server/pages.ts';
+import { allowedVisibilities, canEdit, canManage, isMaster, SHEET_VISIBILITIES } from '#lib/access.ts';
+import { deletePage, getPageBySlug, isSheet, lockedSheet, pageCover, pageMeta, updatePage } from '#lib/server/pages.ts';
 import { readPageForm } from '#lib/server/pageForm.ts';
 import { mapFormValues, readMapForm } from '#lib/server/mapForm.ts';
 import { getMapOfPage, listMaps, updateMap } from '#lib/server/maps.ts';
@@ -49,11 +49,14 @@ export const load: PageServerLoad = ({ params, locals, url }) => {
 		parents: map ? listMaps(locals.user).filter((m) => m.id !== map.id).map(({ id, title }) => ({ id, title })) : [],
 		months: getCalendar().months,
 		categories: categoryTree(locals.user).flat.map(({ id, label }) => ({ id, label })),
-		visibilities: allowedVisibilities(locals.user),
+		visibilities: allowedVisibilities(locals.user, isSheet(page)),
 		canManage: canManage(page, locals.user),
-		canSecret: isMaster(locals.user),
-		canTemplate: canCreateKind('template', locals.user),
-		canHome: isMaster(locals.user) && page.kind === 'page',
+		// Una scheda giocatore resta una pagina della cartella PG, senza segreti: il giocatore deve poterla modificare.
+		sheet: isSheet(page),
+		canDelete: canManage(page, locals.user) && !isHomePage(page.id) && !lockedSheet(page),
+		canSecret: isMaster(locals.user) && !isSheet(page),
+		canTemplate: canCreateKind('template', locals.user) && !isSheet(page),
+		canHome: isMaster(locals.user) && page.kind === 'page' && !isSheet(page),
 		isHome: isHomePage(page.id),
 		knownTags: listTags(locals.user, true).map((t) => t.name)
 	};
@@ -72,9 +75,15 @@ export const actions: Actions = {
 		if (!r.ok) return fail(400, { error: r.error, values: r.values, extra });
 		// Solo chi può fare template trasforma una pagina in template (e viceversa).
 		if (r.input.kind !== page.kind && !canCreateKind('template', u)) r.input.kind = page.kind;
+		// La scheda giocatore resta nella cartella PG e la vedono tutti i giocatori.
+		if (isSheet(page)) {
+			r.input.kind = page.kind;
+			r.input.categoryId = page.categoryId;
+			if (canManage(page, u) && !SHEET_VISIBILITIES.includes(r.input.visibility)) return fail(400, { error: 'errors.sheetVisibility', values: r.values, extra });
+		}
 		// La home: la sceglie il Master tra le pagine normali, e deve poterla vedere chi apre il sito. Una volta home, resta una pagina.
 		if (isHomePage(page.id)) r.input.kind = 'page';
-		const home = isHomePage(page.id) || (f.get('home') === 'on' && isMaster(u) && page.kind === 'page' && r.input.kind === 'page');
+		const home = isHomePage(page.id) || (f.get('home') === 'on' && isMaster(u) && page.kind === 'page' && r.input.kind === 'page' && !isSheet(page));
 		if (home && r.input.visibility !== 'public' && r.input.visibility !== 'players') return fail(400, { error: 'errors.homeVisibility', values: r.values, extra });
 		// Qualcun altro ha salvato nel frattempo: non sovrascriviamo il suo lavoro.
 		if (Number(f.get('updatedAt')) !== page.updatedAt) {
@@ -106,7 +115,7 @@ export const actions: Actions = {
 	delete: async ({ params, request, locals }) => {
 		if (!locals.user) return fail(401, { error: 'errors.forbidden', values: null, extra: null });
 		const page = editable(params.slug, locals.user);
-		if (!canManage(page, locals.user) || isHomePage(page.id)) return fail(403, { error: 'errors.forbidden', values: null, extra: null });
+		if (!canManage(page, locals.user) || isHomePage(page.id) || lockedSheet(page)) return fail(403, { error: 'errors.forbidden', values: null, extra: null });
 		if ((await request.formData()).get('confirm') !== 'on') return fail(400, { error: 'errors.confirm', values: null, extra: null });
 		deletePage(page.id);
 		redirect(303, '/wiki?deleted=1');

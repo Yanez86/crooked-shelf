@@ -160,8 +160,19 @@ function exportablePages(o: ExportOptions, u: Viewer): PageRow[] {
 					.map((r) => r.id)
 			: []
 	);
+	// Le schede giocatore, e le pagine dentro di loro, sono del tavolo: restano nella campagna.
+	const byId = new Map(rows.map((p) => [p.id, p]));
+	const atTable = (p: PageRow) => {
+		const seen = new Set<number>();
+		for (let q: PageRow | undefined = p; q && !seen.has(q.id); q = q.parentPageId ? byId.get(q.parentPageId) : undefined) {
+			if (q.sheetOf !== null) return true;
+			seen.add(q.id);
+		}
+		return false;
+	};
 	return rows.filter((p) => {
 		if (p.visibility === 'personal') return false;
+		if (atTable(p)) return false;
 		if (p.visibility === 'master' && !o.secrets) return false;
 		if (!canView(p, u)) return false;
 		// Le bacheche sono appunti del tavolo, non del mondo: restano nella campagna.
@@ -451,7 +462,8 @@ export function importPack(pack: Pack, opts: { conflict: Conflict; calendar: boo
 			done.skipped++;
 			continue;
 		}
-		const replace = existing && opts.conflict === 'replace' && existing.kind === kind;
+		// Una scheda giocatore non si sostituisce: la pagina del pacchetto prende un altro indirizzo.
+		const replace = existing && opts.conflict === 'replace' && existing.kind === kind && existing.sheetOf === null;
 		// Anche una pagina nel cestino tiene il suo indirizzo: in quel caso si prende il primo libero.
 		const slug = replace ? p.slug : uniquePageSlug(p.slug);
 		slugMap.set(p.slug, slug);

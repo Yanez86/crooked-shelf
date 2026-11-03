@@ -211,6 +211,89 @@ test('bacheche: sono pagine', async ({ browser }) => {
 	await p.context().close();
 });
 
+test('schede giocatore: la cartella PG, chi è al tavolo, le pagine dentro la scheda', async ({ browser }) => {
+	// Alice è entrata con l'invito: ha la sua scheda nella cartella PG, e la home dice chi è al tavolo.
+	await admin.goto('/');
+	const table = admin.getByRole('region', { name: 'Al tavolo' });
+	await expect(table).toContainText('Davide');
+	await expect(table).toContainText('Master');
+	await expect(table.getByRole('link', { name: /^Alice/ })).toHaveAttribute('href', '/wiki/alice');
+	await axe(admin, 'home: al tavolo');
+	await shot(admin, '23b-al-tavolo');
+
+	// Nell'albero: la cartella PG e la scheda non vanno nel cestino.
+	const tree = admin.locator('#explorer');
+	await expect(tree.locator('summary', { hasText: 'PG' })).toBeVisible();
+	await expect(tree.getByRole('button', { name: 'Sposta nel cestino: PG' })).toHaveCount(0);
+	await expect(tree.getByRole('button', { name: 'Sposta nel cestino: Alice' })).toHaveCount(0);
+
+	// Il Master la modifica, ma senza segreti, senza cambiarle cartella, e solo tra Pubblica e Giocatori.
+	await admin.goto('/wiki/alice');
+	await expect(admin.locator('.meta')).toContainText('Scheda di Alice');
+	await expect(admin.getByText('Questa è la scheda di Alice')).toBeVisible();
+	await expect(admin.locator('.content')).toContainText('Il personaggio');
+	await admin.goto('/wiki/alice/edit');
+	await expect(admin.getByRole('button', { name: /Segreto del Master/ })).toHaveCount(0);
+	await expect(admin.getByLabel('Categoria')).toHaveCount(0);
+	await admin.getByRole('button', { name: 'Opzioni pagina' }).click();
+	await expect(admin.getByRole('radio', { name: 'Giocatori' })).toBeChecked();
+	await expect(admin.getByRole('radio', { name: 'Pubblica' })).toBeVisible();
+	await expect(admin.getByRole('radio', { name: /Solo Master/ })).toHaveCount(0);
+	await expect(admin.getByRole('radio', { name: 'Personale' })).toHaveCount(0);
+	await expect(admin.getByLabel('È un template')).toHaveCount(0);
+	await expect(admin.getByLabel('Pagina home')).toHaveCount(0);
+	await expect(admin.getByRole('heading', { name: 'Eliminare la pagina' })).toHaveCount(0);
+
+	// Nella pagina Campagna: il template delle schede nuove, e la scheda di ogni giocatore.
+	await admin.goto('/campaign');
+	await expect(admin.getByLabel('Template delle schede nuove')).toHaveValue('scheda-giocatore');
+	await expect(admin.locator('main').getByRole('link', { name: 'Alice' })).toHaveAttribute('href', '/wiki/alice');
+	await admin.getByLabel('Template delle schede nuove').selectOption('');
+	await admin.locator('form[action="?/sheetTemplate"]').getByRole('button', { name: 'Salva' }).click();
+	await expect(admin.getByRole('status').filter({ hasText: 'Template delle schede salvato' })).toBeVisible();
+	await expect(admin.getByLabel('Template delle schede nuove')).toHaveValue('');
+	await axe(admin, 'campagna: schede giocatore');
+	await admin.getByLabel('Template delle schede nuove').selectOption('scheda-giocatore');
+	await admin.locator('form[action="?/sheetTemplate"]').getByRole('button', { name: 'Salva' }).click();
+	await expect(admin.getByLabel('Template delle schede nuove')).toHaveValue('scheda-giocatore');
+
+	// Alice dà alla sua scheda il nome del personaggio.
+	const p = await login(browser, PLAYER);
+	await p.goto('/');
+	await p.getByRole('region', { name: 'Al tavolo' }).getByRole('link', { name: /^Alice/ }).click();
+	await expect(p.getByRole('heading', { level: 1, name: 'Alice' })).toBeVisible();
+	await expect(p.getByText('Questa è la tua scheda')).toBeVisible();
+	await axe(p, 'scheda giocatore');
+	await p.goto('/wiki/alice/edit');
+	await p.getByLabel('Titolo', { exact: true }).fill('Thalia');
+	await p.locator('.editor-content p').first().click();
+	await p.keyboard.type('Ranger elfa dei boschi.');
+	await p.getByRole('button', { name: 'Salva' }).click();
+	await expect(p.getByRole('heading', { level: 1, name: 'Thalia' })).toBeVisible();
+	await expect(p.locator('.content')).toContainText('Ranger elfa dei boschi.');
+	await p.goto('/');
+	await expect(p.getByRole('region', { name: 'Al tavolo' }).getByRole('link', { name: /^Alice/ })).toContainText('Thalia');
+
+	// Una pagina dentro la scheda: parte Personale, e il Master non la vede.
+	await p.goto('/wiki/alice');
+	await p.getByRole('link', { name: 'Nuova pagina qui dentro' }).click();
+	await p.locator('main').getByRole('link', { name: /^Pagina bianca/ }).click();
+	await expect(p.getByText('Dentro: Thalia')).toBeVisible();
+	await p.getByLabel('Titolo', { exact: true }).fill('Segreti di Thalia');
+	await p.locator('.editor-content').click();
+	await p.keyboard.type('Mio fratello è nella gilda dei ladri.');
+	await p.getByRole('button', { name: 'Opzioni pagina' }).click();
+	await expect(p.getByRole('radio', { name: 'Personale' })).toBeChecked();
+	await p.getByRole('button', { name: 'Crea la pagina' }).click();
+	await expect(p.getByRole('heading', { level: 1, name: 'Segreti di Thalia' })).toBeVisible();
+	await expect(p.getByRole('navigation', { name: 'Percorso della pagina' }).getByRole('link', { name: 'Thalia', exact: true })).toHaveAttribute('href', '/wiki/alice');
+	// La scheda non va nel cestino; la pagina dentro sì.
+	await expect(p.locator('#explorer').getByRole('button', { name: 'Sposta nel cestino: Thalia' })).toHaveCount(0);
+	await expect(p.locator('#explorer').getByRole('button', { name: 'Sposta nel cestino: Segreti di Thalia' })).toHaveCount(1);
+	await p.context().close();
+	expect((await admin.goto('/wiki/segreti-di-thalia'))?.status()).toBe(404);
+});
+
 test('editor dei temi', async () => {
 	await admin.goto('/admin/themes');
 	await axe(admin, 'temi');

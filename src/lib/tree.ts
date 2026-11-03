@@ -24,6 +24,8 @@ export interface TreePage {
 	/** Solo per il Master, che la cambia dalla barra: chi può vedere la pagina, e se l'hanno scritta loro. */
 	visibility?: Visibility;
 	mine?: boolean;
+	/** Una scheda giocatore: sta nella cartella PG, ed è Pubblica o Giocatori. */
+	sheet?: boolean;
 }
 
 /** Il disegno di una pagina: l'icona scelta, altrimenti quella del tipo. */
@@ -39,6 +41,8 @@ export interface TreeFolder {
 	slug: string;
 	sort: number | null;
 	items: TreeNode[];
+	/** La cartella PG, con le schede giocatore: non va nel cestino. */
+	pc?: boolean;
 }
 
 /** Una riga che separa due voci, come un <hr>. */
@@ -76,15 +80,28 @@ const trimDividers = (list: TreeNode[]) =>
 
 /** `keepEmpty` = mostra anche le cartelle senza pagine visibili (per chi gestisce le categorie). */
 export function buildTree(
-	cats: { id: number; name: string; slug: string; parentId: number | null; parentPageId?: number | null; sort?: number | null }[],
-	pages: { id: number; slug: string; title: string; categoryId: number | null; parentPageId?: number | null; sort?: number | null; icon?: string | null; kind?: PageKind; canTrash?: boolean; home?: boolean; visibility?: Visibility; mine?: boolean }[],
+	cats: { id: number; name: string; slug: string; parentId: number | null; parentPageId?: number | null; sort?: number | null; pc?: boolean }[],
+	pages: { id: number; slug: string; title: string; categoryId: number | null; parentPageId?: number | null; sort?: number | null; icon?: string | null; kind?: PageKind; canTrash?: boolean; home?: boolean; visibility?: Visibility; mine?: boolean; sheet?: boolean }[],
 	keepEmpty: boolean,
 	dividers: { id: number; categoryId: number | null; parentPageId: number | null; sort: number | null }[] = []
 ): Tree {
 	const nodes = new Map<string, TreeFolder | TreePage>();
-	for (const c of cats) nodes.set(`folder-${c.id}`, { type: 'folder', id: c.id, name: c.name, slug: c.slug, sort: c.sort ?? null, items: [] });
+	for (const c of cats) nodes.set(`folder-${c.id}`, { type: 'folder', id: c.id, name: c.name, slug: c.slug, sort: c.sort ?? null, items: [], ...(c.pc && { pc: true }) });
 	for (const p of pages)
-		nodes.set(`page-${p.id}`, { type: 'page', id: p.id, slug: p.slug, title: p.title, icon: p.icon ?? null, kind: p.kind ?? 'page', sort: p.sort ?? null, items: [], canTrash: p.canTrash ?? false, home: p.home, ...(p.visibility && { visibility: p.visibility, mine: !!p.mine }) });
+		nodes.set(`page-${p.id}`, {
+			type: 'page',
+			id: p.id,
+			slug: p.slug,
+			title: p.title,
+			icon: p.icon ?? null,
+			kind: p.kind ?? 'page',
+			sort: p.sort ?? null,
+			items: [],
+			canTrash: p.canTrash ?? false,
+			home: p.home,
+			...(p.visibility && { visibility: p.visibility, mine: !!p.mine }),
+			...(p.sheet && { sheet: true })
+		});
 	const root: Tree = { items: [] };
 
 	// Chi contiene chi. Dentro una pagina nascosta o nel cestino non si può stare: si risale alla cartella.
@@ -166,11 +183,18 @@ export function pageTrail(tree: Tree, id: number) {
 	return trail;
 }
 
-/** `key` può finire dentro `parent`? Non in un divisorio, non in sé stessa né in ciò che contiene. */
+/**
+ * `key` può finire dentro `parent`? Non in un divisorio, non in sé stessa né in ciò che contiene.
+ * Una scheda giocatore solo nella cartella PG (lì si riordina, ma non esce).
+ */
 export function canHold(tree: Tree, key: string, parent: string | null): boolean {
+	const moved = locate(tree.items, key);
+	if (moved?.node.type === 'page' && moved.node.sheet) {
+		const pc = parent ? locate(tree.items, parent)?.node : undefined;
+		return pc?.type === 'folder' && !!pc.pc;
+	}
 	if (parent === null) return true;
 	const holder = locate(tree.items, parent);
-	const moved = locate(tree.items, key);
 	return !!holder && !!moved && holder.node.type !== 'divider' && parent !== key && !locate(childrenOf(moved.node), parent);
 }
 

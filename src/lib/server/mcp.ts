@@ -120,6 +120,7 @@ function append(args: Record<string, unknown>, u: Viewer) {
 	const page = editable(args.slug, u);
 	const added = blocks(args.text);
 	if (args.secret && !isMaster(u)) throw new ToolError('Solo il Master scrive segreti.');
+	if (args.secret && page.sheetOf !== null) throw new ToolError('Nelle schede giocatore non si scrivono segreti: il giocatore non potrebbe più modificarla. Scrivili in una pagina Solo Master.');
 	const doc = isDoc(page.content) ? page.content : EMPTY_DOC;
 	return saveContent(page, { ...doc, content: [...(doc.content ?? []), ...(args.secret ? [{ type: 'secret', content: added }] : added)] }, u);
 }

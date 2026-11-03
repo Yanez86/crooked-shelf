@@ -19,7 +19,7 @@ export const AS_PLAYER_COOKIE = 'cs_as_player';
 /** Creata dalla migrazione, così la configurazione iniziale la trova pronta; poi si può eliminare come le altre. */
 export const FIRST_CAMPAIGN = 1;
 /** Per chi non ha campagne: nessuna riga ha questo id, quindi non si legge niente e non si scrive niente. */
-export const NO_CAMPAIGN: CampaignRow = { id: 0, name: '', masterId: null, homePageId: null, calendar: null, createdAt: 0 };
+export const NO_CAMPAIGN: CampaignRow = { id: 0, name: '', masterId: null, homePageId: null, calendar: null, createdAt: 0, pcFolderId: null, sheetTemplateId: null };
 
 const current = new AsyncLocalStorage<CampaignRow>();
 
@@ -77,6 +77,14 @@ export function saveCampaign(id: number, patch: Partial<Omit<CampaignRow, 'id'>>
 export function addMember(id: number, userId: number) {
 	getDb().insert(campaignMembers).values({ campaignId: id, userId }).onConflictDoNothing().run();
 }
+
+/** Sta al tavolo della campagna come giocatore (il Master no: lui la tiene). */
+export const isMember = (id: number, userId: number) =>
+	!!getDb()
+		.select({ id: campaignMembers.userId })
+		.from(campaignMembers)
+		.where(and(eq(campaignMembers.campaignId, id), eq(campaignMembers.userId, userId)))
+		.get();
 
 export function removeMember(id: number, userId: number) {
 	getDb().delete(campaignMembers).where(and(eq(campaignMembers.campaignId, id), eq(campaignMembers.userId, userId))).run();

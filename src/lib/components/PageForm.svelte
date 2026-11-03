@@ -33,7 +33,9 @@
 		isHome = false,
 		multipart = false,
 		historyHref,
-		settings
+		settings,
+		sheet = false,
+		inside
 	}: {
 		values: {
 			title: string;
@@ -71,6 +73,10 @@
 		historyHref?: string;
 		/** Impostazioni del tipo di pagina (mappa, cronologia), sotto i dati della pagina. */
 		settings?: Snippet;
+		/** È una scheda giocatore: resta nella cartella PG e resta una pagina. */
+		sheet?: boolean;
+		/** La pagina nuova nasce dentro questa scheda giocatore, nella sua cartella. */
+		inside?: { id: number; title: string };
 	} = $props();
 
 	const t = getT();
@@ -90,7 +96,7 @@
 
 	// Le opzioni della pagina (chi la vede, chi la modifica, template, home) stanno dietro un pulsante, con il link alle versioni.
 	// Chiuse restano nel modulo: si salvano lo stesso.
-	const templateSwitch = $derived(canTemplate && !isHome && (kind === 'page' || kind === 'template'));
+	const templateSwitch = $derived(canTemplate && !isHome && !sheet && (kind === 'page' || kind === 'template'));
 	const sessionSwitch = $derived(asTemplate || (!canTemplate && kind === 'template'));
 	const hasOptions = $derived(canManage || templateSwitch || canHome || sessionSwitch || !!historyHref);
 	let optionsOpen = $state(false);
@@ -231,7 +237,10 @@
 				</header>
 
 				<div class="meta">
-					{#if !isHome}
+					{#if inside}
+						<input type="hidden" name="inside" value={inside.id} />
+						<span class="chip">{t('sheets.inside', { title: inside.title })}</span>
+					{:else if !isHome && !sheet}
 						<label class="chip">
 							<span>{t('page.category')}</span>
 							<select name="categoryId">

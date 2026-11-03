@@ -5,6 +5,7 @@ import { activeInvites, createInvite, revokeInvite } from '#lib/server/auth.ts';
 import { getDb, schema } from '#lib/server/db/index.ts';
 import { AS_PLAYER_COOKIE, deleteCampaign, membersOf, removeMember, saveCampaign, setCampaignCookie } from '#lib/server/campaigns.ts';
 import { safeNext, str } from '#lib/server/forms.ts';
+import { setSheetTemplate, sheetsByPlayer, sheetTemplateChoice } from '#lib/server/sheets.ts';
 import { eq } from 'drizzle-orm';
 
 const { users } = schema;
@@ -16,13 +17,16 @@ function mine(locals: App.Locals) {
 }
 
 export const load: PageServerLoad = ({ locals }) => {
-	if (!locals.campaign) return { campaign: null, master: null, players: [], invites: [] };
-	const { campaign } = mine(locals);
+	if (!locals.campaign) return { campaign: null, master: null, players: [], invites: [], sheets: null };
+	const { campaign, me } = mine(locals);
+	// La scheda di ogni giocatore, per aprirla dalla tabella.
+	const sheets = sheetsByPlayer();
 	return {
 		campaign: { id: campaign.id, name: campaign.name },
 		master: campaign.masterId ? (getDb().select({ n: users.displayName }).from(users).where(eq(users.id, campaign.masterId)).get()?.n ?? null) : null,
-		players: membersOf(campaign.id),
-		invites: activeInvites(campaign.id)
+		players: membersOf(campaign.id).map((p) => ({ ...p, sheet: sheets.get(p.id)?.slug ?? null })),
+		invites: activeInvites(campaign.id),
+		sheets: sheetTemplateChoice(me)
 	};
 };
 
@@ -42,6 +46,13 @@ export const actions: Actions = {
 		const next = safeNext(str(await request.formData(), 'next'));
 		cookies.delete(AS_PLAYER_COOKIE, { path: '/' });
 		redirect(303, next);
+	},
+	// Il template delle schede che nasceranno: quelle che ci sono già restano come sono.
+	sheetTemplate: async ({ request, locals }) => {
+		const { me } = mine(locals);
+		// Esito a parte (non `ok`/`error`): quelli li mostra il riquadro degli inviti.
+		if (!setSheetTemplate(str(await request.formData(), 'template', 120), me)) return fail(400, { sheetError: 'errors.generic' });
+		return { sheetOk: 'sheets.templateSaved' };
 	},
 	rename: async ({ request, locals }) => {
 		const { campaign } = mine(locals);

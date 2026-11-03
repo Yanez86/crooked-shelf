@@ -87,6 +87,7 @@
 		"generic": "Invalid data. Check the form and try again.",
 		"forbidden": "You don't have permission to do that.",
 		"homeVisibility": "Whoever opens the site must be able to see the home page: choose Public or Players.",
+		"sheetVisibility": "Every player can see a player sheet: choose Public or Players.",
 		"username": "The username must be 3 to 32 characters: letters, numbers, dot, dash or underscore.",
 		"usernameTaken": "This username is already taken.",
 		"passwordShort": "The password must be at least 10 characters long.",
@@ -676,7 +677,9 @@
 			"loot": "Loot and rewards",
 			"next": "Next time",
 			"rule": "The rule",
-			"why": "Why"
+			"why": "Why",
+			"character": "The character",
+			"notes": "Notes"
 		},
 		"f": {
 			"race": "Species",
@@ -1115,6 +1118,23 @@
 		"sessionTemplate": "Copies are session reports",
 		"fromTemplate": "Start from a template",
 		"choose": "What kind of page do you want to make?"
+	},
+	"sheets": {
+		"folder": "PCs",
+		"template": "Player sheet",
+		"of": "{name}'s sheet",
+		"player": "Player",
+		"table": "At the table",
+		"note": "This is {name}'s sheet: {name} and the Master edit it, and every player can see it.",
+		"noteMine": "This is your sheet: you and the Master edit it, and every player can see it. For notes you want to keep to yourself, create a page inside it: it starts out Personal.",
+		"newInside": "New page inside",
+		"inside": "Inside: {title}",
+		"folderLocked": "This is the PCs folder, with the player sheets: it can be renamed and moved, but not deleted.",
+		"templateTitle": "Player sheets",
+		"templateIntro": "Every player has a sheet in the PCs folder: it is created when they join the campaign, from the template you choose here. Changing it does not change the sheets that already exist.",
+		"templateLabel": "Template for new sheets",
+		"blank": "None: blank page",
+		"templateSaved": "Sheet template saved."
 	},
 	"campaign": {
 		"title": "Campaign",

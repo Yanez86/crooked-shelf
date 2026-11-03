@@ -6,7 +6,7 @@
 |---|---|
 | **Admin** | Gestisce il sito: crea le campagne e ne sceglie il Master, impostazioni, utenti, inviti, temi, plugin, backup, pacchetti mondo. Nelle campagne non ha poteri in più: è Master in quelle che tiene e giocatore in quelle in cui è invitato |
 | **Master** | Nella sua campagna: crea e modifica tutte le pagine, scrive e vede i segreti, gestisce categorie, tag, mappe, risorse, calendario, cronologia del mondo e giocatori |
-| **Giocatore** | Legge, crea pagine, modifica le sue e quelle aperte ai giocatori, aggiunge eventi alla cronologia della campagna, usa le bacheche |
+| **Giocatore** | Legge, crea pagine, modifica le sue e quelle aperte ai giocatori, ha la sua scheda giocatore, aggiunge eventi alla cronologia della campagna, usa le bacheche |
 | **Visitatore** | Solo le pagine pubbliche, e solo se l'Admin ha acceso l'accesso dei visitatori |
 
 Le persone entrano con un **invito**: Amministrazione › Inviti › «Crea invito», poi mandi il link. Ogni link funziona una volta sola.
@@ -15,12 +15,27 @@ Le persone entrano con un **invito**: Amministrazione › Inviti › «Crea invi
 
 Una installazione può contenere più campagne. Ognuna è una wiki a sé: pagine, cartelle, tag, mappe, cronologie, bacheche, risorse, home e calendario non si vedono dalle altre, e la stessa pagina può avere lo stesso indirizzo in due campagne.
 
-- **Crearne una**: Amministrazione › Campagne › «Nuova campagna», con il nome e il Master. Ogni campagna ha un solo Master; lo stesso account può tenerne più d'una. Parte con la home, i template e le due cronologie.
+- **Crearne una**: Amministrazione › Campagne › «Nuova campagna», con il nome e il Master. Ogni campagna ha un solo Master; lo stesso account può tenerne più d'una. Parte con la home, i template, le due cronologie e la cartella PG.
 - **Invitare i giocatori**: il Master apre **Campagna** dal menu del profilo e crea un link di invito. Chi non ha un account lo crea; chi lo ha già accede ed entra nella campagna col suo. Dalla stessa pagina il Master rinomina la campagna e rimuove i giocatori.
 - **Cambiare campagna**: chi ne ha più di una le trova in cima al menu del profilo. La scelta resta sul dispositivo. Un collegamento a una pagina si apre nella campagna in cui ti trovi.
 - **Eliminarne una**: il Master elimina la sua dalla pagina Campagna, l'Admin qualsiasi da Amministrazione › Campagne, anche l'ultima; per conferma si riscrive il nome. Spariscono per tutti pagine, mappe, cronologie, bacheche, risorse e immagini, e torna solo ripristinando un backup. Chi resta senza campagne può ancora accedere e aspetta un invito.
 - Si è Master solo nella propria campagna: nelle altre si è giocatori, se si è stati invitati. Vale anche per l'Admin: entra solo nelle campagne che tiene o in cui è invitato, e vede i segreti solo nelle sue. Le altre le gestisce da Amministrazione › Campagne senza entrarci, e non può nominarsi Master di una campagna che esiste già: lo fa un altro Admin. Di una campagna nuova invece può essere lui il Master.
 - Esportazione e pacchetti mondo riguardano la campagna in cui ti trovi; il backup riguarda tutta l'installazione.
+
+## Schede giocatore
+
+Ogni campagna ha la cartella **PG** (in inglese «PCs») e dentro una **scheda** per ogni giocatore: la pagina dove tiene il suo personaggio, gli appunti, le sue cose.
+
+- **Nasce da sola** quando il giocatore entra nella campagna (con un invito, o quando il Master passa la campagna a un altro e diventa giocatore). Nelle campagne nate prima di questa versione cartella e schede compaiono alla prima visita; una cartella «PG» che c'era già diventa la cartella PG.
+- **Il titolo** all'inizio è il nome del giocatore: lui lo cambia con quello del personaggio.
+- **Chi la vede e chi la modifica**: la vedono tutti i giocatori, la modificano il giocatore e il Master. Nelle opzioni della pagina si sceglie solo tra **Pubblica** e **Giocatori**: niente Solo Master né Personale, così il Master la vede sempre e gli altri giocatori pure.
+- **Niente segreti**: nella scheda il Master non mette il Segreto del Master, altrimenti il giocatore non potrebbe più modificarla. Le sue note segrete su un personaggio vanno in una pagina Solo Master, anche dentro la scheda.
+- **Pagine dentro la scheda**: nella scheda c'è **Nuova pagina qui dentro** (il giocatore nella sua, il Master in tutte). La pagina nuova parte **Personale**: va bene per gli appunti che il giocatore tiene per sé, e che non vede neanche il Master. Si può fare anche una bacheca.
+- **Sta al suo posto**: la scheda non cambia cartella, non diventa un template né la home, e nell'albero si riordina solo dentro la cartella PG. Non va nel cestino finché il giocatore è al tavolo. La cartella PG si rinomina e si sposta, ma non si elimina; se finisce nel cestino la cartella che la contiene, lei risale alla radice.
+- **Chi esce dalla campagna** non compare più nell'elenco «Al tavolo», ma la sua scheda resta: il Master la può eliminare. Se il giocatore rientra ritrova la sua, anche dal cestino.
+- **Il template delle schede**: di base è «Scheda giocatore», generico (il personaggio e gli appunti), nella linguetta Template. Il Master lo modifica come ogni template, oppure ne sceglie un altro in **Campagna › Schede giocatore** (anche nessuno: pagina bianca). Vale per le schede che nasceranno; quelle che ci sono restano come sono. Il plugin D&D Beyond porta il template «Scheda D&D», col link alla scheda del personaggio sul sito.
+- **Al tavolo**: nella home, in cima alla colonna a destra, ci sono il Master e i giocatori, con l'icona del profilo. Il nome di un giocatore porta alla sua scheda, col nome del personaggio sotto. I visitatori senza account non vedono l'elenco.
+- Le schede e le pagine dentro di loro non entrano nel pacchetto mondo: sono del tavolo, non del mondo. Restano nel backup e nell'esportazione in Markdown.
 
 ## La barra a sinistra
 
@@ -35,7 +50,7 @@ Tutta la wiki si raggiunge dalla barra a sinistra (in alto non c'è più il menu
 - **Cestino**: passando su una pagina o una cartella, a destra nella riga compare il cestino (lo vede chi può eliminare quella pagina; le cartelle solo il Master). Una cartella ci va con tutto quello che contiene e, dal **Cestino**, torna intera. Le pagine annidate in una pagina eliminata invece restano e risalgono alla sua cartella.
 - **Visibilità** (il Master): accanto al cestino c'è l'icona di chi può vedere la pagina: il globo per Pubblica, l'occhio per Giocatori, l'occhio barrato per Solo Master, il lucchetto per Personale. Solo Master e Personale si vedono sempre; le altre compaiono passando sulla riga (sul telefono si vedono tutte). Cliccandola si sceglie un altro livello. Se la pagina ne contiene altre (anche dentro sue cartelle), si chiede se cambiarle tutte o solo lei. «Personale» vale solo per le pagine scritte da te: quelle degli altri restano come sono. La home non ha l'icona: si cambia dalla sua matita.
 
-La **home** è la pagina iniziale del sito, nata con la wiki: dalla matita si scrive la presentazione, con blocchi, riquadri, copertina e icona. A destra, sotto i suoi riquadri, ci sono le pagine modificate e aggiunte di recente. Sta sempre in cima alla barra a sinistra, fuori dalle cartelle, e non si sposta. Non si può eliminare e ce n'è una sola: per cambiarla, il Master spunta **Pagina home** modificando un'altra pagina, che deve essere Pubblica o Giocatori. Quella di prima torna una pagina come le altre.
+La **home** è la pagina iniziale del sito, nata con la wiki: dalla matita si scrive la presentazione, con blocchi, riquadri, copertina e icona. A destra, sotto i suoi riquadri, ci sono chi è al tavolo (vedi Schede giocatore) e le pagine modificate e aggiunte di recente. Sta sempre in cima alla barra a sinistra, fuori dalle cartelle, e non si sposta. Non si può eliminare e ce n'è una sola: per cambiarla, il Master spunta **Pagina home** modificando un'altra pagina, che deve essere Pubblica o Giocatori. Quella di prima torna una pagina come le altre.
 
 In fondo alla barra, su entrambe le linguette, c'è sempre il **Cestino**. Le altre sezioni della wiki (Pagine, cioè l'elenco con i filtri, Tag, Galleria, Regole, Calendario, Cartelle) non hanno una voce di menu: si aprono dal loro indirizzo (`/wiki`, `/tags`, `/gallery`, `/rules`, `/calendar`, `/categories`).
 

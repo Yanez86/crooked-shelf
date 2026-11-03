@@ -87,6 +87,7 @@
 		"generic": "Dati non validi. Controlla il modulo e riprova.",
 		"forbidden": "Non hai il permesso di farlo.",
 		"homeVisibility": "La home deve poterla vedere chi apre il sito: scegli Pubblica o Giocatori.",
+		"sheetVisibility": "Una scheda giocatore la vedono tutti i giocatori: scegli Pubblica o Giocatori.",
 		"username": "Il nome utente deve avere da 3 a 32 caratteri: lettere, numeri, punto, trattino o trattino basso.",
 		"usernameTaken": "Questo nome utente è già in uso.",
 		"passwordShort": "La password deve avere almeno 10 caratteri.",
@@ -676,7 +677,9 @@
 			"loot": "Tesori e ricompense",
 			"next": "Prossima volta",
 			"rule": "La regola",
-			"why": "Perché"
+			"why": "Perché",
+			"character": "Il personaggio",
+			"notes": "Appunti"
 		},
 		"f": {
 			"race": "Specie",
@@ -1115,6 +1118,23 @@
 		"sessionTemplate": "Le copie sono resoconti di sessione",
 		"fromTemplate": "Parti da un template",
 		"choose": "Che pagina vuoi fare?"
+	},
+	"sheets": {
+		"folder": "PG",
+		"template": "Scheda giocatore",
+		"of": "Scheda di {name}",
+		"player": "Giocatore",
+		"table": "Al tavolo",
+		"note": "Questa è la scheda di {name}: la modificano {name} e il Master, e la vedono tutti i giocatori.",
+		"noteMine": "Questa è la tua scheda: la modificate tu e il Master, e la vedono tutti i giocatori. Per gli appunti da tenere per te crea una pagina qui dentro: parte Personale.",
+		"newInside": "Nuova pagina qui dentro",
+		"inside": "Dentro: {title}",
+		"folderLocked": "È la cartella PG, con le schede dei giocatori: si rinomina e si sposta, ma non si elimina.",
+		"templateTitle": "Schede giocatore",
+		"templateIntro": "Ogni giocatore ha la sua scheda nella cartella PG: nasce quando entra nella campagna, fatta col template che scegli qui. Cambiarlo non cambia le schede che ci sono già.",
+		"templateLabel": "Template delle schede nuove",
+		"blank": "Nessuno: pagina bianca",
+		"templateSaved": "Template delle schede salvato."
 	},
 	"campaign": {
 		"title": "Campagna",

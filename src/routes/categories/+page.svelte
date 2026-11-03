@@ -80,11 +80,15 @@
 						</div>
 						<div class="field"><button class="btn" type="submit"><Icon name="save" />{t('common.save')}</button></div>
 					</form>
-					<form method="post" action="?/delete">
-						<input type="hidden" name="id" value={c.id} />
-						<button class="btn btn-danger btn-small" type="submit">{t('common.delete')}<span class="visually-hidden">: {c.name}</span></button>
-						<span class="hint">{t('categories.deleteHint')}</span>
-					</form>
+					{#if c.pc}
+						<p class="hint">{t('sheets.folderLocked')}</p>
+					{:else}
+						<form method="post" action="?/delete">
+							<input type="hidden" name="id" value={c.id} />
+							<button class="btn btn-danger btn-small" type="submit">{t('common.delete')}<span class="visually-hidden">: {c.name}</span></button>
+							<span class="hint">{t('categories.deleteHint')}</span>
+						</form>
+					{/if}
 				</details>
 			{/each}
 		</section>

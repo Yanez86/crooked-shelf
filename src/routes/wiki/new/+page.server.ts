@@ -11,6 +11,7 @@ import { saveImage } from '#lib/server/files.ts';
 import { categoryTree, listTags } from '#lib/server/taxonomy.ts';
 import { getTemplatePage, listTemplates, templateCopy } from '#lib/server/templates.ts';
 import { getCalendar } from '#lib/server/settings.ts';
+import { nestTarget } from '#lib/server/sheets.ts';
 import { slugify } from '#lib/slug.ts';
 import { canCreateKind, isPageKind, TIMELINE_MODES, type PageKind, type TimelineMode } from '#lib/pageKinds.ts';
 
@@ -26,6 +27,8 @@ export const load: PageServerLoad = ({ locals, url }) => {
 	const slug = slugify(url.searchParams.get('slug') ?? '', '');
 	const cat = Number(url.searchParams.get('category'));
 	const parent = Number(url.searchParams.get('parent'));
+	// Una pagina nuova dentro una scheda giocatore (?in=<id>): sta nella sua cartella e parte Personale.
+	const inside = nestTarget(url.searchParams.get('in'), u);
 	// Da dove si parte: una pagina bianca, la fotocopia di un template, oppure un altro tipo di pagina.
 	const want = url.searchParams.get('kind');
 	const kind: PageKind | null = isPageKind(want) && want !== 'page' && canCreateKind(want, u) ? want : null;
@@ -37,7 +40,8 @@ export const load: PageServerLoad = ({ locals, url }) => {
 	return {
 		title,
 		slug,
-		categoryId: Number.isInteger(cat) && cat > 0 ? cat : null,
+		categoryId: inside ? inside.categoryId : Number.isInteger(cat) && cat > 0 ? cat : null,
+		inside: inside ? { id: inside.id, slug: inside.slug, title: inside.title } : null,
 		chosen,
 		kind: kind ?? 'page',
 		templates: chosen ? [] : listTemplates(u),
@@ -69,6 +73,12 @@ export const actions: Actions = {
 		if (!r.ok) return fail(400, { error: r.error, values: r.values, extra });
 		const kind = r.input.kind ?? 'page';
 		if (!canCreateKind(kind, u)) return fail(403, { error: 'errors.forbidden', values: r.values, extra });
+		if (f.has('inside')) {
+			const inside = nestTarget(f.get('inside'), u);
+			if (!inside) return fail(403, { error: 'errors.forbidden', values: r.values, extra });
+			r.input.parentPageId = inside.id;
+			r.input.categoryId = inside.categoryId;
+		}
 
 		if (kind === 'map') {
 			const image = f.get('image');

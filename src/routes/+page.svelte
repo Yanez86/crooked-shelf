@@ -3,6 +3,7 @@
 	import RelTime from '#lib/components/RelTime.svelte';
 	import PageBody from '#lib/components/PageBody.svelte';
 	import PageHead from '#lib/components/PageHead.svelte';
+	import UserIcon from '#lib/components/UserIcon.svelte';
 	import { page } from '$app/state';
 	import { getT } from '#lib/i18n/index.ts';
 	import { canWrite } from '#lib/access.ts';
@@ -22,10 +23,44 @@
 
 {#snippet lists()}
 	<div class="lists side-panel panel">
-		{@render recent('recent', data.recent, 'updatedAt')}
-		{@render recent('added', data.added, 'createdAt')}
-		<p class="all"><a href="/wiki">{t('home.allPages', { n: data.total })}</a></p>
+		{#if data.table}{@render table(data.table)}{/if}
+		{#if !data.empty}
+			{@render recent('recent', data.recent, 'updatedAt')}
+			{@render recent('added', data.added, 'createdAt')}
+			<p class="all"><a href="/wiki">{t('home.allPages', { n: data.total })}</a></p>
+		{/if}
 	</div>
+{/snippet}
+
+{#snippet person(icon: string | null, name: string, sub: string)}
+	<UserIcon {icon} size="1.5rem" />
+	<span>
+		<span class="title">{name}</span>
+		<span class="when muted">{sub}</span>
+	</span>
+{/snippet}
+
+<!-- Al tavolo: il Master e i giocatori. Il nome di un giocatore porta alla sua scheda, col nome del personaggio sotto. -->
+{#snippet table(tb: NonNullable<typeof data.table>)}
+	<section aria-labelledby="table-title">
+		<h2 id="table-title">{t('sheets.table')}</h2>
+		<ul class="list-plain">
+			{#if tb.master}
+				<li><span class="row">{@render person(tb.master.icon, tb.master.name, t('campaign.master'))}</span></li>
+			{/if}
+			{#each tb.players as p, i (i)}
+				{@const sub = p.sheet && p.sheet.title !== p.name ? p.sheet.title : t('sheets.player')}
+				<li>
+					{#if p.sheet}
+						<a class="row" href="/wiki/{p.sheet.slug}">{@render person(p.icon, p.name, sub)}</a>
+					{:else}
+						<span class="row">{@render person(p.icon, p.name, sub)}</span>
+					{/if}
+				</li>
+			{/each}
+		</ul>
+		{#if !tb.players.length}<p class="none muted">{t('campaign.noPlayers')}</p>{/if}
+	</section>
 {/snippet}
 
 {#snippet recent(id: 'recent' | 'added', rows: typeof data.recent, when: 'updatedAt' | 'createdAt')}
@@ -34,7 +69,7 @@
 		<ul class="list-plain">
 			{#each rows as r (r.slug)}
 				<li>
-					<a href="/wiki/{r.slug}">
+					<a class="row" href="/wiki/{r.slug}">
 						<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d={pageIcon(r)} /></svg>
 						<span>
 							<span class="title">{r.title}</span>
@@ -48,7 +83,7 @@
 {/snippet}
 
 <div class="home">
-	<PageBody title={data.home?.page.title ?? ''} html={data.home?.html ?? ''} fields={data.home?.fields ?? []} session={data.home?.session ?? null} locale={page.data.locale} {head} more={data.empty ? undefined : lists} />
+	<PageBody title={data.home?.page.title ?? ''} html={data.home?.html ?? ''} fields={data.home?.fields ?? []} session={data.home?.session ?? null} locale={page.data.locale} {head} more={data.empty && !data.table ? undefined : lists} />
 
 	{#if data.empty}
 		<section class="card empty">
@@ -114,7 +149,7 @@
 	.lists section + section {
 		margin-top: 0.75rem;
 	}
-	.lists li a {
+	.lists .row {
 		display: flex;
 		align-items: flex-start;
 		gap: 0.35rem;
@@ -125,11 +160,19 @@
 		text-decoration: none;
 		overflow-wrap: anywhere;
 	}
-	.lists li a:hover {
+	a.row:hover {
 		background: var(--c-surface2);
 	}
-	.lists li a:hover .title {
+	a.row:hover .title {
 		text-decoration: underline;
+	}
+	.lists .row :global(.user-icon) {
+		margin-top: 0.05rem;
+	}
+	.none {
+		margin: 0;
+		padding: 0 0.4rem;
+		font-size: var(--fs-sm);
 	}
 	.ico {
 		flex: none;

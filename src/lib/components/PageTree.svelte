@@ -4,7 +4,7 @@
 	import { SvelteSet } from 'svelte/reactivity';
 	import { page } from '$app/state';
 	import { getT } from '../i18n/index.ts';
-	import { allowedVisibilities, canWrite, isMaster } from '../access.ts';
+	import { allowedVisibilities, canWrite, isMaster, SHEET_VISIBILITIES } from '../access.ts';
 	import type { Visibility } from '../roles.ts';
 	import { iconPath } from '../icons.ts';
 	import Icon from './Icon.svelte';
@@ -324,7 +324,8 @@
 	let askDlg = $state<HTMLDialogElement>();
 	let choice: 'all' | 'one' | null = null;
 	const visButton = (p: TreePage) => document.querySelector<HTMLElement>(`[data-vis="${nodeKey(p)}"]`);
-	const visLevels = (p: TreePage) => allowedVisibilities(user).filter((v) => v !== 'personal' || p.mine);
+	// Una scheda giocatore resta Pubblica o Giocatori.
+	const visLevels = (p: TreePage) => allowedVisibilities(user, !!p.sheet).filter((v) => v !== 'personal' || p.mine);
 
 	async function openVis(p: TreePage, btn: HTMLElement, viaPointer: boolean) {
 		if (visBlocked && viaPointer) {
@@ -381,7 +382,7 @@
 		visFor = null;
 		visMenu?.hidePopover();
 		const rest = inside(p).filter((c) => c.visibility !== v);
-		const n = rest.filter((c) => v !== 'personal' || c.mine).length;
+		const n = rest.filter((c) => (v !== 'personal' || c.mine) && (!c.sheet || SHEET_VISIBILITIES.includes(v))).length;
 		if (n) {
 			ask = { p, level: v, n, others: n < rest.length };
 			choice = null;
@@ -527,7 +528,7 @@
 		{:else if n.type === 'folder'}
 			<li class="holder">
 				<!-- Dentro <summary> non ci possono stare pulsanti: il cestino sta accanto e si sovrappone alla riga. -->
-				{#if canManage}{@render trash(n, n.name)}{/if}
+				{#if canManage && !n.pc}{@render trash(n, n.name)}{/if}
 				<details open={open.has(nodeKey(n))} ontoggle={(e) => toggled(nodeKey(n), e.currentTarget.open)}>
 					<summary id="folder-{n.id}" aria-keyshortcuts={canManage ? MOVE_KEYS : undefined} {...rowAttrs(n)}>
 						<span class="chevron" aria-hidden="true"></span>

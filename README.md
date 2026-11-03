@@ -13,6 +13,7 @@
 - **Galleria** con tutte le immagini della campagna (pagine, testo, mappe) e visore a schermo intero.
 - **Segreti del Master**: pagine e blocchi che i giocatori non vedono e non trovano neanche cercando.
 - **Ruoli**: Admin, Master, Giocatore; accesso solo su invito, visitatori spenti di default.
+- **Schede giocatore**: ogni giocatore ha la sua pagina nella cartella PG, nata da sola quando entra nella campagna, per il personaggio e gli appunti; nella home, chi è al tavolo.
 - **Mappe**: pagine con un'immagine, pin collegati a pagine e ad altre mappe, livelli, pin segreti, righello.
 - **Cronologie**: pagine del mondo o della campagna, quante ne vuoi, con **calendari fantasy** (Harptos, inventati…); i resoconti di sessione entrano da soli.
 - **Regole D&D 5.5**: `@incantesimo[Fireball]` mostra l'anteprima del testo SRD 5.2; con il plugin D&D Beyond diventa anche un link al sito.

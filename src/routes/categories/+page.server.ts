@@ -6,6 +6,7 @@ import {
 	createCategory,
 	deleteCategory,
 	getCategory,
+	isPcFolder,
 	updateCategory,
 	validParent
 } from '#lib/server/taxonomy.ts';
@@ -20,7 +21,9 @@ export const load: PageServerLoad = ({ locals }) => ({
 		depth,
 		count,
 		description,
-		parentId
+		parentId,
+		// La cartella PG si rinomina e si sposta, ma non si elimina.
+		pc: isPcFolder(id)
 	})),
 	canManage: isMaster(locals.user)
 });
@@ -54,6 +57,7 @@ export const actions: Actions = {
 	delete: async ({ request, locals }) => {
 		if (!isMaster(locals.user)) return fail(403, { error: 'errors.forbidden' });
 		const f = await request.formData();
+		if (isPcFolder(Number(f.get('id')))) return fail(400, { error: 'sheets.folderLocked' });
 		deleteCategory(Number(f.get('id')));
 		return { ok: 'categories.deleted' };
 	}

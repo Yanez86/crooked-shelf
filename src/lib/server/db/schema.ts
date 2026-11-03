@@ -27,7 +27,11 @@ export const campaigns = sqliteTable('campaigns', {
 	homePageId: integer('home_page_id'),
 	/** Calendario del mondo; finché non viene scelto si usa il gregoriano. */
 	calendar: text('calendar', { mode: 'json' }).$type<Calendar | null>(),
-	createdAt: integer('created_at').notNull()
+	createdAt: integer('created_at').notNull(),
+	/** La cartella PG, con le schede dei giocatori: non si elimina. Null = non ancora preparata (vedi sheets.ts). */
+	pcFolderId: integer('pc_folder_id'),
+	/** Il template delle schede nuove; null = pagina bianca. */
+	sheetTemplateId: integer('sheet_template_id')
 });
 
 /** I giocatori di una campagna. */
@@ -160,7 +164,9 @@ export const pages = sqliteTable(
 		/** La pagina che la contiene nell'albero: `categoryId` resta quello della pagina che la contiene. */
 		parentPageId: integer('parent_page_id'),
 		/** Posizione nell'albero; null = mai spostata. */
-		sort: integer('sort')
+		sort: integer('sort'),
+		/** La scheda di questo giocatore (una per campagna): sta nella cartella PG, non si elimina, non ha segreti. */
+		sheetOf: integer('sheet_of').references(() => users.id, { onDelete: 'set null' })
 	},
 	(t) => [uniqueIndex('pages_slug').on(t.campaignId, t.slug), index('pages_category').on(t.categoryId), index('pages_updated').on(t.updatedAt), index('pages_kind').on(t.kind)]
 );

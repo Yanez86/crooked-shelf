@@ -4,11 +4,11 @@ import { slugify } from '../slug.ts';
 import { extract, stripSecrets } from '../content/extract.ts';
 import { renderDoc, renderInline, type LinkTarget, type RenderOptions } from '../content/render.ts';
 import { EMPTY_DOC, isDoc, type DocNode, type PageField, type SessionInfo } from '../content/types.ts';
-import { authorKey, canView, isMaster, type Viewer } from '../access.ts';
+import { authorKey, canView, isMaster, SHEET_VISIBILITIES, type Viewer } from '../access.ts';
 import type { Visibility } from '../roles.ts';
 import type { PageKind } from '../pageKinds.ts';
 import { visibleTo } from './visibility.ts';
-import { campaignId, ofCampaign } from './campaigns.ts';
+import { campaignId, currentCampaign, isMember, ofCampaign } from './campaigns.ts';
 import { isHomePage } from './settings.ts';
 import { ensureTags, pageTree, syncBranch, tagsForPages } from './taxonomy.ts';
 import { syncSessionEvent } from './timeline.ts';
@@ -63,6 +63,10 @@ export interface PageInput {
 	icon?: string | null;
 	/** Copertina in alto; undefined = lascia quella che c'è. */
 	cover?: PageCover | null;
+	/** Solo alla creazione: la scheda di questo giocatore (vedi sheets.ts). */
+	sheetOf?: number | null;
+	/** Solo alla creazione: la pagina che la contiene nell'albero (una pagina nuova dentro una scheda). */
+	parentPageId?: number | null;
 }
 
 /** Le colonne della copertina (null = nessuna copertina). */
@@ -77,11 +81,18 @@ export function pageCover(p: Pick<PageRow, 'coverImageId' | 'coverColor' | 'cove
 	return null;
 }
 
-function normalizeContent(raw: unknown, u: Viewer): DocNode {
+/** `sheet`: è una scheda giocatore, dove i segreti non ci vanno (il giocatore non potrebbe più modificarla). */
+function normalizeContent(raw: unknown, u: Viewer, sheet = false): DocNode {
 	const doc = isDoc(raw) ? raw : EMPTY_DOC;
 	// Solo il Master scrive blocchi segreti.
-	return isMaster(u) ? doc : stripSecrets(doc);
+	return isMaster(u) && !sheet ? doc : stripSecrets(doc);
 }
+
+/** Una scheda giocatore: sta nella cartella PG, la vedono tutti i giocatori, non ha segreti. */
+export const isSheet = (p: Pick<PageRow, 'sheetOf'>) => p.sheetOf !== null;
+
+/** La scheda di chi è al tavolo non va nel cestino; quella di chi ha lasciato la campagna il Master la può eliminare. */
+export const lockedSheet = (p: Pick<PageRow, 'sheetOf'>) => p.sheetOf !== null && isMember(campaignId(), p.sheetOf);
 
 /** La prima immagine della colonna a lato è l'immagine della pagina (galleria, anteprima dei collegamenti). */
 function coverOf(fields: PageField[]): string | null {
@@ -138,7 +149,7 @@ const sessionOf = (kind: PageKind, session: SessionInfo | null) => (kind === 'te
 
 /** `extra` scrive, nella stessa transazione, ciò che serve al tipo di pagina (mappa, cronologia). */
 export function createPage(input: PageInput, u: Viewer, extra?: (page: PageRow) => void): PageRow {
-	const doc = normalizeContent(input.content, u);
+	const doc = normalizeContent(input.content, u, !!input.sheetOf);
 	const now = Date.now();
 	const base = slugify(input.slug || input.title);
 	const kind = input.kind ?? 'page';
@@ -164,7 +175,9 @@ export function createPage(input: PageInput, u: Viewer, extra?: (page: PageRow) 
 				authorId: u.id,
 				updatedBy: u.id,
 				createdAt: now,
-				updatedAt: now
+				updatedAt: now,
+				sheetOf: input.sheetOf ?? null,
+				parentPageId: input.parentPageId ?? null
 			})
 			.returning()
 			.get();
@@ -183,10 +196,14 @@ const nextKind = (page: PageRow, want: PageKind | undefined): PageKind =>
 
 /** Aggiorna una pagina. `manage` = può cambiare visibilità e permessi. */
 export function updatePage(page: PageRow, input: PageInput, u: Viewer, manage: boolean, extra?: () => void): void {
-	const doc = normalizeContent(input.content, u);
-	const kind = nextKind(page, input.kind);
+	const sheet = isSheet(page);
+	const doc = normalizeContent(input.content, u, sheet);
+	// La scheda resta una pagina, nella sua cartella, visibile ai giocatori.
+	const kind = sheet ? page.kind : nextKind(page, input.kind);
+	const categoryId = sheet ? page.categoryId : input.categoryId;
+	const visibility = manage && (!sheet || SHEET_VISIBILITIES.includes(input.visibility)) ? input.visibility : page.visibility;
 	// Scegliere un'altra cartella la porta fuori dalla pagina che la conteneva.
-	const moved = input.categoryId !== page.categoryId;
+	const moved = categoryId !== page.categoryId;
 	getDb().transaction(() => {
 		getDb()
 			.update(pages)
@@ -194,7 +211,7 @@ export function updatePage(page: PageRow, input: PageInput, u: Viewer, manage: b
 				title: input.title,
 				content: doc,
 				hasSecret: extract(doc).hasSecret,
-				categoryId: input.categoryId,
+				categoryId,
 				fields: input.fields,
 				imageId: coverOf(input.fields),
 				session: input.session,
@@ -203,24 +220,25 @@ export function updatePage(page: PageRow, input: PageInput, u: Viewer, manage: b
 				kind,
 				updatedBy: u.id,
 				updatedAt: Math.max(Date.now(), page.updatedAt + 1),
-				...(manage ? { visibility: input.visibility, playersCanEdit: input.playersCanEdit } : {}),
+				...(manage ? { visibility, playersCanEdit: input.playersCanEdit } : {}),
 				...(moved ? { parentPageId: null } : {})
 			})
 			.where(eq(pages.id, page.id))
 			.run();
-		if (moved) syncBranch(page.id, input.categoryId);
+		if (moved) syncBranch(page.id, categoryId);
 		writeIndex(page.id, input.title, doc, input.fields);
 		writeTags(page.id, input.tags);
-		const visibility = manage ? input.visibility : page.visibility;
 		syncSessionEvent({ id: page.id, title: input.title, visibility, authorId: page.authorId }, sessionOf(kind, input.session));
 		writeRevision(page.id);
 		extra?.();
 	});
 }
 
-/** La home non si elimina: per cambiarla si sceglie un'altra pagina. */
+/** La home non si elimina: per cambiarla si sceglie un'altra pagina. Neanche la scheda di chi è al tavolo. */
 export function deletePage(id: number, at = Date.now()) {
 	if (isHomePage(id)) return;
+	const page = getDb().select({ sheetOf: pages.sheetOf }).from(pages).where(eq(pages.id, id)).get();
+	if (page && lockedSheet(page)) return;
 	getDb().transaction(() => {
 		getDb().update(pages).set({ deletedAt: at }).where(eq(pages.id, id)).run();
 		getDb().delete(pageLinks).where(eq(pageLinks.fromPageId, id)).run();
@@ -312,6 +330,8 @@ export interface ListOptions {
 	noTemplates?: boolean;
 	/** Una pagina da lasciare fuori (es. la home dai propri elenchi). */
 	exclude?: number | null;
+	/** Senza le schede giocatore (che nascono da sole). */
+	noSheets?: boolean;
 	limit?: number;
 	offset?: number;
 	sort?: 'updated' | 'created' | 'title';
@@ -324,6 +344,7 @@ export function listPages(u: Viewer | null, o: ListOptions = {}) {
 	if (o.kind) conds.push(eq(pages.kind, o.kind));
 	if (o.noTemplates) conds.push(sql`${pages.kind} <> 'template'`);
 	if (o.exclude) conds.push(sql`${pages.id} <> ${o.exclude}`);
+	if (o.noSheets) conds.push(sql`${pages.sheetOf} IS NULL`);
 	if (o.tagId)
 		conds.push(
 			sql`${pages.id} IN (SELECT ${pageTags.pageId} FROM ${pageTags} WHERE ${pageTags.tagId} = ${o.tagId})`
@@ -465,10 +486,16 @@ export function purgePage(id: number) {
  * il resto (le pagine personali altrui) esce dalla cartella. Tutti con la stessa ora, per farli tornare insieme.
  */
 export function trashFolder(id: number, u: Viewer) {
+	const pc = currentCampaign().pcFolderId;
 	const folder = locate(pageTree(u).items, `folder-${id}`)?.node;
-	if (folder?.type !== 'folder') return;
+	if (folder?.type !== 'folder' || folder.id === pc) return;
 	const at = Date.now();
 	const walk = (n: TreeNode) => {
+		// La cartella PG non va nel cestino: esce da quella che la conteneva e risale alla radice, con le schede.
+		if (n.type === 'folder' && n.id === pc) {
+			getDb().update(categories).set({ parentId: null, parentPageId: null }).where(eq(categories.id, n.id)).run();
+			return;
+		}
 		if (n.type === 'folder') getDb().update(categories).set({ deletedAt: at }).where(eq(categories.id, n.id)).run();
 		else if (n.type === 'page' && n.canTrash) deletePage(n.id, at);
 		childrenOf(n).forEach(walk);
@@ -480,18 +507,19 @@ export function trashFolder(id: number, u: Viewer) {
  * Visibilità cambiata dalla barra a sinistra, dal Master. Con `branch` vale anche per ciò che la pagina contiene
  * nell'albero (nelle sue cartelle, nelle pagine dentro di lei), tranne i template e la home.
  * «Personale» vale solo per le pagine di chi la sceglie: su quelle degli altri le nasconderebbe a tutti tranne che all'autore.
- * Le pagine personali altrui il Master non le vede, e restano come sono.
+ * Le pagine personali altrui il Master non le vede, e restano come sono. Le schede giocatore restano Pubbliche o Giocatori.
  * Restituisce quante pagine sono cambiate, o null se la pagina non si può cambiare.
  */
 export function setVisibility(id: number, visibility: Visibility, u: Viewer, branch: boolean): number | null {
 	if (!isMaster(u) || isHomePage(id)) return null;
 	const node = locate(pageTree(u).items, `page-${id}`)?.node;
 	const page = getPageById(id);
-	if (node?.type !== 'page' || !page || (visibility === 'personal' && page.authorId !== u.id)) return null;
+	const sheetOk = (p: PageRow) => !isSheet(p) || SHEET_VISIBILITIES.includes(visibility);
+	if (node?.type !== 'page' || !page || (visibility === 'personal' && page.authorId !== u.id) || !sheetOk(page)) return null;
 	const db = getDb();
 	let changed = 0;
 	const set = (p: PageRow | undefined) => {
-		if (!p || p.visibility === visibility || (visibility === 'personal' && p.authorId !== u.id)) return;
+		if (!p || p.visibility === visibility || (visibility === 'personal' && p.authorId !== u.id) || !sheetOk(p)) return;
 		db.update(pages)
 			.set({ visibility, updatedBy: u.id, updatedAt: Math.max(Date.now(), p.updatedAt + 1) })
 			.where(eq(pages.id, p.id))

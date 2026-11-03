@@ -5,6 +5,7 @@ import { pageView } from '#lib/server/pageView.ts';
 import { homePage } from '#lib/server/templates.ts';
 import { listMaps } from '#lib/server/maps.ts';
 import { listTimelines } from '#lib/server/timeline.ts';
+import { tableOf } from '#lib/server/sheets.ts';
 
 export const load: PageServerLoad = ({ locals }) => {
 	const u = locals.user;
@@ -20,8 +21,10 @@ export const load: PageServerLoad = ({ locals }) => {
 			canEdit: canEdit(home, u)
 		},
 		total,
-		// Nessuna pagina scritta: la home e le cronologie preparate alla creazione della wiki non contano.
-		empty: listPages(u, { kind: 'page', limit: 1, exclude: found?.id }).total === 0,
+		// Nessuna pagina scritta: la home, le cronologie preparate alla creazione della wiki e le schede giocatore non contano.
+		empty: listPages(u, { kind: 'page', limit: 1, exclude: found?.id, noSheets: true }).total === 0,
+		// Chi è al tavolo: il Master e i giocatori, con le loro schede (non per i visitatori).
+		table: tableOf(u),
 		recent: rows,
 		added: listPages(u, { ...recent, sort: 'created' }).rows,
 		world: [

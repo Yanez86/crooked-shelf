@@ -1,12 +1,13 @@
 {
 	"id": "dndbeyond",
 	"name": "D&D Beyond",
-	"version": "1.0.0",
-	"description": "Collega i riferimenti alle regole a D&D Beyond, per consultare sul sito anche ciò che non è nell'SRD. Solo collegamenti: nessun contenuto viene copiato dal sito. Non affiliato a Wizards of the Coast.",
-	"instructions": "1. Premi «Accendi». Vale per tutta l'installazione, in ogni campagna.\n2. In una pagina scrivi @ e le prime lettere del nome inglese, oppure direttamente @incantesimo[Fireball]. Per mostrare un altro testo: @incantesimo[Fireball|Palla di fuoco].\n3. Salva: il riferimento diventa un link che apre la ricerca di D&D Beyond in una nuova scheda. Il nome va in inglese, perché è quello che viene cercato.\n4. Nell'anteprima «i» e nella scheda di una regola trovi il pulsante «Apri su D&D Beyond».\n\nSpegnendo il plugin i riferimenti restano al loro posto e tornano a portare alla scheda della regola. Per aprire il sito serve Internet.",
+	"version": "1.1.0",
+	"description": "Collega i riferimenti alle regole a D&D Beyond, per consultare sul sito anche ciò che non è nell'SRD, e porta il template «Scheda D&D» per le schede giocatore, col link alla scheda del personaggio sul sito. Solo collegamenti: nessun contenuto viene copiato dal sito. Non affiliato a Wizards of the Coast.",
+	"instructions": "1. Premi «Accendi». Vale per tutta l'installazione, in ogni campagna.\n2. In una pagina scrivi @ e le prime lettere del nome inglese, oppure direttamente @incantesimo[Fireball]. Per mostrare un altro testo: @incantesimo[Fireball|Palla di fuoco].\n3. Salva: il riferimento diventa un link che apre la ricerca di D&D Beyond in una nuova scheda. Il nome va in inglese, perché è quello che viene cercato.\n4. Nell'anteprima «i» e nella scheda di una regola trovi il pulsante «Apri su D&D Beyond».\n5. Schede giocatore: il template «Scheda D&D» compare nella linguetta Template. Per farne il template delle schede nuove, il Master lo sceglie in Campagna › Schede giocatore. Il giocatore mette nel link in cima l'indirizzo della sua scheda su D&D Beyond.\n\nSe il plugin era già acceso prima della versione 1.1.0, spegnilo e riaccendilo per avere il template.\n\nSpegnendo il plugin i riferimenti restano al loro posto e tornano a portare alla scheda della regola. Per aprire il sito serve Internet.",
 	"author": "Crooked Shelf",
 	"license": "AGPL-3.0",
 	"contributes": {
-		"links": ["links/dndbeyond.json"]
+		"links": ["links/dndbeyond.json"],
+		"templates": ["templates/scheda-dnd.json"]
 	}
 }

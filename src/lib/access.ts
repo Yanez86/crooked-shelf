@@ -35,10 +35,14 @@ export const authorKey = (u: Viewer) => (u.asPlayer ? 0 : u.id);
 /** La vista giocatore è solo da guardare: non si crea, non si modifica e non si sposta niente. */
 export const canWrite = (u: Viewer | null | undefined): u is Viewer => !!u && !u.asPlayer;
 
-/** Visibilità che un utente può assegnare a una pagina. */
-export function allowedVisibilities(u: Viewer | null): Visibility[] {
+/** Una scheda giocatore la vedono almeno tutti i giocatori, Master compreso: niente Solo Master né Personale. */
+export const SHEET_VISIBILITIES: Visibility[] = ['public', 'players'];
+
+/** Visibilità che un utente può assegnare a una pagina (`sheet`: a una scheda giocatore). */
+export function allowedVisibilities(u: Viewer | null, sheet = false): Visibility[] {
 	if (!u) return [];
-	return isMaster(u) ? ['public', 'players', 'master', 'personal'] : ['public', 'players', 'personal'];
+	const all: Visibility[] = isMaster(u) ? ['public', 'players', 'master', 'personal'] : ['public', 'players', 'personal'];
+	return sheet ? all.filter((v) => SHEET_VISIBILITIES.includes(v)) : all;
 }
 
 export function canView(p: PageAccessInfo, u: Viewer | null): boolean {
