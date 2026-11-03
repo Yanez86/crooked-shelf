@@ -3,6 +3,19 @@
 Le versioni seguono il [versionamento semantico](https://semver.org/lang/it/): MAGGIORE.MINORE.CORRETTIVA.
 Questo file è anche la pagina «Novità» della wiki (`/changelog`).
 
+## 0.12.2 — 2026-11-03
+
+### Aggiunte
+- Appuntamenti: cliccando una data nel calendario si apre un popup con le specifiche della sessione, dove si risponde anche. Sotto ogni appuntamento ci sono le figure di chi viene: il Master con il bordo dell'accento, chi viene in presenza, chi da remoto con il bordo blu e chi non c'è con la croce rossa.
+- Home: sotto il tavolo, la prossima sessione (con lo stato e la propria risposta) e le date del mese a cui il giocatore non ha ancora risposto.
+- Stars & Wishes: dopo ogni sessione, a chi aveva risposto «Ci sono», due domande in un popup entrando nella campagna: che cosa gli è piaciuto e che cosa vorrebbe esplorare. Si accende in Campagna › Appuntamenti; non è obbligatorio, si risponde una volta sola e le risposte le legge solo il Master, negli Appuntamenti.
+- Claude come connettore: da claude.ai la wiki si aggiunge come connettore personalizzato, con un indirizzo per campagna (`/mcp/<id>`) e accesso e consenso nella wiki. Claude lavora su una campagna solo col suo Master.
+- Avatar: nel profilo si carica un'immagine (PNG, JPEG, GIF o WebP) che prende il posto dell'icona.
+
+### Modifiche
+- La pagina Campagna è divisa in schede: Generale, Giocatori, Appuntamenti, Claude. Token e connettori di Claude si gestiscono in Campagna › Claude, non più nel Profilo.
+- Anche il Profilo è diviso in schede: Icona e nome, Lettura e accessibilità, Password. Il vecchio indirizzo `/preferences` apre la scheda della lettura.
+
 ## 0.12.0 — 2026-11-03
 
 ### Aggiunte
