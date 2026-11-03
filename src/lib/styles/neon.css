@@ -171,10 +171,13 @@
 	}
 }
 
-/* --- Riquadri: pannelli da terminale, con due angoli tagliati e due staffe di luce --- */
+/* --- Riquadri: pannelli da terminale, con due angoli tagliati e due staffe di luce ---
+   Con :where() queste regole pesano quanto quelle di app.css: le battono perché vengono dopo, ma perdono contro
+   i componenti. Così, quando un componente toglie il riquadro (sul telefono la colonna centrale, i filtri e le righe
+   degli elenchi restano senza bordo né margine interno), il tema non lo rimette attorno al testo. */
 
-:root[data-theme='neon'] .panel,
-:root[data-theme='neon'] .card {
+:where(:root[data-theme='neon']) .panel,
+:where(:root[data-theme='neon']) .card {
 	--cut: var(--neon-cut);
 	border: 1px solid var(--c-border);
 	background:
@@ -187,15 +190,15 @@
 	box-shadow: inset 0 0 2.5rem -1rem color-mix(in srgb, var(--neon-violet) 45%, transparent);
 }
 /* La colonna centrale ha il bordo alto in luce piena: è il pannello principale. */
-:root[data-theme='neon'] .column.panel {
+:where(:root[data-theme='neon']) .column.panel {
 	border-top: 2px solid var(--neon-magenta);
 	box-shadow:
 		0 -0.4rem 1.2rem -0.8rem var(--neon-magenta),
 		inset 0 0 3rem -1.2rem color-mix(in srgb, var(--neon-magenta) 40%, transparent);
 }
 @supports (corner-shape: bevel) {
-	:root[data-theme='neon'] .panel,
-	:root[data-theme='neon'] .card {
+	:where(:root[data-theme='neon']) .panel,
+	:where(:root[data-theme='neon']) .card {
 		border-radius: var(--cut) 0 var(--cut) 0;
 		corner-shape: bevel;
 	}
@@ -392,6 +395,52 @@
 	:root[data-theme='neon'] .panel,
 	:root[data-theme='neon'] .card {
 		--cut: var(--neon-cut-sm);
+	}
+}
+
+/* --- Spazio stretto (la colonna centrale sotto i 44rem, di solito il telefono) ---
+   Qui i componenti tolgono i riquadri e il testo va da un bordo all'altro. Il tema toglie anche quello che li
+   farebbe ancora sembrare scatole: alone interno, angoli smussati, colore pieno sopra il fondale. */
+
+@container (max-width: 44rem) {
+	:root[data-theme='neon'] .column.panel {
+		background: transparent;
+		box-shadow: none;
+		border-radius: 0;
+	}
+	:root[data-theme='neon'] .column :is(.card, .panel) {
+		box-shadow: none;
+		border-radius: 0;
+	}
+	/* La scheda della pagina diventa un elenco tra due fili: quello in alto in luce piena. */
+	:root[data-theme='neon'] .column .panel {
+		border-top-color: var(--neon-magenta);
+	}
+	/* «Nuova pagina» accanto al titolo, col solo «+»: un tubo al neon invece di un blocco pieno. */
+	:root[data-theme='neon'] .head .btn-primary {
+		width: 2.75rem;
+		height: 2.75rem;
+		align-self: flex-start;
+		margin-top: 0.4rem;
+		background: color-mix(in srgb, var(--neon-magenta) 8%, var(--c-bg));
+		border: 2px solid var(--neon-magenta);
+		color: var(--c-primary);
+		box-shadow:
+			0 0 0.6rem -0.1rem color-mix(in srgb, var(--neon-magenta) 70%, transparent),
+			inset 0 0 0.6rem -0.2rem color-mix(in srgb, var(--neon-magenta) 70%, transparent);
+	}
+	:root[data-theme='neon'] .head .btn-primary .icon {
+		width: 1.4rem;
+		height: 1.4rem;
+		stroke-width: 2.25;
+		filter: drop-shadow(0 0 0.25rem var(--neon-magenta));
+	}
+	:root[data-theme='neon'] .head .btn-primary:hover {
+		background: var(--neon-magenta);
+		color: var(--c-on-primary);
+	}
+	:root[data-theme='neon'] .head .btn-primary:hover .icon {
+		filter: none;
 	}
 }
 
