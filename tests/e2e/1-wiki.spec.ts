@@ -31,7 +31,7 @@ async function newPage(page: Page, title: string, write: (p: Page) => Promise<vo
 	await editor.click();
 	await write(page);
 	if (opts.category) await page.getByLabel('Categoria').selectOption({ label: opts.category });
-	if (opts.tags) await page.getByLabel('Tag', { exact: true }).fill(opts.tags);
+	if (opts.tags) await page.getByRole('combobox', { name: 'Tag', exact: true }).fill(opts.tags);
 	if (opts.visibility) {
 		await page.getByRole('button', { name: 'Opzioni pagina' }).click();
 		await page.getByRole('radio', { name: new RegExp(opts.visibility) }).check();
@@ -234,6 +234,11 @@ test('albero delle cartelle e delle pagine', async () => {
 	await expect(tree.getByRole('link').last()).toHaveAttribute('href', '/trash');
 	await tree.getByRole('tab', { name: 'Risorse' }).click();
 	await expect(tree.getByRole('link').last()).toHaveAttribute('href', '/trash');
+	// I tag hanno la loro linguetta, tra Pagine e Risorse; il Master ne cambia nome e colore in Tag.
+	await expect(tree.getByRole('tab')).toHaveText(['Pagine', 'Tag', 'Risorse', 'Template']);
+	await tree.getByRole('tab', { name: 'Tag', exact: true }).click();
+	await expect(tree.getByRole('link', { name: /Taverna/ })).toHaveAttribute('href', '/wiki?tag=taverna');
+	await expect(tree.getByRole('link', { name: 'Nomi e colori dei tag' })).toHaveAttribute('href', '/tags');
 	// I template preparati con la wiki stanno nella loro linguetta, con il pulsante per farne uno nuovo.
 	await tree.getByRole('tab', { name: 'Template' }).click();
 	await expect(tree.getByRole('link', { name: 'Luogo, Template' })).toBeVisible();

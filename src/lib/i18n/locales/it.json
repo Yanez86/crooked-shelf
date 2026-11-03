@@ -19,6 +19,7 @@
 	},
 	"tree": {
 		"label": "Pagine e risorse",
+		"manageTags": "Nomi e colori dei tag",
 		"title": "Menu e pagine",
 		"hide": "Nascondi la barra a sinistra",
 		"show": "Mostra la barra a sinistra",
@@ -51,6 +52,7 @@
 		"tabs": "Cosa mostrare",
 		"tab": {
 			"pages": "Pagine",
+			"tags": "Tag",
 			"resources": "Risorse",
 			"templates": "Template"
 		}

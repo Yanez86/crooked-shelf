@@ -1,7 +1,8 @@
 import type { LayoutServerLoad } from './$types';
 import { getSettings } from '#lib/server/settings.ts';
 import { extraThemes } from '#lib/server/plugins.ts';
-import { pageTree } from '#lib/server/taxonomy.ts';
+import { listTags, pageTree } from '#lib/server/taxonomy.ts';
+import { isMaster } from '#lib/access.ts';
 import { resourceEntries } from '#lib/server/gallery.ts';
 import { openStarWish } from '#lib/server/schedule.ts';
 import { extraLocale } from '#lib/i18n/index.ts';
@@ -17,7 +18,7 @@ export const load: LayoutServerLoad = ({ locals, cookies, request, url, depends,
 	const u = locals.user;
 	const s = getSettings();
 	const extra = extraThemes();
-	// Barra a sinistra (pagine, risorse e sezioni): niente titoli a chi non può ancora leggere la wiki (es. nella pagina di accesso).
+	// Barra a sinistra (pagine, tag, risorse e sezioni): niente titoli a chi non può ancora leggere la wiki (es. nella pagina di accesso).
 	const tree = !!u || s.allowVisitors;
 	// Si entra aprendo la wiki o passando da un'altra campagna. Il cookie non ha scadenza: chiuso il browser, si rientra.
 	const entered = !!u && !!locals.campaign && cookies.get(ENTERED_COOKIE) !== String(locals.campaign.id);
@@ -41,6 +42,8 @@ export const load: LayoutServerLoad = ({ locals, cookies, request, url, depends,
 		// Traduzioni dei plugin per la lingua in uso (il browser non le ha nel pacchetto).
 		localeExtra: extraLocale(locals.locale),
 		tree: tree ? pageTree(u) : null,
+		// Il Master vede anche i tag senza pagine: da lì ne cambia nome e colore.
+		treeTags: tree ? listTags(u, isMaster(u)).map(({ id, name, slug, color, count }) => ({ id, name, slug, color, count })) : null,
 		resources: tree ? resourceEntries(u).map(({ id, title, kind }) => ({ id, title, kind })) : null,
 		// Nella vista giocatore il Master guarda soltanto: niente domande.
 		starWish: entered && !locals.asPlayer ? openStarWish(u!.id) : null

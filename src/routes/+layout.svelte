@@ -198,7 +198,7 @@ ${iconCss()}</style>`}
 {/if}
 
 <div class="container shell" class:wide class:with-tree={docked} class:collapsed class:framed>
-	{#if tree}<PageTree {tree} resources={data.resources ?? []} {docked} bind:open={treeOpen} onhide={() => hideTree(true)} />{/if}
+	{#if tree}<PageTree {tree} tags={data.treeTags ?? []} resources={data.resources ?? []} {docked} bind:open={treeOpen} onhide={() => hideTree(true)} />{/if}
 	{#if collapsed}
 		<button id="tree-show" class="btn tree-show" type="button" title={t('tree.show')} aria-label={t('tree.show')} onclick={() => hideTree(false)}>
 			<Icon name="arrowRight" />

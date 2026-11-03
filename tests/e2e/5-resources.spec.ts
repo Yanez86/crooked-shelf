@@ -81,7 +81,9 @@ test('linguette dell\'albero: pagine e risorse', async () => {
 	await expect(locanda).toBeHidden();
 	await expect(tree.getByRole('link', { name: 'Carica una risorsa' })).toBeVisible();
 
-	// Da tastiera: le frecce passano da una linguetta all'altra.
+	// Da tastiera: le frecce passano da una linguetta all'altra (prima di Risorse c'è Tag).
+	await admin.keyboard.press('ArrowLeft');
+	await expect(tree.getByRole('tab', { name: 'Tag', exact: true })).toBeFocused();
 	await admin.keyboard.press('ArrowLeft');
 	await expect(pages).toBeFocused();
 	await expect(pages).toHaveAttribute('aria-selected', 'true');

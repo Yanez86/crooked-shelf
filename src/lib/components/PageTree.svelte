@@ -11,16 +11,17 @@
 	import { childrenOf, keyPlace, locate, nodeKey, pageIcon, placeAt, treePaths, treeTemplates, withoutTemplates, type Tree, type TreeNode, type TreePage, type TreePlace } from '../tree.ts';
 	import { RESOURCE_KINDS, type ResourceItem, type ResourceKind } from '../resources.ts';
 
-	// La barra a sinistra: in alto le linguette Pagine, Risorse e Template, sotto le icone delle azioni, poi l'albero.
+	// La barra a sinistra: in alto le linguette Pagine, Tag, Risorse e Template, sotto le icone delle azioni, poi l'albero.
 	// Le sezioni della wiki (galleria, regole, calendario…) stanno nel menu del profilo in alto a destra.
 	// `docked`: sta accanto alla pagina (la freccia chiama `onhide`); altrimenti (e sempre sul telefono) è un pannello a scomparsa, aperto dal pulsante in alto.
 	let {
 		tree,
+		tags,
 		resources,
 		docked = true,
 		open: shown = $bindable(false),
 		onhide
-	}: { tree: Tree; resources: ResourceItem[]; docked?: boolean; open?: boolean; onhide?: () => void } = $props();
+	}: { tree: Tree; tags: { id: number; name: string; slug: string; color: string; count: number }[]; resources: ResourceItem[]; docked?: boolean; open?: boolean; onhide?: () => void } = $props();
 	const t = getT();
 	const canManage = $derived(isMaster(page.data.user));
 	const user = $derived(page.data.user);
@@ -54,14 +55,16 @@
 		untrack(() => ids.forEach((id) => open.add(id)));
 	});
 
-	// Tre linguette: le pagine con le loro cartelle, le risorse (immagini, audio, altri file) e i template.
+	// Quattro linguette: le pagine con le loro cartelle, i tag, le risorse (immagini, audio, altri file) e i template.
 	// Si apre quella di ciò che stai guardando; altrove resta l'ultima scelta, ricordata in questo browser.
-	type Tab = 'pages' | 'resources' | 'templates';
-	const TABS: Tab[] = ['pages', 'resources', 'templates'];
-	const TAB_ICONS: Record<Tab, string> = { pages: 'doc', resources: 'image', templates: 'template' };
+	type Tab = 'pages' | 'tags' | 'resources' | 'templates';
+	const TABS: Tab[] = ['pages', 'tags', 'resources', 'templates'];
+	const TAB_ICONS: Record<Tab, string> = { pages: 'doc', tags: 'tag', resources: 'image', templates: 'template' };
 	const TAB_STORE = 'cs-tree-tab';
 	const onTemplate = $derived(page.url.searchParams.get('kind') === 'template' || templates.some((p) => p.slug === current));
-	const tabFor = (p: string): Tab | null => (p.startsWith('/resources') ? 'resources' : !p.startsWith('/wiki') ? null : onTemplate ? 'templates' : 'pages');
+	const currentTag = $derived(path === '/wiki' ? page.url.searchParams.get('tag') : null);
+	const tabFor = (p: string): Tab | null =>
+		p.startsWith('/resources') ? 'resources' : p === '/tags' || currentTag ? 'tags' : !p.startsWith('/wiki') ? null : onTemplate ? 'templates' : 'pages';
 	let tab = $state<Tab>(untrack(() => tabFor(page.url.pathname)) ?? 'pages');
 	$effect(() => {
 		const want = tabFor(path);
@@ -601,7 +604,7 @@
 				</button>
 			{/if}
 		</div>
-		{#if canNew || foldable}
+		{#if canNew || foldable || (canManage && tab === 'tags')}
 			<div class="explorer-tools">
 				{#if canNew}
 					<a
@@ -629,6 +632,10 @@
 					<button type="button" id="tree-new-divider" class="tool" title={t('tree.newDivider')} aria-label={t('tree.newDivider')} onclick={newDivider}>
 						<Icon name="divider" />
 					</button>
+				{:else if canManage && tab === 'tags'}
+					<a class="tool" href="/tags" title={t('tree.manageTags')} aria-label={t('tree.manageTags')} aria-current={path === '/tags' ? 'page' : undefined}>
+						<Icon name="sliders" />
+					</a>
 				{:else if canManage && tab === 'resources'}
 					<a class="tool" href="/resources/new" title={t('resources.new')} aria-label={t('resources.new')}>
 						<Icon name="upload" />
@@ -682,6 +689,23 @@
 				</ul>
 			{:else if naming === null}
 				<p class="muted none">{t('tree.empty')}</p>
+			{/if}
+		</div>
+		<div role="tabpanel" id="tree-panel-tags" aria-labelledby="tree-tab-tags" hidden={tab !== 'tags'}>
+			{#if tags.length}
+				<ul class="list-plain level root">
+					{#each tags as tag (tag.id)}
+						<li>
+							<a href="/wiki?tag={encodeURIComponent(tag.slug)}" aria-current={currentTag === tag.slug ? 'page' : undefined}>
+								<span class="tag-dot tag-{tag.color}" aria-hidden="true"></span>
+								<span>{tag.name}</span>
+								<span class="muted count">{tag.count}</span>
+							</a>
+						</li>
+					{/each}
+				</ul>
+			{:else}
+				<p class="muted none">{t('tags.empty')}</p>
 			{/if}
 		</div>
 		<div role="tabpanel" id="tree-panel-resources" aria-labelledby="tree-tab-resources" hidden={tab !== 'resources'}>
@@ -1163,6 +1187,14 @@
 		background: var(--c-surface2);
 		box-shadow: inset 3px 0 0 var(--c-primary);
 		font-weight: 700;
+	}
+	/* Il tag: il pallino del suo colore al posto dell'icona, il numero di pagine in fondo alla riga. */
+	a > .tag-dot {
+		margin: 0.3rem 0.2rem 0;
+	}
+	.count {
+		margin-left: auto;
+		font-size: var(--fs-sm);
 	}
 	.chevron {
 		flex: none;
