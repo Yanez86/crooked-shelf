@@ -9,7 +9,7 @@ import { slugify } from '../../src/lib/slug.ts';
 
 const NAME = 'La Notte in Affitto';
 const STYLE =
-	'Style: cyberpunk tabletop RPG illustration with painterly digital brushwork, a rainy night palette of deep violet, magenta and cyan neon with small acid-yellow accents, wet reflective surfaces, cinematic rim lighting. Any signs, screens or holograms show only abstract glowing shapes: no readable text, no letters, no logos, no watermark.';
+	'Style: modern cyberpunk TV anime key frame, angular stylized character designs with expressive anime faces, bold thick black linework, flat cel shading with hard-edged shadows, hyper-saturated neon palette of hot magenta, electric cyan and acid yellow against deep violet night, strong graphic silhouettes, flat glowing color fields in the background, subtle chromatic aberration and glitch accents, energetic dynamic composition. Any signs, screens or holograms show only abstract glowing shapes: no readable text, no letters, no logos, no watermark.';
 const COVER = { where: 'copertina', ratio: '21:9', framing: 'Wide panoramic composition with the main subject in the central horizontal band.' };
 const PORTRAIT = { where: 'colonna a lato', ratio: '3:4', framing: 'Half-length portrait, face clearly visible.' };
 
@@ -305,7 +305,7 @@ writeFileSync(
 	`${here}prompt-immagini.md`,
 	`# ${NAME}: prompt per le immagini
 
-Un prompt per ogni pagina dell'avventura, scritto per Gemini e in inglese perché lo capisce meglio. Ognuno è completo: si copia così com'è. Lo stile è sempre lo stesso, ed è pensato per il tema Neon: viola, magenta e ciano, con un filo di giallo acido.
+Un prompt per ogni pagina dell'avventura, scritto per Gemini e in inglese perché lo capisce meglio. Ognuno è completo: si copia così com'è. Lo stile è sempre lo stesso: anime cyberpunk da serie TV recente, con linee nere spesse, ombre nette e neon saturi (magenta, ciano e giallo acido sul viola della notte), gli stessi colori del tema Neon. Lo stile è descritto senza citare serie o studi: Gemini a volte rifiuta i prompt che nominano un'opera.
 
 Qualche consiglio per Gemini:
 
