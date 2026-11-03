@@ -3,7 +3,7 @@
 Le versioni seguono il [versionamento semantico](https://semver.org/lang/it/): MAGGIORE.MINORE.CORRETTIVA.
 Questo file è anche la pagina «Novità» della wiki (`/changelog`).
 
-## 0.11.0 — 2026-10-30
+## 0.11.0 — 2026-11-03
 
 ### Aggiunte
 - Due temi nuovi, Lago e Lago di notte: grigi freddi, accento verde petrolio, contrasti WCAG AA con margine. Si scelgono da Profilo.
