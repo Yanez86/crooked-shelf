@@ -14,8 +14,13 @@
 		campaign: string | null;
 	}
 
-	/** Senza `roles` si invitano solo giocatori, nella campagna della pagina. */
-	let { invites, roles = null, form }: { invites: Invite[]; roles?: Role[] | null; form: { error?: string; ok?: string; link?: string; role?: Role } | null | undefined } = $props();
+	/** Senza `roles` si invitano solo giocatori, nella campagna della pagina. `query` si aggiunge alle azioni, es. la scheda in cui tornare. */
+	let {
+		invites,
+		roles = null,
+		form,
+		query = ''
+	}: { invites: Invite[]; roles?: Role[] | null; form: { error?: string; ok?: string; link?: string; role?: Role } | null | undefined; query?: string } = $props();
 	const t = getT();
 	const locale = $derived(page.data.locale as string);
 	let copied = $state(false);
@@ -46,7 +51,7 @@
 	</div>
 {/if}
 
-<form method="post" action="?/create" class="card inline-form">
+<form method="post" action="?/create{query}" class="card inline-form">
 	{#if roles}
 		<div class="field">
 			<label for="role">{t('admin.role')}</label>
@@ -87,7 +92,7 @@
 						<td>{i.by ?? '—'}</td>
 						<td><RelTime ts={i.expiresAt} {locale} /></td>
 						<td class="col-end">
-							<form method="post" action="?/revoke">
+							<form method="post" action="?/revoke{query}">
 								<input type="hidden" name="id" value={i.id} />
 								<button class="btn btn-small btn-danger" type="submit">{t('admin.revoke')}</button>
 							</form>

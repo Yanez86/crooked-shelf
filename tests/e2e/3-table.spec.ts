@@ -245,16 +245,16 @@ test('schede giocatore: la cartella PG, chi è al tavolo, le pagine dentro la sc
 	await expect(admin.getByRole('heading', { name: 'Eliminare la pagina' })).toHaveCount(0);
 
 	// Nella pagina Campagna: il template delle schede nuove, e la scheda di ogni giocatore.
-	await admin.goto('/campaign');
+	await admin.goto('/campaign?tab=players');
 	await expect(admin.getByLabel('Template delle schede nuove')).toHaveValue('scheda-giocatore');
 	await expect(admin.locator('main').getByRole('link', { name: 'Alice' })).toHaveAttribute('href', '/wiki/alice');
 	await admin.getByLabel('Template delle schede nuove').selectOption('');
-	await admin.locator('form[action="?/sheetTemplate"]').getByRole('button', { name: 'Salva' }).click();
+	await admin.locator('form[action="?/sheetTemplate&tab=players"]').getByRole('button', { name: 'Salva' }).click();
 	await expect(admin.getByRole('status').filter({ hasText: 'Template delle schede salvato' })).toBeVisible();
 	await expect(admin.getByLabel('Template delle schede nuove')).toHaveValue('');
 	await axe(admin, 'campagna: schede giocatore');
 	await admin.getByLabel('Template delle schede nuove').selectOption('scheda-giocatore');
-	await admin.locator('form[action="?/sheetTemplate"]').getByRole('button', { name: 'Salva' }).click();
+	await admin.locator('form[action="?/sheetTemplate&tab=players"]').getByRole('button', { name: 'Salva' }).click();
 	await expect(admin.getByLabel('Template delle schede nuove')).toHaveValue('scheda-giocatore');
 
 	// Alice dà alla sua scheda il nome del personaggio.
@@ -296,8 +296,8 @@ test('schede giocatore: la cartella PG, chi è al tavolo, le pagine dentro la sc
 
 test('appuntamenti: il Master fissa i giovedì, i giocatori rispondono, sotto il minimo si salta', async ({ browser }) => {
 	// Nella pagina Campagna: il link per il remoto e la regola del minimo.
-	await admin.goto('/campaign');
-	const rules = admin.locator('form[action="?/schedule"]');
+	await admin.goto('/campaign?tab=schedule');
+	const rules = admin.locator('form[action="?/schedule&tab=schedule"]');
 	await rules.getByLabel('Link per il remoto (Discord o altro)').fill('javascript:alert(1)');
 	await rules.getByRole('button', { name: 'Salva' }).click();
 	await expect(admin.getByRole('alert')).toContainText('indirizzo web');
@@ -351,7 +351,7 @@ test('appuntamenti: il Master fissa i giovedì, i giocatori rispondono, sotto il
 	await expect(admin.locator('time[datetime="2030-01-17T20:00"]')).toHaveCount(0);
 
 	// Senza regola, niente stato.
-	await admin.goto('/campaign');
+	await admin.goto('/campaign?tab=schedule');
 	await rules.getByLabel('Giocatori minimi').fill('0');
 	await rules.getByRole('button', { name: 'Salva' }).click();
 	await expect(rules.getByRole('status')).toContainText('Modifiche salvate');

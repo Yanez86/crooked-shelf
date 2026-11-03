@@ -1,5 +1,6 @@
 import { test, expect, type Page, type Browser } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
+import { createHash } from 'node:crypto';
 
 // Fase 6: il profilo in alto a destra. Usa la wiki dei test precedenti.
 test.describe.configure({ mode: 'serial' });
@@ -228,28 +229,27 @@ test('la home: una sola, in cima all\'albero, fuori dalle cartelle, non si elimi
 	await expect(tree.getByRole('button', { name: 'Sposta nel cestino: Locanda del Grifone' })).toHaveCount(1);
 });
 
-test('Claude legge la campagna col token, con gli stessi permessi di chi lo crea', async ({ browser, request }) => {
+test('Claude legge la campagna col token del Master, e solo il Master lo crea', async ({ browser, request }) => {
 	const createToken = async (p: Page) => {
-		await p.goto('/profile');
+		await p.goto('/campaign?tab=claude');
 		await p.getByRole('button', { name: 'Crea un token' }).click();
-		await expect(p.getByLabel('Indirizzo')).toHaveValue(/\/mcp$/);
-		await axe(p, 'profilo: token per Claude');
+		await expect(p.getByLabel('Indirizzo', { exact: true })).toHaveValue(/\/mcp$/);
+		await axe(p, 'campagna: Claude');
+		await shot(p, '6-campagna-claude');
 		return p.getByLabel('Token', { exact: true }).inputValue();
 	};
 	const mcp = (token: string, name: string, args: object) =>
 		request.post('/mcp', { headers: { Authorization: `Bearer ${token}` }, data: { jsonrpc: '2.0', id: 1, method: 'tools/call', params: { name, arguments: args } } });
 	const text = async (token: string, name: string, args: object) => (await (await mcp(token, name, args)).json()).result.content[0].text as string;
 
+	// Claude lavora su una campagna solo col suo Master: il giocatore non arriva alla scheda.
 	const p = await login(browser, PLAYER);
-	const player = await createToken(p);
-	const master = await createToken(admin);
+	expect((await p.goto('/campaign?tab=claude'))?.status()).toBe(404);
+	await p.context().close();
 
+	const master = await createToken(admin);
 	expect(await text(master, 'read_page', { slug: 'locanda-del-grifone' })).toContain('spia degli Zhentarim');
-	expect(await text(player, 'read_page', { slug: 'locanda-del-grifone' })).toContain('birra annacquata');
-	expect(await text(player, 'read_page', { slug: 'locanda-del-grifone' })).not.toContain('spia');
-	expect(await text(player, 'search', { query: 'spia' })).toBe('[]');
-	expect(await text(player, 'read_page', { slug: 'piano-del-cattivo' })).toBe('Pagina non trovata.');
-	expect(await text(player, 'list_pages', {})).toContain('bartolo-pancia');
+	expect(await text(master, 'list_pages', {})).toContain('piano-del-cattivo');
 
 	// Senza token non si entra, nemmeno col cookie dell'Admin; il token non vale per il resto della wiki.
 	const body = { data: { jsonrpc: '2.0', id: 1, method: 'tools/list' } };
@@ -261,20 +261,15 @@ test('Claude legge la campagna col token, con gli stessi permessi di chi lo crea
 	expect((await request.get('/mcp', { headers: { Authorization: `Bearer ${master}` } })).status()).toBe(405);
 
 	// Senza la casella il token non scrive.
-	expect((await (await mcp(player, 'create_page', { title: 'Abusiva', text: 'x' })).json()).error.code).toBe(-32602);
-
-	await p.getByRole('button', { name: 'Revoca' }).click();
-	await expect(p.getByRole('region', { name: 'Claude' }).getByRole('status')).toContainText('Token revocato');
-	expect((await mcp(player, 'list_pages', {})).status()).toBe(401);
-	await p.context().close();
+	expect((await (await mcp(master, 'create_page', { title: 'Abusiva', text: 'x' })).json()).error.code).toBe(-32602);
 
 	// Con la casella Claude scrive, ma solo testo delle pagine.
-	await admin.goto('/profile');
+	await admin.goto('/campaign?tab=claude');
 	await admin.getByLabel('Claude può anche scrivere').check();
 	await axe(admin, 'profilo: token che scrive');
 	await admin.getByRole('button', { name: 'Sostituisci il token' }).click();
 	const writer = await admin.getByLabel('Token', { exact: true }).inputValue();
-	await expect(admin.getByRole('region', { name: 'Claude' })).toContainText('leggere e scrivere');
+	await expect(admin.getByRole('region', { name: 'Collegamenti attivi' })).toContainText('leggere e scrivere');
 	await expect(admin.getByLabel('Claude può anche scrivere')).toBeChecked();
 	expect((await mcp(master, 'list_pages', {})).status()).toBe(401);
 
@@ -313,4 +308,64 @@ test('Claude legge la campagna col token, con gli stessi permessi di chi lo crea
 	expect((await request.get('/admin/backup/download', { headers: auth, maxRedirects: 0 })).ok()).toBe(false);
 	expect((await request.post('/admin/plugins', { headers: auth, maxRedirects: 0 })).ok()).toBe(false);
 	expect((await (await mcp(writer, 'delete_page', { slug: made.slug })).json()).error.code).toBe(-32602);
+});
+
+test('Claude si collega come connettore (OAuth), uno per campagna e solo col Master', async ({ browser, request }) => {
+	// L'indirizzo del connettore è nella scheda Claude della campagna, che vede solo il Master; da lì, senza token, Claude trova dove chiedere il consenso e si registra.
+	await admin.goto('/campaign?tab=claude');
+	const connector = await admin.getByLabel('Indirizzo del connettore per claude.ai').inputValue();
+	expect(connector).toMatch(/\/mcp\/\d+$/);
+	const denied = await request.post(connector, { data: { jsonrpc: '2.0', id: 1, method: 'tools/list' } });
+	expect(denied.status()).toBe(401);
+	const meta = /resource_metadata="([^"]+)"/.exec(denied.headers()['www-authenticate'])![1];
+	const resource = await (await request.get(meta)).json();
+	expect(resource.resource).toBe(connector);
+	const as = await (await request.get(`${resource.authorization_servers[0]}/.well-known/oauth-authorization-server`)).json();
+	const back = 'https://claude.ai/api/mcp/auth_callback';
+	const client = await (await request.post(as.registration_endpoint, { data: { redirect_uris: [back], client_name: 'Claude' } })).json();
+
+	const verifier = 'verificatore-di-prova-'.repeat(3);
+	const challenge = createHash('sha256').update(verifier).digest('base64url');
+	const q = new URLSearchParams({ response_type: 'code', client_id: client.client_id, redirect_uri: back, code_challenge: challenge, code_challenge_method: 'S256', state: 'xyz', resource: connector });
+	const consent = `${as.authorization_endpoint}?${q}`;
+
+	// Il giocatore non può collegare la campagna.
+	const p = await login(browser, PLAYER);
+	await p.goto(consent);
+	await expect(p.getByRole('alert')).toContainText('solo col suo Master');
+	await expect(p.getByRole('button', { name: 'Consenti' })).toHaveCount(0);
+	await p.context().close();
+
+	await admin.route('https://claude.ai/**', (r) => r.fulfill({ body: 'ok' }));
+	await admin.goto(consent);
+	await expect(admin.getByText('claude.ai', { exact: true })).toBeVisible();
+	await expect(admin.getByRole('main')).toContainText('Le Cronache di Faerûn');
+	await axe(admin, 'consenso per il connettore');
+	await shot(admin, '6-oauth-consenso');
+	await admin.getByRole('button', { name: 'Consenti' }).click();
+	await admin.waitForURL(/^https:\/\/claude\.ai\//);
+	const code = new URL(admin.url()).searchParams;
+	expect(code.get('state')).toBe('xyz');
+
+	// I server di Claude non mandano Origin: il token lo prendono lo stesso, gli altri form da fuori restano chiusi.
+	const form = { grant_type: 'authorization_code', code: code.get('code')!, redirect_uri: back, code_verifier: verifier, client_id: client.client_id, resource: connector };
+	const issued = await request.post(as.token_endpoint, { form });
+	expect(issued.status()).toBe(200);
+	const token = (await issued.json()).access_token as string;
+	expect((await request.post(as.token_endpoint, { form })).status()).toBe(400);
+	expect((await request.post('/login', { form: { username: 'alice', password: PLAYER.pass } })).status()).toBe(403);
+
+	// Il token vale per la campagna del connettore e per nessun'altra.
+	const read = (url: string) =>
+		request.post(url, { headers: { Authorization: `Bearer ${token}` }, data: { jsonrpc: '2.0', id: 1, method: 'tools/call', params: { name: 'read_page', arguments: { slug: 'locanda-del-grifone' } } } });
+	expect((await (await read(connector)).json()).result.content[0].text).toContain('spia degli Zhentarim');
+	expect((await read(connector.replace(/\d+$/, (n) => String(Number(n) + 1)))).status()).toBe(401);
+
+	await admin.unroute('https://claude.ai/**');
+	await admin.goto('/campaign?tab=claude');
+	await expect(admin.getByRole('region', { name: 'Collegamenti attivi' })).toContainText('collegato da claude.ai');
+	await admin.getByRole('button', { name: 'Revoca' }).click();
+	await expect(admin.getByRole('status').filter({ hasText: 'Token revocato' })).toBeVisible();
+	await expect(admin.getByRole('region', { name: 'Collegamenti attivi' })).toContainText('nessun collegamento');
+	expect((await read(connector)).status()).toBe(401);
 });

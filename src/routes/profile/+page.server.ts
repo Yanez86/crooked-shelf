@@ -4,17 +4,17 @@ import type { Actions, PageServerLoad } from './$types';
 import { cleanPrefs, PREFS_COOKIE, PREF_OPTIONS } from '#lib/prefs.ts';
 import { isLocale, localeNames } from '#lib/i18n/index.ts';
 import { getDb, schema } from '#lib/server/db/index.ts';
-import { PASSWORD_MIN, apiTokenAccess, createApiToken, deleteUserSessions, createSession, hashPassword, revokeApiToken, setSessionCookie, verifyPassword } from '#lib/server/auth.ts';
+import { PASSWORD_MIN, deleteUserSessions, createSession, hashPassword, setSessionCookie, verifyPassword } from '#lib/server/auth.ts';
 import { str } from '#lib/server/forms.ts';
 import { extraThemes } from '#lib/server/plugins.ts';
 import { PAGE_ICONS } from '#lib/pageIcons.ts';
 
+// Claude si collega dalla pagina Campagna, scheda Claude: è del Master, una campagna per volta.
 export const load: PageServerLoad = ({ locals }) => ({
 	options: PREF_OPTIONS,
 	custom: extraThemes().map(({ id, name, scheme, colors }) => ({ id, name: name ?? id, scheme, colors })),
 	locales: localeNames(),
-	current: { ...locals.prefs, locale: locals.prefs.locale ?? '' },
-	claude: locals.user && locals.campaign ? { campaign: locals.campaign.name, access: apiTokenAccess(locals.user.id, locals.campaign.id) } : null
+	current: { ...locals.prefs, locale: locals.prefs.locale ?? '' }
 });
 
 export const actions: Actions = {
@@ -75,15 +75,5 @@ export const actions: Actions = {
 		const s = createSession(row.id);
 		setSessionCookie(cookies, url, s.token, s.expires);
 		return { ok: 'prefs.passwordChanged', section: 'password' };
-	},
-	claude: async ({ request, locals, url }) => {
-		if (!locals.user || !locals.campaign) return fail(401, { error: 'errors.forbidden', section: 'claude' });
-		const write = (await request.formData()).get('write') === 'on';
-		return { section: 'claude', token: createApiToken(locals.user.id, locals.campaign.id, write), url: `${url.origin}/mcp` };
-	},
-	claudeRevoke: async ({ locals }) => {
-		if (!locals.user || !locals.campaign) return fail(401, { error: 'errors.forbidden', section: 'claude' });
-		revokeApiToken(locals.user.id, locals.campaign.id);
-		return { ok: 'claude.revoked', section: 'claude' };
 	}
 };

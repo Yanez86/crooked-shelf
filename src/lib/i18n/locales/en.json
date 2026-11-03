@@ -448,11 +448,11 @@
 	},
 	"claude": {
 		"title": "Claude",
-		"intro": "With the Claude plugin you can work on “{campaign}” from the conversation. Claude only sees what you can see and only does what you can do.",
+		"intro": "Claude can work on this campaign from the conversation: it searches and reads pages and, if you allow it, writes them. Only the Master can connect it, and it sees what you see, secrets included.",
 		"access": {
-			"none": "No token for this campaign.",
-			"read": "There is an active token: Claude can only read.",
-			"write": "There is an active token: Claude can read and write."
+			"none": "Plugin for Claude Code: no token.",
+			"read": "Plugin for Claude Code: there is an active token, Claude can only read.",
+			"write": "Plugin for Claude Code: there is an active token, Claude can read and write."
 		},
 		"write": "Claude can also write",
 		"writeHint": "It creates pages and changes the text of those you can edit, one version at a time. It doesn't touch settings, users, plugins, folders or visibility, and it deletes nothing.",
@@ -461,7 +461,26 @@
 		"once": "Copy the token now: it won't be shown again. The plugin will ask for these two values.",
 		"url": "Address",
 		"token": "Token",
-		"revoked": "Token revoked."
+		"revoked": "Token revoked.",
+		"clients": "Connector: connected from {clients}.",
+		"connector": "Connector address for claude.ai",
+		"connectorHint": "One per campaign: add it to Claude as a custom connector, and in each chat turn on only the one for the campaign you're working on.",
+		"connectorTitle": "Connector for claude.ai",
+		"connectorIntro": "To use Claude on the web, desktop or phone, without copying tokens.",
+		"step1": "Copy the connector address.",
+		"step2": "In Claude open Settings › Connectors › Add custom connector, name it after the campaign and paste the address. Leave the client ID and secret empty.",
+		"step3": "Claude opens the wiki: sign in as the Master, choose whether Claude can also write, and allow.",
+		"connectorReach": "The wiki must be reachable from the internet over HTTPS: Anthropic's servers connect to it, not your computer.",
+		"pluginTitle": "Plugin for Claude Code",
+		"pluginIntro": "To work from the terminal. Install the plugin, then create a token here and enter it with the address when Claude Code asks.",
+		"statusTitle": "Active connections",
+		"noClients": "Connector: no connections.",
+		"revokeHint": "“Revoke” closes every connection to this campaign, plugin and connectors. To come back, just connect again.",
+		"canTitle": "What it can do",
+		"canRead": "It searches, reads and lists the campaign's pages, with the side column and the pages that mention them.",
+		"canWrite": "If you allow it, it creates pages (only you see them by default) and changes the text of those you can edit. Every change leaves a version in your name in the history.",
+		"cannot": "It deletes nothing and doesn't touch titles, visibility, folders, templates, maps, timelines, boards, files, users or settings.",
+		"safety": "Page text reaches Claude, and so Anthropic. Keep confirmation on before every write: a page could contain instructions written to trick Claude, for example into copying a secret where players can see it."
 	},
 	"admin": {
 		"settings": "Settings",
@@ -1155,7 +1174,21 @@
 		"deleteWarning": "The campaign's pages, maps, timelines, boards, resources and images disappear forever, for everyone. This can't be undone.",
 		"deleteConfirm": "To confirm, type “{name}”",
 		"deleteSubmit": "Delete forever",
-		"deleteMismatch": "The name doesn't match: the campaign was not deleted."
+		"deleteMismatch": "The name doesn't match: the campaign was not deleted.",
+		"tabsLabel": "Campaign sections",
+		"tabs": {
+			"general": "General",
+			"players": "Players ({n})",
+			"schedule": "Sessions",
+			"claude": "Claude"
+		},
+		"overview": "Overview",
+		"player": "Player",
+		"sheet": "Sheet",
+		"noSheet": "No sheet",
+		"claudeOn": "Connected",
+		"claudeOff": "Not connected",
+		"danger": "Danger zone"
 	},
 	"schedule": {
 		"title": "Schedule",
@@ -1225,5 +1258,15 @@
 			"minPlayersHint": "Below this many confirmed players the session is off. 0: no rule.",
 			"quorumHours": "Decided this many hours before the start"
 		}
+	},
+	"oauth": {
+		"title": "Connect Claude",
+		"intro": "This site asks to work on “{campaign}” with your Master account. Claude will see everything you see, secrets included.",
+		"local": "It's a program on this computer, such as Claude Code: allow it only if you started it.",
+		"allow": "Allow",
+		"back": "Back to {host}",
+		"revoke": "You can revoke it from Campaign › Claude, in this campaign.",
+		"invalid": "This connection request isn't valid. Try again from Claude.",
+		"notMaster": "Claude can connect to a campaign only with its Master. Sign in with the Master's account, or ask them for the right connector address."
 	}
 }

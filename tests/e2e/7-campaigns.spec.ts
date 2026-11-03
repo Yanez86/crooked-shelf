@@ -102,7 +102,7 @@ test('chi non è nella campagna non la raggiunge', async () => {
 });
 
 test('il Master invita un giocatore che ha già un account', async () => {
-	await dm.goto('/campaign');
+	await dm.goto('/campaign?tab=players');
 	await axe(dm, 'campagna');
 	await dm.getByRole('button', { name: 'Crea invito' }).click();
 	const link = await inviteLink(dm);
@@ -111,7 +111,7 @@ test('il Master invita un giocatore che ha già un account', async () => {
 	await alice.locator('form[action="?/join"] button').click();
 	await alice.waitForURL((u) => u.pathname === '/');
 	await expect(alice.locator('.brand')).toContainText('Avalon');
-	await dm.goto('/campaign');
+	await dm.goto('/campaign?tab=players');
 	await expect(dm.getByRole('main')).toContainText('@alice');
 });
 
@@ -127,15 +127,15 @@ test('nella campagna nuova il giocatore non vede i segreti, e può tornare a que
 });
 
 test('rimosso dal Master, il giocatore non entra più', async () => {
-	await dm.goto('/campaign');
+	await dm.goto('/campaign?tab=players');
 	await dm.getByRole('button', { name: /Rimuovi/ }).click();
-	await expect(dm.getByRole('status')).toContainText('rimosso');
+	await expect(dm.getByRole('status').filter({ hasText: 'rimosso' })).toBeVisible();
 	await alice.goto('/');
 	await expect(alice.locator('.user-menu .campaigns')).toHaveCount(0);
 });
 
 test("l'Admin invitato da un altro Master è un giocatore: non vede i segreti", async () => {
-	await dm.goto('/campaign');
+	await dm.goto('/campaign?tab=players');
 	await dm.getByRole('button', { name: 'Crea invito' }).click();
 	const link = await inviteLink(dm);
 	await admin.goto(link);

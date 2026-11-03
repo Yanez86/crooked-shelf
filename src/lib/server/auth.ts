@@ -1,6 +1,6 @@
 import { hash, verify } from '@node-rs/argon2';
 import { createHash, randomBytes } from 'node:crypto';
-import { and, desc, eq, gt, isNull, lt, sql } from 'drizzle-orm';
+import { and, desc, eq, gt, isNull, lt, ne, sql } from 'drizzle-orm';
 import type { Cookies } from '@sveltejs/kit';
 import { getDb, schema } from './db/index.ts';
 import { addMember } from './campaigns.ts';
@@ -174,20 +174,39 @@ export function clearSessionCookie(cookies: Cookies) {
 
 // --- Token per Claude ---
 
-/** Si vede una volta sola e sostituisce quello di prima: nel database c'è solo l'impronta. */
-export function createApiToken(userId: number, campaignId: number, canWrite = false): string {
+/** Si vede una volta sola e sostituisce quello di prima dello stesso client: nel database c'è solo l'impronta. */
+export function createApiToken(userId: number, campaignId: number, canWrite = false, client = ''): string {
 	const token = newToken();
 	const tokenHash = sha256(token);
-	getDb().insert(apiTokens).values({ userId, campaignId, tokenHash, canWrite }).onConflictDoUpdate({ target: [apiTokens.userId, apiTokens.campaignId], set: { tokenHash, canWrite } }).run();
+	getDb()
+		.insert(apiTokens)
+		.values({ userId, campaignId, client, tokenHash, canWrite })
+		.onConflictDoUpdate({ target: [apiTokens.userId, apiTokens.campaignId, apiTokens.client], set: { tokenHash, canWrite } })
+		.run();
 	return token;
 }
 
-/** Cosa può fare il token di una persona in una campagna; null se non ne ha uno. */
+/** Cosa può fare il token del profilo di una persona in una campagna; null se non ne ha uno. */
 export function apiTokenAccess(userId: number, campaignId: number): 'read' | 'write' | null {
-	const row = getDb().select().from(apiTokens).where(and(eq(apiTokens.userId, userId), eq(apiTokens.campaignId, campaignId))).get();
+	const row = getDb()
+		.select()
+		.from(apiTokens)
+		.where(and(eq(apiTokens.userId, userId), eq(apiTokens.campaignId, campaignId), eq(apiTokens.client, '')))
+		.get();
 	return row ? (row.canWrite ? 'write' : 'read') : null;
 }
 
+/** I siti collegati col connettore (OAuth) a una campagna, es. claude.ai. */
+export function apiTokenClients(userId: number, campaignId: number): string[] {
+	return getDb()
+		.select({ client: apiTokens.client })
+		.from(apiTokens)
+		.where(and(eq(apiTokens.userId, userId), eq(apiTokens.campaignId, campaignId), ne(apiTokens.client, '')))
+		.all()
+		.map((r) => r.client);
+}
+
+/** Revoca tutti i token di una persona in una campagna: quello del profilo e quelli del connettore. */
 export function revokeApiToken(userId: number, campaignId: number) {
 	getDb().delete(apiTokens).where(and(eq(apiTokens.userId, userId), eq(apiTokens.campaignId, campaignId))).run();
 }

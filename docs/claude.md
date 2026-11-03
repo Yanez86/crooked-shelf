@@ -2,11 +2,11 @@
 
 Il plugin per Claude Code porta una campagna nella conversazione: chi è quel personaggio, cosa è successo nell'ultima sessione, quali pagine parlano di un luogo. Claude cerca e legge le pagine da solo e, se glielo permetti, le scrive: un resoconto di sessione, un personaggio nuovo, una correzione.
 
-Claude vede **solo quello che puoi vedere tu** e fa **solo quello che puoi fare tu**. Con un token di un giocatore i segreti non arrivano a Claude; con quello del Master sì.
+Claude lavora su una campagna **solo col suo Master**: i giocatori non possono collegarlo. Vede quello che vede il Master, segreti compresi, e fa solo quello che il Master può fare.
 
 ## Installare
 
-1. Nella wiki, entra nella campagna e apri Profilo › Claude. Spunta «Claude può anche scrivere» solo se ti serve, poi «Crea un token». Copia indirizzo e token: il token si vede una volta sola.
+1. Nella wiki, entra nella campagna di cui sei Master e apri Campagna › Claude. Spunta «Claude può anche scrivere» solo se ti serve, poi «Crea un token». Copia indirizzo e token: il token si vede una volta sola.
 2. In Claude Code:
 
    ```bash
@@ -18,10 +18,24 @@ Claude vede **solo quello che puoi vedere tu** e fa **solo quello che puoi fare 
 
 La wiki deve essere raggiungibile dal computer su cui gira Claude Code.
 
+## Come connettore, su claude.ai
+
+Da claude.ai (e dalle app di Claude) la wiki si aggiunge come connettore personalizzato, senza copiare token:
+
+1. Nella wiki, entra nella campagna di cui sei Master e copia da Campagna › Claude l'«Indirizzo del connettore», per esempio `https://wiki.esempio.it/mcp/2`.
+2. In Claude apri Impostazioni › Connettori › Aggiungi connettore personalizzato, dagli il nome della campagna e incolla l'indirizzo. Lascia vuoti ID e segreto del client.
+3. Claude apre la wiki: fai l'accesso, scegli se Claude può anche scrivere, poi «Consenti».
+
+**Un connettore per campagna**, ognuno col suo indirizzo: il token di uno non apre le altre. In ogni chat accendi solo quello della campagna su cui lavori, così Claude non porta un segreto di una campagna nelle pagine di un'altra.
+
+La wiki deve essere raggiungibile da internet in HTTPS (vedi [Installazione](installazione.md)): a collegarsi sono i server di Anthropic, non il tuo computer.
+
+Il connettore ha un token suo, che non sostituisce quello del plugin. In Campagna › Claude si vede da quali siti è collegata la campagna; «Revoca» li chiude tutti, e per tornare basta ricollegarsi da Claude.
+
 ## Il token
 
-- Vale per una sola campagna, e per una persona ne esiste uno per campagna: crearne un altro sostituisce il precedente.
-- Si revoca da Profilo › Claude. Smette di valere anche cambiando la password, se l'account viene disattivato o se esci dalla campagna.
+- Vale per una sola campagna, e solo finché ne sei il Master. Quello del profilo è uno per campagna: crearne un altro sostituisce il precedente.
+- Si revoca da Campagna › Claude. Smette di valere anche cambiando la password, se l'account viene disattivato o se non sei più il Master della campagna.
 - Di base legge soltanto: per farlo scrivere va creato con la casella spuntata, e i token creati prima restano in lettura.
 - Apre solo l'indirizzo `/mcp`: non vale per accedere al resto della wiki.
 
@@ -53,4 +67,6 @@ Claude Code chiede conferma prima di ogni scrittura, mostrando il testo: convien
 
 ## Per chi sviluppa
 
-`src/routes/mcp/+server.ts` parla MCP su HTTP, un messaggio a richiesta e senza sessione; gli strumenti sono in `src/lib/server/mcp.ts` e passano dalle stesse funzioni del sito. Chi aggiunge uno strumento di scrittura deve restare sul testo delle pagine: Claude non manda mai JSON dell'editor, solo Markdown che passa da `fromMarkdown`. Il plugin è in `claude-plugin/`. Per provarlo senza installarlo: `claude --plugin-dir claude-plugin`.
+`src/routes/mcp/[[id=id]]/+server.ts` parla MCP su HTTP, un messaggio a richiesta e senza sessione; gli strumenti sono in `src/lib/server/mcp.ts` e passano dalle stesse funzioni del sito. Chi aggiunge uno strumento di scrittura deve restare sul testo delle pagine: Claude non manda mai JSON dell'editor, solo Markdown che passa da `fromMarkdown`. Il plugin è in `claude-plugin/`. Per provarlo senza installarlo: `claude --plugin-dir claude-plugin`.
+
+Il connettore è OAuth 2.1 con PKCE: `/.well-known/oauth-protected-resource/mcp/<id>` e `/.well-known/oauth-authorization-server` per la scoperta, `/oauth/register`, il consenso in `/oauth/authorize` e `/oauth/token`, che dà un token di `api_tokens` col sito di ritorno in `client`. La campagna viene dall'indirizzo `/mcp/<id>` (il parametro `resource`), e `/mcp/<id>` accetta solo token di quella campagna. La registrazione è aperta a chiunque, quindi non salva niente e dà a tutti lo stesso client: a proteggere è la pagina di consenso, che mostra il sito a cui va il token (`src/lib/server/oauth.ts`). I token non scadono e non c'è refresh, come quelli del profilo. `/oauth/token` lo chiamano i server di Claude senza `Origin`: per questo il controllo dei form da altri siti è in `hooks.server.ts` e non in SvelteKit.

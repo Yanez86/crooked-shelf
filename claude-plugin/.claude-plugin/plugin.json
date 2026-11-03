@@ -11,13 +11,13 @@
 		"url": {
 			"type": "string",
 			"title": "Indirizzo",
-			"description": "Dalla wiki: Profilo › Claude. Finisce con /mcp.",
+			"description": "Dalla wiki: Campagna › Claude. Finisce con /mcp.",
 			"required": true
 		},
 		"token": {
 			"type": "string",
 			"title": "Token",
-			"description": "Dalla wiki: Profilo › Claude. Vale per una sola campagna.",
+			"description": "Dalla wiki: Campagna › Claude. Vale per una sola campagna.",
 			"sensitive": true,
 			"required": true
 		}

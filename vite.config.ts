@@ -14,6 +14,8 @@ export default defineConfig({
 					filename.split(/[/\\]/).includes('node_modules') ? undefined : true
 			},
 			adapter: adapter(),
+			// Il controllo dei form da altri siti è in hooks.server.ts, per lasciar passare /oauth/token.
+			csrf: { trustedOrigins: ['*'] },
 			csp: {
 				mode: 'auto',
 				directives: {

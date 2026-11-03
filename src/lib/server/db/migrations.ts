@@ -363,5 +363,19 @@ export const MIGRATIONS: (string | ((db: Database.Database) => void) | { rebuild
 		answer TEXT NOT NULL CHECK (answer IN ('in_person','remote','no')),
 		PRIMARY KEY (appointment_id, date, user_id)
 	);
+	`,
+	// Connettore di Claude (OAuth): oltre al token del profilo, uno per ogni app che si collega, col nome del sito a cui è andato.
+	`
+	CREATE TABLE api_tokens_new (
+		user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+		campaign_id INTEGER NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
+		client TEXT NOT NULL DEFAULT '',
+		token_hash TEXT NOT NULL UNIQUE,
+		can_write INTEGER NOT NULL DEFAULT 0,
+		PRIMARY KEY (user_id, campaign_id, client)
+	);
+	INSERT INTO api_tokens_new (user_id, campaign_id, token_hash, can_write) SELECT user_id, campaign_id, token_hash, can_write FROM api_tokens;
+	DROP TABLE api_tokens;
+	ALTER TABLE api_tokens_new RENAME TO api_tokens;
 	`
 ];

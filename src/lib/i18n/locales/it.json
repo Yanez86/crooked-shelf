@@ -448,11 +448,11 @@
 	},
 	"claude": {
 		"title": "Claude",
-		"intro": "Con il plugin per Claude puoi lavorare su «{campaign}» dalla conversazione. Claude vede solo quello che puoi vedere tu e fa solo quello che puoi fare tu.",
+		"intro": "Claude può lavorare su questa campagna dalla conversazione: cerca e legge le pagine e, se glielo permetti, le scrive. Può collegarlo solo il Master, e vede quello che vedi tu, segreti compresi.",
 		"access": {
-			"none": "Nessun token per questa campagna.",
-			"read": "C'è un token attivo: Claude può solo leggere.",
-			"write": "C'è un token attivo: Claude può leggere e scrivere."
+			"none": "Plugin per Claude Code: nessun token.",
+			"read": "Plugin per Claude Code: c'è un token attivo, Claude può solo leggere.",
+			"write": "Plugin per Claude Code: c'è un token attivo, Claude può leggere e scrivere."
 		},
 		"write": "Claude può anche scrivere",
 		"writeHint": "Crea pagine e cambia il testo di quelle che puoi modificare tu, una versione per volta. Non tocca impostazioni, utenti, plugin, cartelle o visibilità, e non elimina nulla.",
@@ -461,7 +461,26 @@
 		"once": "Copia subito il token: non si vedrà più. Il plugin ti chiederà questi due valori.",
 		"url": "Indirizzo",
 		"token": "Token",
-		"revoked": "Token revocato."
+		"revoked": "Token revocato.",
+		"clients": "Connettore: collegato da {clients}.",
+		"connector": "Indirizzo del connettore per claude.ai",
+		"connectorHint": "Uno per campagna: in Claude aggiungilo come connettore personalizzato e accendi in ogni chat solo quello della campagna su cui lavori.",
+		"connectorTitle": "Connettore per claude.ai",
+		"connectorIntro": "Per usare Claude dal sito, dal computer o dal telefono, senza copiare token.",
+		"step1": "Copia l'indirizzo del connettore.",
+		"step2": "In Claude apri Impostazioni › Connettori › Aggiungi connettore personalizzato, dagli il nome della campagna e incolla l'indirizzo. Lascia vuoti ID e segreto del client.",
+		"step3": "Claude apre la wiki: accedi come Master, scegli se Claude può anche scrivere e consenti.",
+		"connectorReach": "La wiki deve essere raggiungibile da internet in HTTPS: a collegarsi sono i server di Anthropic, non il tuo computer.",
+		"pluginTitle": "Plugin per Claude Code",
+		"pluginIntro": "Per lavorare dal terminale. Installa il plugin, poi crea qui un token e inseriscilo insieme all'indirizzo quando Claude Code li chiede.",
+		"statusTitle": "Collegamenti attivi",
+		"noClients": "Connettore: nessun collegamento.",
+		"revokeHint": "«Revoca» chiude tutti i collegamenti di questa campagna, plugin e connettori. Per tornare basta ricollegarsi.",
+		"canTitle": "Cosa può fare",
+		"canRead": "Cerca, legge ed elenca le pagine della campagna, con la colonna a lato e le pagine che le citano.",
+		"canWrite": "Se glielo permetti, crea pagine (di base le vedi solo tu) e cambia il testo di quelle che puoi modificare. Ogni modifica lascia una versione a tuo nome nella cronologia.",
+		"cannot": "Non elimina nulla e non tocca titoli, visibilità, cartelle, template, mappe, cronologie, bacheche, file, utenti o impostazioni.",
+		"safety": "Il testo delle pagine arriva a Claude, quindi ad Anthropic. Tieni attiva la conferma prima di ogni scrittura: una pagina potrebbe contenere istruzioni scritte per ingannare Claude, per esempio per copiare un segreto dove lo vedono i giocatori."
 	},
 	"admin": {
 		"settings": "Impostazioni",
@@ -1155,7 +1174,21 @@
 		"deleteWarning": "Spariscono per sempre, per tutti, pagine, mappe, cronologie, bacheche, risorse e immagini della campagna. Non si può annullare.",
 		"deleteConfirm": "Per confermare scrivi «{name}»",
 		"deleteSubmit": "Elimina per sempre",
-		"deleteMismatch": "Il nome scritto non corrisponde: la campagna non è stata eliminata."
+		"deleteMismatch": "Il nome scritto non corrisponde: la campagna non è stata eliminata.",
+		"tabsLabel": "Sezioni della campagna",
+		"tabs": {
+			"general": "Generale",
+			"players": "Giocatori ({n})",
+			"schedule": "Appuntamenti",
+			"claude": "Claude"
+		},
+		"overview": "Riepilogo",
+		"player": "Giocatore",
+		"sheet": "Scheda",
+		"noSheet": "Nessuna scheda",
+		"claudeOn": "Collegato",
+		"claudeOff": "Non collegato",
+		"danger": "Zona pericolosa"
 	},
 	"schedule": {
 		"title": "Appuntamenti",
@@ -1225,5 +1258,15 @@
 			"minPlayersHint": "Sotto questo numero di giocatori confermati la sessione salta. 0: nessuna regola.",
 			"quorumHours": "Si decide quante ore prima dell'inizio"
 		}
+	},
+	"oauth": {
+		"title": "Collegare Claude",
+		"intro": "Questo sito chiede di lavorare su «{campaign}» col tuo account di Master. Claude vedrà tutto quello che vedi tu, segreti compresi.",
+		"local": "È un programma su questo computer, per esempio Claude Code: consenti solo se l'hai avviato tu.",
+		"allow": "Consenti",
+		"back": "Torna a {host}",
+		"revoke": "Si revoca da Campagna › Claude, in questa campagna.",
+		"invalid": "Questa richiesta di collegamento non è valida. Riprova da Claude.",
+		"notMaster": "Claude può collegarsi a una campagna solo col suo Master. Accedi con l'account del Master, o chiedi a lui l'indirizzo del connettore giusto."
 	}
 }

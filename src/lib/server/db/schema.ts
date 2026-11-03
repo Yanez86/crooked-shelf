@@ -73,10 +73,12 @@ export const apiTokens = sqliteTable(
 		campaignId: integer('campaign_id')
 			.notNull()
 			.references(() => campaigns.id, { onDelete: 'cascade' }),
+		/** '' per il token creato nel profilo; per il connettore (OAuth), il sito a cui è andato, es. claude.ai. */
+		client: text('client').notNull().default(''),
 		tokenHash: text('token_hash').notNull().unique(),
 		canWrite: integer('can_write', { mode: 'boolean' }).notNull().default(false)
 	},
-	(t) => [primaryKey({ columns: [t.userId, t.campaignId] })]
+	(t) => [primaryKey({ columns: [t.userId, t.campaignId, t.client] })]
 );
 
 export const invites = sqliteTable('invites', {

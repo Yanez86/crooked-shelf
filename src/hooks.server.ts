@@ -17,7 +17,12 @@ import { cleanPrefs, PREFS_COOKIE } from '#lib/prefs.ts';
 import { fromAcceptLanguage, isLocale, DEFAULT_LOCALE } from '#lib/i18n/index.ts';
 
 // Pagine raggiungibili senza aver fatto l'accesso. /mcp risponde da sé: 401 senza un token valido.
-const OPEN = ['/login', '/setup', '/invite/', '/mcp'];
+// Il connettore di Claude si registra e prende il token dai suoi server; il consenso (/oauth/authorize) chiede l'accesso.
+const OPEN = ['/login', '/setup', '/invite/', '/mcp', '/oauth/register', '/oauth/token', '/.well-known/'];
+// Il controllo di SvelteKit sui form mandati da altri siti è spento (csrf.trustedOrigins in vite.config.ts) e si fa qui,
+// uguale, tranne che per /oauth/token: lì scrivono i server di Claude, che non mandano Origin.
+const FORM_TYPES = ['', 'application/x-www-form-urlencoded', 'multipart/form-data', 'text/plain', 'application/x-sveltekit-formdata'];
+const WRITES = ['POST', 'PUT', 'PATCH', 'DELETE'];
 // Quello che resta a chi ha un account ma non è in nessuna campagna.
 const WITHOUT_CAMPAIGN = ['/campaign', '/profile', '/logout'];
 // Nella vista giocatore si guarda soltanto: si scrive solo per tornare alla propria vista o cambiare campagna, nel proprio profilo e per uscire.
@@ -34,12 +39,15 @@ function readCookiePrefs(raw: string | undefined): Record<string, unknown> | nul
 }
 
 export const handle: Handle = async ({ event, resolve }) => {
-	const { cookies, url, locals } = event;
+	const { cookies, url, locals, request } = event;
+	const type = (request.headers.get('content-type') ?? '').split(';', 1)[0].trim().toLowerCase();
+	if (url.pathname !== '/oauth/token' && WRITES.includes(request.method) && FORM_TYPES.includes(type) && request.headers.get('origin') !== url.origin)
+		return new Response(`Cross-site ${request.method} form submissions are forbidden`, { status: 403 });
 	const ready = hasUsers();
 	allPlugins();
 
-	// Claude entra solo da /mcp, col suo token: lì i cookie non contano, e il token non apre il resto della wiki.
-	const mcp = url.pathname === '/mcp';
+	// Claude entra solo da /mcp (o /mcp/<campagna>, il connettore), col suo token: lì i cookie non contano, e il token non apre il resto della wiki.
+	const [mcp, mcpCampaign] = /^\/mcp(?:\/(\d+))?$/.exec(url.pathname) ?? [];
 	const api = mcp ? validateApiToken(event.request.headers.get('authorization')) : null;
 
 	locals.user = api?.user ?? null;
@@ -55,8 +63,9 @@ export const handle: Handle = async ({ event, resolve }) => {
 
 	const settings = getSettings();
 	locals.campaigns = campaignsFor(locals.user, settings.allowVisitors);
+	// Claude lavora su una campagna solo per il suo Master, e col connettore solo su quella dell'indirizzo.
 	locals.campaign = mcp
-		? (locals.campaigns.find((c) => c.id === api?.campaignId) ?? null)
+		? (locals.campaigns.find((c) => c.id === api?.campaignId && c.masterId === api.user.id && (!mcpCampaign || c.id === Number(mcpCampaign))) ?? null)
 		: (locals.campaigns.find((c) => c.id === Number(cookies.get(CAMPAIGN_COOKIE))) ?? locals.campaigns[0] ?? null);
 	// Da qui in poi `role` vale per questa campagna: i controlli sui permessi non devono sapere che ce ne sono altre.
 	const campaign = locals.campaign ?? NO_CAMPAIGN;
