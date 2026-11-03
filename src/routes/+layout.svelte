@@ -120,6 +120,17 @@ ${iconCss()}</style>`}
 	<div class="backdrop"></div>
 	<a class="skip-link" href="#main">{t('nav.skip')}</a>
 
+	{#if data.asPlayer}
+		<!-- Su ogni pagina, così non ci si dimentica di essere nella vista giocatore. -->
+		<form class="as-player" method="post" action="/campaign?/asMaster">
+			<div class="container">
+				<p>{t('campaign.asPlayerOn')}</p>
+				<input type="hidden" name="next" value={page.url.pathname + page.url.search} />
+				<button type="submit">{t('campaign.asMaster')}</button>
+			</div>
+		</form>
+	{/if}
+
 	<header class="site-header">
 		<div class="container header-inner" class:wide class:bare>
 			{#if tree}
@@ -221,6 +232,33 @@ ${iconCss()}</style>`}
 			z-index: -1;
 			background: var(--bg-image, none) center / cover no-repeat;
 		}
+	}
+	.as-player {
+		background: var(--c-primary);
+		color: var(--c-on-primary);
+	}
+	.as-player .container {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: center;
+		gap: 0.25rem 1rem;
+		padding-top: 0.4rem;
+		padding-bottom: 0.4rem;
+	}
+	.as-player p {
+		margin: 0;
+	}
+	.as-player button {
+		min-height: 2.75rem;
+		padding: 0 0.8rem;
+		border: 1px solid currentColor;
+		border-radius: var(--radius);
+		background: none;
+		color: inherit;
+		font: inherit;
+		font-weight: 700;
+		cursor: pointer;
 	}
 	.site-header {
 		background: var(--c-surface);

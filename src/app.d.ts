@@ -14,6 +14,8 @@ declare global {
 			campaigns: CampaignRow[];
 			/** Il token di Claude può anche scrivere (solo su /mcp). */
 			mcpWrite: boolean;
+			/** Il Master guarda la wiki come un giocatore: `user.role` vale 'player'. */
+			asPlayer: boolean;
 			prefs: Prefs;
 			locale: string;
 		}

@@ -3,8 +3,8 @@ import type { Actions, PageServerLoad } from './$types';
 import { isMaster } from '#lib/access.ts';
 import { activeInvites, createInvite, revokeInvite } from '#lib/server/auth.ts';
 import { getDb, schema } from '#lib/server/db/index.ts';
-import { deleteCampaign, membersOf, removeMember, saveCampaign, setCampaignCookie } from '#lib/server/campaigns.ts';
-import { str } from '#lib/server/forms.ts';
+import { AS_PLAYER_COOKIE, deleteCampaign, membersOf, removeMember, saveCampaign, setCampaignCookie } from '#lib/server/campaigns.ts';
+import { safeNext, str } from '#lib/server/forms.ts';
 import { eq } from 'drizzle-orm';
 
 const { users } = schema;
@@ -31,6 +31,17 @@ export const actions: Actions = {
 		const id = Number((await request.formData()).get('id'));
 		if (locals.campaigns.some((c) => c.id === id)) setCampaignCookie(cookies, url, id);
 		redirect(303, '/');
+	},
+	// Si torna alla pagina da cui si è partiti, per vederla subito nell'altra vista.
+	asPlayer: async ({ request, cookies, url, locals }) => {
+		const next = safeNext(str(await request.formData(), 'next'));
+		if (isMaster(locals.user)) cookies.set(AS_PLAYER_COOKIE, '1', { path: '/', httpOnly: true, sameSite: 'lax', secure: url.protocol === 'https:' });
+		redirect(303, next);
+	},
+	asMaster: async ({ request, cookies }) => {
+		const next = safeNext(str(await request.formData(), 'next'));
+		cookies.delete(AS_PLAYER_COOKIE, { path: '/' });
+		redirect(303, next);
 	},
 	rename: async ({ request, locals }) => {
 		const { campaign } = mine(locals);

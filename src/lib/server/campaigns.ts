@@ -14,6 +14,8 @@ const { campaigns, campaignMembers, categories, maps, pageRevisions, pages, reso
 export type CampaignRow = typeof campaigns.$inferSelect;
 
 export const CAMPAIGN_COOKIE = 'cs_campaign';
+/** Vista giocatore: il Master guarda la wiki con i permessi di un giocatore (vedi hooks.server.ts). */
+export const AS_PLAYER_COOKIE = 'cs_as_player';
 /** Creata dalla migrazione, così la configurazione iniziale la trova pronta; poi si può eliminare come le altre. */
 export const FIRST_CAMPAIGN = 1;
 /** Per chi non ha campagne: nessuna riga ha questo id, quindi non si legge niente e non si scrive niente. */

@@ -21,6 +21,7 @@ export const load: LayoutServerLoad = ({ locals, cookies, request, depends }) =>
 		framed: request.headers.get('sec-fetch-dest') === 'iframe',
 		locale: locals.locale,
 		siteName: s.siteName,
+		asPlayer: locals.asPlayer,
 		campaign: locals.campaign && { id: locals.campaign.id, name: locals.campaign.name },
 		campaigns: locals.campaigns.map(({ id, name }) => ({ id, name })),
 		version: __APP_VERSION__,

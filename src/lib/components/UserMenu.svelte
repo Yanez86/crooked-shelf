@@ -84,6 +84,12 @@
 			</li>
 			{#if campaign && (user?.role === 'master' || user?.role === 'admin')}
 				<li><a href="/campaign" aria-current={current('/campaign')} onclick={(e) => openPanel(e, '/campaign', t('campaign.title'))}>{t('campaign.title')}</a></li>
+				<li>
+					<form method="post" action="/campaign?/asPlayer">
+						<input type="hidden" name="next" value={page.url.pathname + page.url.search} />
+						<button type="submit">{t('campaign.asPlayer')}</button>
+					</form>
+				</li>
 			{/if}
 			{#if user?.role === 'admin'}
 				<li><a href="/admin" aria-current={current('/admin')} onclick={(e) => openPanel(e, '/admin', t('nav.admin'))}>{t('nav.admin')}</a></li>

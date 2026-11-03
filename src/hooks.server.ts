@@ -9,8 +9,9 @@ import {
 	validateSession
 } from '#lib/server/auth.ts';
 import { getSettings } from '#lib/server/settings.ts';
-import { CAMPAIGN_COOKIE, NO_CAMPAIGN, campaignsFor, inCampaign, roleIn } from '#lib/server/campaigns.ts';
+import { AS_PLAYER_COOKIE, CAMPAIGN_COOKIE, NO_CAMPAIGN, campaignsFor, inCampaign, roleIn } from '#lib/server/campaigns.ts';
 import { allPlugins, extraThemes } from '#lib/server/plugins.ts';
+import { isMaster } from '#lib/access.ts';
 import { cleanPrefs, PREFS_COOKIE } from '#lib/prefs.ts';
 import { fromAcceptLanguage, isLocale, DEFAULT_LOCALE } from '#lib/i18n/index.ts';
 
@@ -56,6 +57,9 @@ export const handle: Handle = async ({ event, resolve }) => {
 	// Da qui in poi `role` vale per questa campagna: i controlli sui permessi non devono sapere che ce ne sono altre.
 	const campaign = locals.campaign ?? NO_CAMPAIGN;
 	if (locals.user) locals.user.role = roleIn(campaign, locals.user);
+	// Vista giocatore: il ruolo cambia per tutta la richiesta, così anche il server tiene per sé i segreti, come per un vero giocatore.
+	locals.asPlayer = !mcp && isMaster(locals.user) && cookies.get(AS_PLAYER_COOKIE) === '1';
+	if (locals.asPlayer) locals.user!.role = 'player';
 
 	locals.prefs = cleanPrefs(
 		locals.user ? locals.user.prefs : readCookiePrefs(cookies.get(PREFS_COOKIE)),

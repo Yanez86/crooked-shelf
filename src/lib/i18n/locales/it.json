@@ -1083,6 +1083,9 @@
 	"campaign": {
 		"title": "Campagna",
 		"switch": "Cambia campagna",
+		"asPlayer": "Visualizza come giocatore",
+		"asPlayerOn": "Stai vedendo la wiki come la vede un giocatore.",
+		"asMaster": "Torna alla tua vista",
 		"none": "Non fai ancora parte di nessuna campagna. Chiedi al Master il link di invito.",
 		"name": "Nome della campagna",
 		"master": "Master",

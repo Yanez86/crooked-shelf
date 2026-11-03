@@ -1083,6 +1083,9 @@
 	"campaign": {
 		"title": "Campaign",
 		"switch": "Switch campaign",
+		"asPlayer": "View as player",
+		"asPlayerOn": "You are seeing the wiki as a player sees it.",
+		"asMaster": "Back to your view",
 		"none": "You aren't part of a campaign yet. Ask your Master for an invite link.",
 		"name": "Campaign name",
 		"master": "Master",

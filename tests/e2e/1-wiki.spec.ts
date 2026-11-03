@@ -220,7 +220,7 @@ test('albero delle cartelle e delle pagine', async () => {
 	await expect(tree.getByRole('link', { name: 'Bartolo Pancia' })).toHaveAttribute('aria-current', 'page');
 	// Le cartelle aperte restano aperte.
 	await expect(locanda).toBeVisible();
-	// Niente barra orizzontale e niente sezioni: il menu del profilo ha solo Profilo, Campagna, Amministrazione ed Esci.
+	// Niente barra orizzontale e niente sezioni: il menu del profilo ha solo Profilo, Campagna, Amministrazione, la vista giocatore ed Esci.
 	await expect(admin.getByRole('navigation', { name: 'Navigazione principale' })).toHaveCount(0);
 	await admin.locator('.user-menu summary').click();
 	await expect(admin.locator('.user-menu .panel').getByRole('link')).toHaveText(['Profilo', 'Campagna', 'Amministrazione']);
@@ -569,6 +569,27 @@ test('il giocatore non vede i segreti', async ({ browser }) => {
 	await expect(p.getByRole('heading', { level: 1, name: 'Profile' })).toBeVisible();
 	await expect(html).toHaveAttribute('lang', 'en');
 	await p.context().close();
+});
+
+test('il Master vede la wiki come un giocatore, e torna indietro', async ({ browser }) => {
+	const m = await login(browser, ADMIN);
+	await m.goto('/wiki/locanda-del-grifone');
+	await m.locator('.user-menu summary').click();
+	await m.locator('.user-menu .panel').getByRole('button', { name: 'Visualizza come giocatore' }).click();
+
+	// Stessa pagina, senza segreti: il server li tiene per sé, come per Alice.
+	await expect(m).toHaveURL(/\/wiki\/locanda-del-grifone$/);
+	await expect(m.getByText('Stai vedendo la wiki come la vede un giocatore.')).toBeVisible();
+	await expect(m.locator('.content')).toContainText('birra annacquata');
+	await expect(m.locator('.content')).not.toContainText('spia');
+	await expect(m.getByRole('navigation', { name: TREE })).not.toContainText('Piano del cattivo');
+	expect((await m.request.get('/wiki/piano-del-cattivo')).status()).toBe(404);
+	await axe(m, 'vista giocatore');
+
+	await m.getByRole('button', { name: 'Torna alla tua vista' }).click();
+	await expect(m.locator('.content .secret')).toContainText('spia degli Zhentarim');
+	await expect(m.getByText('Stai vedendo la wiki come la vede un giocatore.')).toHaveCount(0);
+	await m.context().close();
 });
 
 test('visitatori: spenti di default', async ({ browser }) => {
