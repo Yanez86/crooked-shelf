@@ -18,6 +18,7 @@
 	import UserMenu from '#lib/components/UserMenu.svelte';
 	import Icon from '#lib/components/Icon.svelte';
 	import { iconCss } from '#lib/icons.ts';
+	import { LOGO_BOOKS } from '#lib/logo.ts';
 	import type { LayoutProps } from './$types';
 
 	let { data, children }: LayoutProps = $props();
@@ -114,6 +115,7 @@
 <svelte:head>
 	{@html `<style>${data.themeCss}
 ${iconCss()}</style>`}
+	<link rel="icon" href={data.favicon} type="image/svg+xml" />
 	<title>{data.campaign?.name ?? data.siteName}</title>
 </svelte:head>
 
@@ -150,7 +152,8 @@ ${iconCss()}</style>`}
 				</button>
 			{/if}
 			<a class="brand" href="/">
-				<img src="/favicon.svg" alt="" width="32" height="32" />
+				<!-- Il marchio nei colori del tema: cambia insieme alla pagina, anche con «Automatico». -->
+				<svg class="logo" viewBox="0 0 32 32" width="32" height="32" aria-hidden="true"><rect class="logo-bg" width="32" height="32" /><g class="logo-books">{@html LOGO_BOOKS}</g></svg>
 				<span>{data.campaign?.name ?? data.siteName}</span>
 			</a>
 
@@ -285,6 +288,24 @@ ${iconCss()}</style>`}
 		color: var(--c-text);
 		text-decoration: none;
 	}
+	.logo {
+		flex: none;
+	}
+	.logo-bg {
+		fill: var(--c-primary);
+	}
+	.logo-books {
+		fill: var(--c-on-primary);
+	}
+	/* Con i colori forzati del sistema il marchio resta visibile: fondo e libri nei colori del testo e della pagina. */
+	@media (forced-colors: active) {
+		.logo-bg {
+			fill: CanvasText;
+		}
+		.logo-books {
+			fill: Canvas;
+		}
+	}
 	.search {
 		display: flex;
 		gap: 0.4rem;
@@ -343,7 +364,7 @@ ${iconCss()}</style>`}
 			font-size: var(--fs-md);
 			font-stretch: 80%;
 		}
-		.brand img {
+		.brand .logo {
 			width: 1.75rem;
 			height: 1.75rem;
 		}

@@ -4,13 +4,15 @@ import { extraThemes } from '#lib/server/plugins.ts';
 import { pageTree } from '#lib/server/taxonomy.ts';
 import { resourceEntries } from '#lib/server/gallery.ts';
 import { extraLocale } from '#lib/i18n/index.ts';
-import { themeCss } from '#lib/themes.ts';
+import { THEMES, themeCss } from '#lib/themes.ts';
+import { faviconHref } from '#lib/logo.ts';
 import { SIDE_COOKIE, TREE_COOKIE } from '#lib/prefs.ts';
 
 export const load: LayoutServerLoad = ({ locals, cookies, request, depends }) => {
 	depends('app:layout');
 	const u = locals.user;
 	const s = getSettings();
+	const extra = extraThemes();
 	// Barra a sinistra (pagine, risorse e sezioni): niente titoli a chi non può ancora leggere la wiki (es. nella pagina di accesso).
 	const tree = !!u || s.allowVisitors;
 	return {
@@ -25,7 +27,9 @@ export const load: LayoutServerLoad = ({ locals, cookies, request, depends }) =>
 		campaign: locals.campaign && { id: locals.campaign.id, name: locals.campaign.name },
 		campaigns: locals.campaigns.map(({ id, name }) => ({ id, name })),
 		version: __APP_VERSION__,
-		themeCss: themeCss(extraThemes()),
+		themeCss: themeCss(extra),
+		// L'icona della scheda nei colori del tema di chi guarda.
+		favicon: faviconHref(locals.prefs.theme, [...THEMES, ...extra]),
 		// Traduzioni dei plugin per la lingua in uso (il browser non le ha nel pacchetto).
 		localeExtra: extraLocale(locals.locale),
 		tree: tree ? pageTree(u) : null,

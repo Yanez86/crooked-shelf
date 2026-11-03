@@ -22,64 +22,89 @@
 
 /* --- Il fondale: una città di notte, fuori fuoco --- */
 
+/* Gli strati del fondale sono fermi rispetto allo schermo e si muovono solo con transform: il browser li compone
+   senza ridisegnarli, né a ogni fotogramma né mentre la pagina scorre (un background-attachment: fixed o un
+   background-position animato costringerebbero a ridipingere tutto lo schermo, e sul telefono si sente). */
 :root[data-theme='neon'] body {
-	background:
-		radial-gradient(60rem 40rem at 10% -10%, color-mix(in srgb, var(--neon-magenta) 16%, transparent), transparent 70%),
-		radial-gradient(50rem 35rem at 100% 0%, color-mix(in srgb, var(--neon-cyan) 12%, transparent), transparent 70%),
-		radial-gradient(70rem 30rem at 50% 115%, color-mix(in srgb, var(--neon-violet) 20%, transparent), transparent 70%),
-		var(--c-bg);
-	background-attachment: fixed;
+	background: var(--c-bg);
 	caret-color: var(--neon-magenta);
 }
-/* Griglia in prospettiva verso l'orizzonte, ferma in fondo allo schermo. */
+/* Aloni di colore e scanline: fermi, dietro tutto. */
+:root[data-theme='neon'] body::after {
+	content: '';
+	position: fixed;
+	inset: 0;
+	z-index: -3;
+	pointer-events: none;
+	background:
+		repeating-linear-gradient(to bottom, rgb(255 255 255 / 0.025) 0 1px, transparent 1px 3px),
+		radial-gradient(60rem 40rem at 10% -10%, color-mix(in srgb, var(--neon-magenta) 16%, transparent), transparent 70%),
+		radial-gradient(50rem 35rem at 100% 0%, color-mix(in srgb, var(--neon-cyan) 12%, transparent), transparent 70%),
+		radial-gradient(70rem 30rem at 50% 115%, color-mix(in srgb, var(--neon-violet) 20%, transparent), transparent 70%);
+}
+/* Griglia in prospettiva verso l'orizzonte, in fondo allo schermo. Scorre verso chi guarda di un quadretto alla volta:
+   dopo un giro la griglia è identica, quindi il salto non si vede. */
 :root[data-theme='neon'] body::before {
 	content: '';
 	position: fixed;
 	left: -50%;
 	right: -50%;
-	bottom: 0;
-	height: 55vh;
+	bottom: -4rem;
+	height: calc(55vh + 4rem);
 	z-index: -2;
 	pointer-events: none;
 	background:
 		repeating-linear-gradient(90deg, color-mix(in srgb, var(--neon-magenta) 34%, transparent) 0 1px, transparent 1px 4rem),
 		repeating-linear-gradient(0deg, color-mix(in srgb, var(--neon-cyan) 26%, transparent) 0 1px, transparent 1px 4rem);
-	transform: perspective(30vh) rotateX(58deg);
 	transform-origin: 50% 100%;
 	-webkit-mask: linear-gradient(to top, #000 0%, transparent 85%);
 	mask: linear-gradient(to top, #000 0%, transparent 85%);
+	transform: perspective(30vh) rotateX(58deg);
 	animation: neon-grid 6s linear infinite;
+	will-change: transform;
 }
-/* Scanline e una banda di luce che scende piano: sullo sfondo, sotto i riquadri. */
-:root[data-theme='neon'] body::after {
+/* Una banda di luce che scende piano dall'alto in basso. */
+:root[data-theme='neon']::after {
 	content: '';
 	position: fixed;
-	inset: 0;
+	top: 0;
+	left: 0;
+	right: 0;
+	height: 30vh;
 	z-index: -1;
 	pointer-events: none;
-	background:
-		linear-gradient(to bottom, transparent 0%, color-mix(in srgb, var(--neon-cyan) 7%, transparent) 50%, transparent 100%) 0 0 / 100% 30vh no-repeat,
-		repeating-linear-gradient(to bottom, rgb(255 255 255 / 0.025) 0 1px, transparent 1px 3px);
+	background: linear-gradient(to bottom, transparent, color-mix(in srgb, var(--neon-cyan) 7%, transparent) 50%, transparent);
+	transform: translateY(-30vh);
 	animation: neon-sweep 9s linear infinite;
+	will-change: transform;
 }
 @keyframes neon-grid {
+	from {
+		transform: perspective(30vh) rotateX(58deg) translateY(0);
+	}
 	to {
-		background-position:
-			0 4rem,
-			0 4rem;
+		transform: perspective(30vh) rotateX(58deg) translateY(4rem);
 	}
 }
 @keyframes neon-sweep {
 	from {
-		background-position:
-			0 -30vh,
-			0 0;
+		transform: translateY(-30vh);
 	}
 	to {
-		background-position:
-			0 130vh,
-			0 0;
+		transform: translateY(100vh);
 	}
+}
+
+/* Con meno movimento il fondale sta fermo: un'animazione infinita accorciata a 0,01 ms girerebbe comunque a vuoto. */
+@media (prefers-reduced-motion: reduce) {
+	:root[data-theme='neon'] body::before,
+	:root[data-theme='neon']::after {
+		animation: none;
+	}
+}
+:root[data-theme='neon'][data-motion='reduce'] body::before,
+:root[data-theme='neon'][data-motion='reduce']::after {
+	animation: none;
 }
 
 :root[data-theme='neon'] ::selection {
@@ -145,6 +170,9 @@
 	border-image: linear-gradient(90deg, var(--neon-magenta), var(--neon-violet) 50%, var(--neon-cyan)) 1;
 	box-shadow: 0 0.4rem 1.5rem -0.6rem color-mix(in srgb, var(--neon-magenta) 50%, transparent);
 }
+:root[data-theme='neon'] .brand .logo {
+	filter: drop-shadow(0 0 0.35rem color-mix(in srgb, var(--neon-magenta) 80%, transparent));
+}
 :root[data-theme='neon'] .brand {
 	font-stretch: 125%;
 	text-transform: uppercase;
@@ -152,22 +180,17 @@
 	text-shadow: var(--neon-glow-m);
 	animation: neon-flicker 2.4s steps(1, end) 1 both;
 }
-/* Come un'insegna che si accende: due sfarfallii e poi resta. */
+/* Come un'insegna che si accende: il bagliore sfarfalla due volte e poi resta. Il testo invece è sempre pieno,
+   così il contrasto non cala nemmeno per un istante. */
 @keyframes neon-flicker {
-	0% {
-		opacity: 0.35;
-		text-shadow: none;
-	}
-	8% {
-		opacity: 1;
-	}
+	0%,
 	12% {
-		opacity: 0.4;
 		text-shadow: none;
 	}
+	8%,
 	20%,
 	100% {
-		opacity: 1;
+		text-shadow: var(--neon-glow-m);
 	}
 }
 
@@ -449,6 +472,7 @@
 @media (forced-colors: active) {
 	:root[data-theme='neon'] body::before,
 	:root[data-theme='neon'] body::after,
+	:root[data-theme='neon']::after,
 	:root[data-theme='neon'] .page-cover::after {
 		display: none;
 	}
