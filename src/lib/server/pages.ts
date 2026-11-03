@@ -476,6 +476,43 @@ export function trashFolder(id: number, u: Viewer) {
 	getDb().transaction(() => walk(folder));
 }
 
+/**
+ * Visibilità cambiata dalla barra a sinistra, da Master e Admin. Con `branch` vale anche per ciò che la pagina contiene
+ * nell'albero (nelle sue cartelle, nelle pagine dentro di lei), tranne i template e la home.
+ * «Personale» vale solo per le pagine di chi la sceglie: su quelle degli altri le nasconderebbe a tutti tranne che all'autore.
+ * Le pagine personali altrui il Master non le vede, e restano come sono.
+ * Restituisce quante pagine sono cambiate, o null se la pagina non si può cambiare.
+ */
+export function setVisibility(id: number, visibility: Visibility, u: Viewer, branch: boolean): number | null {
+	if (!isMaster(u) || isHomePage(id)) return null;
+	const node = locate(pageTree(u).items, `page-${id}`)?.node;
+	const page = getPageById(id);
+	if (node?.type !== 'page' || !page || (visibility === 'personal' && page.authorId !== u.id)) return null;
+	const db = getDb();
+	let changed = 0;
+	const set = (p: PageRow | undefined) => {
+		if (!p || p.visibility === visibility || (visibility === 'personal' && p.authorId !== u.id)) return;
+		db.update(pages)
+			.set({ visibility, updatedBy: u.id, updatedAt: Math.max(Date.now(), p.updatedAt + 1) })
+			.where(eq(pages.id, p.id))
+			.run();
+		syncSessionEvent({ id: p.id, title: p.title, visibility, authorId: p.authorId }, sessionOf(p.kind, p.session));
+		writeRevision(p.id);
+		changed++;
+	};
+	const walk = (n: TreeNode) => {
+		for (const c of childrenOf(n)) {
+			if (c.type === 'page' && c.kind !== 'template' && !c.home) set(getPageById(c.id));
+			walk(c);
+		}
+	};
+	db.transaction(() => {
+		set(page);
+		if (branch) walk(node);
+	});
+	return changed;
+}
+
 const pagesTrashedAt = (at: number) => getDb().select({ id: pages.id }).from(pages).where(and(ofCampaign(pages), eq(pages.deletedAt, at))).all();
 
 /** Le cartelle nel cestino, senza quelle che stanno dentro un'altra finita lì con lei. */

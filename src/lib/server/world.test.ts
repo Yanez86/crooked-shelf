@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { useMemoryDb, schema } from './db/index.ts';
 import { resetSettingsCache } from './settings.ts';
 import { FIRST_CAMPAIGN, saveCampaign } from './campaigns.ts';
-import { createPage, deletePage, getPageBySlug, updatePage } from './pages.ts';
+import { createPage, deletePage, getPageBySlug, setVisibility, updatePage } from './pages.ts';
 import { checkEvent, listEvents, saveEvent, recomputeSortKeys, setTimelineMode, getTimeline, type EventInput } from './timeline.ts';
 import { createMap, getMap, mapsForPage, pinsOf, saveLayer, savePin, layersOf, validParentMap, listMaps, mapPath } from './maps.ts';
 import { preset } from '../calendar.ts';
@@ -247,6 +247,63 @@ describe('template', () => {
 
 import { getRevision, listRevisions, listTrash, purgePage, restorePage, revisionText } from './pages.ts';
 import { searchPages } from './search.ts';
+
+describe('visibilità dalla barra a sinistra', () => {
+	it('solo Master e Admin la vedono nell\'albero e la cambiano; mai la home', () => {
+		seedWiki('it', master);
+		const pg = createPage({ ...base, title: 'Rocca' }, master);
+		expect(locate(pageTree(master).items, `page-${pg.id}`)!.node).toMatchObject({ visibility: 'players', mine: true });
+		expect(locate(pageTree(alice).items, `page-${pg.id}`)!.node).not.toHaveProperty('visibility');
+
+		expect(setVisibility(pg.id, 'master', alice, false)).toBeNull();
+		expect(setVisibility(homePage(master)!.id, 'master', master, false)).toBeNull();
+		expect(setVisibility(pg.id, 'master', master, false)).toBe(1);
+		const page = getPageBySlug('rocca')!;
+		expect(page.visibility).toBe('master');
+		expect(listRevisions(page, master)).toHaveLength(2);
+		expect(locate(pageTree(alice).items, `page-${pg.id}`)).toBeNull();
+	});
+
+	it('scende su ciò che la pagina contiene, anche nelle sue cartelle; «Personale» solo sulle proprie pagine', () => {
+		const top = createPage({ ...base, title: 'Regno' }, master);
+		const child = createPage({ ...base, title: 'Capitale' }, master);
+		const grandchild = createPage({ ...base, title: 'Porto', visibility: 'public' }, master);
+		const byAlice = createPage({ ...base, title: 'Taverna di Alice' }, alice);
+		const folder = createCategory('Villaggi', null);
+		const inFolder = createPage({ ...base, title: 'Borgo', categoryId: folder.id }, master);
+		createPage({ ...base, title: 'Altrove' }, master);
+		for (const [node, parent] of [
+			[`page-${child.id}`, `page-${top.id}`],
+			[`page-${grandchild.id}`, `page-${child.id}`],
+			[`page-${byAlice.id}`, `page-${top.id}`],
+			[`folder-${folder.id}`, `page-${top.id}`]
+		])
+			expect(moveTreeNode(master, node, { parent, before: null })).toBe(true);
+
+		// Senza `branch` cambia solo lei.
+		expect(setVisibility(top.id, 'public', master, false)).toBe(1);
+		expect(getPageBySlug('capitale')!.visibility).toBe('players');
+
+		expect(setVisibility(top.id, 'master', master, true)).toBe(5);
+		for (const slug of ['regno', 'capitale', 'porto', 'taverna-di-alice', 'borgo']) expect(getPageBySlug(slug)!.visibility).toBe('master');
+		expect(getPageBySlug('altrove')!.visibility).toBe('players');
+
+		// La pagina di Alice non diventa personale del Master: resta com'era. E il Master non rende personale la pagina di un altro.
+		expect(setVisibility(top.id, 'personal', master, true)).toBe(4);
+		expect(getPageBySlug('taverna-di-alice')!.visibility).toBe('master');
+		expect(getPageBySlug('borgo')!.visibility).toBe('personal');
+		expect(setVisibility(byAlice.id, 'personal', master, false)).toBeNull();
+	});
+
+	it('i resoconti di sessione portano la nuova visibilità nella cronologia', () => {
+		const campaign = timeline('Al tavolo', 'campaign');
+		const pg = createPage({ ...base, title: 'Sessione 2', session: { number: 2, realDate: '2026-10-08', world: null } }, master);
+		expect(listEvents(campaign, alice)).toHaveLength(1);
+		setVisibility(pg.id, 'master', master, false);
+		expect(listEvents(campaign, alice)).toEqual([]);
+		expect(listEvents(campaign, master)).toHaveLength(1);
+	});
+});
 
 describe('versioni e cestino', () => {
 	it('ogni salvataggio crea una versione, visibile solo a chi poteva vederla', () => {

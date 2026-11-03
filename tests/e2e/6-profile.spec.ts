@@ -198,7 +198,7 @@ test('la home: una sola, in cima all\'albero, fuori dalle cartelle, non si elimi
 	await expect(admin.getByRole('heading', { level: 1, name: 'Locanda del Grifone' })).toBeVisible();
 	await expect(first).toContainText('Locanda del Grifone');
 	await expect(tree.getByRole('button', { name: 'Sposta nel cestino: Locanda del Grifone' })).toHaveCount(0);
-	await expect(tree.locator('li.row:has(a[href="/wiki/le-cronache-di-faerun"])').getByRole('button')).toHaveCount(1);
+	await expect(tree.locator('li.row:has(a[href="/wiki/le-cronache-di-faerun"])').getByRole('button', { name: /^Sposta nel cestino/ })).toHaveCount(1);
 	await axe(admin, 'nuova home');
 
 	// In modifica: niente eliminazione, niente cartella, e la casella non si può togliere.

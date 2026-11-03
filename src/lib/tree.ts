@@ -1,6 +1,7 @@
 import { iconPath } from './icons.ts';
 import { PAGE_ICONS } from './pageIcons.ts';
 import { KIND_ICONS, type PageKind } from './pageKinds.ts';
+import type { Visibility } from './roles.ts';
 
 /**
  * Albero delle cartelle (le categorie), delle pagine di ogni tipo e dei divisori, come in Esplora risorse.
@@ -20,6 +21,9 @@ export interface TreePage {
 	canTrash?: boolean;
 	/** La pagina iniziale del sito: in cima alla radice, non si sposta. */
 	home?: boolean;
+	/** Solo per Master e Admin, che la cambiano dalla barra: chi può vedere la pagina, e se l'hanno scritta loro. */
+	visibility?: Visibility;
+	mine?: boolean;
 }
 
 /** Il disegno di una pagina: l'icona scelta, altrimenti quella del tipo. */
@@ -73,14 +77,14 @@ const trimDividers = (list: TreeNode[]) =>
 /** `keepEmpty` = mostra anche le cartelle senza pagine visibili (per chi gestisce le categorie). */
 export function buildTree(
 	cats: { id: number; name: string; slug: string; parentId: number | null; parentPageId?: number | null; sort?: number | null }[],
-	pages: { id: number; slug: string; title: string; categoryId: number | null; parentPageId?: number | null; sort?: number | null; icon?: string | null; kind?: PageKind; canTrash?: boolean; home?: boolean }[],
+	pages: { id: number; slug: string; title: string; categoryId: number | null; parentPageId?: number | null; sort?: number | null; icon?: string | null; kind?: PageKind; canTrash?: boolean; home?: boolean; visibility?: Visibility; mine?: boolean }[],
 	keepEmpty: boolean,
 	dividers: { id: number; categoryId: number | null; parentPageId: number | null; sort: number | null }[] = []
 ): Tree {
 	const nodes = new Map<string, TreeFolder | TreePage>();
 	for (const c of cats) nodes.set(`folder-${c.id}`, { type: 'folder', id: c.id, name: c.name, slug: c.slug, sort: c.sort ?? null, items: [] });
 	for (const p of pages)
-		nodes.set(`page-${p.id}`, { type: 'page', id: p.id, slug: p.slug, title: p.title, icon: p.icon ?? null, kind: p.kind ?? 'page', sort: p.sort ?? null, items: [], canTrash: p.canTrash ?? false, home: p.home });
+		nodes.set(`page-${p.id}`, { type: 'page', id: p.id, slug: p.slug, title: p.title, icon: p.icon ?? null, kind: p.kind ?? 'page', sort: p.sort ?? null, items: [], canTrash: p.canTrash ?? false, home: p.home, ...(p.visibility && { visibility: p.visibility, mine: !!p.mine }) });
 	const root: Tree = { items: [] };
 
 	// Chi contiene chi. Dentro una pagina nascosta o nel cestino non si può stare: si risale alla cartella.

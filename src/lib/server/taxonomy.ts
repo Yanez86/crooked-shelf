@@ -100,7 +100,13 @@ function readTree(where: SQL, keepEmpty: boolean, u: Viewer | null = null): Tree
 		.from(pages)
 		.where(where)
 		.all()
-		.map((p) => ({ ...p, canTrash: canEdit(p, u) && canManage(p, u), ...(isHomePage(p.id) && HOME_ROW) }));
+		.map(({ visibility, ...p }) => ({
+			...p,
+			canTrash: canEdit({ ...p, visibility }, u) && canManage({ ...p, visibility }, u),
+			// Ai giocatori la visibilità non serve: l'icona per cambiarla è solo di Master e Admin.
+			...(isMaster(u) && { visibility, mine: p.authorId === u!.id }),
+			...(isHomePage(p.id) && HOME_ROW)
+		}));
 	return buildTree(listCategories(), rows, keepEmpty, db.select().from(treeDividers).where(ofCampaign(treeDividers)).all());
 }
 

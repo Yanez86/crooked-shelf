@@ -4,7 +4,8 @@
 	import { SvelteSet } from 'svelte/reactivity';
 	import { page } from '$app/state';
 	import { getT } from '../i18n/index.ts';
-	import { isMaster } from '../access.ts';
+	import { allowedVisibilities, isMaster } from '../access.ts';
+	import type { Visibility } from '../roles.ts';
 	import { iconPath } from '../icons.ts';
 	import Icon from './Icon.svelte';
 	import { childrenOf, keyPlace, locate, nodeKey, pageIcon, placeAt, treePaths, treeTemplates, withoutTemplates, type Tree, type TreeNode, type TreePage, type TreePlace } from '../tree.ts';
@@ -259,9 +260,9 @@
 		move(key, place);
 	}
 
-	async function changed(r: Response | null, done: string) {
+	async function changed(r: Response | null, done: string, params?: Record<string, string | number>) {
 		failed = !r?.ok;
-		announce = failed ? '' : t(done);
+		announce = failed ? '' : t(done, params);
 		await invalidateAll();
 		await tick();
 	}
@@ -307,6 +308,109 @@
 		if (r?.ok && reading) return goto('/wiki?deleted=1', { invalidateAll: true });
 		await changed(r, n.type === 'divider' ? 'tree.dividerRemoved' : 'tree.trashed');
 		document.querySelector<HTMLElement>('#explorer .new-page')?.focus();
+	}
+
+	// Chi può vedere una pagina, per Master e Admin: l'icona accanto al cestino apre i livelli.
+	// Se la pagina ne contiene altre, prima di cambiare anche quelle si chiede. «Personale» solo sulle proprie pagine.
+	const VIS_ICONS: Record<Visibility, string> = { public: 'globe', players: 'eye', master: 'eyeOff', personal: 'lock' };
+	const level = (v: Visibility) => t('visibility.' + v);
+	let visFor = $state<TreePage | null>(null);
+	let visMenu = $state<HTMLElement>();
+	// Il clic sull'icona di un menu aperto lo chiude (fuori dal menu) e basta: non lo deve riaprire.
+	let visBlocked = false;
+	let ask = $state<{ p: TreePage; level: Visibility; n: number; others: boolean } | null>(null);
+	let askDlg = $state<HTMLDialogElement>();
+	let choice: 'all' | 'one' | null = null;
+	const visButton = (p: TreePage) => document.querySelector<HTMLElement>(`[data-vis="${nodeKey(p)}"]`);
+	const visLevels = (p: TreePage) => allowedVisibilities(user).filter((v) => v !== 'personal' || p.mine);
+
+	async function openVis(p: TreePage, btn: HTMLElement, viaPointer: boolean) {
+		if (visBlocked && viaPointer) {
+			visBlocked = false;
+			return;
+		}
+		visFor = p;
+		await tick();
+		if (!visMenu) return;
+		visMenu.showPopover();
+		const box = btn.getBoundingClientRect();
+		const menu = visMenu.getBoundingClientRect();
+		const below = box.bottom + 4 + menu.height <= innerHeight - 8;
+		visMenu.style.top = `${Math.max(8, below ? box.bottom + 4 : box.top - 4 - menu.height)}px`;
+		visMenu.style.left = `${Math.max(8, Math.min(box.right - menu.width, innerWidth - menu.width - 8))}px`;
+		(visMenu.querySelector<HTMLElement>('[aria-checked="true"]') ?? visMenu.querySelector<HTMLElement>('button'))?.focus();
+	}
+
+	function visToggled(e: ToggleEvent) {
+		if (e.newState !== 'closed' || !visFor) return;
+		const p = visFor;
+		visFor = null;
+		// Con Esc o un clic fuori il fuoco torna sull'icona; se si sceglie un livello lo sposta chi cambia.
+		if (!document.activeElement || document.activeElement === document.body || visMenu?.contains(document.activeElement)) visButton(p)?.focus();
+	}
+
+	function menuKeys(e: KeyboardEvent) {
+		const items = [...(visMenu?.querySelectorAll<HTMLElement>('button') ?? [])];
+		const i = items.indexOf(document.activeElement as HTMLElement);
+		const to: Record<string, number> = { ArrowDown: (i + 1) % items.length, ArrowUp: (i - 1 + items.length) % items.length, Home: 0, End: items.length - 1 };
+		if (e.key === 'Tab') {
+			e.preventDefault();
+			visMenu?.hidePopover();
+		} else if (to[e.key] !== undefined) {
+			e.preventDefault();
+			items[to[e.key]]?.focus();
+		}
+	}
+
+	// Le pagine dentro questa, come nell'albero (i template stanno nella loro linguetta).
+	function inside(p: TreePage): TreePage[] {
+		const hit = locate(pagesTree.items, nodeKey(p));
+		const out: TreePage[] = [];
+		const walk = (n: TreeNode) =>
+			childrenOf(n).forEach((c) => {
+				if (c.type === 'page' && !c.home) out.push(c);
+				walk(c);
+			});
+		if (hit) walk(hit.node);
+		return out;
+	}
+
+	async function chooseVis(p: TreePage, v: Visibility) {
+		visFor = null;
+		visMenu?.hidePopover();
+		const rest = inside(p).filter((c) => c.visibility !== v);
+		const n = rest.filter((c) => v !== 'personal' || c.mine).length;
+		if (n) {
+			ask = { p, level: v, n, others: n < rest.length };
+			choice = null;
+			await tick();
+			askDlg?.showModal();
+			return;
+		}
+		if (v !== p.visibility) await setVis(p, v, false);
+		else visButton(p)?.focus();
+	}
+
+	function answer(c: 'all' | 'one') {
+		choice = c;
+		askDlg?.close();
+	}
+
+	// Chiusa con la X o con Esc: non cambia niente.
+	async function answered() {
+		const a = ask;
+		ask = null;
+		if (!a) return;
+		if (choice === 'all' || (choice === 'one' && a.level !== a.p.visibility)) await setVis(a.p, a.level, choice === 'all');
+		else visButton(a.p)?.focus();
+	}
+
+	async function setVis(p: TreePage, v: Visibility, branch: boolean) {
+		const body = JSON.stringify({ node: nodeKey(p), visibility: v, branch });
+		const r = await fetch('/api/tree/visibility', { method: 'POST', headers: { 'content-type': 'application/json' }, body }).catch(() => null);
+		const res = r?.ok ? await r.json().catch(() => null) : null;
+		await changed(r, branch ? 'tree.visibilityChangedBranch' : 'tree.visibilityChanged', { level: level(v), n: res?.changed ?? 0 });
+		visButton(p)?.focus();
 	}
 
 	function save() {
@@ -370,6 +474,26 @@
 	</button>
 {/snippet}
 
+{#snippet vis(p: TreePage)}
+	{#if canManage && p.visibility && !p.home}
+		<button
+			type="button"
+			class="tool vis"
+			data-vis={nodeKey(p)}
+			data-level={p.visibility}
+			title={t('tree.visibility', { level: level(p.visibility) })}
+			aria-label={t('tree.visibilityOf', { title: p.title, level: level(p.visibility) })}
+			aria-haspopup="menu"
+			aria-expanded={visFor?.id === p.id}
+			aria-controls={visFor?.id === p.id ? 'tree-vis-menu' : undefined}
+			onpointerdown={() => (visBlocked = visFor?.id === p.id)}
+			onclick={(e) => openVis(p, e.currentTarget, e.detail > 0)}
+		>
+			<Icon name={VIS_ICONS[p.visibility]} />
+		</button>
+	{/if}
+{/snippet}
+
 {#snippet resourceLeaf(r: ResourceItem)}
 	<li>
 		<a href="/resources/{r.id}" aria-current={currentRes === String(r.id) ? 'page' : undefined}>
@@ -428,6 +552,7 @@
 						<span class="chevron" aria-hidden="true"></span>
 					</button>
 					{@render link(n)}
+					{@render vis(n)}
 					{#if n.canTrash}{@render trash(n, n.title)}{/if}
 				</div>
 				{#if open.has(nodeKey(n))}
@@ -437,6 +562,7 @@
 		{:else}
 			<li class="row" {...rowAttrs(n)}>
 				{@render link(n)}
+				{@render vis(n)}
 				{#if n.canTrash}{@render trash(n, n.title)}{/if}
 			</li>
 		{/if}
@@ -583,6 +709,7 @@
 					{#each templates as p (p.id)}
 						<li class="row">
 							{@render link(p)}
+							{@render vis(p)}
 							{#if p.canTrash}{@render trash(p, p.title)}{/if}
 						</li>
 					{/each}
@@ -597,6 +724,40 @@
 				<svg class="ico doc" viewBox="0 0 24 24" aria-hidden="true"><path d={iconPath('trash')} /></svg>
 				<span>{t('trash.title')}</span>
 			</a>
+		{/if}
+		<!-- Un solo menu per tutte le righe, in primo piano (popover): non lo taglia il bordo della barra. Esc o un clic fuori lo chiudono. -->
+		<div
+			id="tree-vis-menu"
+			class="vis-menu"
+			role="menu"
+			tabindex="-1"
+			popover="auto"
+			aria-label={visFor ? t('tree.visibilityMenu', { title: visFor.title }) : undefined}
+			bind:this={visMenu}
+			ontoggle={visToggled}
+			onkeydown={menuKeys}
+		>
+			{#if visFor}
+				{@const p = visFor}
+				{#each visLevels(p) as v (v)}
+					<button type="button" role="menuitemradio" aria-checked={p.visibility === v} onclick={() => chooseVis(p, v)}>
+						<Icon name={VIS_ICONS[v]} />
+						<span>{level(v)}<small>{t('visibility.' + v + 'Hint')}</small></span>
+						{#if p.visibility === v}<Icon name="check" />{/if}
+					</button>
+				{/each}
+			{/if}
+		</div>
+		{#if ask}
+			<dialog bind:this={askDlg} class="vis-ask" aria-labelledby="vis-ask-q" onclose={answered}>
+				<p id="vis-ask-q">{t('tree.branchQuestion', { title: ask.p.title, n: ask.n, level: level(ask.level) })}</p>
+				{#if ask.others}<p class="muted">{t('tree.branchOthers')}</p>{/if}
+				<div class="actions">
+					<button class="btn btn-primary" type="button" onclick={() => answer('all')}>{t('tree.branchAll')}</button>
+					<button class="btn" type="button" onclick={() => answer('one')}>{t('tree.branchOne')}</button>
+				</div>
+				<button class="btn btn-small btn-ghost close-ask" type="button" title={t('common.cancel')} aria-label={t('common.cancel')} onclick={() => askDlg?.close()}><Icon name="close" /></button>
+			</dialog>
 		{/if}
 	</nav>
 </div>
@@ -768,7 +929,8 @@
 		background: var(--c-surface2);
 	}
 	/* Mentre si trascina non deve intralciare: sotto c'è la riga dove lasciare la voce. */
-	.dragging .trash {
+	.dragging .trash,
+	.dragging .vis {
 		pointer-events: none;
 	}
 	.tool.trash {
@@ -800,13 +962,129 @@
 		.tool.trash {
 			display: none;
 		}
-		.divider .tool {
+		.divider .tool,
+		.tool.vis {
 			opacity: 1;
+		}
+		.tool.vis:has(+ .trash) {
+			right: 0.1rem;
+		}
+		.row:has(> .vis + .trash) > a {
+			padding-right: 1.85rem;
 		}
 	}
 	.row:has(> .trash) > a,
+	.row:has(> .vis) > a,
 	.holder:has(> .trash) > details > summary {
 		padding-right: 1.85rem;
+	}
+	/*
+	 * Chi può vedere la pagina, accanto al cestino. Solo Master e Personale si vedono sempre: sono quelle da notare scorrendo.
+	 * Pubblica e Giocatori compaiono passando sulla riga, come il cestino. L'icona cambia forma, non solo colore.
+	 */
+	.tool.vis {
+		position: absolute;
+		top: calc((var(--row) - 1.5rem) / 2);
+		right: 0.1rem;
+		width: 1.5rem;
+		height: 1.5rem;
+		opacity: 0;
+	}
+	.tool.vis:has(+ .trash) {
+		right: 1.6rem;
+	}
+	.row:has(> .vis + .trash) > a {
+		padding-right: 3.35rem;
+	}
+	.tool.vis[data-level='master'],
+	.tool.vis[data-level='personal'],
+	.tool.vis[aria-expanded='true'],
+	.row:hover > .tool.vis,
+	.tool.vis:hover,
+	.tool.vis:focus-visible {
+		opacity: 1;
+	}
+	.tool.vis:hover {
+		background: none;
+		color: var(--c-text);
+	}
+	.vis-menu {
+		position: fixed;
+		inset: auto;
+		width: max-content;
+		max-width: min(19rem, calc(100vw - 1rem));
+		margin: 0;
+		padding: 0.25rem;
+		border: 1px solid var(--c-border);
+		border-radius: var(--radius);
+		background: var(--c-bg);
+		color: var(--c-text);
+		box-shadow: 0 0.5rem 1.5rem rgb(0 0 0 / 0.25);
+	}
+	.vis-menu button {
+		display: flex;
+		align-items: flex-start;
+		gap: 0.5rem;
+		width: 100%;
+		min-height: 2rem;
+		padding: 0.35rem 0.5rem;
+		border: 0;
+		border-radius: var(--radius);
+		background: none;
+		color: inherit;
+		font: inherit;
+		text-align: left;
+		cursor: pointer;
+	}
+	.vis-menu button > span {
+		flex: 1;
+	}
+	.vis-menu button :global(.icon) {
+		flex: none;
+		width: 1.05rem;
+		height: 1.05rem;
+		margin-top: 0.15rem;
+	}
+	.vis-menu small {
+		display: block;
+		color: var(--c-muted);
+		font-size: 0.8rem;
+	}
+	.vis-menu button:hover,
+	.vis-menu button:focus-visible {
+		background: var(--c-surface2);
+	}
+	.vis-menu [aria-checked='true'] {
+		font-weight: 700;
+		box-shadow: inset 3px 0 0 var(--c-primary);
+	}
+	.vis-ask {
+		width: min(100% - 2rem, 28rem);
+		max-width: none;
+		padding: 1.25rem;
+		color: var(--c-text);
+		background: var(--c-bg);
+		border: 1px solid var(--c-border);
+		border-top: 4px solid var(--c-primary);
+		border-radius: var(--radius);
+	}
+	.vis-ask::backdrop {
+		background: rgb(0 0 0 / 0.6);
+	}
+	.vis-ask p:first-child {
+		margin-top: 0;
+		padding-right: 2.25rem;
+	}
+	.vis-ask .actions {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem;
+	}
+	.close-ask {
+		position: absolute;
+		top: 0.5rem;
+		right: 0.5rem;
+		padding: 0;
 	}
 	.page-row {
 		display: flex;

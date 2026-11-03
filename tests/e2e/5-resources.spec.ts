@@ -54,7 +54,7 @@ async function upload(page: Page, file: { name: string; mimeType: string; buffer
 	await page.goto('/resources/new');
 	await page.getByLabel('File', { exact: true }).setInputFiles(file);
 	if (title) await page.getByLabel('Titolo').fill(title);
-	if (visibility) await page.getByLabel(visibility).check();
+	if (visibility) await page.getByLabel(visibility, { exact: true }).check();
 	await page.getByRole('button', { name: 'Carica', exact: true }).click();
 	await page.waitForURL(/\/resources\/\d+$/);
 }

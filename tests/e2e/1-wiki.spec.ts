@@ -592,6 +592,82 @@ test('il Master vede la wiki come un giocatore, e torna indietro', async ({ brow
 	await m.context().close();
 });
 
+test('la visibilità si cambia dalla barra a sinistra, anche per le pagine dentro', async ({ browser }) => {
+	await admin.setViewportSize({ width: 1280, height: 900 });
+	await newPage(admin, 'Torre Alta', async (p) => p.keyboard.type('In cima.'));
+	await newPage(admin, 'Cella Segreta', async (p) => p.keyboard.type('In fondo.'));
+	await admin.goto('/wiki/torre-alta');
+	const tree = admin.getByRole('navigation', { name: TREE });
+	await tree.getByRole('link', { name: 'Cella Segreta' }).dragTo(tree.getByRole('link', { name: 'Torre Alta' }));
+	await expect(tree.locator('li', { has: admin.locator('.page-row', { hasText: 'Torre Alta' }) }).getByRole('link', { name: 'Cella Segreta' })).toBeVisible();
+
+	// Giocatori: l'occhio compare passando sulla riga. La home non ce l'ha.
+	const torre = tree.getByRole('button', { name: 'Chi vede Torre Alta: Giocatori' });
+	await expect(torre).toHaveCSS('opacity', '0');
+	await tree.getByRole('link', { name: 'Torre Alta' }).hover();
+	await expect(torre).toHaveCSS('opacity', '1');
+	await expect(tree.getByRole('button', { name: /^Chi vede Le Cronache di Faerûn/ })).toHaveCount(0);
+
+	// Il menu: Esc lo chiude e il fuoco torna sull'icona.
+	await torre.click();
+	const menu = admin.getByRole('menu', { name: 'Chi può vedere Torre Alta' });
+	await expect(menu.getByRole('menuitemradio', { name: /Giocatori/ })).toBeFocused();
+	await expect(menu.getByRole('menuitemradio')).toHaveCount(4);
+	await axe(admin, 'menu della visibilità');
+	await shot(admin, '02e-visibilita-menu');
+	await admin.keyboard.press('Escape');
+	await expect(menu).toBeHidden();
+	await expect(torre).toBeFocused();
+
+	// Da tastiera, Solo Master: la pagina dentro va chiesta.
+	await admin.keyboard.press('Enter');
+	await admin.keyboard.press('ArrowDown');
+	await expect(menu.getByRole('menuitemradio', { name: /Solo Master/ })).toBeFocused();
+	await admin.keyboard.press('Enter');
+	const ask = admin.getByRole('dialog', { name: /Torre Alta.*contiene altre pagine \(1 da cambiare\)/ });
+	await expect(ask).toBeVisible();
+	await axe(admin, 'domanda sulle pagine dentro');
+	await shot(admin, '02f-visibilita-domanda');
+	await ask.getByRole('button', { name: 'Sì, anche loro' }).click();
+	await expect(ask).toHaveCount(0);
+	const torreMaster = tree.getByRole('button', { name: 'Chi vede Torre Alta: Solo Master' });
+	await expect(torreMaster).toBeFocused();
+	await admin.mouse.move(800, 800);
+	// Solo Master si vede sempre, senza passare sulla riga.
+	await expect(torreMaster).toHaveCSS('opacity', '1');
+	await expect(tree.getByRole('button', { name: 'Chi vede Cella Segreta: Solo Master' })).toHaveCSS('opacity', '1');
+	await expect(admin.getByText('Pagine cambiate: 2.')).toBeAttached();
+
+	// Il giocatore non le vede più, e non ha le icone (Alice ora legge in inglese: l'albero si cerca per id).
+	const p = await login(browser, PLAYER);
+	await p.goto('/wiki');
+	const playerTree = p.locator('#explorer');
+	await expect(playerTree).toContainText('Bartolo Pancia');
+	await expect(playerTree).not.toContainText('Torre Alta');
+	await expect(playerTree).not.toContainText('Cella Segreta');
+	await expect(playerTree.locator('[data-vis]')).toHaveCount(0);
+	expect((await p.goto('/wiki/cella-segreta'))?.status()).toBe(404);
+	expect((await p.request.post('/api/tree/visibility', { data: { node: 'page-1', visibility: 'public' } })).status()).toBe(403);
+	await p.context().close();
+
+	// «Solo questa pagina»: torna Giocatori soltanto la torre.
+	await torreMaster.click();
+	await menu.getByRole('menuitemradio', { name: /Giocatori/ }).click();
+	await ask.getByRole('button', { name: 'Solo questa pagina' }).click();
+	await expect(tree.getByRole('button', { name: 'Chi vede Torre Alta: Giocatori' })).toBeFocused();
+	await expect(tree.getByRole('button', { name: 'Chi vede Cella Segreta: Solo Master' })).toBeAttached();
+
+	// Si fa pulizia: il cestino resta vuoto per chi viene dopo.
+	await tree.getByRole('button', { name: 'Sposta nel cestino: Torre Alta' }).click();
+	await tree.getByRole('button', { name: 'Sposta nel cestino: Cella Segreta' }).click({ force: true });
+	await admin.goto('/trash');
+	for (const name of ['Torre Alta', 'Cella Segreta']) {
+		await admin.getByRole('checkbox', { name: new RegExp(`Sono sicuro.*${name}`) }).check();
+		await admin.getByRole('button', { name: new RegExp(`Elimina per sempre.*${name}`) }).click();
+		await expect(admin.locator('main').getByText(name, { exact: true })).toHaveCount(0);
+	}
+});
+
 test('visitatori: spenti di default', async ({ browser }) => {
 	const p = await (await browser.newContext({ locale: 'it-IT' })).newPage();
 	await p.goto('/wiki');
