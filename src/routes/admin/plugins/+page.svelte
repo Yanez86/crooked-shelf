@@ -123,8 +123,10 @@
 		color: inherit;
 		font: inherit;
 		text-align: left;
-		text-decoration: underline;
 		cursor: pointer;
+	}
+	.plugins .card:hover .open {
+		text-decoration: underline;
 	}
 	.open::after {
 		content: '';

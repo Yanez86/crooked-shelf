@@ -6,7 +6,7 @@ import { getDb, schema } from './db/index.ts';
 import { addMember } from './campaigns.ts';
 import type { Role } from '../roles.ts';
 
-const { users, sessions, invites, campaigns } = schema;
+const { users, sessions, invites, campaigns, apiTokens } = schema;
 
 export const SESSION_COOKIE = 'cs_session';
 const DAY = 24 * 60 * 60 * 1000;
@@ -131,16 +131,21 @@ export function validateSession(token: string): { user: SessionUser; expires?: D
 		db.update(sessions).set({ expiresAt }).where(eq(sessions.id, id)).run();
 		expires = new Date(expiresAt);
 	}
-	const { id: uid, username, displayName, role, prefs, icon } = row.u;
-	return { user: { id: uid, username, displayName, role, prefs: prefs ?? {}, icon }, expires };
+	return { user: sessionUser(row.u), expires };
+}
+
+function sessionUser({ id, username, displayName, role, prefs, icon }: typeof users.$inferSelect): SessionUser {
+	return { id, username, displayName, role, prefs: prefs ?? {}, icon };
 }
 
 export function deleteSession(token: string) {
 	getDb().delete(sessions).where(eq(sessions.id, sha256(token))).run();
 }
 
+/** Chiude tutti gli accessi di una persona, compresi i token: chi ha rubato la password non deve poter restare. */
 export function deleteUserSessions(userId: number) {
 	getDb().delete(sessions).where(eq(sessions.userId, userId)).run();
+	getDb().delete(apiTokens).where(eq(apiTokens.userId, userId)).run();
 }
 
 export function purgeExpiredSessions() {
@@ -160,6 +165,39 @@ export function setSessionCookie(cookies: Cookies, url: URL, token: string, expi
 
 export function clearSessionCookie(cookies: Cookies) {
 	cookies.delete(SESSION_COOKIE, { path: '/' });
+}
+
+// --- Token per Claude ---
+
+/** Si vede una volta sola e sostituisce quello di prima: nel database c'è solo l'impronta. */
+export function createApiToken(userId: number, campaignId: number, canWrite = false): string {
+	const token = newToken();
+	const tokenHash = sha256(token);
+	getDb().insert(apiTokens).values({ userId, campaignId, tokenHash, canWrite }).onConflictDoUpdate({ target: [apiTokens.userId, apiTokens.campaignId], set: { tokenHash, canWrite } }).run();
+	return token;
+}
+
+/** Cosa può fare il token di una persona in una campagna; null se non ne ha uno. */
+export function apiTokenAccess(userId: number, campaignId: number): 'read' | 'write' | null {
+	const row = getDb().select().from(apiTokens).where(and(eq(apiTokens.userId, userId), eq(apiTokens.campaignId, campaignId))).get();
+	return row ? (row.canWrite ? 'write' : 'read') : null;
+}
+
+export function revokeApiToken(userId: number, campaignId: number) {
+	getDb().delete(apiTokens).where(and(eq(apiTokens.userId, userId), eq(apiTokens.campaignId, campaignId))).run();
+}
+
+/** Dall'intestazione `Authorization: Bearer …`: chi è, per quale campagna vale e se può scrivere. */
+export function validateApiToken(header: string | null): { user: SessionUser; campaignId: number; canWrite: boolean } | null {
+	const [, token] = /^Bearer (\S+)$/i.exec(header ?? '') ?? [];
+	if (!token) return null;
+	const row = getDb()
+		.select({ t: apiTokens, u: users })
+		.from(apiTokens)
+		.innerJoin(users, eq(users.id, apiTokens.userId))
+		.where(eq(apiTokens.tokenHash, sha256(token)))
+		.get();
+	return row && !row.u.disabled ? { user: sessionUser(row.u), campaignId: row.t.campaignId, canWrite: row.t.canWrite } : null;
 }
 
 // --- Inviti ---

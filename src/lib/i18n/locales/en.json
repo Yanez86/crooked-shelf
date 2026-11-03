@@ -150,6 +150,8 @@
 		"auto": "Automatic (like your system)",
 		"light": "Light",
 		"dark": "Dark",
+		"lake": "Lake",
+		"lake-dark": "Lake at night",
 		"intro": "Built-in themes can't be changed, but you can copy them and change the colors. A theme is saved only if all text stays readable (WCAG AA).",
 		"builtin": "Built-in themes",
 		"custom": "Your themes",
@@ -241,7 +243,6 @@
 		"pink": "Pink"
 	},
 	"home": {
-		"welcome": "Welcome back, {name}.",
 		"emptyTitle": "The wiki is empty",
 		"emptyText": "Every great campaign starts with a page. Write a place, a character or the recap of the first session.",
 		"firstPage": "Create the first page",
@@ -423,13 +424,30 @@
 		"currentPassword": "Current password",
 		"newPassword": "New password",
 		"changePassword": "Change password",
-		"passwordChanged": "Password changed. Sessions on other devices have been closed."
+		"passwordChanged": "Password changed. Sessions on other devices have been closed and Claude tokens revoked."
 	},
 	"profile": {
 		"title": "Profile",
 		"guest": "Guest",
 		"icon": "Icon",
 		"iconHint": "Shown at the top right, next to your name and rank."
+	},
+	"claude": {
+		"title": "Claude",
+		"intro": "With the Claude plugin you can work on “{campaign}” from the conversation. Claude only sees what you can see and only does what you can do.",
+		"access": {
+			"none": "No token for this campaign.",
+			"read": "There is an active token: Claude can only read.",
+			"write": "There is an active token: Claude can read and write."
+		},
+		"write": "Claude can also write",
+		"writeHint": "It creates pages and changes the text of those you can edit, one version at a time. It doesn't touch settings, users, plugins, folders or visibility, and it deletes nothing.",
+		"create": "Create a token",
+		"replace": "Replace the token",
+		"once": "Copy the token now: it won't be shown again. The plugin will ask for these two values.",
+		"url": "Address",
+		"token": "Token",
+		"revoked": "Token revoked."
 	},
 	"admin": {
 		"settings": "Settings",

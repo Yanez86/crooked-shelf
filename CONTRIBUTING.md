@@ -39,6 +39,7 @@ Per provarli sull'immagine Docker: `docker run -d -p 4300:3000 crooked-shelf` e 
 | `src/lib/themes.ts` | temi e controllo dei contrasti |
 | `src/lib/server/rules/` | testi SRD 5.2 (generati con `tools/import-srd.mjs`) |
 | `plugins/` | plugin inclusi (esempi) |
+| `claude-plugin/` | plugin per Claude Code: si collega a `/mcp` |
 | `docs/` | progetto, installazione, guida, plugin |
 
 Regole importanti:

@@ -204,7 +204,7 @@ describe('pacchetto mondo', () => {
 		const dir = 'examples/la-campana-sommersa';
 		const r = readPack(readFileSync(`${dir}/la-campana-sommersa.shelf`));
 		if (!r.ok) throw new Error(r.error);
-		expect(importPack(r.pack, { conflict: 'rename', calendar: false }, admin)).toMatchObject({ pages: 11, categories: 5 });
+		expect(importPack(r.pack, { conflict: 'rename', calendar: false }, admin)).toMatchObject({ pages: 11, categories: 4 });
 		const prompts = readFileSync(`${dir}/prompt-immagini.md`, 'utf8');
 		const pages = JSON.parse(strFromU8(r.pack.entries['pages.json'])) as { slug: string; title: string }[];
 		const refs = (n: DocNode): DocNode[] => [...(n.type === 'wikiLink' || n.type === 'ruleRef' ? [n] : []), ...(n.content ?? []).flatMap(refs)];

@@ -13,16 +13,18 @@
 <h1>{t('resources.edit')}: {data.values.title}</h1>
 <FormError error={form?.error} />
 {#key form}
-	<ResourceForm values={form?.values ?? data.values} requireFile={false} submitLabel={t('common.save')} cancelHref="/resources/{data.id}" />
+	<ResourceForm values={form?.values ?? data.values} requireFile={false} titleOnly={data.wikiImage} submitLabel={t('common.save')} cancelHref="/resources/{data.id}" />
 {/key}
 
-<section class="danger" aria-labelledby="del-title">
-	<h2 id="del-title">{t('resources.delete')}</h2>
-	<form method="post" action="?/delete">
-		<label class="choice"><input type="checkbox" name="confirm" required /><span>{t('resources.deleteConfirm', { title: data.values.title })}</span></label>
-		<button class="btn btn-danger" type="submit">{t('resources.delete')}</button>
-	</form>
-</section>
+{#if !data.wikiImage}
+	<section class="danger" aria-labelledby="del-title">
+		<h2 id="del-title">{t('resources.delete')}</h2>
+		<form method="post" action="?/delete">
+			<label class="choice"><input type="checkbox" name="confirm" required /><span>{t('resources.deleteConfirm', { title: data.values.title })}</span></label>
+			<button class="btn btn-danger" type="submit">{t('resources.delete')}</button>
+		</form>
+	</section>
+{/if}
 
 <style>
 	.danger {

@@ -138,12 +138,13 @@
 		display: flex;
 		align-items: center;
 		gap: 0.4rem;
-		color: var(--c-link);
 		font-size: var(--fs-md);
-		text-decoration: underline;
 	}
 	.template-card:hover {
 		border-color: var(--c-primary);
+	}
+	.template-card:hover strong {
+		text-decoration: underline;
 	}
 	.ico {
 		flex: none;

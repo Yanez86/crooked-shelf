@@ -222,3 +222,90 @@ test('la home: una sola, in cima all\'albero, fuori dalle cartelle, non si elimi
 	await expect(first).toContainText('Le Cronache di Faerûn');
 	await expect(tree.getByRole('button', { name: 'Sposta nel cestino: Locanda del Grifone' })).toHaveCount(1);
 });
+
+test('Claude legge la campagna col token, con gli stessi permessi di chi lo crea', async ({ browser, request }) => {
+	const createToken = async (p: Page) => {
+		await p.goto('/profile');
+		await p.getByRole('button', { name: 'Crea un token' }).click();
+		await expect(p.getByLabel('Indirizzo')).toHaveValue(/\/mcp$/);
+		await axe(p, 'profilo: token per Claude');
+		return p.getByLabel('Token', { exact: true }).inputValue();
+	};
+	const mcp = (token: string, name: string, args: object) =>
+		request.post('/mcp', { headers: { Authorization: `Bearer ${token}` }, data: { jsonrpc: '2.0', id: 1, method: 'tools/call', params: { name, arguments: args } } });
+	const text = async (token: string, name: string, args: object) => (await (await mcp(token, name, args)).json()).result.content[0].text as string;
+
+	const p = await login(browser, PLAYER);
+	const player = await createToken(p);
+	const master = await createToken(admin);
+
+	expect(await text(master, 'read_page', { slug: 'locanda-del-grifone' })).toContain('spia degli Zhentarim');
+	expect(await text(player, 'read_page', { slug: 'locanda-del-grifone' })).toContain('birra annacquata');
+	expect(await text(player, 'read_page', { slug: 'locanda-del-grifone' })).not.toContain('spia');
+	expect(await text(player, 'search', { query: 'spia' })).toBe('[]');
+	expect(await text(player, 'read_page', { slug: 'piano-del-cattivo' })).toBe('Pagina non trovata.');
+	expect(await text(player, 'list_pages', {})).toContain('bartolo-pancia');
+
+	// Senza token non si entra, nemmeno col cookie dell'Admin; il token non vale per il resto della wiki.
+	const body = { data: { jsonrpc: '2.0', id: 1, method: 'tools/list' } };
+	expect((await request.post('/mcp', body)).status()).toBe(401);
+	expect((await request.post('/mcp', { ...body, headers: { Authorization: 'Bearer sbagliato' } })).status()).toBe(401);
+	expect((await admin.request.post('/mcp', body)).status()).toBe(401);
+	const other = await request.post('/api/tree', { headers: { Authorization: `Bearer ${master}` }, maxRedirects: 0 });
+	expect(other.ok()).toBe(false);
+	expect((await request.get('/mcp', { headers: { Authorization: `Bearer ${master}` } })).status()).toBe(405);
+
+	// Senza la casella il token non scrive.
+	expect((await (await mcp(player, 'create_page', { title: 'Abusiva', text: 'x' })).json()).error.code).toBe(-32602);
+
+	await p.getByRole('button', { name: 'Revoca' }).click();
+	await expect(p.getByRole('region', { name: 'Claude' }).getByRole('status')).toContainText('Token revocato');
+	expect((await mcp(player, 'list_pages', {})).status()).toBe(401);
+	await p.context().close();
+
+	// Con la casella Claude scrive, ma solo testo delle pagine.
+	await admin.goto('/profile');
+	await admin.getByLabel('Claude può anche scrivere').check();
+	await axe(admin, 'profilo: token che scrive');
+	await admin.getByRole('button', { name: 'Sostituisci il token' }).click();
+	const writer = await admin.getByLabel('Token', { exact: true }).inputValue();
+	await expect(admin.getByRole('region', { name: 'Claude' })).toContainText('leggere e scrivere');
+	await expect(admin.getByLabel('Claude può anche scrivere')).toBeChecked();
+	expect((await mcp(master, 'list_pages', {})).status()).toBe(401);
+
+	const text2 = '## Riassunto\n\nSi parla di [[Bartolo Pancia]] e di @incantesimo[Fireball].\n\n- primo fatto\n- secondo fatto\n\n<script>window.preso = 1</script>';
+	const made = JSON.parse(await text(writer, 'create_page', { title: 'Scritta da Claude', text: text2, visibility: 'players' }));
+	expect(made.slug).toBe('scritta-da-claude');
+	await text(writer, 'append_to_page', { slug: made.slug, text: 'Nota del Master', secret: true });
+	await text(writer, 'replace_text', { slug: made.slug, find: 'primo fatto', replace: 'fatto corretto' });
+
+	const errors: string[] = [];
+	admin.on('pageerror', (e) => errors.push(e.message));
+	await admin.goto(`/wiki/${made.slug}`);
+	const content = admin.locator('.content');
+	await expect(content.getByRole('heading', { level: 2, name: 'Riassunto' })).toBeVisible();
+	await expect(content.getByRole('link', { name: 'Bartolo Pancia' })).toHaveAttribute('href', '/wiki/bartolo-pancia');
+	await expect(content.locator('.secret')).toContainText('Nota del Master');
+	await expect(content).toContainText('fatto corretto');
+	await expect(content).toContainText('<script>window.preso = 1</script>');
+	expect(await admin.evaluate(() => (window as unknown as { preso?: number }).preso)).toBeUndefined();
+
+	// L'editor del sito apre e salva quello che ha scritto Claude.
+	await admin.goto(`/wiki/${made.slug}/edit`);
+	await expect(admin.locator('.editor-content')).toContainText('fatto corretto');
+	await admin.getByRole('button', { name: 'Salva' }).click();
+	await admin.waitForURL(`**/wiki/${made.slug}`);
+	await expect(admin.locator('.content .secret')).toContainText('Nota del Master');
+	expect(errors).toEqual([]);
+
+	await admin.goto(`/wiki/${made.slug}/history`);
+	await expect(admin.getByRole('main')).toContainText('Davide');
+
+	// Il token che scrive resta chiuso fuori da tutto il resto.
+	const auth = { Authorization: `Bearer ${writer}` };
+	expect((await request.post('/api/tree', { headers: auth, maxRedirects: 0 })).ok()).toBe(false);
+	expect((await request.delete('/api/tree', { headers: auth, data: { node: 'page-1' }, maxRedirects: 0 })).ok()).toBe(false);
+	expect((await request.get('/admin/backup/download', { headers: auth, maxRedirects: 0 })).ok()).toBe(false);
+	expect((await request.post('/admin/plugins', { headers: auth, maxRedirects: 0 })).ok()).toBe(false);
+	expect((await (await mcp(writer, 'delete_page', { slug: made.slug })).json()).error.code).toBe(-32602);
+});

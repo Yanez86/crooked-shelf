@@ -87,6 +87,15 @@ export function getFile(id: string): FileRow | undefined {
 	return getDb().select().from(schema.files).where(eq(schema.files.id, id)).get();
 }
 
+/** Cambia il nome di un file. L'estensione resta: senza, chi lo scarica non saprebbe con cosa aprirlo. */
+export function renameFile(id: string, title: string) {
+	const f = getFile(id);
+	if (!f) return;
+	const ext = /\.[^.]+$/.exec(f.name)?.[0] ?? '';
+	const name = title.toLowerCase().endsWith(ext.toLowerCase()) ? title : title + ext;
+	getDb().update(schema.files).set({ name }).where(eq(schema.files.id, id)).run();
+}
+
 /** Dove sta il file sul disco (null se manca). */
 export function filePath(f: FileRow): string | null {
 	const p = pathOf(f.id, extOf(f.mime));

@@ -128,14 +128,24 @@ test('il Master carica una musica, un ritratto e una dispensa segreta', async ()
 	await axe(admin, 'elenco delle risorse');
 	await shot(admin, '41-risorse');
 
-	// Un'immagine della wiki ha la sua scheda: dice dove compare e non si modifica.
+	// Un'immagine della wiki ha la sua scheda: dice dove compare e si cambia solo il nome.
 	await admin.locator('main h3 a').filter({ hasNotText: 'Ritratto di Elminster' }).first().click();
 	await admin.waitForURL(/\/resources\/[^/]*[^\d/][^/]*$/);
 	await expect(admin.locator('main img')).toBeVisible();
 	await expect(admin.locator('main ul a[href^="/wiki/"]').first()).toBeVisible();
-	await expect(admin.getByRole('link', { name: 'Modifica la risorsa' })).toHaveCount(0);
 	await expect(panel.locator('a[aria-current="page"]')).toHaveCount(1);
 	await axe(admin, 'immagine della wiki');
+	await admin.getByRole('link', { name: /^Modifica: / }).click();
+	await expect(admin.locator('main input, main textarea')).toHaveCount(1);
+	await expect(admin.getByRole('button', { name: 'Elimina la risorsa' })).toHaveCount(0);
+	await axe(admin, 'rinomina una risorsa');
+	await admin.getByLabel('Titolo').fill('   ');
+	await admin.getByRole('button', { name: 'Salva' }).click();
+	await expect(admin.getByRole('alert')).toBeVisible();
+	await admin.getByLabel('Titolo').fill('Immagine rinominata');
+	await admin.getByRole('button', { name: 'Salva' }).click();
+	await expect(admin.getByRole('heading', { level: 1, name: /^Immagine rinominata/ })).toBeVisible();
+	await expect(panel.getByRole('link', { name: /^Immagine rinominata/ })).toHaveAttribute('aria-current', 'page');
 
 	await admin.goto('/gallery?show=resources');
 	await expect(admin.locator('main').getByRole('status')).toHaveText('1 immagini');
@@ -151,6 +161,10 @@ test('il giocatore vede le risorse, ma non quelle segrete', async ({ browser }) 
 	await expect(main).not.toContainText('Piano del drago');
 	await expect(main.getByRole('link', { name: /Carica una risorsa/ })).toHaveCount(0);
 	await expect(p.getByRole('navigation', { name: TREE })).not.toContainText('Piano del drago');
+	await main.getByRole('link', { name: 'Ritratto di Elminster' }).click();
+	await expect(main.getByRole('heading', { level: 1, name: 'Ritratto di Elminster' })).toBeVisible();
+	await expect(main.getByRole('link', { name: /^Modifica: / })).toHaveCount(0);
+	expect((await p.goto(p.url() + '/edit'))?.status()).toBe(404);
 	expect((await p.goto(secretUrl))?.status()).toBe(404);
 	expect((await p.goto('/resources/new'))?.status()).toBe(404);
 	await p.context().close();
@@ -158,14 +172,14 @@ test('il giocatore vede le risorse, ma non quelle segrete', async ({ browser }) 
 
 test('modifica ed elimina una risorsa', async () => {
 	await admin.goto(secretUrl);
-	await admin.getByRole('link', { name: 'Modifica la risorsa' }).click();
+	await admin.getByRole('link', { name: /^Modifica: / }).click();
 	await admin.getByLabel('Titolo').fill('Piano del drago (bozza)');
 	await admin.getByLabel('Descrizione').fill('Da dare ai giocatori solo alla fine.');
 	await admin.getByRole('button', { name: 'Salva' }).click();
 	await expect(admin.getByRole('heading', { level: 1, name: 'Piano del drago (bozza)' })).toBeVisible();
 	await expect(admin.locator('main')).toContainText('Da dare ai giocatori solo alla fine.');
 
-	await admin.getByRole('link', { name: 'Modifica la risorsa' }).click();
+	await admin.getByRole('link', { name: /^Modifica: / }).click();
 	await admin.getByLabel('Sì, voglio eliminare «Piano del drago (bozza)» e il suo file').check();
 	await admin.getByRole('button', { name: 'Elimina la risorsa' }).click();
 	await expect(admin.getByRole('status')).toContainText('Risorsa eliminata.');

@@ -16,13 +16,11 @@ const EMBLEM = { where: 'colonna a lato', ratio: '1:1', framing: 'centered and s
 
 // Cartelle: gli indirizzi non coincidono con quelli di una campagna esistente, che l'importazione sposterebbe qui dentro.
 const CATEGORIES = [
-	{ slug: 'campana-sommersa', name: NAME, parent: null, description: "Avventura di esempio per tre personaggi di 2° livello." },
-	{ slug: 'campana-png', name: 'PNG', parent: 'campana-sommersa', description: '' },
-	{ slug: 'campana-personaggi', name: 'Personaggi', parent: 'campana-sommersa', description: '' },
-	{ slug: 'campana-luoghi', name: 'Luoghi', parent: 'campana-sommersa', description: '' },
-	{ slug: 'campana-fazioni', name: 'Fazioni', parent: 'campana-sommersa', description: '' }
+	{ slug: 'campana-png', name: 'PNG', parent: null, description: '' },
+	{ slug: 'campana-personaggi', name: 'Personaggi', parent: null, description: '' },
+	{ slug: 'campana-luoghi', name: 'Luoghi', parent: null, description: '' },
+	{ slug: 'campana-fazioni', name: 'Fazioni', parent: null, description: '' }
 ];
-const COVER_COLORS = { 'campana-sommersa': 'night', 'campana-luoghi': 'sea' };
 
 // --- Blocchi dell'editor ---
 
@@ -56,8 +54,8 @@ const table = (head, ...rows) => ({ type: 'table', content: [row('tableHeader', 
 
 const PAGES = [
 	{
-		title: NAME,
-		category: 'campana-sommersa',
+		title: 'Guida del Master',
+		category: null,
 		visibility: 'master',
 		icon: 'scroll',
 		tags: ['Avventura'],
@@ -417,7 +415,7 @@ const packPages = PAGES.map(({ title, category, visibility, icon, tags, fields, 
 	template: null,
 	icon,
 	// Una tinta unita tiene il posto solo a chi avrà una copertina: i ritratti stanno nella colonna a lato.
-	cover: image.where !== COVER.where ? null : { image: null, color: COVER_COLORS[category], y: 50 },
+	cover: image.where !== COVER.where ? null : { image: null, color: category ? 'sea' : 'night', y: 50 },
 	kind: 'page'
 }));
 

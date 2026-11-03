@@ -150,6 +150,8 @@
 		"auto": "Automatico (come il sistema)",
 		"light": "Chiaro",
 		"dark": "Scuro",
+		"lake": "Lago",
+		"lake-dark": "Lago di notte",
 		"intro": "I temi preinstallati non si modificano, ma puoi copiarli e cambiare i colori. Un tema si salva solo se tutti i testi restano leggibili (WCAG AA).",
 		"builtin": "Temi preinstallati",
 		"custom": "Temi creati da te",
@@ -241,7 +243,6 @@
 		"pink": "Rosa"
 	},
 	"home": {
-		"welcome": "Bentornato, {name}.",
 		"emptyTitle": "La wiki è vuota",
 		"emptyText": "Ogni grande campagna comincia da una pagina. Scrivi un luogo, un personaggio o il resoconto della prima sessione.",
 		"firstPage": "Crea la prima pagina",
@@ -423,13 +424,30 @@
 		"currentPassword": "Password attuale",
 		"newPassword": "Nuova password",
 		"changePassword": "Cambia password",
-		"passwordChanged": "Password cambiata. Le sessioni sugli altri dispositivi sono state chiuse."
+		"passwordChanged": "Password cambiata. Le sessioni sugli altri dispositivi sono state chiuse e i token per Claude revocati."
 	},
 	"profile": {
 		"title": "Profilo",
 		"guest": "Ospite",
 		"icon": "Icona",
 		"iconHint": "Si vede in alto a destra, accanto al tuo nome e al tuo grado."
+	},
+	"claude": {
+		"title": "Claude",
+		"intro": "Con il plugin per Claude puoi lavorare su «{campaign}» dalla conversazione. Claude vede solo quello che puoi vedere tu e fa solo quello che puoi fare tu.",
+		"access": {
+			"none": "Nessun token per questa campagna.",
+			"read": "C'è un token attivo: Claude può solo leggere.",
+			"write": "C'è un token attivo: Claude può leggere e scrivere."
+		},
+		"write": "Claude può anche scrivere",
+		"writeHint": "Crea pagine e cambia il testo di quelle che puoi modificare tu, una versione per volta. Non tocca impostazioni, utenti, plugin, cartelle o visibilità, e non elimina nulla.",
+		"create": "Crea un token",
+		"replace": "Sostituisci il token",
+		"once": "Copia subito il token: non si vedrà più. Il plugin ti chiederà questi due valori.",
+		"url": "Indirizzo",
+		"token": "Token",
+		"revoked": "Token revocato."
 	},
 	"admin": {
 		"settings": "Impostazioni",

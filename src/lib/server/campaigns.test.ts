@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import { eq } from 'drizzle-orm';
 import { getDb, getSqlite, migrate, useMemoryDb, schema } from './db/index.ts';
 import { MIGRATIONS } from './db/migrations.ts';
+import { campaignsMigration } from './db/campaigns.ts';
 import { campaignsFor, currentCampaign, deleteCampaign, FIRST_CAMPAIGN, getCampaign, inCampaign, membersOf, ofCampaign, roleIn, saveCampaign, setMaster, addMember, type CampaignRow } from './campaigns.ts';
 import { createInvite, activeInvites, joinInvite, redeemInvite } from './auth.ts';
 import { createPage, getPageById, getPageBySlug, listPages, listTrash, deletePage, resolverFor, backlinks, updatePage } from './pages.ts';
@@ -252,10 +253,10 @@ describe('eliminare una campagna', () => {
 });
 
 describe('migrazione', () => {
-	const last = MIGRATIONS.length - 1;
+	const before = MIGRATIONS.findIndex((m) => typeof m === 'object' && m.rebuild === campaignsMigration);
 
 	function oldWiki() {
-		useMemoryDb(last);
+		useMemoryDb(before);
 		const s = getSqlite();
 		s.exec(`
 		INSERT INTO users (id, username, display_name, password_hash, role, created_at) VALUES
@@ -301,7 +302,7 @@ describe('migrazione', () => {
 		s.exec(`UPDATE users SET role = 'player' WHERE role = 'master'`);
 		migrate(s);
 		expect(getCampaign(1)!.masterId).toBe(1);
-		s = useMemoryDb(last) && getSqlite();
+		s = useMemoryDb(before) && getSqlite();
 		migrate(s);
 		expect(getCampaign(1)).toMatchObject({ name: 'Crooked Shelf', masterId: null, homePageId: null, calendar: null });
 	});

@@ -104,9 +104,9 @@ Immagini, musica e altri file della campagna: dispense, ritratti, sottofondi per
 
 Il Master le carica con «Carica una risorsa»: immagini (PNG, JPEG, WebP o GIF, fino a 25 MB), audio (MP3, OGG, WAV, FLAC o M4A) o qualsiasi altro file, fino a 90 MB. Se non scrive un titolo si usa il nome del file. Come per le mappe sceglie chi le vede: pubbliche, giocatori o solo Master.
 
-Tra le Immagini ci sono anche tutte quelle usate nella wiki, cioè copertine, colonna a lato, testo delle pagine e mappe, senza doverle caricare di nuovo: ognuno vede solo quelle che può vedere. Compaiono con il nome del file; la loro scheda dice dove compaiono e non si modifica da qui: si cambiano nella pagina che le usa.
+Tra le Immagini ci sono anche tutte quelle usate nella wiki, cioè copertine, colonna a lato, testo delle pagine e mappe, senza doverle caricare di nuovo: ognuno vede solo quelle che può vedere. Compaiono con il nome del file; la loro scheda dice dove compaiono e con la matita il Master cambia solo il nome (l'estensione del file resta); il resto si cambia nella pagina che le usa.
 
-Le immagini si guardano e l'audio si ascolta direttamente nella wiki, anche dal telefono; gli altri file (PDF compresi) si scaricano. Con la matita si cambiano titolo, descrizione, visibilità e file, o la si elimina.
+Le immagini si guardano e l'audio si ascolta direttamente nella wiki, anche dal telefono; gli altri file (PDF compresi) si scaricano. Cliccando una risorsa si apre la sua scheda: con la matita in alto a destra il Master ne cambia titolo, descrizione, visibilità e file, o la elimina.
 
 Le risorse entrano nel backup, ma non ancora nel pacchetto mondo.
 

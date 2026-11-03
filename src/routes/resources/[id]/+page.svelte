@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { getT } from '#lib/i18n/index.ts';
-	import Icon from '#lib/components/Icon.svelte';
+	import PageHead from '#lib/components/PageHead.svelte';
 	import { formatSize } from '#lib/resources.ts';
 	import type { PageProps } from './$types';
 
@@ -14,10 +14,7 @@
 <svelte:head><title>{r.title} · {page.data.siteName}</title></svelte:head>
 
 <nav aria-label={t('resources.path')}><a href="/resources">{t('resources.title')}</a> › {t('resources.kinds.' + r.kind)}</nav>
-<div class="head">
-	<h1>{r.title}</h1>
-	{#if data.canEdit}<a class="btn" href="/resources/{r.id}/edit" title={t('resources.edit')}><Icon name="edit" /><span class="visually-hidden">{t('resources.edit')}</span></a>{/if}
-</div>
+<PageHead page={{ slug: '', title: r.title, icon: null, cover: null }} canEdit={data.canEdit} editHref="/resources/{r.id}/edit" />
 {#if r.visibility !== 'players'}<p><span class="badge">{t('visibility.' + r.visibility)}</span></p>{/if}
 {#if r.description}<p class="description">{r.description}</p>{/if}
 {#if r.sources}
@@ -42,13 +39,6 @@
 </p>
 
 <style>
-	.head {
-		display: flex;
-		flex-wrap: wrap;
-		justify-content: space-between;
-		align-items: center;
-		gap: 0.5rem 1rem;
-	}
 	.description {
 		white-space: pre-line;
 	}

@@ -48,7 +48,7 @@ export const THEMES: Theme[] = [
 			control: '#77726a',
 			primary: '#7a2e1c',
 			onPrimary: '#ffffff',
-			link: '#0b5394',
+			link: '#7a2e1c',
 			missing: '#b00020',
 			focus: '#1a56db',
 			danger: '#a1101e',
@@ -75,7 +75,7 @@ export const THEMES: Theme[] = [
 			control: '#8d8a84',
 			primary: '#f0a080',
 			onPrimary: '#1a0d08',
-			link: '#8ab8ff',
+			link: '#f0a080',
 			missing: '#ff8a8a',
 			focus: '#ffd166',
 			danger: '#ff8a8a',
@@ -87,6 +87,61 @@ export const THEMES: Theme[] = [
 			tipBorder: '#6cc98a',
 			warningBorder: '#e8a84f',
 			codeBg: '#2a2c33'
+		}
+	},
+	// Lago: grigi freddi appena tinti di verde acqua, un solo accento petrolio, fuoco arancio che non si confonde con l'accento.
+	{
+		id: 'lake',
+		scheme: 'light',
+		colors: {
+			bg: '#f5f7f7',
+			surface: '#ffffff',
+			surface2: '#e9eef0',
+			text: '#132024',
+			muted: '#4b5b60',
+			border: '#d2dbde',
+			control: '#687a80',
+			primary: '#0b6a70',
+			onPrimary: '#ffffff',
+			link: '#0b6470',
+			missing: '#b3261e',
+			focus: '#c2410c',
+			danger: '#b3261e',
+			success: '#1d6b3a',
+			secretBg: '#f2edfb',
+			secretText: '#3a1f63',
+			secretBorder: '#7a4fb8',
+			noteBorder: '#2b6cb0',
+			tipBorder: '#2e7d4f',
+			warningBorder: '#9a5800',
+			codeBg: '#e9eef0'
+		}
+	},
+	{
+		id: 'lake-dark',
+		scheme: 'dark',
+		colors: {
+			bg: '#0e1315',
+			surface: '#151c1f',
+			surface2: '#1f292d',
+			text: '#e5eeef',
+			muted: '#a2b2b6',
+			border: '#2b373b',
+			control: '#7a8c91',
+			primary: '#5ccfc6',
+			onPrimary: '#03201e',
+			link: '#7ad6ce',
+			missing: '#ff8f86',
+			focus: '#ffb454',
+			danger: '#ff8f86',
+			success: '#7dd59f',
+			secretBg: '#241b35',
+			secretText: '#e9dcff',
+			secretBorder: '#b08ae8',
+			noteBorder: '#79aef0',
+			tipBorder: '#6ece96',
+			warningBorder: '#efb259',
+			codeBg: '#1f292d'
 		}
 	}
 ];

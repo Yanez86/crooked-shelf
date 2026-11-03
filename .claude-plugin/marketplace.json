@@ -1,0 +1,5 @@
+{
+	"name": "crooked-shelf",
+	"owner": { "name": "Crooked Shelf" },
+	"plugins": [{ "name": "crooked-shelf", "source": "./claude-plugin", "description": "Porta la tua campagna di Crooked Shelf in Claude: cerca, legge e scrive le pagine con i tuoi permessi." }]
+}

@@ -74,7 +74,7 @@
 			<h3 id="prev-title">{t('themes.preview')}</h3>
 			<div class="preview" style={previewStyle}>
 				<p class="pv-title">{name}</p>
-				<p>{t('themes.sampleText')} <a href="#prev-title">{t('themes.sampleLink')}</a> · <span class="pv-missing">{t('themes.sampleMissing')}</span></p>
+				<p>{t('themes.sampleText')} <a href="#prev-title">{t('themes.sampleLink')}</a> · <a class="wikilink missing" href="#prev-title">{t('themes.sampleMissing')}</a></p>
 				<p class="pv-muted">{t('themes.sampleMuted')}</p>
 				<span class="pv-btn"><Icon name="save" />{t('common.save')}</span>
 				<div class="pv-secret"><strong><Icon name="lock" /> {t('editor.secret')}</strong><br />{t('themes.sampleSecret')}</div>
@@ -155,18 +155,11 @@
 		border-radius: var(--radius);
 		padding: 1rem;
 	}
-	.preview a {
-		color: var(--c-link);
-	}
 	.pv-title {
 		font-family: var(--font-head);
 		font-size: var(--fs-lg);
 		font-weight: 700;
 		margin-top: 0;
-	}
-	.pv-missing {
-		color: var(--c-missing);
-		text-decoration: underline dashed;
 	}
 	.pv-muted {
 		color: var(--c-muted);

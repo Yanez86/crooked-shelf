@@ -498,7 +498,7 @@ test('invito di un giocatore', async ({ browser }) => {
 	await p.getByLabel('Password', { exact: true }).fill(PLAYER.pass);
 	await p.getByLabel('Ripeti la password').fill(PLAYER.pass);
 	await p.getByRole('button', { name: "Crea l'account" }).click();
-	await expect(p.getByText('Bentornato, Alice.')).toBeVisible();
+	await expect(p.locator('.user-menu summary')).toContainText('Alice');
 
 	// L'invito non funziona una seconda volta.
 	const p2 = await (await browser.newContext({ locale: 'it-IT' })).newPage();

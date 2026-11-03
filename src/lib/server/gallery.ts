@@ -2,7 +2,7 @@ import { inArray, sql } from 'drizzle-orm';
 import { getDb, schema } from './db/index.ts';
 import { visibleTo } from './visibility.ts';
 import { listMaps } from './maps.ts';
-import { collator, listResources, type Resource } from './resources.ts';
+import { collator, getResource, listResources, type Resource } from './resources.ts';
 import { stripSecrets, uploadedImages } from '../content/extract.ts';
 import { EMPTY_DOC, isDoc } from '../content/types.ts';
 import { isMaster, type Viewer } from '../access.ts';
@@ -75,7 +75,7 @@ export function galleryImages(u: Viewer | null): GalleryImage[] {
 		.sort((a, b) => b.createdAt - a.createdAt || a.id.localeCompare(b.id));
 }
 
-/** Una voce delle Risorse. Con l'id del file al posto del numero è un'immagine della wiki mai caricata come risorsa: si chiama come il file, dice dove compare e da qui non si modifica. */
+/** Una voce delle Risorse. Con l'id del file al posto del numero è un'immagine della wiki mai caricata come risorsa: si chiama come il file, dice dove compare e da qui si cambia solo il nome. */
 export type ResourceEntry = Omit<Resource, 'id'> & { id: number | string; alt?: string; sources?: GallerySource[] };
 
 /** Le risorse che chi guarda può vedere più le immagini della wiki che non lo sono già, in ordine di titolo. */
@@ -93,4 +93,9 @@ export function resourceEntries(u: Viewer | null): ResourceEntry[] {
 			sources
 		}));
 	return [...listResources(u), ...images].sort((a, b) => collator.compare(a.title, b.title));
+}
+
+/** Una voce delle Risorse, dal suo indirizzo. */
+export function resourceEntry(id: string, u: Viewer | null): ResourceEntry | undefined {
+	return getResource(Number(id), u) ?? resourceEntries(u).find((r) => r.id === id);
 }

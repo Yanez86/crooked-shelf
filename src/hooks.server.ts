@@ -5,6 +5,7 @@ import {
 	clearSessionCookie,
 	hasUsers,
 	setSessionCookie,
+	validateApiToken,
 	validateSession
 } from '#lib/server/auth.ts';
 import { getSettings } from '#lib/server/settings.ts';
@@ -13,8 +14,8 @@ import { allPlugins, extraThemes } from '#lib/server/plugins.ts';
 import { cleanPrefs, PREFS_COOKIE } from '#lib/prefs.ts';
 import { fromAcceptLanguage, isLocale, DEFAULT_LOCALE } from '#lib/i18n/index.ts';
 
-// Pagine raggiungibili senza aver fatto l'accesso.
-const OPEN = ['/login', '/setup', '/invite/'];
+// Pagine raggiungibili senza aver fatto l'accesso. /mcp risponde da sé: 401 senza un token valido.
+const OPEN = ['/login', '/setup', '/invite/', '/mcp'];
 // Quello che resta a chi ha un account ma non è in nessuna campagna.
 const WITHOUT_CAMPAIGN = ['/campaign', '/profile', '/logout'];
 
@@ -32,8 +33,13 @@ export const handle: Handle = async ({ event, resolve }) => {
 	const ready = hasUsers();
 	allPlugins();
 
-	locals.user = null;
-	const token = cookies.get(SESSION_COOKIE);
+	// Claude entra solo da /mcp, col suo token: lì i cookie non contano, e il token non apre il resto della wiki.
+	const mcp = url.pathname === '/mcp';
+	const api = mcp ? validateApiToken(event.request.headers.get('authorization')) : null;
+
+	locals.user = api?.user ?? null;
+	locals.mcpWrite = api?.canWrite ?? false;
+	const token = mcp ? undefined : cookies.get(SESSION_COOKIE);
 	if (token) {
 		const s = validateSession(token);
 		if (s) {
@@ -44,7 +50,9 @@ export const handle: Handle = async ({ event, resolve }) => {
 
 	const settings = getSettings();
 	locals.campaigns = campaignsFor(locals.user, settings.allowVisitors);
-	locals.campaign = locals.campaigns.find((c) => c.id === Number(cookies.get(CAMPAIGN_COOKIE))) ?? locals.campaigns[0] ?? null;
+	locals.campaign = mcp
+		? (locals.campaigns.find((c) => c.id === api?.campaignId) ?? null)
+		: (locals.campaigns.find((c) => c.id === Number(cookies.get(CAMPAIGN_COOKIE))) ?? locals.campaigns[0] ?? null);
 	// Da qui in poi `role` vale per questa campagna: i controlli sui permessi non devono sapere che ce ne sono altre.
 	const campaign = locals.campaign ?? NO_CAMPAIGN;
 	if (locals.user) locals.user.role = roleIn(campaign, locals.user);

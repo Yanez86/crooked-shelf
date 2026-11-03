@@ -1,0 +1,25 @@
+{
+	"name": "crooked-shelf",
+	"displayName": "Crooked Shelf",
+	"version": "1.0.0",
+	"description": "Porta la tua campagna di Crooked Shelf in Claude: cerca, legge e, se il token lo permette, scrive le pagine con i tuoi permessi.",
+	"author": { "name": "Crooked Shelf" },
+	"homepage": "https://github.com/Yanez86/crooked-shelf/blob/main/docs/claude.md",
+	"repository": "https://github.com/Yanez86/crooked-shelf",
+	"license": "AGPL-3.0-only",
+	"userConfig": {
+		"url": {
+			"type": "string",
+			"title": "Indirizzo",
+			"description": "Dalla wiki: Profilo › Claude. Finisce con /mcp.",
+			"required": true
+		},
+		"token": {
+			"type": "string",
+			"title": "Token",
+			"description": "Dalla wiki: Profilo › Claude. Vale per una sola campagna.",
+			"sensitive": true,
+			"required": true
+		}
+	}
+}

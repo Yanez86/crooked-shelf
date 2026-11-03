@@ -197,7 +197,7 @@
 			<button class="add" type="button" onclick={addImage}><Icon name="plus" />{t('fields.imageBox')}</button>
 		</div>
 		{#if !fixed && !rows.length}
-			<button class="close" type="button" onclick={closeColumn}>{t('fields.removeColumn')}</button>
+			<button class="btn btn-small btn-ghost close" type="button" onclick={closeColumn}>{t('fields.removeColumn')}</button>
 		{/if}
 		<p class="visually-hidden" aria-live="polite">{announce}</p>
 	</section>
@@ -423,15 +423,6 @@
 	}
 	.close {
 		align-self: flex-start;
-		font: inherit;
-		font-size: var(--fs-sm);
-		min-height: 1.5rem;
-		padding: 0;
-		border: 0;
-		background: none;
-		color: var(--c-link);
-		text-decoration: underline;
-		cursor: pointer;
 	}
 	/* Col dito i comandi crescono e stanno in fila, accanto al nome del riquadro: in colonna ogni riquadro sarebbe alto il triplo. */
 	@media (max-width: 48rem), (pointer: coarse) {

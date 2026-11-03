@@ -4,13 +4,15 @@
 	import { PAGE_ICONS } from '../pageIcons.ts';
 	import { COVER_COLORS, type PageCover } from '../covers.ts';
 
-	/** La testa di una pagina: copertina, icona, titolo e matita. La stessa nelle pagine e nella home. */
+	/** La testa di una pagina: copertina, icona, titolo e matita. La stessa nelle pagine, nella home e nelle risorse. */
 	let {
 		page,
-		canEdit
+		canEdit,
+		editHref
 	}: {
 		page: { slug: string; title: string; icon: string | null; cover: PageCover | null };
 		canEdit: boolean;
+		editHref?: string;
 	} = $props();
 	const t = getT();
 </script>
@@ -28,7 +30,7 @@
 	{/if}
 	<h1>{page.title}</h1>
 	{#if canEdit}
-		<a class="edit-pencil" href="/wiki/{page.slug}/edit" title={t('page.edit')}><Icon name="edit" /><span class="visually-hidden">{t('page.edit')}: {page.title}</span></a>
+		<a class="edit-pencil" href={editHref ?? `/wiki/${page.slug}/edit`} title={t('page.edit')}><Icon name="edit" /><span class="visually-hidden">{t('page.edit')}: {page.title}</span></a>
 	{/if}
 </header>
 

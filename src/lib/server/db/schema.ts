@@ -52,6 +52,22 @@ export const sessions = sqliteTable('sessions', {
 	expiresAt: integer('expires_at').notNull()
 });
 
+/** Il token con cui Claude legge una campagna (/mcp), coi permessi di chi l'ha creato. */
+export const apiTokens = sqliteTable(
+	'api_tokens',
+	{
+		userId: integer('user_id')
+			.notNull()
+			.references(() => users.id, { onDelete: 'cascade' }),
+		campaignId: integer('campaign_id')
+			.notNull()
+			.references(() => campaigns.id, { onDelete: 'cascade' }),
+		tokenHash: text('token_hash').notNull().unique(),
+		canWrite: integer('can_write', { mode: 'boolean' }).notNull().default(false)
+	},
+	(t) => [primaryKey({ columns: [t.userId, t.campaignId] })]
+);
+
 export const invites = sqliteTable('invites', {
 	id: integer('id').primaryKey({ autoIncrement: true }),
 	tokenHash: text('token_hash').notNull().unique(),

@@ -1,4 +1,7 @@
 import type { DocNode, PageField } from './types.ts';
+import { INLINE_LINK } from './extract.ts';
+import { slugify } from '../slug.ts';
+import { parseRuleKind } from '../rules/index.ts';
 
 export interface MarkdownOptions {
 	/** Includere i blocchi segreti (come callout "secret"). */
@@ -97,6 +100,77 @@ export function toMarkdown(doc: DocNode, o: MarkdownOptions): string {
 		.join('\n')
 		.replace(/\n{3,}/g, '\n\n')
 		.trim();
+}
+
+// Oltre a INLINE_LINK (gruppi 1-5): **grassetto** (6), *corsivo* (7), [testo](https://…) (8-9). Lunghezze limitate: il testo arriva da fuori.
+const INLINE = new RegExp(`${INLINE_LINK.source}|\\*\\*(.{1,2000}?)\\*\\*|\\*(.{1,2000}?)\\*|\\[([^\\]\\n]{1,200})\\]\\((https?://[^\\s)]{1,2000})\\)`, 'g');
+
+function inlineNodes(s: string, marks: NonNullable<DocNode['marks']> = []): DocNode[] {
+	const out: DocNode[] = [];
+	const text = (t: string) => {
+		if (t) out.push({ type: 'text', text: t, ...(marks.length ? { marks } : {}) });
+	};
+	let last = 0;
+	for (const m of s.matchAll(INLINE)) {
+		text(s.slice(last, m.index));
+		last = m.index + m[0].length;
+		const kind = m[3] ? parseRuleKind(m[3]) : null;
+		if (m[1]) out.push({ type: 'wikiLink', attrs: { target: slugify(m[1].trim()), title: m[1].trim(), label: m[2]?.trim() || null } });
+		else if (kind) out.push({ type: 'ruleRef', attrs: { kind, name: m[4].trim(), label: m[5]?.trim() || null } });
+		else if (m[3]) text(m[0]);
+		else if (m[6]) out.push(...inlineNodes(m[6], [...marks, { type: 'bold' }]));
+		else if (m[7]) out.push(...inlineNodes(m[7], [...marks, { type: 'italic' }]));
+		else out.push(...inlineNodes(m[8], [...marks, { type: 'link', attrs: { href: m[9] } }]));
+	}
+	text(s.slice(last));
+	return out;
+}
+
+const HEADING = /^(#{1,6})\s+(.+)$/;
+const RULE = /^(-{3,}|\*{3,})$/;
+const BULLET = /^[-*]\s+(.+)$/;
+const NUMBER = /^\d+\.\s+(.+)$/;
+const QUOTE = /^>\s?(.*)$/;
+
+const paragraph = (s: string): DocNode => ({ type: 'paragraph', content: inlineNodes(s) });
+const list = (type: string, items: string[]): DocNode => ({ type, content: items.map((s) => ({ type: 'listItem', content: [paragraph(s)] })) });
+
+/**
+ * Markdown scritto da fuori (Claude) in blocchi dell'editor. Può nascere solo ciò che è qui:
+ * mai segreti, immagini o HTML, che resta testo. I livelli dei titoli sono quelli dell'editor.
+ */
+// ponytail: tabelle e blocchi di codice restano testo, aggiungerli se Claude ne ha bisogno.
+export function fromMarkdown(text: string): DocNode[] {
+	const lines = text.split(/\r?\n/).map((l) => l.trim());
+	const out: DocNode[] = [];
+	let i = 0;
+	const run = (re: RegExp) => {
+		const items: string[] = [];
+		for (let m = re.exec(lines[i] ?? ''); m; m = re.exec(lines[++i] ?? '')) items.push(m[1]);
+		return items;
+	};
+	while (i < lines.length) {
+		const line = lines[i];
+		const heading = HEADING.exec(line);
+		if (!line) i++;
+		else if (heading) {
+			out.push({ type: 'heading', attrs: { level: Math.min(4, Math.max(2, heading[1].length)) }, content: inlineNodes(heading[2]) });
+			i++;
+		} else if (RULE.test(line)) {
+			out.push({ type: 'horizontalRule' });
+			i++;
+		} else if (BULLET.test(line)) out.push(list('bulletList', run(BULLET)));
+		else if (NUMBER.test(line)) out.push(list('orderedList', run(NUMBER)));
+		else if (QUOTE.test(line)) {
+			const quote = run(QUOTE).filter(Boolean).map(paragraph);
+			if (quote.length) out.push({ type: 'blockquote', content: quote });
+		} else {
+			const para: string[] = [];
+			while (lines[i] && ![HEADING, RULE, BULLET, NUMBER, QUOTE].some((re) => re.test(lines[i]))) para.push(lines[i++]);
+			out.push(paragraph(para.join(' ')));
+		}
+	}
+	return out;
 }
 
 const yamlString = (s: string) => JSON.stringify(s);

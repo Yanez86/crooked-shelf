@@ -41,6 +41,7 @@ Senza Docker, su Raspberry Pi, su internet con HTTPS, backup e ripristino: **[do
 - [Installazione](docs/installazione.md)
 - [Guida all'uso](docs/guida.md)
 - [Creare un plugin](docs/plugin.md)
+- [Plugin per Claude](docs/claude.md)
 - [Contribuire](CONTRIBUTING.md)
 - [Progetto completo](docs/design.md)
 

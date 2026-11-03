@@ -5,11 +5,15 @@ Questo file è anche la pagina «Novità» della wiki (`/changelog`).
 
 ## 0.11.0 — 2026-10-30
 
+### Aggiunte
+- Due temi nuovi, Lago e Lago di notte: grigi freddi, accento verde petrolio, contrasti WCAG AA con margine. Si scelgono da Profilo.
+- Plugin per Claude Code: Claude cerca e legge le pagine di una campagna per rispondere alle tue domande, con i tuoi stessi permessi. Se lo permetti quando crei il token, può anche creare pagine e cambiarne il testo: niente eliminazioni, niente impostazioni, e ogni modifica lascia una versione. Il token si crea da Profilo › Claude; le istruzioni sono in [docs/claude.md](docs/claude.md).
+
 ### Modifiche
 - Telefono: tutta la wiki rivista per il dito. Testo a 16px e campi che non fanno più ingrandire la pagina; intestazione su una riga, sempre in vista, con la ricerca dietro la lente; scheda della pagina compatta, nome e valore sulla stessa riga; elenchi a righe, filtri a due a due, miniature a due per riga; in modifica Salva segue il pollice; bersagli più grandi e mappa più bassa, così la pagina si scorre. I collegamenti aprono la pagina invece del popup, e Indietro funziona.
 - Sopra il titolo di una pagina, al posto della categoria, c'è il percorso per arrivarci: cartella » pagina » sottopagina. Ogni voce porta lì.
 - Pulsanti uguali ovunque: per modificare c'è sempre la matita, Salva ha il dischetto a sinistra e ogni popup si chiude con la X, compresi la scelta dell'icona, i livelli della mappa e le domande dell'editor su collegamenti e testo alternativo, che prima erano finestre del browser.
-- Risorse: tra le Immagini ci sono anche tutte quelle usate nella wiki (copertine, colonna a lato, testo delle pagine, mappe), con il nome del file e l'elenco di dove compaiono.
+- Risorse: tra le Immagini ci sono anche tutte quelle usate nella wiki (copertine, colonna a lato, testo delle pagine, mappe), con il nome del file e l'elenco di dove compaiono. La matita in alto a destra c'è su ogni risorsa: sulle immagini della wiki il Master ne cambia il nome.
 - D&D Beyond diventa un plugin incluso, spento di base: per riavere i link al sito accendilo da Amministrazione › Plugin. Senza plugin, `@incantesimo[Fireball]` porta alla scheda della regola, o resta testo se la voce non è nell'elenco. Altri plugin possono aggiungere link ad altri siti.
 - Plugin: ogni plugin dice a cosa serve e come si usa. Cliccandolo si apre una finestra con scopo, istruzioni, autore, licenza e contenuto.
 - Barra a sinistra: sotto le icone delle linguette c'è il nome: Pagine, Risorse, Template.

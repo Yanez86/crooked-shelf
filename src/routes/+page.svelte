@@ -17,7 +17,6 @@
 
 {#snippet head()}
 	<PageHead page={data.home?.page ?? { slug: '', title: page.data.siteName, icon: null, cover: null }} canEdit={data.home?.canEdit ?? false} />
-	{#if user}<p class="muted welcome">{t('home.welcome', { name: user.displayName })}</p>{/if}
 {/snippet}
 
 {#snippet lists()}
@@ -85,9 +84,6 @@
 			max-height: none;
 		}
 	}
-	.welcome {
-		margin: 0;
-	}
 	.empty h2 {
 		margin-top: 0;
 	}
@@ -104,10 +100,6 @@
 		display: inline-flex;
 		align-items: center;
 		min-height: 2.5rem;
-		text-decoration: none;
-	}
-	.cats a:hover {
-		text-decoration: underline;
 	}
 	/* Titoli e righe come quelli dell'albero a sinistra. */
 	.lists h2 {
@@ -152,7 +144,7 @@
 	}
 	.when {
 		display: block;
-		font-size: 0.9em;
+		font-size: var(--fs-sm);
 	}
 	.all {
 		margin: 0.5rem 0 0;

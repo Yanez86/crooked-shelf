@@ -236,7 +236,7 @@ test('colonna a lato: si aggiunge modificando la pagina, con riquadri di testo e
 	await admin.evaluate(() => scrollTo(0, 0));
 	const top = async () => (await side.boundingBox())!.y;
 	expect(await top()).toBeCloseTo((await admin.locator('#explorer').boundingBox())!.y, 0);
-	await admin.evaluate(() => scrollTo(0, 500));
+	await admin.evaluate(() => scrollTo(0, 300));
 	await expect.poll(top).toBeCloseTo(16, 0);
 	await admin.evaluate(() => scrollTo(0, 0));
 	await admin.getByRole('button', { name: 'Salva' }).click();

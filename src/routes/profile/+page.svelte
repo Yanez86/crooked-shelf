@@ -154,6 +154,43 @@
 			</form>
 		</section>
 	{/if}
+
+	{#if data.claude}
+		<section aria-labelledby="claude-title">
+			<h2 id="claude-title">{t('claude.title')}</h2>
+			<p>{t('claude.intro', { campaign: data.claude.campaign })}</p>
+			<FormError error={msg('claude')?.error} />
+			<FormOk message={msg('claude')?.ok} />
+			{#if form?.token}
+				<div class="alert alert-ok" role="status">
+					<p>{t('claude.once')}</p>
+					<div class="field">
+						<label for="claude-url">{t('claude.url')}</label>
+						<input id="claude-url" type="text" readonly value={form.url} onfocus={(e) => e.currentTarget.select()} />
+					</div>
+					<div class="field">
+						<label for="claude-token">{t('claude.token')}</label>
+						<input id="claude-token" type="text" readonly autocomplete="off" value={form.token} onfocus={(e) => e.currentTarget.select()} />
+					</div>
+				</div>
+			{/if}
+			<div class="card claude">
+				<p>{t('claude.access.' + (data.claude.access ?? 'none'))}</p>
+				<form method="post" action="?/claude">
+					<label class="choice">
+						<input type="checkbox" name="write" checked={data.claude.access === 'write'} aria-describedby="claude-write-hint" />
+						<span>{t('claude.write')}<br /><span id="claude-write-hint" class="hint">{t('claude.writeHint')}</span></span>
+					</label>
+					<button class="btn btn-primary" type="submit">{data.claude.access ? t('claude.replace') : t('claude.create')}</button>
+				</form>
+				{#if data.claude.access}
+					<form method="post" action="?/claudeRevoke">
+						<button class="btn btn-danger" type="submit">{t('admin.revoke')}</button>
+					</form>
+				{/if}
+			</div>
+		</section>
+	{/if}
 </div>
 
 <style>
@@ -169,6 +206,14 @@
 		font-family: var(--font-head);
 		font-size: var(--fs-xl);
 		font-weight: 700;
+	}
+	.claude {
+		display: grid;
+		justify-items: start;
+		gap: 0.75rem;
+	}
+	.claude p {
+		margin: 0;
 	}
 	.icons {
 		display: grid;

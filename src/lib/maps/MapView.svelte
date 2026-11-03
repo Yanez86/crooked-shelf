@@ -284,6 +284,10 @@
 		font-size: var(--fs-base);
 		line-height: 1.5;
 	}
+	/* Leaflet colora i collegamenti di blu: nei fumetti valgono quelli della wiki. */
+	.map :global(.leaflet-popup-content a:not(.missing)) {
+		color: var(--c-link);
+	}
 	.map :global(.leaflet-popup-content p) {
 		margin: 0.35rem 0;
 	}

@@ -12,6 +12,8 @@ declare global {
 			campaign: CampaignRow | null;
 			/** Le campagne in cui può entrare. */
 			campaigns: CampaignRow[];
+			/** Il token di Claude può anche scrivere (solo su /mcp). */
+			mcpWrite: boolean;
 			prefs: Prefs;
 			locale: string;
 		}

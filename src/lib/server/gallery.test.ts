@@ -9,6 +9,7 @@ import { createCategory, pageTree } from './taxonomy.ts';
 import { galleryImages, resourceEntries } from './gallery.ts';
 import { createMap } from './maps.ts';
 import { createResource } from './resources.ts';
+import { renameFile } from './files.ts';
 import type { DocNode, PageField } from '../content/types.ts';
 
 const master = { id: 1, role: 'master' as const };
@@ -157,6 +158,14 @@ describe('galleria', () => {
 			file: { id: 'mapxxxxxxxx', name: 'map.png', mime: 'image/png' },
 			sources: [{ kind: 'map', title: 'Faerûn', href: '/wiki/faerun' }]
 		});
+	});
+
+	it("rinominare un'immagine della wiki cambia il nome del file e tiene l'estensione", () => {
+		const title = () => resourceEntries(master).find((r) => r.id === 'inlinexxxxxxxx')!.title;
+		renameFile('inlinexxxxxxxx', 'Torre');
+		expect(title()).toBe('Torre.png');
+		renameFile('inlinexxxxxxxx', 'Torre alta.PNG');
+		expect(title()).toBe('Torre alta.PNG');
 	});
 });
 

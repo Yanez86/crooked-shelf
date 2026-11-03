@@ -312,5 +312,18 @@ export const MIGRATIONS: (string | ((db: Database.Database) => void) | { rebuild
 	ALTER TABLE categories ADD COLUMN deleted_at INTEGER;
 	`,
 	// Più campagne nella stessa installazione, ognuna col suo Master.
-	{ rebuild: campaignsMigration }
+	{ rebuild: campaignsMigration },
+	// Il token con cui Claude legge una campagna: uno per persona e campagna.
+	`
+	CREATE TABLE api_tokens (
+		user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+		campaign_id INTEGER NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
+		token_hash TEXT NOT NULL UNIQUE,
+		PRIMARY KEY (user_id, campaign_id)
+	);
+	`,
+	// Il token scrive solo se chi lo crea lo chiede: quelli che c'erano restano in lettura.
+	`
+	ALTER TABLE api_tokens ADD COLUMN can_write INTEGER NOT NULL DEFAULT 0;
+	`
 ];

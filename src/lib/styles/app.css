@@ -19,12 +19,12 @@
 	--measure: none;
 	--side-col: 20rem;
 	/* Scala dei caratteri (rapporto ~1.2): usare solo questi valori. */
-	--fs-sm: 0.8125rem;
-	--fs-base: 0.9375rem;
-	--fs-md: 1.125rem;
-	--fs-lg: 1.375rem;
-	--fs-xl: 1.625rem;
-	--fs-2xl: 2rem;
+	--fs-sm: 0.75rem;
+	--fs-base: 0.8125rem;
+	--fs-md: 1.0625rem;
+	--fs-lg: 1.25rem;
+	--fs-xl: 1.5rem;
+	--fs-2xl: 1.875rem;
 	/* I campi scritti in piccolo: sul telefono non scendono sotto i 16px (vedi in fondo). */
 	--fs-field: var(--fs-sm);
 	/* L'altezza di ciò che resta fermo in cima allo schermo: sul telefono l'intestazione. */
@@ -92,11 +92,16 @@ table.data {
 	font-variant-numeric: tabular-nums;
 }
 
+/* Uno stile solo per i collegamenti nel testo: la sottolineatura è sottile e si fa piena al passaggio.
+   Le righe di navigazione (albero, menu, schede) usano il colore del testo e si sottolineano solo al passaggio. */
 a {
 	color: var(--c-link);
-	text-underline-offset: 0.15em;
+	text-decoration-color: color-mix(in srgb, currentColor 60%, transparent);
+	text-decoration-thickness: 1px;
+	text-underline-offset: 0.2em;
 }
 a:hover {
+	text-decoration-color: currentColor;
 	text-decoration-thickness: 2px;
 }
 
@@ -222,7 +227,6 @@ mark {
 	top: 1rem;
 	max-height: calc(100vh - 2rem);
 	overflow-y: auto;
-	font-size: var(--fs-sm);
 	line-height: 1.35;
 	/* Le righe hanno già 0.4rem ai lati: il testo sta a 1rem dal bordo, come nella colonna a destra. */
 	padding-inline: 0.6rem;
@@ -533,6 +537,10 @@ a.badge:hover {
 .tag-purple { background: #8a55c9; }
 .tag-pink { background: #d6559b; }
 
+/* La distanza minima tra due collegamenti in elenco, uno sotto l'altro (WCAG 2.5.8). */
+li {
+	min-height: 1.5rem;
+}
 .list-plain {
 	list-style: none;
 	padding: 0;
@@ -650,12 +658,10 @@ table.data .col-end {
 	margin: 0;
 }
 
-.wikilink {
-	text-decoration-style: solid;
-}
 .wikilink.missing {
 	color: var(--c-missing);
 	text-decoration-style: dashed;
+	text-decoration-color: currentColor;
 }
 .wikilink-hidden {
 	border-bottom: 1px dotted var(--c-muted);
@@ -736,10 +742,6 @@ table.data .col-end {
 
 .ruleref {
 	white-space: nowrap;
-}
-.ruleref-link {
-	text-decoration-style: dotted;
-	text-decoration-thickness: 2px;
 }
 .rule-info {
 	display: inline-grid;

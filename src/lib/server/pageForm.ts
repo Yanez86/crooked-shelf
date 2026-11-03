@@ -14,7 +14,7 @@ import { cleanCover, type PageCover } from '../covers.ts';
 import { isPageKind, type PageKind } from '../pageKinds.ts';
 import { SESSION_TEMPLATE } from '../templates.ts';
 
-const CONTENT_MAX = 2_000_000;
+export const CONTENT_MAX = 2_000_000;
 
 export interface PageFormValues {
 	title: string;

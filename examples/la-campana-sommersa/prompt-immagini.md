@@ -6,7 +6,7 @@ La copertina è una fascia bassa e larga: se il generatore non arriva a 21:9, us
 
 Questo file e `la-campana-sommersa.shelf` si rigenerano da `build.mjs`.
 
-## La Campana Sommersa
+## Guida del Master
 
 **Dove va:** copertina · **Formato:** 21:9
 
