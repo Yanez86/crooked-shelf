@@ -1,6 +1,6 @@
 import { and, asc, eq, sql } from 'drizzle-orm';
 import { getDb, schema } from './db/index.ts';
-import { currentCampaign, saveCampaign } from './campaigns.ts';
+import { currentCampaign, masterOf, saveCampaign } from './campaigns.ts';
 import { createPage, getPageById, isSheet, restorePage, type PageRow } from './pages.ts';
 import { createCategory, getCategory, getCategoryBySlug } from './taxonomy.ts';
 import { ensureSheetTemplate, getTemplatePage, listTemplates, templateCopy } from './templates.ts';
@@ -134,7 +134,6 @@ export function tableOf(u: Viewer | null) {
 	if (!u) return null;
 	const c = currentCampaign();
 	const db = getDb();
-	const master = c.masterId ? db.select({ name: users.displayName, icon: users.icon, avatar: users.avatar }).from(users).where(eq(users.id, c.masterId)).get() : undefined;
 	const players = db
 		.select({ id: users.id, name: users.displayName, icon: users.icon, avatar: users.avatar })
 		.from(campaignMembers)
@@ -144,7 +143,7 @@ export function tableOf(u: Viewer | null) {
 		.all();
 	const sheets = sheetsByPlayer();
 	return {
-		master: master ?? null,
+		master: masterOf(c),
 		players: players.map(({ id, name, icon, avatar }) => {
 			const sheet = sheets.get(id);
 			return { name, icon, avatar, sheet: sheet && canView(sheet, u) ? { slug: sheet.slug, title: sheet.title } : null };

@@ -338,9 +338,10 @@ test('appuntamenti: il Master fissa i giovedì, i giocatori rispondono, sotto il
 	await expect(tenth).toContainText('Confermata');
 	await expect(tenth).toContainText(/Vengono da remoto\s*Alice/);
 	await axe(p, 'appuntamenti: giocatore');
-	// Nel calendario la sua figura, con la cuffia; cliccando, il popup con le specifiche.
+	// Nel calendario la sua figura (col bordo del remoto) accanto a quella del Master; cliccando, il popup con le specifiche.
 	const cell = p.getByRole('table', { name: 'gennaio 2030' }).getByRole('link', { name: /20:00 Serata al Grifone/ }).nth(1);
 	await expect(cell.locator('.face.remote')).toHaveAttribute('title', 'Alice: Ci sono, da remoto');
+	await expect(cell.locator('.face.master')).toHaveAttribute('title', /: Master$/);
 	await cell.click();
 	const dlg = p.getByRole('dialog', { name: 'Serata al Grifone' });
 	await expect(dlg).toContainText(/Vengono da remoto\s*Alice/);

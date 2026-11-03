@@ -1,7 +1,7 @@
 import { error, fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { isMaster } from '#lib/access.ts';
-import { isMember } from '#lib/server/campaigns.ts';
+import { isMember, masterOf } from '#lib/server/campaigns.ts';
 import { str } from '#lib/server/forms.ts';
 import { monthSchedule, monthStarWishes, saveStarWish, setAnswer, skipDate } from '#lib/server/schedule.ts';
 import { ANSWERS, DATE_RE, localDate, MONTH_RE, shiftMonth, type Answer } from '#lib/schedule.ts';
@@ -22,6 +22,8 @@ export const load: PageServerLoad = ({ locals, url }) => {
 		next: shiftMonth(month, 1),
 		today: localDate(),
 		items: monthSchedule(month),
+		// Nel calendario il Master c'è sempre, accanto a chi risponde.
+		master: masterOf(campaign),
 		rule: { min: campaign.minPlayers, hours: campaign.quorumHours },
 		canManage: isMaster(me),
 		canAnswer: isMember(campaign.id, me.id),

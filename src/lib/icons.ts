@@ -56,7 +56,6 @@ export const UI_ICONS: Record<string, string> = {
 	info: 'M12 10v8.5M12 5.5v.01M8.5 18.5h7M9 10h3',
 	calendar: 'M3.75 5.25h16.5v15H3.75zM3.75 9.75h16.5M8 3v4.5M16 3v4.5',
 	clock: 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM12 7v5l3.5 2',
-	headphones: 'M4 16v-4a8 8 0 0 1 16 0v4M4 14h3.5v6H4zM16.5 14H20v6h-3.5z',
 	// Editor
 	bold: 'M7 4.5h6a3.75 3.75 0 0 1 0 7.5H7zM7 12h7a3.75 3.75 0 0 1 0 7.5H7z',
 	italic: 'M10 4.5h8M6 19.5h8M14 4.5l-4 15',

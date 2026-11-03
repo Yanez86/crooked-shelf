@@ -150,6 +150,10 @@ export function deleteCampaign(id: number) {
 	for (const f of files) deleteFile(f);
 }
 
+/** Il Master di una campagna, da mostrare: nome, icona e immagine. */
+export const masterOf = (c: Pick<CampaignRow, 'masterId'>) =>
+	(c.masterId && getDb().select({ name: users.displayName, icon: users.icon, avatar: users.avatar }).from(users).where(eq(users.id, c.masterId)).get()) || null;
+
 /** I giocatori di una campagna (il Master no). */
 export function membersOf(id: number) {
 	return getDb()

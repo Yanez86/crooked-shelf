@@ -155,14 +155,17 @@
 														}}
 													>
 														{o.starts} <span class="name">{o.title}</span>{#if o.status}<span class="visually-hidden"> ({t('schedule.status.' + o.status)})</span>{/if}
-														<!-- Chi viene in presenza, chi da remoto (con la cuffia) e chi no (con la croce): i nomi sono nel popup. -->
-														{#if o.answers.in_person.length + o.answers.remote.length + o.answers.no.length}
+														<!-- Il Master (bordo dell'accento), chi viene in presenza, da remoto (bordo blu) e chi no (con la croce): i nomi sono nel popup. -->
+														{#if data.master || o.answers.in_person.length + o.answers.remote.length + o.answers.no.length}
 															<span class="faces" aria-hidden="true">
+																{#if data.master}
+																	<span class="face master" title="{data.master.name}: {t('campaign.master')}"><UserIcon icon={data.master.icon} avatar={data.master.avatar} size="1.25rem" /></span>
+																{/if}
 																{#each CHOICES as k (k)}
 																	{#each o.answers[k] as p (p.id)}
 																		<span class="face {k}" title="{p.displayName}: {t('schedule.answer.' + k)}">
 																			<UserIcon icon={p.icon} avatar={p.avatar} size="1.25rem" />
-																			{#if k !== 'in_person'}<span class="mark"><Icon name={k === 'remote' ? 'headphones' : 'close'} /></span>{/if}
+																			{#if k === 'no'}<span class="mark"><Icon name="close" /></span>{/if}
 																		</span>
 																	{/each}
 																{/each}
@@ -283,11 +286,13 @@
 		place-items: center;
 		pointer-events: none;
 	}
-	/* La cuffia sopra la testa; la croce sopra tutta la figura. */
-	.remote .mark {
-		inset: -0.3rem -0.1rem auto;
-		color: var(--c-text);
+	.master :global(.user-icon) {
+		border: 2px solid var(--c-primary);
 	}
+	.remote :global(.user-icon) {
+		border: 2px solid var(--c-note-border);
+	}
+	/* La croce sopra tutta la figura. */
 	.no .mark {
 		color: var(--c-danger);
 	}
