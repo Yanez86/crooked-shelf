@@ -3,6 +3,14 @@
 Le versioni seguono il [versionamento semantico](https://semver.org/lang/it/): MAGGIORE.MINORE.CORRETTIVA.
 Questo file è anche la pagina «Novità» della wiki (`/changelog`).
 
+## 0.12.3 — 2026-11-04
+
+### Aggiunte
+- Barra a sinistra: la linguetta Tag, tra Pagine e Risorse, con i tag nel loro colore e il numero di pagine; un clic apre le pagine con quel tag. Il Master ne cambia nome e colore dall'icona «Nomi e colori dei tag».
+
+### Modifiche
+- Appuntamenti: gli avatar accanto ai nomi nelle schede e il bordo delle figure più sottile.
+
 ## 0.12.2 — 2026-11-03
 
 ### Aggiunte
