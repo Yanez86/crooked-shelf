@@ -100,6 +100,22 @@
 					{/if}
 				{/each}
 			</dl>
+			{#if data.starWishes[`${o.id}/${o.date}`]}
+				<h4>{t('schedule.starWishes.title')}</h4>
+				<ul class="list-plain wishes">
+					{#each data.starWishes[`${o.id}/${o.date}`] as w, i (i)}
+						<li>
+							<strong>{w.name}</strong>
+							<dl class="facts">
+								<dt>{t('schedule.starWishes.starShort')}</dt>
+								<dd>{w.star || '—'}</dd>
+								<dt>{t('schedule.starWishes.wishShort')}</dt>
+								<dd>{w.wish || '—'}</dd>
+							</dl>
+						</li>
+					{/each}
+				</ul>
+			{/if}
 			{#if data.canAnswer}
 				<form
 					method="post"
@@ -246,6 +262,13 @@
 	.facts dd {
 		margin: 0;
 		overflow-wrap: anywhere;
+	}
+	.wishes li + li {
+		margin-top: 0.75rem;
+	}
+	/* Le righe che il giocatore ha scritto restano righe. */
+	.wishes dd {
+		white-space: pre-line;
 	}
 	.actions form {
 		display: contents;

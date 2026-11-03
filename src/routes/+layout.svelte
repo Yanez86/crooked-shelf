@@ -14,6 +14,7 @@
 	import RulePopover from '#lib/components/RulePopover.svelte';
 	import LinkPreview from '#lib/components/LinkPreview.svelte';
 	import PanelDialog from '#lib/components/PanelDialog.svelte';
+	import StarWishDialog from '#lib/components/StarWishDialog.svelte';
 	import PageTree from '#lib/components/PageTree.svelte';
 	import UserMenu from '#lib/components/UserMenu.svelte';
 	import Icon from '#lib/components/Icon.svelte';
@@ -213,6 +214,7 @@ ${iconCss()}</style>`}
 <RulePopover />
 <LinkPreview />
 {#if linked}<PanelDialog {...linked} expandable onclose={() => (linked = null)} />{/if}
+{#if data.starWish && !framed}<StarWishDialog session={data.starWish} />{/if}
 
 {#if !framed}
 	<footer class="site-footer">

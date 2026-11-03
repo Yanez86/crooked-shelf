@@ -23,7 +23,7 @@ export const load: PageServerLoad = ({ locals, url }) => {
 	// La scheda di ogni giocatore, per aprirla dalla tabella.
 	const sheets = sheetsByPlayer();
 	return {
-		campaign: { id: campaign.id, name: campaign.name, remoteLink: campaign.remoteLink, minPlayers: campaign.minPlayers, quorumHours: campaign.quorumHours },
+		campaign: { id: campaign.id, name: campaign.name, remoteLink: campaign.remoteLink, minPlayers: campaign.minPlayers, quorumHours: campaign.quorumHours, starWishes: campaign.starWishes },
 		master: campaign.masterId ? (getDb().select({ n: users.displayName }).from(users).where(eq(users.id, campaign.masterId)).get()?.n ?? null) : null,
 		players: membersOf(campaign.id).map((p) => ({ ...p, sheet: sheets.get(p.id)?.slug ?? null })),
 		invites: activeInvites(campaign.id),
@@ -61,7 +61,7 @@ export const actions: Actions = {
 		if (!setSheetTemplate(str(await request.formData(), 'template', 120), me)) return fail(400, { section: 'sheets', error: 'errors.generic' });
 		return { section: 'sheets', ok: 'sheets.templateSaved' };
 	},
-	// Appuntamenti: il link per il remoto e la regola del minimo.
+	// Appuntamenti: il link per il remoto, la regola del minimo e Stars & Wishes.
 	schedule: async ({ request, locals }) => {
 		const { campaign } = mine(locals);
 		const f = await request.formData();
@@ -71,7 +71,7 @@ export const actions: Actions = {
 		if (link && !webLink(link)) return fail(400, { section: 'schedule', error: 'schedule.badLink' });
 		if (!Number.isInteger(minPlayers) || minPlayers < 0 || minPlayers > 50 || !Number.isInteger(quorumHours) || quorumHours < 0 || quorumHours > 336)
 			return fail(400, { section: 'schedule', error: 'errors.generic' });
-		saveCampaign(campaign.id, { remoteLink: link ? webLink(link) : null, minPlayers, quorumHours });
+		saveCampaign(campaign.id, { remoteLink: link ? webLink(link) : null, minPlayers, quorumHours, starWishes: f.get('starWishes') === 'on' });
 		return { section: 'schedule', ok: 'common.saved' };
 	},
 	rename: async ({ request, locals }) => {

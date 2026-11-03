@@ -377,5 +377,18 @@ export const MIGRATIONS: (string | ((db: Database.Database) => void) | { rebuild
 	INSERT INTO api_tokens_new (user_id, campaign_id, token_hash, can_write) SELECT user_id, campaign_id, token_hash, can_write FROM api_tokens;
 	DROP TABLE api_tokens;
 	ALTER TABLE api_tokens_new RENAME TO api_tokens;
+	`,
+	// Stars & Wishes: dopo ogni sessione, due domande a chi è venuto.
+	`
+	ALTER TABLE campaigns ADD COLUMN star_wishes INTEGER NOT NULL DEFAULT 0;
+	CREATE TABLE star_wishes (
+		appointment_id INTEGER NOT NULL REFERENCES appointments(id) ON DELETE CASCADE,
+		date TEXT NOT NULL,
+		user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+		star TEXT NOT NULL,
+		wish TEXT NOT NULL,
+		created_at INTEGER NOT NULL,
+		PRIMARY KEY (appointment_id, date, user_id)
+	);
 	`
 ];

@@ -1236,6 +1236,22 @@
 			"no": "Not coming",
 			"waiting": "No answer yet"
 		},
+		"starWishes": {
+			"title": "Stars & Wishes",
+			"toggle": "Stars & Wishes: after each session, two questions for those who came",
+			"toggleHint": "Players who answered “I'm in” see them when they enter the campaign, until the day of the next session. Answering is optional; only you read them, here in Schedule.",
+			"intro": "How did “{title}” on {date} go? Answer if you like: only the Game Master reads the answers.",
+			"star": "What did you enjoy about this session?",
+			"wish": "What would you like to explore in the next session?",
+			"starShort": "Enjoyed",
+			"wishShort": "Would like to explore",
+			"final": "Once sent, the answer can't be changed.",
+			"send": "Send",
+			"later": "Later",
+			"thanks": "Thank you! The Game Master will read your answer.",
+			"empty": "Write at least one of the two answers.",
+			"closed": "The questions about this session are closed, or you've already answered."
+		},
 		"fields": {
 			"title": "Title",
 			"titlePlaceholder": "Session 12",

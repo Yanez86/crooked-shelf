@@ -359,6 +359,82 @@ test('appuntamenti: il Master fissa i giovedì, i giocatori rispondono, sotto il
 	await expect(dates.first()).not.toContainText('In forse');
 });
 
+test('Stars & Wishes: chi c\'era risponde entrando nella campagna, una volta sola; il Master legge', async ({ browser }) => {
+	// Una sessione ieri, già finita, e Alice c'era. La prossima è a gennaio 2030 (il test prima).
+	const d = new Date(Date.now() - 86_400_000);
+	const yesterday = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+	const month = `/schedule?m=${yesterday.slice(0, 7)}`;
+	await admin.goto('/schedule/new');
+	await admin.getByLabel('Titolo', { exact: true }).fill('La cripta');
+	await admin.getByLabel('Data', { exact: true }).fill(yesterday);
+	await admin.getByLabel('Inizio', { exact: true }).fill('18:00');
+	await admin.getByLabel('Fine', { exact: true }).fill('20:00');
+	await admin.getByRole('button', { name: "Crea l'appuntamento" }).click();
+	await admin.waitForURL(`**${month}`);
+	let p = await login(browser, PLAYER);
+	await p.goto(month);
+	const crypt = (pg: Page) => pg.locator('article.occurrence').filter({ has: pg.locator(`time[datetime="${yesterday}T18:00"]`) });
+	await crypt(p).getByRole('button', { name: 'Ci sono, in presenza' }).click();
+	await expect(crypt(p).getByRole('button', { name: 'Ci sono, in presenza' })).toHaveAttribute('aria-pressed', 'true');
+	await p.context().close();
+
+	// Spento finché il Master non lo accende.
+	await admin.goto('/campaign?tab=schedule');
+	const rules = admin.locator('form[action^="?/schedule"]');
+	await rules.getByLabel(/^Stars & Wishes/).check();
+	await rules.getByRole('button', { name: 'Salva' }).click();
+	await expect(rules.getByRole('status')).toContainText('Modifiche salvate');
+
+	// Entrando nella campagna, il popup. «Più tardi» lo rimanda al prossimo ingresso, non alla pagina dopo.
+	p = await login(browser, PLAYER);
+	let sw = p.getByRole('dialog', { name: 'Stars & Wishes' });
+	await expect(sw).toBeVisible();
+	await expect(sw).toContainText('«La cripta»');
+	await expect(sw.getByLabel('Che cosa ti è piaciuto di questa sessione?')).toBeFocused();
+	await axe(p, 'star & wishes');
+	await shot(p, '23d-star-wishes');
+	await sw.getByRole('button', { name: 'Più tardi' }).click();
+	await expect(sw).toBeHidden();
+	await p.reload();
+	await expect(sw).toHaveCount(0);
+	await p.context().close();
+
+	// Si rientra e si risponde: almeno una delle due, e poi non si cambia più.
+	p = await login(browser, PLAYER);
+	sw = p.getByRole('dialog', { name: 'Stars & Wishes' });
+	await sw.getByRole('button', { name: 'Invia' }).click();
+	await expect(sw.getByRole('alert')).toContainText('almeno una');
+	await sw.getByLabel('Che cosa ti è piaciuto di questa sessione?').fill('Il drago nella cripta');
+	await sw.getByLabel('Che cosa ti piacerebbe esplorare nella prossima sessione?').fill('La torre del mago');
+	await sw.getByRole('button', { name: 'Invia' }).click();
+	await expect(sw.getByRole('status')).toContainText('Grazie');
+	await expect(sw.getByRole('button', { name: 'Chiudi' }).first()).toBeFocused();
+	await sw.getByRole('button', { name: 'Chiudi' }).first().click();
+	await expect(sw).toBeHidden();
+	await p.context().close();
+	p = await login(browser, PLAYER);
+	await expect(p.getByRole('dialog', { name: 'Stars & Wishes' })).toHaveCount(0);
+	const res = await p.request.post('/schedule?/starWish', { form: { star: 'Cambio idea' }, headers: { origin: new URL(p.url()).origin } });
+	expect(res.status()).toBe(400);
+	// Le risposte sono del Master.
+	await p.goto(month);
+	await expect(crypt(p)).not.toContainText('Il drago nella cripta');
+	await p.context().close();
+
+	await admin.goto(month);
+	await expect(crypt(admin).getByRole('heading', { name: 'Stars & Wishes' })).toBeVisible();
+	await expect(crypt(admin)).toContainText(/Alice\s*Gli è piaciuto\s*Il drago nella cripta\s*Vorrebbe esplorare\s*La torre del mago/);
+	await axe(admin, 'star & wishes: il Master');
+
+	// Spento: le risposte spariscono dalla vista, ma restano salvate.
+	await admin.goto('/campaign?tab=schedule');
+	await rules.getByLabel(/^Stars & Wishes/).uncheck();
+	await rules.getByRole('button', { name: 'Salva' }).click();
+	await expect(rules.getByRole('status')).toContainText('Modifiche salvate');
+	await admin.goto(month);
+	await expect(crypt(admin)).not.toContainText('Il drago nella cripta');
+});
+
 test('editor dei temi', async () => {
 	await admin.goto('/admin/themes');
 	await axe(admin, 'temi');

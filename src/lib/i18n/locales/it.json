@@ -1236,6 +1236,22 @@
 			"no": "Non vengono",
 			"waiting": "Non hanno risposto"
 		},
+		"starWishes": {
+			"title": "Stars & Wishes",
+			"toggle": "Stars & Wishes: dopo ogni sessione, due domande a chi è venuto",
+			"toggleHint": "Chi aveva risposto «Ci sono» le trova entrando nella campagna, fino al giorno della sessione dopo. Rispondere non è obbligatorio; le risposte le leggi solo tu, qui negli Appuntamenti.",
+			"intro": "Com'è andata «{title}» di {date}? Rispondi se ti va: le risposte le legge solo il Master.",
+			"star": "Che cosa ti è piaciuto di questa sessione?",
+			"wish": "Che cosa ti piacerebbe esplorare nella prossima sessione?",
+			"starShort": "Gli è piaciuto",
+			"wishShort": "Vorrebbe esplorare",
+			"final": "Una volta inviata, la risposta non si può più cambiare.",
+			"send": "Invia",
+			"later": "Più tardi",
+			"thanks": "Grazie! Il Master leggerà la tua risposta.",
+			"empty": "Scrivi almeno una delle due risposte.",
+			"closed": "Le domande su questa sessione sono chiuse, o hai già risposto."
+		},
 		"fields": {
 			"title": "Titolo",
 			"titlePlaceholder": "Sessione 12",

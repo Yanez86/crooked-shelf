@@ -68,6 +68,9 @@ const pad = (n: number) => String(n).padStart(2, '0');
 /** Oggi, nell'ora del server (TZ). */
 export const localDate = (d = new Date()) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 
+/** La data `n` giorni dopo (o prima, con `n` negativo). */
+export const shiftDay = (d: string, n: number) => fromDay(toDay(d) + n);
+
 export const lastOfMonth = (month: string) => `${month}-${daysIn(Number(month.slice(0, 4)), Number(month.slice(5)))}`;
 
 export type Status = 'confirmed' | 'pending' | 'cancelled';
@@ -82,6 +85,25 @@ export function sessionStatus(date: string, starts: string, going: number, rule:
 	const [y, m, d] = date.split('-').map(Number);
 	const [h, mm] = starts.split(':').map(Number);
 	return new Date(y, m - 1, d, h, mm).getTime() - rule.hours * 3_600_000 > now ? 'pending' : 'cancelled';
+}
+
+/** Quando finisce una data, nell'ora del server (TZ): una fine prima dell'inizio (o uguale) è il giorno dopo. */
+export function endsAt(date: string, starts: string, ends: string): number {
+	const [y, m, d] = date.split('-').map(Number);
+	const [h, mm] = ends.split(':').map(Number);
+	return new Date(y, m - 1, d + (ends <= starts ? 1 : 0), h, mm).getTime();
+}
+
+/**
+ * Stars & Wishes: l'ultima sessione finita, finché non arriva il giorno di quella dopo (o per sempre, se non ce n'è una).
+ * Le sessioni saltate per la regola del minimo non contano. `items` in ordine, come li dà il calendario.
+ */
+export function starWishSession<T extends { date: string; starts: string; ends: string; status: Status | null }>(items: T[], now = Date.now()): T | null {
+	const held = items.filter((o) => o.status !== 'cancelled');
+	const i = held.findLastIndex((o) => endsAt(o.date, o.starts, o.ends) <= now);
+	if (i < 0) return null;
+	const next = held[i + 1];
+	return !next || localDate(new Date(now)) < next.date ? held[i] : null;
 }
 
 /** Solo indirizzi web: un link `javascript:` scritto nel modulo non deve finire in un href. */

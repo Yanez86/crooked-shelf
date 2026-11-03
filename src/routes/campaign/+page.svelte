@@ -147,6 +147,10 @@
 					<label for="quorum-hours">{t('schedule.fields.quorumHours')}</label>
 					<input id="quorum-hours" name="quorumHours" type="number" min="0" max="336" required value={data.campaign.quorumHours} />
 				</div>
+				<div class="field">
+					<label class="choice"><input type="checkbox" name="starWishes" checked={data.campaign.starWishes} aria-describedby="star-wishes-hint" />{t('schedule.starWishes.toggle')}</label>
+					<span id="star-wishes-hint" class="hint">{t('schedule.starWishes.toggleHint')}</span>
+				</div>
 				<button class="btn btn-primary" type="submit"><Icon name="save" />{t('common.save')}</button>
 			</form>
 		{:else}

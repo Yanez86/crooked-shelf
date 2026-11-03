@@ -48,6 +48,16 @@ In fondo alla barra a sinistra, **Appuntamenti** è il calendario delle sessioni
 - **La regola del minimo**, sempre in Campagna › Appuntamenti: sotto un certo numero di giocatori confermati la sessione **salta**. Finché mancano più ore di quelle scelte (di base 24) è **in forse**, poi salta; con abbastanza giocatori è **confermata**. Il Master non conta. Con 0 non c'è regola.
 - Date e orari sono quelli del tavolo, senza fusi orari: l'ora in cui una sessione «salta» è quella del server (`TZ`, vedi l'installazione).
 
+### Stars & Wishes
+
+Dopo una sessione, due domande a chi c'era: **che cosa ti è piaciuto di questa sessione?** e **che cosa ti piacerebbe esplorare nella prossima?** Si accende in **Campagna › Appuntamenti** ed è spento finché il Master non lo accende.
+
+- Le domande arrivano a chi aveva risposto «Ci sono» (in presenza o da remoto), quando la sessione è finita. Le sessioni annullate o saltate per la regola del minimo non contano.
+- Il giocatore le trova in un popup **entrando nella campagna**: aprendo la wiki o passando da un'altra campagna. «Più tardi» le rimanda al prossimo ingresso; rispondere non è obbligatorio.
+- La risposta si invia **una volta sola** e non si cambia più.
+- Le domande si chiudono da sole **il giorno della sessione dopo**. Se non ce n'è una in calendario, restano aperte.
+- Le risposte le legge **solo il Master**, negli Appuntamenti, sotto la data della sessione. Spegnendo Stars & Wishes spariscono dalla vista ma restano salvate.
+
 ## La barra a sinistra
 
 Tutta la wiki si raggiunge dalla barra a sinistra (in alto non c'è più il menu orizzontale):

@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { schema, useMemoryDb } from './db/index.ts';
 import { addMember, inCampaign, insertCampaign, removeMember, saveCampaign, type CampaignRow } from './campaigns.ts';
-import { getAppointment, monthSchedule, saveAppointment, setAnswer, skipDate, type AppointmentInput } from './schedule.ts';
+import { getAppointment, monthSchedule, monthStarWishes, openStarWish, saveAppointment, saveStarWish, setAnswer, skipDate, type AppointmentInput } from './schedule.ts';
 
 const thursdays: AppointmentInput = { title: 'Sessione', date: '2026-11-05', starts: '20:00', ends: '00:00', inPerson: true, remote: false, place: 'Da Marco', link: null, repeat: 'week', until: null };
 const names = ['Davide', 'Alice', 'Bruno', 'Carla'];
@@ -59,5 +59,27 @@ describe('appuntamenti nel server', () => {
 		expect(here(() => setAnswer(a.id, '2026-11-19', 2, 'in_person'))).toBe(false);
 		// Il mese di un'altra campagna è vuoto.
 		expect(inCampaign(other, () => monthSchedule('2026-11'))).toEqual([]);
+	});
+
+	it('Stars & Wishes: solo a chi è venuto, una risposta sola, finché il Master lo tiene acceso', () => {
+		const a = here(() => saveAppointment(thursdays))!;
+		here(() => setAnswer(a.id, '2026-11-05', 2, 'in_person'));
+		here(() => setAnswer(a.id, '2026-11-05', 3, 'no'));
+		const friday = new Date(2026, 10, 6, 12).getTime();
+		// Spento: nessuna domanda.
+		expect(here(() => openStarWish(2, friday))).toBeNull();
+		saveCampaign(c.id, { starWishes: true });
+		c = { ...c, starWishes: true };
+		expect(here(() => openStarWish(2, friday))).toEqual({ id: a.id, title: 'Sessione', date: '2026-11-05' });
+		// Bruno non c'era; il 12 è il giorno della sessione dopo.
+		expect(here(() => openStarWish(3, friday))).toBeNull();
+		expect(here(() => openStarWish(2, new Date(2026, 10, 12, 9).getTime()))).toBeNull();
+		// Si risponde una volta: la seconda non passa e la prima resta com'è.
+		expect(here(() => saveStarWish(2, 'Il drago', 'La torre', friday))).toBe(true);
+		expect(here(() => saveStarWish(2, 'Altro', 'Altro', friday))).toBe(false);
+		expect(here(() => openStarWish(2, friday))).toBeNull();
+		expect(here(() => monthStarWishes('2026-11'))).toEqual({ [`${a.id}/2026-11-05`]: [{ name: 'Alice', star: 'Il drago', wish: 'La torre' }] });
+		// Un'altra campagna non le vede.
+		expect(inCampaign(other, () => monthStarWishes('2026-11'))).toEqual({});
 	});
 });

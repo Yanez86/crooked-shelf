@@ -3,18 +3,26 @@ import { getSettings } from '#lib/server/settings.ts';
 import { extraThemes } from '#lib/server/plugins.ts';
 import { pageTree } from '#lib/server/taxonomy.ts';
 import { resourceEntries } from '#lib/server/gallery.ts';
+import { openStarWish } from '#lib/server/schedule.ts';
 import { extraLocale } from '#lib/i18n/index.ts';
 import { THEMES, themeCss } from '#lib/themes.ts';
 import { faviconHref } from '#lib/logo.ts';
 import { SIDE_COOKIE, TREE_COOKIE } from '#lib/prefs.ts';
 
-export const load: LayoutServerLoad = ({ locals, cookies, request, depends }) => {
+// La campagna in cui si è entrati in questa sessione del browser: per Stars & Wishes, che chiede all'ingresso.
+const ENTERED_COOKIE = 'cs_entered';
+
+export const load: LayoutServerLoad = ({ locals, cookies, request, url, depends, untrack }) => {
 	depends('app:layout');
 	const u = locals.user;
 	const s = getSettings();
 	const extra = extraThemes();
 	// Barra a sinistra (pagine, risorse e sezioni): niente titoli a chi non può ancora leggere la wiki (es. nella pagina di accesso).
 	const tree = !!u || s.allowVisitors;
+	// Si entra aprendo la wiki o passando da un'altra campagna. Il cookie non ha scadenza: chiuso il browser, si rientra.
+	const entered = !!u && !!locals.campaign && cookies.get(ENTERED_COOKIE) !== String(locals.campaign.id);
+	if (entered)
+		cookies.set(ENTERED_COOKIE, String(locals.campaign!.id), { path: '/', httpOnly: true, sameSite: 'lax', secure: untrack(() => url.protocol) === 'https:' });
 	return {
 		user: u ? { id: u.id, username: u.username, displayName: u.displayName, role: u.role, admin: !!u.admin, icon: u.icon, asPlayer: locals.asPlayer } : null,
 		prefs: locals.prefs,
@@ -33,6 +41,8 @@ export const load: LayoutServerLoad = ({ locals, cookies, request, depends }) =>
 		// Traduzioni dei plugin per la lingua in uso (il browser non le ha nel pacchetto).
 		localeExtra: extraLocale(locals.locale),
 		tree: tree ? pageTree(u) : null,
-		resources: tree ? resourceEntries(u).map(({ id, title, kind }) => ({ id, title, kind })) : null
+		resources: tree ? resourceEntries(u).map(({ id, title, kind }) => ({ id, title, kind })) : null,
+		// Nella vista giocatore il Master guarda soltanto: niente domande.
+		starWish: entered && !locals.asPlayer ? openStarWish(u!.id) : null
 	};
 };

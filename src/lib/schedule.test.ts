@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { monthGrid, occurrences, sessionStatus, shiftMonth, webLink, type Series } from './schedule.ts';
+import { endsAt, monthGrid, occurrences, sessionStatus, shiftDay, shiftMonth, starWishSession, webLink, type Series, type Status } from './schedule.ts';
 
 const s = (date: string, repeat: Series['repeat'], until: string | null = null, skips: string[] = []): Series => ({ date, repeat, until, skips });
 
@@ -43,6 +43,22 @@ describe('appuntamenti', () => {
 		expect(sessionStatus('2026-11-05', '20:00', 3, rule, now)).toBe('confirmed');
 		expect(sessionStatus('2026-11-05', '20:00', 2, rule, now)).toBe('pending');
 		expect(sessionStatus('2026-11-04', '19:00', 2, rule, now)).toBe('cancelled');
+	});
+
+	it('Stars & Wishes: l\'ultima sessione finita, fino al giorno di quella dopo', () => {
+		const at = (d: number, h = 12) => new Date(2026, 10, d, h).getTime();
+		const s = (date: string, status: Status | null = null) => ({ date, starts: '20:00', ends: '00:00', status });
+		const items = [s('2026-11-05'), s('2026-11-12', 'cancelled'), s('2026-11-19')];
+		// Finisce dopo mezzanotte: il 5 alle 23 non è ancora finita, il 6 sì.
+		expect(endsAt('2026-11-05', '20:00', '00:00')).toBe(new Date(2026, 10, 6, 0, 0).getTime());
+		expect(starWishSession(items, at(5, 23))).toBeNull();
+		expect(starWishSession(items, at(6))?.date).toBe('2026-11-05');
+		// Quella saltata non conta: le domande sul 5 restano fino al 19, il giorno della sessione dopo.
+		expect(starWishSession(items, at(13))?.date).toBe('2026-11-05');
+		expect(starWishSession(items, at(19))).toBeNull();
+		// Senza una sessione dopo, restano aperte.
+		expect(starWishSession(items, at(25))?.date).toBe('2026-11-19');
+		expect(shiftDay('2026-12-31', 1)).toBe('2027-01-01');
 	});
 
 	it('solo link web', () => {

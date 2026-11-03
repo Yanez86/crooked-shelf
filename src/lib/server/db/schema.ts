@@ -38,7 +38,9 @@ export const campaigns = sqliteTable('campaigns', {
 	/** Sotto questi giocatori confermati la sessione salta (0 = nessuna regola)… */
 	minPlayers: integer('min_players').notNull().default(0),
 	/** …quando mancano queste ore all'inizio. */
-	quorumHours: integer('quorum_hours').notNull().default(24)
+	quorumHours: integer('quorum_hours').notNull().default(24),
+	/** Stars & Wishes: dopo ogni sessione, due domande a chi è venuto (vedi schedule.ts). */
+	starWishes: integer('star_wishes', { mode: 'boolean' }).notNull().default(false)
 });
 
 /** I giocatori di una campagna. */
@@ -405,6 +407,24 @@ export const appointmentAnswers = sqliteTable(
 			.notNull()
 			.references(() => users.id, { onDelete: 'cascade' }),
 		answer: text('answer', { enum: ANSWERS }).notNull()
+	},
+	(t) => [primaryKey({ columns: [t.appointmentId, t.date, t.userId] })]
+);
+
+/** Stars & Wishes: che cosa è piaciuto di una sessione e che cosa esplorare nella prossima. Una risposta sola, che non si cambia. */
+export const starWishes = sqliteTable(
+	'star_wishes',
+	{
+		appointmentId: integer('appointment_id')
+			.notNull()
+			.references(() => appointments.id, { onDelete: 'cascade' }),
+		date: text('date').notNull(),
+		userId: integer('user_id')
+			.notNull()
+			.references(() => users.id, { onDelete: 'cascade' }),
+		star: text('star').notNull(),
+		wish: text('wish').notNull(),
+		createdAt: integer('created_at').notNull()
 	},
 	(t) => [primaryKey({ columns: [t.appointmentId, t.date, t.userId] })]
 );
