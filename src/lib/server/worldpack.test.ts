@@ -200,11 +200,14 @@ describe('pacchetto mondo', () => {
 		expect(loc.fields).toEqual([{ label: '', value: '', image: loc.imageId }, { label: 'Oste', value: '[[Bartolo]]' }]);
 	});
 
-	it("l'avventura di esempio si importa con tutti i collegamenti e i prompt, e non anticipa nulla ai giocatori", () => {
-		const dir = 'examples/la-campana-sommersa';
-		const r = readPack(readFileSync(`${dir}/la-campana-sommersa.shelf`));
+	it.each([
+		{ name: 'la-campana-sommersa', pages: 11, categories: 4, spoiler: /Oddone|paratie si aprirono/ },
+		{ name: 'la-notte-in-affitto', pages: 7, categories: 2, spoiler: /engramma|perdit[ae] termic/ }
+	])("l'avventura di esempio $name si importa con tutti i collegamenti e i prompt, e non anticipa nulla ai giocatori", ({ name, pages: n, categories, spoiler }) => {
+		const dir = `examples/${name}`;
+		const r = readPack(readFileSync(`${dir}/${name}.shelf`));
 		if (!r.ok) throw new Error(r.error);
-		expect(importPack(r.pack, { conflict: 'rename', calendar: false }, admin)).toMatchObject({ pages: 11, categories: 4 });
+		expect(importPack(r.pack, { conflict: 'rename', calendar: false }, admin)).toMatchObject({ pages: n, categories });
 		const prompts = readFileSync(`${dir}/prompt-immagini.md`, 'utf8');
 		const pages = JSON.parse(strFromU8(r.pack.entries['pages.json'])) as { slug: string; title: string }[];
 		const refs = (n: DocNode): DocNode[] => [...(n.type === 'wikiLink' || n.type === 'ruleRef' ? [n] : []), ...(n.content ?? []).flatMap(refs)];
@@ -220,7 +223,7 @@ describe('pacchetto mondo', () => {
 				const rule = /^@(\w+)\/(.+)$/.exec(l);
 				expect(rule ? hasRule(rule[1] as RuleKind, rule[2]) : !!getPageBySlug(l), `${title}: ${l}`).toBe(true);
 			}
-			if (page.visibility !== 'master') expect(JSON.stringify([stripSecrets(content), page.fields])).not.toMatch(/Oddone|paratie si aprirono/);
+			if (page.visibility !== 'master') expect(JSON.stringify([stripSecrets(content), page.fields])).not.toMatch(spoiler);
 		}
 	});
 
