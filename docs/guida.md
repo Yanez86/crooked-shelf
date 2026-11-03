@@ -37,6 +37,17 @@ Ogni campagna ha la cartella **PG** (in inglese «PCs») e dentro una **scheda**
 - **Al tavolo**: nella home, in cima alla colonna a destra, ci sono il Master e i giocatori, con l'icona del profilo. Il nome di un giocatore porta alla sua scheda, col nome del personaggio sotto. I visitatori senza account non vedono l'elenco.
 - Le schede e le pagine dentro di loro non entrano nel pacchetto mondo: sono del tavolo, non del mondo. Restano nel backup e nell'esportazione in Markdown.
 
+## Appuntamenti
+
+In fondo alla barra a sinistra, **Appuntamenti** è il calendario delle sessioni di gioco della campagna: un mese per pagina, e sotto la griglia ogni data con i suoi dettagli. Lo vedono il Master e i giocatori, non i visitatori senza account.
+
+- **Il Master fissa un appuntamento** con «Nuovo appuntamento»: titolo, data, inizio e fine (una fine prima dell'inizio vuol dire dopo mezzanotte, es. 20:00–00:00). Sceglie se si gioca **in presenza** (e dove), **da remoto** o in tutti e due i modi.
+- **Si ripete** ogni settimana, ogni 2 settimane od ogni mese, fino a una data o senza fine. «Ogni mese» è lo stesso giorno della settimana nella stessa posizione: dal primo giovedì, il primo giovedì di ogni mese. Una sola data si toglie con **Annulla questa data**; «Modifica la serie» cambia tutte le date.
+- **I giocatori rispondono** per ogni data: in presenza, da remoto (solo nei modi che l'appuntamento ammette) o «Non ci sono». Si può cambiare idea. Sotto ogni data c'è chi viene, come, chi no e chi non ha ancora risposto.
+- **Il link per il remoto** (Discord o altro) il Master lo mette in **Campagna › Appuntamenti** e vale per tutti; un appuntamento può averne uno suo.
+- **La regola del minimo**, sempre in Campagna › Appuntamenti: sotto un certo numero di giocatori confermati la sessione **salta**. Finché mancano più ore di quelle scelte (di base 24) è **in forse**, poi salta; con abbastanza giocatori è **confermata**. Il Master non conta. Con 0 non c'è regola.
+- Date e orari sono quelli del tavolo, senza fusi orari: l'ora in cui una sessione «salta» è quella del server (`TZ`, vedi l'installazione).
+
 ## La barra a sinistra
 
 Tutta la wiki si raggiunge dalla barra a sinistra (in alto non c'è più il menu orizzontale):

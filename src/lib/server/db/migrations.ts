@@ -333,5 +333,35 @@ export const MIGRATIONS: (string | ((db: Database.Database) => void) | { rebuild
 	ALTER TABLE campaigns ADD COLUMN sheet_template_id INTEGER;
 	ALTER TABLE pages ADD COLUMN sheet_of INTEGER REFERENCES users(id) ON DELETE SET NULL;
 	CREATE UNIQUE INDEX pages_sheet ON pages(campaign_id, sheet_of) WHERE sheet_of IS NOT NULL;
+	`,
+	// Appuntamenti: il calendario delle sessioni di gioco, con le risposte dei giocatori e la regola del minimo.
+	`
+	ALTER TABLE campaigns ADD COLUMN remote_link TEXT;
+	ALTER TABLE campaigns ADD COLUMN min_players INTEGER NOT NULL DEFAULT 0;
+	ALTER TABLE campaigns ADD COLUMN quorum_hours INTEGER NOT NULL DEFAULT 24;
+	CREATE TABLE appointments (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		campaign_id INTEGER NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
+		title TEXT NOT NULL,
+		date TEXT NOT NULL,
+		starts TEXT NOT NULL,
+		ends TEXT NOT NULL,
+		in_person INTEGER NOT NULL,
+		remote INTEGER NOT NULL,
+		place TEXT NOT NULL DEFAULT '',
+		link TEXT,
+		repeat TEXT NOT NULL DEFAULT 'none' CHECK (repeat IN ('none','week','2weeks','month')),
+		until TEXT,
+		skips TEXT NOT NULL DEFAULT '[]',
+		created_at INTEGER NOT NULL
+	);
+	CREATE INDEX appointments_campaign ON appointments(campaign_id);
+	CREATE TABLE appointment_answers (
+		appointment_id INTEGER NOT NULL REFERENCES appointments(id) ON DELETE CASCADE,
+		date TEXT NOT NULL,
+		user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+		answer TEXT NOT NULL CHECK (answer IN ('in_person','remote','no')),
+		PRIMARY KEY (appointment_id, date, user_id)
+	);
 	`
 ];

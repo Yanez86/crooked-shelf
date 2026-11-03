@@ -136,6 +136,7 @@ Va bene per provarla, non per giocarci una campagna: per quello usa uno dei modi
 | `CS_TRUST_PROXY` | `1` dietro un proxy che invia `X-Forwarded-*` | — |
 | `CS_PLUGINS_BUNDLED` | cartella dei plugin inclusi | `./plugins` |
 | `CS_UPDATE_CHECK` | `0` = non controllare su GitHub se c'è una versione nuova | — |
+| `TZ` | fuso orario del tavolo, es. `Europe/Rome`: decide «oggi» e quando un appuntamento salta | quello del sistema (`docker-compose.yml`: `Europe/Rome`) |
 
 Senza `CS_ORIGIN` la wiki usa l'indirizzo con cui viene raggiunta, in `http`: così funziona subito in rete locale.
 

@@ -151,7 +151,7 @@ test('bacheche: sono pagine', async ({ browser }) => {
 	await admin.locator('main').getByRole('link', { name: /^Nuova bacheca/ }).click();
 	await expect(admin.getByLabel('Colonne', { exact: true })).toHaveValue('Indizi\nDomande\nRisolto');
 	await axe(admin, 'nuova bacheca');
-	await admin.getByLabel('Titolo').fill('Missioni del gruppo');
+	await admin.getByLabel('Titolo', { exact: true }).fill('Missioni del gruppo');
 	await admin.getByRole('button', { name: 'Crea la pagina' }).click();
 	await expect(admin.getByRole('heading', { level: 1, name: 'Missioni del gruppo' })).toBeVisible();
 	// Sta nell'albero a sinistra come le altre pagine.
@@ -192,7 +192,7 @@ test('bacheche: sono pagine', async ({ browser }) => {
 
 	// Bacheca personale dell'Admin: il giocatore non la vede.
 	await admin.goto('/wiki/new?kind=board');
-	await admin.getByLabel('Titolo').fill('Idee segrete');
+	await admin.getByLabel('Titolo', { exact: true }).fill('Idee segrete');
 	await admin.getByRole('button', { name: 'Opzioni pagina' }).click();
 	await admin.getByRole('radio', { name: 'Personale' }).check();
 	await admin.getByRole('button', { name: 'Crea la pagina' }).click();
@@ -292,6 +292,71 @@ test('schede giocatore: la cartella PG, chi è al tavolo, le pagine dentro la sc
 	await expect(p.locator('#explorer').getByRole('button', { name: 'Sposta nel cestino: Segreti di Thalia' })).toHaveCount(1);
 	await p.context().close();
 	expect((await admin.goto('/wiki/segreti-di-thalia'))?.status()).toBe(404);
+});
+
+test('appuntamenti: il Master fissa i giovedì, i giocatori rispondono, sotto il minimo si salta', async ({ browser }) => {
+	// Nella pagina Campagna: il link per il remoto e la regola del minimo.
+	await admin.goto('/campaign');
+	const rules = admin.locator('form[action="?/schedule"]');
+	await rules.getByLabel('Link per il remoto (Discord o altro)').fill('javascript:alert(1)');
+	await rules.getByRole('button', { name: 'Salva' }).click();
+	await expect(admin.getByRole('alert')).toContainText('indirizzo web');
+	await rules.getByLabel('Link per il remoto (Discord o altro)').fill('https://discord.gg/grifone');
+	await rules.getByLabel('Giocatori minimi').fill('1');
+	await rules.getByRole('button', { name: 'Salva' }).click();
+	await expect(rules.getByRole('status')).toContainText('Modifiche salvate');
+
+	// Ogni giovedì di gennaio 2030, in presenza o da remoto.
+	await admin.locator('#explorer').getByRole('link', { name: 'Appuntamenti' }).click();
+	await expect(admin.getByRole('heading', { level: 1, name: 'Appuntamenti' })).toBeVisible();
+	await admin.getByRole('link', { name: 'Nuovo appuntamento' }).click();
+	await admin.getByLabel('Titolo', { exact: true }).fill('Serata al Grifone');
+	await admin.getByLabel('Data', { exact: true }).fill('2030-01-03');
+	await admin.getByLabel('Inizio', { exact: true }).fill('20:00');
+	await admin.getByLabel('Fine', { exact: true }).fill('00:00');
+	await admin.getByLabel('Si ripete').selectOption({ label: 'Ogni settimana' });
+	await admin.getByLabel('Dove', { exact: true }).fill('Locanda del Grifone');
+	await admin.getByLabel('Da remoto', { exact: true }).check();
+	await axe(admin, 'nuovo appuntamento');
+	await admin.getByRole('button', { name: "Crea l'appuntamento" }).click();
+	await admin.waitForURL('**/schedule?m=2030-01');
+	const dates = admin.locator('article.occurrence');
+	await expect(dates).toHaveCount(5);
+	await expect(admin.getByRole('table', { name: 'gennaio 2030' }).getByRole('link', { name: /20:00 Serata al Grifone/ })).toHaveCount(5);
+	await expect(dates.first()).toContainText('In forse');
+	await expect(dates.first().getByRole('link', { name: 'https://discord.gg/grifone' })).toBeVisible();
+	await axe(admin, 'appuntamenti');
+	await shot(admin, '23c-appuntamenti');
+
+	// Alice viene da remoto il 10: con lei si arriva al minimo.
+	const p = await login(browser, PLAYER);
+	await p.goto('/schedule?m=2030-01');
+	const tenth = p.locator('article.occurrence').filter({ has: p.locator('time[datetime="2030-01-10T20:00"]') });
+	await expect(tenth.getByRole('button', { name: 'Ci sono, in presenza' })).toBeVisible();
+	await tenth.getByRole('button', { name: 'Ci sono, da remoto' }).click();
+	await expect(tenth.getByRole('button', { name: 'Ci sono, da remoto' })).toHaveAttribute('aria-pressed', 'true');
+	await expect(tenth).toContainText('Confermata');
+	await expect(tenth).toContainText(/Vengono da remoto\s*Alice/);
+	await axe(p, 'appuntamenti: giocatore');
+	// Il giocatore non scrive appuntamenti.
+	await expect(p.getByRole('link', { name: 'Nuovo appuntamento' })).toHaveCount(0);
+	expect((await p.goto('/schedule/new'))?.status()).toBe(404);
+	await p.context().close();
+
+	// Il Master annulla il 17 e vede la risposta di Alice.
+	await admin.reload();
+	await expect(dates.nth(1)).toContainText(/Vengono da remoto\s*Alice/);
+	await dates.nth(2).getByRole('button', { name: /^Annulla questa data/ }).click();
+	await expect(dates).toHaveCount(4);
+	await expect(admin.locator('time[datetime="2030-01-17T20:00"]')).toHaveCount(0);
+
+	// Senza regola, niente stato.
+	await admin.goto('/campaign');
+	await rules.getByLabel('Giocatori minimi').fill('0');
+	await rules.getByRole('button', { name: 'Salva' }).click();
+	await expect(rules.getByRole('status')).toContainText('Modifiche salvate');
+	await admin.goto('/schedule?m=2030-01');
+	await expect(dates.first()).not.toContainText('In forse');
 });
 
 test('editor dei temi', async () => {

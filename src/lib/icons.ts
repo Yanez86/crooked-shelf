@@ -54,6 +54,7 @@ export const UI_ICONS: Record<string, string> = {
 	markerPlus: 'M12 21.25s-6.5-5.75-6.5-11.5a6.5 6.5 0 0 1 13 0c0 5.75-6.5 11.5-6.5 11.5zM12 7v5.5M9.25 9.75h5.5',
 	contrast: 'M3.75 3.75h16.5v16.5H3.75zM3.75 20.25 20.25 3.75',
 	info: 'M12 10v8.5M12 5.5v.01M8.5 18.5h7M9 10h3',
+	calendar: 'M3.75 5.25h16.5v15H3.75zM3.75 9.75h16.5M8 3v4.5M16 3v4.5',
 	clock: 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM12 7v5l3.5 2',
 	// Editor
 	bold: 'M7 4.5h6a3.75 3.75 0 0 1 0 7.5H7zM7 12h7a3.75 3.75 0 0 1 0 7.5H7z',

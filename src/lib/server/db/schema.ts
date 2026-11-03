@@ -4,6 +4,7 @@ import { ROLES, VISIBILITIES } from '../../roles.ts';
 import { PAGE_KINDS, TIMELINE_MODES } from '../../pageKinds.ts';
 import type { PageField, SessionInfo } from '../../content/types.ts';
 import type { Calendar } from '../../calendar.ts';
+import { ANSWERS, REPEATS } from '../../schedule.ts';
 
 export const users = sqliteTable('users', {
 	id: integer('id').primaryKey({ autoIncrement: true }),
@@ -31,7 +32,13 @@ export const campaigns = sqliteTable('campaigns', {
 	/** La cartella PG, con le schede dei giocatori: non si elimina. Null = non ancora preparata (vedi sheets.ts). */
 	pcFolderId: integer('pc_folder_id'),
 	/** Il template delle schede nuove; null = pagina bianca. */
-	sheetTemplateId: integer('sheet_template_id')
+	sheetTemplateId: integer('sheet_template_id'),
+	/** Appuntamenti: il link per giocare da remoto (Discord o altro), se l'appuntamento non ne ha uno suo. */
+	remoteLink: text('remote_link'),
+	/** Sotto questi giocatori confermati la sessione salta (0 = nessuna regola)… */
+	minPlayers: integer('min_players').notNull().default(0),
+	/** …quando mancano queste ore all'inizio. */
+	quorumHours: integer('quorum_hours').notNull().default(24)
 });
 
 /** I giocatori di una campagna. */
@@ -354,3 +361,48 @@ export const resources = sqliteTable('resources', {
 	createdAt: integer('created_at').notNull(),
 	updatedAt: integer('updated_at').notNull()
 });
+
+/** Un appuntamento del calendario della campagna; se si ripete, le date si calcolano (vedi schedule.ts). */
+export const appointments = sqliteTable(
+	'appointments',
+	{
+		id: integer('id').primaryKey({ autoIncrement: true }),
+		campaignId: integer('campaign_id')
+			.notNull()
+			.references(() => campaigns.id, { onDelete: 'cascade' }),
+		title: text('title').notNull(),
+		/** La prima data, `YYYY-MM-DD`. */
+		date: text('date').notNull(),
+		/** `HH:MM`; se `ends` viene prima di `starts` si finisce dopo mezzanotte. */
+		starts: text('starts').notNull(),
+		ends: text('ends').notNull(),
+		inPerson: integer('in_person', { mode: 'boolean' }).notNull(),
+		remote: integer('remote', { mode: 'boolean' }).notNull(),
+		/** Dove ci si trova, in presenza. */
+		place: text('place').notNull().default(''),
+		/** Il link per il remoto; null = quello della campagna. */
+		link: text('link'),
+		repeat: text('repeat', { enum: REPEATS }).notNull().default('none'),
+		until: text('until'),
+		/** Le date della serie annullate dal Master. */
+		skips: text('skips', { mode: 'json' }).$type<string[]>().notNull().default([]),
+		createdAt: integer('created_at').notNull()
+	},
+	(t) => [index('appointments_campaign').on(t.campaignId)]
+);
+
+/** La risposta di un giocatore per una data di un appuntamento. */
+export const appointmentAnswers = sqliteTable(
+	'appointment_answers',
+	{
+		appointmentId: integer('appointment_id')
+			.notNull()
+			.references(() => appointments.id, { onDelete: 'cascade' }),
+		date: text('date').notNull(),
+		userId: integer('user_id')
+			.notNull()
+			.references(() => users.id, { onDelete: 'cascade' }),
+		answer: text('answer', { enum: ANSWERS }).notNull()
+	},
+	(t) => [primaryKey({ columns: [t.appointmentId, t.date, t.userId] })]
+);

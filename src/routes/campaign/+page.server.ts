@@ -6,6 +6,7 @@ import { getDb, schema } from '#lib/server/db/index.ts';
 import { AS_PLAYER_COOKIE, deleteCampaign, membersOf, removeMember, saveCampaign, setCampaignCookie } from '#lib/server/campaigns.ts';
 import { safeNext, str } from '#lib/server/forms.ts';
 import { setSheetTemplate, sheetsByPlayer, sheetTemplateChoice } from '#lib/server/sheets.ts';
+import { webLink } from '#lib/schedule.ts';
 import { eq } from 'drizzle-orm';
 
 const { users } = schema;
@@ -22,7 +23,7 @@ export const load: PageServerLoad = ({ locals }) => {
 	// La scheda di ogni giocatore, per aprirla dalla tabella.
 	const sheets = sheetsByPlayer();
 	return {
-		campaign: { id: campaign.id, name: campaign.name },
+		campaign: { id: campaign.id, name: campaign.name, remoteLink: campaign.remoteLink, minPlayers: campaign.minPlayers, quorumHours: campaign.quorumHours },
 		master: campaign.masterId ? (getDb().select({ n: users.displayName }).from(users).where(eq(users.id, campaign.masterId)).get()?.n ?? null) : null,
 		players: membersOf(campaign.id).map((p) => ({ ...p, sheet: sheets.get(p.id)?.slug ?? null })),
 		invites: activeInvites(campaign.id),
@@ -53,6 +54,19 @@ export const actions: Actions = {
 		// Esito a parte (non `ok`/`error`): quelli li mostra il riquadro degli inviti.
 		if (!setSheetTemplate(str(await request.formData(), 'template', 120), me)) return fail(400, { sheetError: 'errors.generic' });
 		return { sheetOk: 'sheets.templateSaved' };
+	},
+	// Appuntamenti: il link per il remoto e la regola del minimo. Esito a parte, come per il template delle schede.
+	schedule: async ({ request, locals }) => {
+		const { campaign } = mine(locals);
+		const f = await request.formData();
+		const link = str(f, 'remoteLink', 500);
+		const minPlayers = Number(f.get('minPlayers'));
+		const quorumHours = Number(f.get('quorumHours'));
+		if (link && !webLink(link)) return fail(400, { scheduleError: 'schedule.badLink' });
+		if (!Number.isInteger(minPlayers) || minPlayers < 0 || minPlayers > 50 || !Number.isInteger(quorumHours) || quorumHours < 0 || quorumHours > 336)
+			return fail(400, { scheduleError: 'errors.generic' });
+		saveCampaign(campaign.id, { remoteLink: link ? webLink(link) : null, minPlayers, quorumHours });
+		return { scheduleOk: 'common.saved' };
 	},
 	rename: async ({ request, locals }) => {
 		const { campaign } = mine(locals);

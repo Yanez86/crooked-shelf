@@ -1156,5 +1156,74 @@
 		"deleteConfirm": "To confirm, type “{name}”",
 		"deleteSubmit": "Delete forever",
 		"deleteMismatch": "The name doesn't match: the campaign was not deleted."
+	},
+	"schedule": {
+		"title": "Schedule",
+		"settingsIntro": "The link for remote players and the minimum rule apply to every appointment in the campaign.",
+		"ruleInfo": "Campaign rule: with fewer than {n} confirmed players the session is off, {hours} hours before it starts.",
+		"prev": "Previous month",
+		"next": "Next month",
+		"new": "New appointment",
+		"editTitle": "Edit “{title}”",
+		"create": "Create appointment",
+		"edit": "Edit",
+		"editSeries": "Edit series",
+		"skip": "Cancel this date",
+		"skipped": "Date cancelled.",
+		"delete": "Delete appointment",
+		"deleteOne": "The appointment disappears from the calendar, along with the players' answers.",
+		"deleteSeries": "The whole series disappears, along with the players' answers. To remove a single date use “Cancel this date” in the calendar.",
+		"dates": "Dates this month",
+		"empty": "No appointments this month.",
+		"inPerson": "In person",
+		"remote": "Remote",
+		"answered": "Answer saved.",
+		"untilBefore": "The series can't end before its first date.",
+		"modeRequired": "Choose at least one way to play: in person or remote.",
+		"badLink": "The link must be a web address (https://…).",
+		"status": {
+			"confirmed": "Confirmed",
+			"pending": "Tentative: not enough players yet",
+			"cancelled": "Off: too few players"
+		},
+		"repeat": {
+			"none": "Once",
+			"week": "Every week",
+			"2weeks": "Every 2 weeks",
+			"month": "Every month"
+		},
+		"answer": {
+			"in_person": "I'm in, in person",
+			"remote": "I'm in, remote",
+			"no": "Can't make it"
+		},
+		"answers": {
+			"in_person": "Coming in person",
+			"remote": "Joining remotely",
+			"no": "Not coming",
+			"waiting": "No answer yet"
+		},
+		"fields": {
+			"title": "Title",
+			"titlePlaceholder": "Session 12",
+			"date": "Date",
+			"starts": "Starts",
+			"ends": "Ends",
+			"endsHint": "Earlier than the start means after midnight (e.g. 00:00).",
+			"repeat": "Repeats",
+			"until": "Until",
+			"untilHint": "Empty: no end. “Every month” is the same weekday in the same position (e.g. the first Thursday).",
+			"mode": "How you play",
+			"modeHint": "If you pick both, each player says how they'll join.",
+			"place": "Where",
+			"placePlaceholder": "At Mark's, 3 Main Street",
+			"link": "Remote link",
+			"linkHint": "Empty: the campaign's ({link}).",
+			"linkNone": "Empty: no link. You can set one for the whole campaign on the Campaign page.",
+			"campaignLink": "Remote link (Discord or other)",
+			"minPlayers": "Minimum players",
+			"minPlayersHint": "Below this many confirmed players the session is off. 0: no rule.",
+			"quorumHours": "Decided this many hours before the start"
+		}
 	}
 }

@@ -73,6 +73,27 @@
 			</form>
 		{/if}
 
+		<h2 id="schedule-title">{t('schedule.title')}</h2>
+		<p>{t('schedule.settingsIntro')}</p>
+		<form method="post" action="?/schedule" class="card" aria-labelledby="schedule-title">
+			{#if form && 'scheduleError' in form}<FormError error={form.scheduleError} />{/if}
+			{#if form && 'scheduleOk' in form}<FormOk message={form.scheduleOk} />{/if}
+			<div class="field">
+				<label for="remote-link">{t('schedule.fields.campaignLink')}</label>
+				<input id="remote-link" name="remoteLink" type="url" maxlength="500" value={data.campaign.remoteLink ?? ''} placeholder="https://discord.gg/…" />
+			</div>
+			<div class="field">
+				<label for="min-players">{t('schedule.fields.minPlayers')}</label>
+				<input id="min-players" name="minPlayers" type="number" min="0" max="50" required value={data.campaign.minPlayers} aria-describedby="min-players-hint" />
+				<span id="min-players-hint" class="hint">{t('schedule.fields.minPlayersHint')}</span>
+			</div>
+			<div class="field">
+				<label for="quorum-hours">{t('schedule.fields.quorumHours')}</label>
+				<input id="quorum-hours" name="quorumHours" type="number" min="0" max="336" required value={data.campaign.quorumHours} />
+			</div>
+			<button class="btn btn-primary" type="submit"><Icon name="save" />{t('common.save')}</button>
+		</form>
+
 		<h2>{t('admin.invites')}</h2>
 		<p>{t('campaign.inviteIntro')}</p>
 		<Invites invites={data.invites} {form} />

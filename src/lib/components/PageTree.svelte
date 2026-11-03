@@ -721,8 +721,12 @@
 				<p class="muted none">{t('tree.noTemplates')}</p>
 			{/if}
 		</div>
-		<!-- Fuori dalle linguette: sempre l'ultima voce della barra, anche ad albero vuoto. A chi non ha fatto l'accesso non serve. -->
+		<!-- Fuori dalle linguette: sempre in fondo alla barra, anche ad albero vuoto. A chi non ha fatto l'accesso non servono. -->
 		{#if user}
+			<a class="bin" href="/schedule" aria-current={path.startsWith('/schedule') ? 'page' : undefined}>
+				<svg class="ico doc" viewBox="0 0 24 24" aria-hidden="true"><path d={iconPath('calendar')} /></svg>
+				<span>{t('schedule.title')}</span>
+			</a>
 			<a class="bin" href="/trash" aria-current={path === '/trash' ? 'page' : undefined}>
 				<svg class="ico doc" viewBox="0 0 24 24" aria-hidden="true"><path d={iconPath('trash')} /></svg>
 				<span>{t('trash.title')}</span>

@@ -1,0 +1,267 @@
+<script lang="ts">
+	import { enhance } from '$app/forms';
+	import { page } from '$app/state';
+	import { getT } from '#lib/i18n/index.ts';
+	import Icon from '#lib/components/Icon.svelte';
+	import FormOk from '#lib/components/FormOk.svelte';
+	import FormError from '#lib/components/FormError.svelte';
+	import { monthGrid, type Answer } from '#lib/schedule.ts';
+	import type { PageProps } from './$types';
+
+	let { data, form }: PageProps = $props();
+	const t = getT();
+	const locale = $derived(page.data.locale as string);
+
+	// Date "di parete": si formattano in UTC, così il fuso di chi guarda non sposta il giorno.
+	const fmt = (d: string, o: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat(locale, { ...o, timeZone: 'UTC' }).format(new Date(d + 'T00:00:00Z'));
+	const weekdays = $derived(Array.from({ length: 7 }, (_, i) => ({ short: fmt(`2024-01-0${i + 1}`, { weekday: 'short' }), long: fmt(`2024-01-0${i + 1}`, { weekday: 'long' }) })));
+	const weeks = $derived(monthGrid(data.month));
+	const byDate = $derived(data.items.reduce((m, o) => m.set(o.date, [...(m.get(o.date) ?? []), o]), new Map<string, typeof data.items>()));
+	const anchor = (o: { id: number; date: string }) => `o-${o.id}-${o.date}`;
+	const STATUS_ICONS = { confirmed: 'check', pending: 'clock', cancelled: 'close' };
+	const CHOICES: Answer[] = ['in_person', 'remote', 'no'];
+	const mine = (o: (typeof data.items)[number]) => CHOICES.find((a) => o.answers[a].some((p) => p.id === page.data.user?.id));
+	// L'esito va accanto alla data a cui si è risposto, non in cima alla pagina.
+	let sent = $state('');
+</script>
+
+<svelte:head><title>{t('schedule.title')}</title></svelte:head>
+
+<div class="center-column">
+	<h1>{t('schedule.title')}</h1>
+	{#if data.rule.min > 0}
+		<p>{t('schedule.ruleInfo', { n: data.rule.min, hours: data.rule.hours })}</p>
+	{/if}
+
+	<div class="month-head">
+		<a class="btn btn-ghost" href="?m={data.prev}" title={t('schedule.prev')} aria-label={t('schedule.prev')}><Icon name="arrowLeft" /></a>
+		<h2 id="month-title">{fmt(data.month + '-01', { month: 'long', year: 'numeric' })}</h2>
+		<a class="btn btn-ghost" href="?m={data.next}" title={t('schedule.next')} aria-label={t('schedule.next')}><Icon name="arrowRight" /></a>
+		{#if data.canManage}
+			<a class="btn btn-primary new" href="/schedule/new?date={data.month === data.today.slice(0, 7) ? data.today : data.month + '-01'}"><Icon name="plus" />{t('schedule.new')}</a>
+		{/if}
+	</div>
+
+	<table class="month" aria-labelledby="month-title">
+		<thead>
+			<tr>
+				{#each weekdays as w (w.long)}<th scope="col" abbr={w.long}>{w.short}</th>{/each}
+			</tr>
+		</thead>
+		<tbody>
+			{#each weeks as week, i (i)}
+				<tr>
+					{#each week as d, j (j)}
+						<td class:out={!d} class:today={d === data.today} aria-current={d === data.today ? 'date' : undefined}>
+							{#if d}
+								<span class="day">{Number(d.slice(8))}</span>
+								{#if byDate.get(d)}
+									<ul class="list-plain">
+										{#each byDate.get(d)! as o (o.id)}
+											<li class:off={o.status === 'cancelled'}>
+												<a href="#{anchor(o)}">{o.starts} <span class="name">{o.title}</span>{#if o.status}<span class="visually-hidden"> ({t('schedule.status.' + o.status)})</span>{/if}</a>
+											</li>
+										{/each}
+									</ul>
+								{/if}
+							{/if}
+						</td>
+					{/each}
+				</tr>
+			{/each}
+		</tbody>
+	</table>
+
+	<h2>{t('schedule.dates')}</h2>
+	{#each data.items as o (anchor(o))}
+		{@const answer = mine(o)}
+		<article id={anchor(o)} class="card occurrence" aria-labelledby="{anchor(o)}-title">
+			<h3 id="{anchor(o)}-title">{o.title}</h3>
+			<p class="when">
+				<time datetime="{o.date}T{o.starts}">{fmt(o.date, { weekday: 'long', day: 'numeric', month: 'long' })}, {o.starts}–{o.ends}</time>
+				{#if o.repeat !== 'none'}<span class="muted"> · {t('schedule.repeat.' + o.repeat)}</span>{/if}
+			</p>
+			{#if o.status}
+				<p class="status {o.status}"><Icon name={STATUS_ICONS[o.status]} />{t('schedule.status.' + o.status)}</p>
+			{/if}
+			<dl class="facts">
+				{#if o.inPerson}
+					<dt>{t('schedule.inPerson')}</dt>
+					<dd>{o.place || '—'}</dd>
+				{/if}
+				{#if o.remote}
+					<dt>{t('schedule.remote')}</dt>
+					<dd>{#if o.link}<a href={o.link} target="_blank" rel="noopener noreferrer">{o.link}</a>{:else}—{/if}</dd>
+				{/if}
+				{#each [...CHOICES, 'waiting'] as k (k)}
+					{#if o.answers[k as Answer | 'waiting'].length}
+						<dt>{t('schedule.answers.' + k)}</dt>
+						<dd>{o.answers[k as Answer | 'waiting'].map((p) => p.displayName).join(', ')}</dd>
+					{/if}
+				{/each}
+			</dl>
+			{#if data.canAnswer}
+				<form
+					method="post"
+					action="?m={data.month}&/answer"
+					class="actions"
+					use:enhance={() => async ({ update }) => {
+						sent = anchor(o);
+						await update({ reset: false });
+					}}
+				>
+					<input type="hidden" name="id" value={o.id} />
+					<input type="hidden" name="date" value={o.date} />
+					{#each CHOICES.filter((a) => (a !== 'in_person' || o.inPerson) && (a !== 'remote' || o.remote)) as a (a)}
+						<button class="btn" class:btn-primary={answer === a} type="submit" name="answer" value={a} aria-pressed={answer === a}>{t('schedule.answer.' + a)}</button>
+					{/each}
+				</form>
+				{#if sent === anchor(o)}
+					<FormError error={form?.error} />
+					<FormOk message={form?.ok} />
+				{/if}
+			{/if}
+			{#if data.canManage}
+				<div class="actions">
+					<a class="btn btn-small" href="/schedule/{o.id}"><Icon name="edit" />{t(o.repeat === 'none' ? 'schedule.edit' : 'schedule.editSeries')}<span class="visually-hidden">: {o.title}</span></a>
+					{#if o.repeat !== 'none'}
+						<form method="post" action="?m={data.month}&/skip">
+							<input type="hidden" name="id" value={o.id} />
+							<input type="hidden" name="date" value={o.date} />
+							<button class="btn btn-small btn-danger" type="submit">{t('schedule.skip')}<span class="visually-hidden">: {o.title}, {fmt(o.date, { day: 'numeric', month: 'long' })}</span></button>
+						</form>
+					{/if}
+				</div>
+			{/if}
+		</article>
+	{:else}
+		<p class="muted">{t('schedule.empty')}</p>
+	{/each}
+</div>
+
+<style>
+	.month-head {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.5rem;
+		margin-bottom: 1rem;
+	}
+	.month-head h2 {
+		margin: 0;
+		min-width: 10rem;
+		text-align: center;
+	}
+	.month-head h2::first-letter {
+		text-transform: uppercase;
+	}
+	.new {
+		margin-left: auto;
+	}
+	.month {
+		width: 100%;
+		table-layout: fixed;
+		border-collapse: collapse;
+		margin-bottom: 2rem;
+		background: var(--c-surface);
+	}
+	th {
+		font-size: var(--fs-sm);
+		padding: 0.3rem;
+		text-align: center;
+	}
+	td {
+		vertical-align: top;
+		height: 5.5rem;
+		padding: 0.25rem;
+		border: 1px solid var(--c-border);
+		overflow: hidden;
+	}
+	td.out {
+		background: var(--c-surface2);
+	}
+	.day {
+		display: inline-block;
+		min-width: 1.6rem;
+		font-weight: 600;
+	}
+	.today .day {
+		border-radius: var(--radius);
+		background: var(--c-primary);
+		color: var(--c-on-primary);
+		text-align: center;
+	}
+	td li a {
+		display: block;
+		min-height: 1.5rem;
+		padding: 0.1rem 0.25rem;
+		margin-top: 0.15rem;
+		border-left: 3px solid var(--c-primary);
+		font-size: var(--fs-sm);
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+	/* Salta: barrata, oltre che detta a parole a chi usa un lettore di schermo. */
+	td li.off a {
+		border-left-color: var(--c-muted);
+		text-decoration: line-through;
+	}
+	.occurrence {
+		margin-bottom: 1rem;
+		scroll-margin-top: 5rem;
+	}
+	.occurrence:target {
+		outline: 2px solid var(--c-focus);
+	}
+	.when {
+		margin: 0.25rem 0;
+	}
+	.when::first-letter {
+		text-transform: uppercase;
+	}
+	.status {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.3rem;
+		padding: 0.1rem 0.5rem;
+		border: 2px solid currentColor;
+		border-radius: var(--radius);
+		font-weight: 600;
+	}
+	.status.confirmed {
+		color: var(--c-success);
+	}
+	.status.cancelled {
+		color: var(--c-danger);
+	}
+	.facts {
+		display: grid;
+		grid-template-columns: max-content 1fr;
+		gap: 0.25rem 1rem;
+	}
+	.facts dt {
+		font-weight: 600;
+	}
+	.facts dd {
+		margin: 0;
+		overflow-wrap: anywhere;
+	}
+	.actions form {
+		display: contents;
+	}
+	/* Sul telefono nelle caselle sta solo l'ora: il resto è nelle schede sotto. */
+	@media (max-width: 40rem) {
+		td {
+			height: 3.5rem;
+			padding: 0.1rem;
+		}
+		.name {
+			display: none;
+		}
+		td li a {
+			padding-inline: 0.1rem;
+			border-left-width: 2px;
+		}
+	}
+</style>

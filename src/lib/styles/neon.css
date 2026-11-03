@@ -280,14 +280,14 @@
 
 /* --- Campi: un prompt che si accende quando ci scrivi --- */
 
-:root[data-theme='neon'] :is(input[type='text'], input[type='password'], input[type='search'], input[type='number'], input[type='date'], select, textarea) {
+:root[data-theme='neon'] :is(input[type='text'], input[type='password'], input[type='search'], input[type='number'], input[type='date'], input[type='time'], input[type='url'], select, textarea) {
 	background: var(--c-bg);
 	border-width: 1px 1px 2px;
 	transition:
 		border-color 0.15s ease-out,
 		box-shadow 0.15s ease-out;
 }
-:root[data-theme='neon'] :is(input[type='text'], input[type='password'], input[type='search'], input[type='number'], input[type='date'], select, textarea):focus {
+:root[data-theme='neon'] :is(input[type='text'], input[type='password'], input[type='search'], input[type='number'], input[type='date'], input[type='time'], input[type='url'], select, textarea):focus {
 	border-color: var(--neon-cyan);
 	box-shadow:
 		var(--neon-glow-c),

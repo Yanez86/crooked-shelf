@@ -1156,5 +1156,74 @@
 		"deleteConfirm": "Per confermare scrivi «{name}»",
 		"deleteSubmit": "Elimina per sempre",
 		"deleteMismatch": "Il nome scritto non corrisponde: la campagna non è stata eliminata."
+	},
+	"schedule": {
+		"title": "Appuntamenti",
+		"settingsIntro": "Il link per chi gioca da remoto e la regola del minimo valgono per tutti gli appuntamenti della campagna.",
+		"ruleInfo": "Regola della campagna: con meno di {n} giocatori confermati la sessione salta, {hours} ore prima dell'inizio.",
+		"prev": "Mese prima",
+		"next": "Mese dopo",
+		"new": "Nuovo appuntamento",
+		"editTitle": "Modifica «{title}»",
+		"create": "Crea l'appuntamento",
+		"edit": "Modifica",
+		"editSeries": "Modifica la serie",
+		"skip": "Annulla questa data",
+		"skipped": "Data annullata.",
+		"delete": "Elimina l'appuntamento",
+		"deleteOne": "L'appuntamento sparisce dal calendario, con le risposte dei giocatori.",
+		"deleteSeries": "Sparisce tutta la serie, con le risposte dei giocatori. Per togliere una sola data usa «Annulla questa data» nel calendario.",
+		"dates": "Le date del mese",
+		"empty": "Nessun appuntamento in questo mese.",
+		"inPerson": "In presenza",
+		"remote": "Da remoto",
+		"answered": "Risposta salvata.",
+		"untilBefore": "La ripetizione non può finire prima della prima data.",
+		"modeRequired": "Scegli almeno un modo: in presenza o da remoto.",
+		"badLink": "Il link deve essere un indirizzo web (https://…).",
+		"status": {
+			"confirmed": "Confermata",
+			"pending": "In forse: mancano giocatori",
+			"cancelled": "Salta: troppo pochi giocatori"
+		},
+		"repeat": {
+			"none": "Una volta sola",
+			"week": "Ogni settimana",
+			"2weeks": "Ogni 2 settimane",
+			"month": "Ogni mese"
+		},
+		"answer": {
+			"in_person": "Ci sono, in presenza",
+			"remote": "Ci sono, da remoto",
+			"no": "Non ci sono"
+		},
+		"answers": {
+			"in_person": "Vengono in presenza",
+			"remote": "Vengono da remoto",
+			"no": "Non vengono",
+			"waiting": "Non hanno risposto"
+		},
+		"fields": {
+			"title": "Titolo",
+			"titlePlaceholder": "Sessione 12",
+			"date": "Data",
+			"starts": "Inizio",
+			"ends": "Fine",
+			"endsHint": "Prima dell'inizio vuol dire dopo mezzanotte (es. 00:00).",
+			"repeat": "Si ripete",
+			"until": "Fino al",
+			"untilHint": "Vuoto: senza fine. «Ogni mese» è lo stesso giorno della settimana nella stessa posizione (es. il primo giovedì).",
+			"mode": "Come si gioca",
+			"modeHint": "Se scegli entrambi, ogni giocatore dice come partecipa.",
+			"place": "Dove",
+			"placePlaceholder": "Da Marco, via Roma 3",
+			"link": "Link per il remoto",
+			"linkHint": "Vuoto: quello della campagna ({link}).",
+			"linkNone": "Vuoto: nessun link. Puoi metterne uno per tutta la campagna nella pagina Campagna.",
+			"campaignLink": "Link per il remoto (Discord o altro)",
+			"minPlayers": "Giocatori minimi",
+			"minPlayersHint": "Sotto questo numero di giocatori confermati la sessione salta. 0: nessuna regola.",
+			"quorumHours": "Si decide quante ore prima dell'inizio"
+		}
 	}
 }
