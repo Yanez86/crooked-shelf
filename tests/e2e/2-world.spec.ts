@@ -746,7 +746,7 @@ test('il giocatore non vede pin, livelli ed eventi segreti', async ({ browser })
 	// Nella fase 1 il giocatore ha scelto l'inglese: torna alla lingua della wiki.
 	await p.goto('/preferences');
 	await p.locator('#locale').selectOption('');
-	await p.locator('form[action="?/prefs"] button[type=submit]').click();
+	await p.locator('form[action^="?/prefs"] button[type=submit]').click();
 	await expect(p.locator('html')).toHaveAttribute('lang', 'it');
 	await p.goto('/maps/costa-della-spada');
 	await expect(p.locator('.leaflet-marker-icon')).toHaveCount(1);

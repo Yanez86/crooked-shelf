@@ -7,6 +7,7 @@
 	import FormError from '#lib/components/FormError.svelte';
 	import FormOk from '#lib/components/FormOk.svelte';
 	import UserIcon from '#lib/components/UserIcon.svelte';
+	import Tabs from '#lib/components/Tabs.svelte';
 	import { PAGE_ICONS } from '#lib/pageIcons.ts';
 	import type { PageProps } from './$types';
 
@@ -17,6 +18,10 @@
 	const swatch = (id: string) => [...THEMES, ...data.custom].find((th) => th.id === id)?.colors;
 	const themeIds = $derived([...data.options.theme, ...data.custom.map((c) => c.id)]);
 	const themeName = (id: string) => data.custom.find((c) => c.id === id)?.name ?? t('themes.' + id);
+	// Una scheda per indirizzo (?tab=…), come nella pagina Campagna. Chi non ha fatto l'accesso ha solo la lettura.
+	const TABS = ['profile', 'reading', 'password'] as const;
+	const TAB_TITLES = { profile: 'prefs.profile', reading: 'prefs.reading', password: 'prefs.password' };
+	const tab = $derived(user ? (TABS.find((x) => x === page.url.searchParams.get('tab')) ?? 'profile') : 'reading');
 </script>
 
 <svelte:head><title>{user ? t('profile.title') : t('prefs.title')} · {page.data.siteName}</title></svelte:head>
@@ -37,83 +42,87 @@
 				{#if user.admin}<p class="hint">{t('roles.adminHint')}</p>{/if}
 			</div>
 		</div>
+		<Tabs
+			label={t('profile.tabsLabel')}
+			links={TABS.map((x) => ({ href: x === 'profile' ? '/profile' : `/profile?tab=${x}`, text: t(TAB_TITLES[x]), current: x === tab }))}
+		/>
 	{/if}
-	<p>{user ? t('prefs.introUser') : t('prefs.introGuest')}</p>
 
-	<section aria-labelledby="read-title">
-		<h2 id="read-title">{t('prefs.reading')}</h2>
-		<FormError error={msg('prefs')?.error} />
-		<FormOk message={msg('prefs')?.ok} />
-		<form method="post" action="?/prefs" class="card" use:enhance={() => async ({ update }) => update({ reset: false })}>
-			<fieldset>
-				<legend>{t('prefs.theme')}</legend>
-				<div class="themes">
-					{#each themeIds as th (th)}
-						{@const c = swatch(th)}
-						<label class="choice theme-choice">
-							<input type="radio" name="theme" value={th} checked={data.current.theme === th} />
-							<span class="swatch" aria-hidden="true" style={c ? `background:${c.bg};color:${c.text};border-color:${c.control}` : ''}>
-								{#if c}<span style="color:{c.link}">Aa</span>{:else}<Icon name="contrast" />{/if}
-							</span>
-							<span>{themeName(th)}</span>
-						</label>
-					{/each}
-				</div>
-			</fieldset>
+	{#if tab === 'reading'}
+		<p>{user ? t('prefs.introUser') : t('prefs.introGuest')}</p>
+		<section aria-labelledby="read-title">
+			<h2 id="read-title">{t('prefs.reading')}</h2>
+			<FormError error={msg('prefs')?.error} />
+			<FormOk message={msg('prefs')?.ok} />
+			<form method="post" action="?/prefs&tab=reading" class="card" use:enhance={() => async ({ update }) => update({ reset: false })}>
+				<fieldset>
+					<legend>{t('prefs.theme')}</legend>
+					<div class="themes">
+						{#each themeIds as th (th)}
+							{@const c = swatch(th)}
+							<label class="choice theme-choice">
+								<input type="radio" name="theme" value={th} checked={data.current.theme === th} />
+								<span class="swatch" aria-hidden="true" style={c ? `background:${c.bg};color:${c.text};border-color:${c.control}` : ''}>
+									{#if c}<span style="color:{c.link}">Aa</span>{:else}<Icon name="contrast" />{/if}
+								</span>
+								<span>{themeName(th)}</span>
+							</label>
+						{/each}
+					</div>
+				</fieldset>
 
-			<div class="cols">
-				<div class="field">
-					<label for="fontSize">{t('prefs.fontSize')}</label>
-					<select id="fontSize" name="fontSize">
-						{#each data.options.fontSize as s (s)}<option value={s} selected={data.current.fontSize === s}>{s}%</option>{/each}
-					</select>
+				<div class="cols">
+					<div class="field">
+						<label for="fontSize">{t('prefs.fontSize')}</label>
+						<select id="fontSize" name="fontSize">
+							{#each data.options.fontSize as s (s)}<option value={s} selected={data.current.fontSize === s}>{s}%</option>{/each}
+						</select>
+					</div>
+					<div class="field">
+						<label for="font">{t('prefs.font')}</label>
+						<select id="font" name="font" aria-describedby="font-hint">
+							{#each data.options.font as s (s)}<option value={s} selected={data.current.font === s}>{t('fonts.' + s)}</option>{/each}
+						</select>
+						<span id="font-hint" class="hint">{t('prefs.fontHint')}</span>
+					</div>
+					<div class="field">
+						<label for="spacing">{t('prefs.spacing')}</label>
+						<select id="spacing" name="spacing">
+							{#each data.options.spacing as s (s)}<option value={s} selected={data.current.spacing === s}>{t('spacing.' + s)}</option>{/each}
+						</select>
+					</div>
+					<div class="field">
+						<label for="motion">{t('prefs.motion')}</label>
+						<select id="motion" name="motion">
+							{#each data.options.motion as s (s)}<option value={s} selected={data.current.motion === s}>{t('motion.' + s)}</option>{/each}
+						</select>
+					</div>
+					<div class="field">
+						<label for="tree">{t('prefs.tree')}</label>
+						<select id="tree" name="tree" aria-describedby="tree-hint">
+							{#each data.options.tree as s (s)}<option value={s} selected={data.current.tree === s}>{t('treePref.' + s)}</option>{/each}
+						</select>
+						<span id="tree-hint" class="hint">{t('prefs.treeHint')}</span>
+					</div>
+					<div class="field">
+						<label for="locale">{t('prefs.locale')}</label>
+						<select id="locale" name="locale">
+							<option value="" selected={!data.current.locale}>{t('prefs.localeDefault')}</option>
+							{#each data.locales as l (l.code)}<option value={l.code} selected={data.current.locale === l.code}>{l.name}</option>{/each}
+						</select>
+					</div>
 				</div>
-				<div class="field">
-					<label for="font">{t('prefs.font')}</label>
-					<select id="font" name="font" aria-describedby="font-hint">
-						{#each data.options.font as s (s)}<option value={s} selected={data.current.font === s}>{t('fonts.' + s)}</option>{/each}
-					</select>
-					<span id="font-hint" class="hint">{t('prefs.fontHint')}</span>
-				</div>
-				<div class="field">
-					<label for="spacing">{t('prefs.spacing')}</label>
-					<select id="spacing" name="spacing">
-						{#each data.options.spacing as s (s)}<option value={s} selected={data.current.spacing === s}>{t('spacing.' + s)}</option>{/each}
-					</select>
-				</div>
-				<div class="field">
-					<label for="motion">{t('prefs.motion')}</label>
-					<select id="motion" name="motion">
-						{#each data.options.motion as s (s)}<option value={s} selected={data.current.motion === s}>{t('motion.' + s)}</option>{/each}
-					</select>
-				</div>
-				<div class="field">
-					<label for="tree">{t('prefs.tree')}</label>
-					<select id="tree" name="tree" aria-describedby="tree-hint">
-						{#each data.options.tree as s (s)}<option value={s} selected={data.current.tree === s}>{t('treePref.' + s)}</option>{/each}
-					</select>
-					<span id="tree-hint" class="hint">{t('prefs.treeHint')}</span>
-				</div>
-				<div class="field">
-					<label for="locale">{t('prefs.locale')}</label>
-					<select id="locale" name="locale">
-						<option value="" selected={!data.current.locale}>{t('prefs.localeDefault')}</option>
-						{#each data.locales as l (l.code)}<option value={l.code} selected={data.current.locale === l.code}>{l.name}</option>{/each}
-					</select>
-				</div>
-			</div>
-			<button class="btn btn-primary" type="submit"><Icon name="save" />{t('common.save')}</button>
-		</form>
-	</section>
-
-	{#if user}
+				<button class="btn btn-primary" type="submit"><Icon name="save" />{t('common.save')}</button>
+			</form>
+		</section>
+	{:else if tab === 'profile'}
 		<section aria-labelledby="profile-title">
 			<h2 id="profile-title">{t('prefs.profile')}</h2>
 			<FormError error={msg('profile')?.error} />
 			<FormOk message={msg('profile')?.ok} />
 			<form
 				method="post"
-				action="?/profile"
+				action="?/profile&tab=profile"
 				enctype="multipart/form-data"
 				class="card"
 				use:enhance={({ formElement }) =>
@@ -154,12 +163,12 @@
 				<button class="btn btn-primary" type="submit"><Icon name="save" />{t('common.save')}</button>
 			</form>
 		</section>
-
+	{:else}
 		<section aria-labelledby="pw-title">
 			<h2 id="pw-title">{t('prefs.password')}</h2>
 			<FormError error={msg('password')?.error} />
 			<FormOk message={msg('password')?.ok} />
-			<form method="post" action="?/password" class="card">
+			<form method="post" action="?/password&tab=password" class="card">
 				<div class="cols">
 					<div class="field">
 						<label for="current">{t('prefs.currentPassword')}</label>

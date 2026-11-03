@@ -445,6 +445,7 @@
 	},
 	"profile": {
 		"title": "Profilo",
+		"tabsLabel": "Sezioni del profilo",
 		"guest": "Ospite",
 		"icon": "Icona",
 		"iconHint": "Si vede in alto a destra, accanto al tuo nome e al tuo grado.",

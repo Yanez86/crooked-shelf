@@ -445,6 +445,7 @@
 	},
 	"profile": {
 		"title": "Profile",
+		"tabsLabel": "Profile sections",
 		"guest": "Guest",
 		"icon": "Icon",
 		"iconHint": "Shown at the top right, next to your name and rank.",

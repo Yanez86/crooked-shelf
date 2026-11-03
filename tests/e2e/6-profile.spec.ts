@@ -69,7 +69,7 @@ test('in alto a destra: icona, nome e grado', async () => {
 			return outlineStyle === 'none' ? '0px' : outlineWidth;
 		});
 	const panel = admin.getByRole('dialog', { name: 'Profilo' });
-	await expect(panel.frameLocator('iframe').getByRole('region', { name: 'Lettura e accessibilità' })).toBeVisible();
+	await expect(panel.frameLocator('iframe').getByRole('region', { name: 'Icona e nome' })).toBeVisible();
 	await expect(panel.getByRole('button', { name: 'Chiudi' })).toBeFocused();
 	expect(await focusWidth()).toBe('0px');
 	await admin.keyboard.press('Tab');
@@ -85,13 +85,20 @@ test('in alto a destra: icona, nome e grado', async () => {
 });
 
 test('profilo: preferenze, icona e nome', async () => {
-	// Il vecchio indirizzo porta al profilo.
+	// Il vecchio indirizzo porta alla scheda Lettura del profilo; le schede sono collegamenti.
 	await admin.goto('/preferences');
-	await expect(admin).toHaveURL(/\/profile$/);
+	await expect(admin).toHaveURL(/\/profile\?tab=reading$/);
 	await expect(admin.getByRole('heading', { level: 1, name: 'Profilo' })).toBeVisible();
 	await expect(admin.getByRole('main')).toContainText('@davide');
+	const tabs = admin.getByRole('navigation', { name: 'Sezioni del profilo' });
+	await expect(tabs.getByRole('link', { name: 'Lettura e accessibilità' })).toHaveAttribute('aria-current', 'page');
 	await expect(admin.getByRole('region', { name: 'Lettura e accessibilità' })).toBeVisible();
+	await expect(admin.getByRole('region', { name: 'Icona e nome' })).toHaveCount(0);
 	await axe(admin, 'profilo');
+	await tabs.getByRole('link', { name: 'Password' }).click();
+	await expect(admin.getByLabel('Password attuale')).toBeVisible();
+	await tabs.getByRole('link', { name: 'Icona e nome' }).click();
+	await expect(admin).toHaveURL(/\/profile$/);
 
 	// Senza scelta, la sagoma di una persona; si sceglie un'altra icona e si vede subito in alto.
 	const identity = admin.getByRole('region', { name: 'Icona e nome' });
