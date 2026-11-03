@@ -141,7 +141,7 @@
 		"admin": "Admin",
 		"master": "Game Master",
 		"player": "Player",
-		"adminHint": "Everything: settings, users, invites, and all Game Master powers.",
+		"adminHint": "Runs the site: settings, users, campaigns, invites, backups. In campaigns they are Game Master only of the ones they run: elsewhere they are a player and do not see secrets.",
 		"masterHint": "Creates and edits all pages, sees and writes secrets, manages categories and tags.",
 		"playerHint": "Reads player pages, creates pages and edits their own and those open to players."
 	},
@@ -152,7 +152,7 @@
 		"personal": "Personal",
 		"publicHint": "also visitors without an account, if visitor access is on",
 		"playersHint": "everyone with an account",
-		"masterHint": "only Game Masters and Admins",
+		"masterHint": "only the Game Master",
 		"personalHint": "only you"
 	},
 	"themes": {
@@ -948,7 +948,7 @@
 		"kind": "Whose board",
 		"kindMine": "Personal (only you)",
 		"kindShared": "Group (everyone can add and move cards)",
-		"masterOnly": "Only for Game Masters and Admins",
+		"masterOnly": "Only for the Game Master",
 		"columns": "Columns",
 		"columnsHint": "One per line.",
 		"defaultColumns": "Clues\nQuestions\nSolved",
@@ -1061,6 +1061,7 @@
 		"openCampaign": "Open the campaign",
 		"errFile": "The file isn't a valid world package.",
 		"errExpired": "The uploaded file is no longer available: upload it again.",
+		"errNotMaster": "You are a player in this campaign: you can only import the pack into a new campaign.",
 		"done": {
 			"pages": "{n} pages",
 			"skipped": "{n} pages skipped",

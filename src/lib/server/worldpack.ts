@@ -387,14 +387,18 @@ function packPagesOf(pack: Pack): PackPage[] {
 }
 
 /** Cosa c'è nel pacchetto e cosa esiste già. */
-export function previewPack(pack: Pack) {
+/** Le pagine che esistono già le vede solo chi può vederle: i titoli delle pagine del Master restano suoi. */
+export function previewPack(pack: Pack, u: Viewer) {
 	return {
 		name: pack.manifest.name,
 		secrets: !!pack.manifest.secrets,
 		counts: pack.manifest.counts ?? {},
 		hasCalendar: !!pack.entries['calendar.json'],
 		pageConflicts: packPagesOf(pack)
-			.filter((x) => getPageBySlug(x.slug))
+			.filter((x) => {
+				const p = getPageBySlug(x.slug);
+				return !!p && canView(p, u);
+			})
 			.map((x) => x.title)
 	};
 }
@@ -607,10 +611,11 @@ export type ImportDone = ReturnType<typeof importPack>;
  * Il pacchetto in una campagna nuova, col suo calendario e la sua home. Le pagine di partenza arrivano dopo, e solo quelle
  * che il pacchetto non ha: i template preinstallati se non porta template, la cronologia del mondo se non ne porta una.
  */
-export function importAsCampaign(pack: Pack, o: { name: string; master: Viewer }, u: Viewer): { campaign: CampaignRow; done: ImportDone } {
+export function importAsCampaign(pack: Pack, o: { name: string; master: Viewer }): { campaign: CampaignRow; done: ImportDone } {
 	let done: ImportDone | undefined;
+	// Le pagine le scrive il Master della campagna nuova: è lui che ne tiene i segreti, anche se a importare è un Admin.
 	const campaign = newCampaign(o.name, o.master, getSettings().defaultLocale, () => {
-		done = importPack(pack, { conflict: 'rename', calendar: true, home: true }, u);
+		done = importPack(pack, { conflict: 'rename', calendar: true, home: true }, o.master);
 	});
 	return { campaign, done: done! };
 }

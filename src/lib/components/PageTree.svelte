@@ -195,7 +195,7 @@
 		}
 	}
 
-	// Riordino, per Master e Admin: si trascinano le righe, o da tastiera Alt e le frecce. Su, giù, dentro la voce sopra, fuori.
+	// Riordino, per il Master: si trascinano le righe, o da tastiera Alt e le frecce. Su, giù, dentro la voce sopra, fuori.
 	type Where = 'before' | 'after' | 'inside';
 	const MOVE_KEYS = 'Alt+ArrowUp Alt+ArrowDown Alt+ArrowLeft Alt+ArrowRight';
 	const ARROWS: Record<string, 'up' | 'down' | 'in' | 'out'> = { ArrowUp: 'up', ArrowDown: 'down', ArrowRight: 'in', ArrowLeft: 'out' };
@@ -312,7 +312,7 @@
 		document.querySelector<HTMLElement>('#explorer .new-page')?.focus();
 	}
 
-	// Chi può vedere una pagina, per Master e Admin: l'icona accanto al cestino apre i livelli.
+	// Chi può vedere una pagina, per il Master: l'icona accanto al cestino apre i livelli.
 	// Se la pagina ne contiene altre, prima di cambiare anche quelle si chiede. «Personale» solo sulle proprie pagine.
 	const VIS_ICONS: Record<Visibility, string> = { public: 'globe', players: 'eye', master: 'eyeOff', personal: 'lock' };
 	const level = (v: Visibility) => t('visibility.' + v);

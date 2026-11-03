@@ -8,7 +8,7 @@ import { MIGRATIONS } from './db/migrations.ts';
 import { campaignsMigration } from './db/campaigns.ts';
 import { campaignsFor, currentCampaign, deleteCampaign, FIRST_CAMPAIGN, getCampaign, inCampaign, membersOf, ofCampaign, roleIn, saveCampaign, setMaster, addMember, type CampaignRow } from './campaigns.ts';
 import { createInvite, activeInvites, joinInvite, redeemInvite } from './auth.ts';
-import { createPage, getPageById, getPageBySlug, listPages, listTrash, deletePage, resolverFor, backlinks, updatePage } from './pages.ts';
+import { createPage, getPageById, getPageBySlug, listPages, listTrash, deletePage, renderPage, resolverFor, backlinks, updatePage } from './pages.ts';
 import { filePath, getFile, saveImage } from './files.ts';
 import { searchPages } from './search.ts';
 import { createCategory, createDivider, deleteDivider, ensureTags, getCategory, listTags, pageTree } from './taxonomy.ts';
@@ -20,7 +20,9 @@ import { getTimeline, listEvents, recomputeSortKeys, saveEvent, setTimelineMode 
 import { preset } from '../calendar.ts';
 import type { DocNode } from '../content/types.ts';
 
-const admin = { id: 1, role: 'admin' as const };
+const admin = { id: 1, role: 'admin' as const, admin: true };
+// Chi può vedere di più in una campagna: il suo Master. Serve a provare che nemmeno lui raggiunge le altre.
+const strongest = { id: 1, role: 'master' as const, admin: true };
 const dm = { id: 2, role: 'master' as const };
 const otherDm = { id: 3, role: 'master' as const };
 const alice = { id: 4, role: 'player' as const };
@@ -62,10 +64,10 @@ describe('isolamento tra campagne', () => {
 			expect(getPageById(page.id)).toBeUndefined();
 			expect(getPageBySlug(page.slug)).toBeUndefined();
 			expect(getCategory(cat.id)).toBeUndefined();
-			expect(listPages(admin).rows.map((r) => r.title)).not.toContain('Piano segreto');
-			expect(searchPages('drago', admin)).toEqual([]);
-			expect(resolverFor([page.slug], admin)(page.slug)).toBeUndefined();
-			expect(JSON.stringify(pageTree(admin))).not.toContain('Piano segreto');
+			expect(listPages(strongest).rows.map((r) => r.title)).not.toContain('Piano segreto');
+			expect(searchPages('drago', strongest)).toEqual([]);
+			expect(resolverFor([page.slug], strongest)(page.slug)).toBeUndefined();
+			expect(JSON.stringify(pageTree(strongest))).not.toContain('Piano segreto');
 			deleteDivider(div.id);
 		});
 		expect(getDb().select().from(schema.treeDividers).where(eq(schema.treeDividers.id, div.id)).get()).toBeDefined();
@@ -75,7 +77,7 @@ describe('isolamento tra campagne', () => {
 		const target = { type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'wikiLink', attrs: { target: 'porto', title: 'Porto' } }] }] };
 		inCampaign(a, () => createPage({ ...base, title: 'Fonte', content: target }, dm));
 		inCampaign(b, () => createPage({ ...base, title: 'Porto' }, otherDm));
-		expect(inCampaign(b, () => backlinks('porto', admin))).toEqual([]);
+		expect(inCampaign(b, () => backlinks('porto', strongest))).toEqual([]);
 		const file = { id: 'f'.repeat(16), width: 10, height: 10 };
 		getDb().insert(schema.files).values({ ...file, sha256: 'x', name: 'm', mime: 'image/png', size: 1, createdAt: 0 }).run();
 		const map = inCampaign(a, () => {
@@ -86,7 +88,7 @@ describe('isolamento tra campagne', () => {
 		});
 		expect(inCampaign(a, () => getMap(map.id))).toBeDefined();
 		expect(inCampaign(b, () => getMap(map.id))).toBeUndefined();
-		expect(inCampaign(b, () => mapsForPage('porto', admin))).toEqual([]);
+		expect(inCampaign(b, () => mapsForPage('porto', strongest))).toEqual([]);
 	});
 
 	it('resoconti e calendario non attraversano le campagne', () => {
@@ -112,13 +114,13 @@ describe('isolamento tra campagne', () => {
 	it('risorse, cestino e home sono separati', () => {
 		getDb().insert(schema.files).values({ id: 'r'.repeat(16), sha256: 'x', name: 'm', mime: 'image/png', size: 1, width: 1, height: 1, createdAt: 0 }).run();
 		const res = inCampaign(a, () => createResource({ title: 'Dispensa', description: '', visibility: 'players' }, 'r'.repeat(16), dm.id));
-		expect(inCampaign(b, () => listResources(admin))).toEqual([]);
+		expect(inCampaign(b, () => listResources(strongest))).toEqual([]);
 		inCampaign(b, () => deleteResource(res));
-		expect(inCampaign(a, () => listResources(admin))).toHaveLength(1);
+		expect(inCampaign(a, () => listResources(strongest))).toHaveLength(1);
 
 		const page = inCampaign(a, () => createPage({ ...base, title: 'Via' }, dm));
 		inCampaign(a, () => deletePage(page.id));
-		expect(inCampaign(b, () => listTrash(admin))).toEqual([]);
+		expect(inCampaign(b, () => listTrash(strongest))).toEqual([]);
 
 		expect(inCampaign(b, () => homePage(otherDm))!.title).toBe('Luci');
 		expect(inCampaign(a, () => homePage(alice))).toBeNull();
@@ -135,8 +137,31 @@ describe('campagne e persone', () => {
 	it('il ruolo dipende dalla campagna', () => {
 		expect(roleIn(a, dm)).toBe('master');
 		expect(roleIn(b, dm)).toBe('player');
-		expect(roleIn(a, admin)).toBe('admin');
+		expect(roleIn(a, admin)).toBe('player');
 		expect(roleIn(a, alice)).toBe('player');
+	});
+
+	it("l'Admin è Master solo nella sua campagna: nelle altre è un giocatore e non ne vede i segreti", () => {
+		const mine = newCampaign('Del capo', { id: admin.id, role: 'master' }, 'it');
+		addMember(b.id, admin.id);
+		expect(roleIn(mine, admin)).toBe('master');
+		expect(roleIn(b, admin)).toBe('player');
+		// Nella campagna di un altro entra solo se invitato.
+		expect(campaignsFor(admin, false).map((c) => c.id)).toEqual([b.id, mine.id]);
+
+		inCampaign(b, () => {
+			createPage({ ...base, visibility: 'master', title: 'Piano del Master', content: text('il drago dorme') }, otherDm);
+			createPage({ ...base, title: 'Torre', content: { type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Una torre' }] }, { type: 'secret', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'tesoro sotterraneo' }] }] }] } }, otherDm);
+			const here = { ...admin, role: roleIn(b, admin) };
+			expect(listPages(here, { limit: 100 }).rows.map((r) => r.title)).not.toContain('Piano del Master');
+			expect(searchPages('drago', here)).toEqual([]);
+			expect(searchPages('tesoro', here)).toEqual([]);
+			expect(renderPage(getPageBySlug('torre')!, here, { secret: 'S', note: 'N', tip: 'T', warning: 'W', missing: 'M' }).html).not.toContain('tesoro');
+		});
+		inCampaign(mine, () => {
+			createPage({ ...base, visibility: 'master', title: 'Piano del capo', content: text('x') }, { id: admin.id, role: 'master' });
+			expect(listPages({ ...admin, role: roleIn(mine, admin) }, { limit: 100 }).rows.map((r) => r.title)).toContain('Piano del capo');
+		});
 	});
 
 	it('si entra solo nelle proprie campagne', () => {
@@ -144,7 +169,8 @@ describe('campagne e persone', () => {
 		addMember(b.id, alice.id);
 		expect(campaignsFor(alice, false).map((c) => c.id)).toEqual([b.id]);
 		expect(campaignsFor(dm, false).map((c) => c.id)).toEqual([a.id]);
-		expect(campaignsFor(admin, false)).toHaveLength(2);
+		// Anche l'Admin entra solo dove tiene o è invitato: le altre le gestisce da Amministrazione › Campagne.
+		expect(campaignsFor(admin, false)).toEqual([]);
 		expect(campaignsFor(null, false)).toEqual([]);
 		expect(campaignsFor(null, true)).toHaveLength(2);
 	});
@@ -246,20 +272,20 @@ describe('eliminare una campagna', () => {
 	it('si può eliminare anche la prima, e anche tutte', () => {
 		deleteCampaign(a.id);
 		deleteCampaign(b.id);
-		expect(campaignsFor(admin, false)).toEqual([]);
+		expect(campaignsFor(null, true)).toEqual([]);
 		expect(currentCampaign().id).toBe(0);
 		expect(newCampaign('Da capo', dm, 'it').id).toBeGreaterThan(b.id);
 	});
 
 	it('una campagna nuova che si rompe mentre si riempie non resta a metà', () => {
-		const before = campaignsFor(admin, false).map((c) => c.id);
+		const before = campaignsFor(null, true).map((c) => c.id);
 		expect(() =>
 			newCampaign('A metà', dm, 'it', () => {
 				createPage({ ...base, title: 'Prima pagina' }, dm);
 				throw new Error('pacchetto rotto');
 			})
 		).toThrow('pacchetto rotto');
-		expect(campaignsFor(admin, false).map((c) => c.id)).toEqual(before);
+		expect(campaignsFor(null, true).map((c) => c.id)).toEqual(before);
 		expect(getDb().select().from(schema.pages).where(eq(schema.pages.title, 'Prima pagina')).all()).toEqual([]);
 	});
 });

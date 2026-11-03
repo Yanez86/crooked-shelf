@@ -4,7 +4,13 @@ export type { Role, Visibility };
 
 export interface Viewer {
 	id: number;
+	/** Il ruolo nella campagna della richiesta (vedi roleIn): Master solo chi la tiene, gli altri giocatori. */
 	role: Role;
+	/**
+	 * Amministra il sito (utenti, campagne, backup, plugin). Non dà nessun potere nelle campagne:
+	 * l'Admin è Master solo in quelle che tiene e giocatore in quelle in cui è invitato.
+	 */
+	admin?: boolean;
 	/** Vista giocatore: il Master guarda la wiki come un giocatore qualunque (vedi hooks.server.ts). */
 	asPlayer?: boolean;
 }
@@ -16,9 +22,9 @@ export interface PageAccessInfo {
 	hasSecret: boolean;
 }
 
-/** Master e Admin vedono e scrivono i contenuti segreti. */
-export const isMaster = (u: Viewer | null | undefined) => u?.role === 'admin' || u?.role === 'master';
-export const isAdmin = (u: Viewer | null | undefined) => u?.role === 'admin';
+/** Solo il Master della campagna vede e scrive i contenuti segreti, anche se è un Admin. */
+export const isMaster = (u: Viewer | null | undefined) => u?.role === 'master';
+export const isAdmin = (u: Viewer | null | undefined) => !!u?.admin;
 
 /**
  * Chi conta come autore. Nella vista giocatore nessuno: il Master è un giocatore qualunque, che non ha scritto
@@ -56,7 +62,7 @@ export function canEdit(p: PageAccessInfo, u: Viewer | null): boolean {
 	return p.authorId === u.id || p.playersCanEdit;
 }
 
-/** Cambiare visibilità e permessi: Master/Admin o l'autore. */
+/** Cambiare visibilità e permessi: il Master o l'autore. */
 export function canManage(p: PageAccessInfo, u: Viewer | null): boolean {
 	return canWrite(u) && (isMaster(u) || (p.authorId === u.id && !p.hasSecret));
 }

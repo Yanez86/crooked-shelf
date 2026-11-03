@@ -121,6 +121,33 @@ test('rimosso dal Master, il giocatore non entra più', async () => {
 	await expect(alice.locator('.user-menu .campaigns')).toHaveCount(0);
 });
 
+test("l'Admin invitato da un altro Master è un giocatore: non vede i segreti", async () => {
+	await dm.goto('/campaign');
+	await dm.getByRole('button', { name: 'Crea invito' }).click();
+	const link = await inviteLink(dm);
+	await admin.goto(link);
+	await admin.locator('form[action="?/join"] button').click();
+	await admin.waitForURL((u) => u.pathname === '/');
+	await expect(admin.locator('.brand')).toContainText('Avalon');
+	await admin.locator('.user-menu summary').click();
+	await expect(admin.locator('.user-menu .role')).toHaveText('Giocatore');
+	// Amministra ancora il sito, ma qui non è il Master.
+	await expect(admin.locator('.user-menu .panel').getByRole('link', { name: 'Amministrazione' })).toBeVisible();
+	await expect(admin.locator('.user-menu .panel').getByRole('button', { name: 'Visualizza come giocatore' })).toHaveCount(0);
+	expect((await admin.goto(`/wiki/${SECRET_SLUG}`))?.status()).toBe(404);
+	expect((await admin.goto('/campaign'))?.status()).toBe(404);
+	await admin.goto('/admin/world');
+	await expect(admin.getByLabel(/Includi i segreti del Master/)).toHaveCount(0);
+
+	// Nella sua campagna torna Master.
+	await admin.goto('/');
+	await admin.locator('.user-menu summary').click();
+	await admin.locator('.user-menu .campaigns').getByRole('button', { name: /Faerûn/ }).click();
+	await admin.waitForURL((u) => u.pathname === '/');
+	await admin.locator('.user-menu summary').click();
+	await expect(admin.locator('.user-menu .role')).toHaveText('Master');
+});
+
 /** Apre «Elimina la campagna» di `name`, scrive `typed` e conferma. */
 async function deleteCampaign(page: Page, name: string, typed = name) {
 	await page.locator('summary', { hasText: name }).click();
@@ -150,11 +177,11 @@ test('il Master elimina la sua campagna, ma solo col nome giusto', async () => {
 });
 
 test("l'Admin fa una campagna nuova da un pacchetto mondo e la dà a un Master", async () => {
-	const templates = async () => {
-		await admin.goto('/wiki?kind=template');
-		return admin.locator('main .page-list > li').count();
+	const templates = async (page: Page) => {
+		await page.goto('/wiki?kind=template');
+		return page.locator('main .page-list > li').count();
 	};
-	const before = await templates();
+	const before = await templates(admin);
 	expect(before).toBeGreaterThan(0);
 
 	await admin.goto('/admin/world');
@@ -177,16 +204,15 @@ test("l'Admin fa una campagna nuova da un pacchetto mondo e la dà a un Master",
 	await expect(admin.getByRole('status').first()).toContainText('Pacchetto importato nella campagna nuova «Ritorno a Faerûn».');
 	await axe(admin, 'pacchetto mondo: importato in una campagna nuova');
 
-	// La home è quella del pacchetto, e i template preinstallati non si sono aggiunti a quelli che porta.
-	await admin.getByRole('button', { name: 'Apri la campagna Ritorno a Faerûn' }).click();
-	await admin.waitForURL((u) => u.pathname === '/');
-	await expect(admin.locator('.brand')).toContainText('Ritorno a Faerûn');
-	await expect(admin.getByRole('heading', { level: 1, name: 'Le Cronache di Faerûn' })).toBeVisible();
-	expect(await templates()).toBe(before);
+	// La campagna è di Merlino: l'Admin non ci entra, la gestisce da Amministrazione › Campagne.
+	await expect(admin.getByRole('button', { name: /Apri la campagna/ })).toHaveCount(0);
 
-	// Il Master, rimasto senza campagne, la trova pronta; i segreti non sono venuti col pacchetto.
+	// Il Master, rimasto senza campagne, la trova pronta: la home è quella del pacchetto, e i template
+	// preinstallati non si sono aggiunti a quelli che porta; i segreti non sono venuti col pacchetto.
 	await dm.goto('/');
 	await expect(dm.locator('.brand')).toContainText('Ritorno a Faerûn');
+	await expect(dm.getByRole('heading', { level: 1, name: 'Le Cronache di Faerûn' })).toBeVisible();
+	expect(await templates(dm)).toBe(before);
 	await dm.goto('/wiki/locanda-del-grifone');
 	await expect(dm.getByRole('heading', { level: 1, name: 'Locanda del Grifone' })).toBeVisible();
 	await expect(dm.locator('.content .secret')).toHaveCount(0);

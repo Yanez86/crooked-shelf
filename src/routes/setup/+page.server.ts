@@ -28,7 +28,7 @@ export const actions: Actions = {
 		const id = await createUser({ username, displayName, password, role: 'admin' });
 		saveSettings({ siteName, defaultLocale: locale, allowVisitors: false });
 		// La prima campagna è di chi installa: template preinstallati e cronologie, nella lingua scelta.
-		inCampaign(saveCampaign(FIRST_CAMPAIGN, { name: siteName, masterId: id }), () => seedWiki(locale, { id, role: 'admin' }));
+		inCampaign(saveCampaign(FIRST_CAMPAIGN, { name: siteName, masterId: id }), () => seedWiki(locale, { id, role: 'master', admin: true }));
 		const s = createSession(id);
 		setSessionCookie(cookies, url, s.token, s.expires);
 		redirect(303, '/');

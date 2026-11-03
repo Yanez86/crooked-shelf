@@ -79,7 +79,7 @@ export function pageCover(p: Pick<PageRow, 'coverImageId' | 'coverColor' | 'cove
 
 function normalizeContent(raw: unknown, u: Viewer): DocNode {
 	const doc = isDoc(raw) ? raw : EMPTY_DOC;
-	// Solo Master e Admin scrivono blocchi segreti.
+	// Solo il Master scrive blocchi segreti.
 	return isMaster(u) ? doc : stripSecrets(doc);
 }
 
@@ -477,7 +477,7 @@ export function trashFolder(id: number, u: Viewer) {
 }
 
 /**
- * Visibilità cambiata dalla barra a sinistra, da Master e Admin. Con `branch` vale anche per ciò che la pagina contiene
+ * Visibilità cambiata dalla barra a sinistra, dal Master. Con `branch` vale anche per ciò che la pagina contiene
  * nell'albero (nelle sue cartelle, nelle pagine dentro di lei), tranne i template e la home.
  * «Personale» vale solo per le pagine di chi la sceglie: su quelle degli altri le nasconderebbe a tutti tranne che all'autore.
  * Le pagine personali altrui il Master non le vede, e restano come sono.

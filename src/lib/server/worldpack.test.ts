@@ -23,7 +23,7 @@ import { inlineLinks, stripSecrets } from '../content/extract.ts';
 import { ruleTarget, type RuleKind } from '../rules/index.ts';
 import type { DocNode } from '../content/types.ts';
 
-const admin = { id: 1, role: 'admin' as const };
+const admin = { id: 1, role: 'master' as const, admin: true };
 const base = { visibility: 'players' as const, playersCanEdit: false, categoryId: null, tags: [], fields: [], session: null, content: { type: 'doc' } };
 const p = (text: string): DocNode => ({ type: 'paragraph', content: [{ type: 'text', text }] });
 const all: ExportOptions = { name: 'Faerûn', allPages: true, categoryIds: [], tagIds: [], maps: true, templates: true, calendar: true, timeline: true, themes: true, secrets: false };
@@ -99,7 +99,7 @@ describe('pacchetto mondo', () => {
 
 		const r = readPack(bytes);
 		if (!r.ok) throw new Error(r.error);
-		expect(previewPack(r.pack).pageConflicts).toEqual(['Bartolo']);
+		expect(previewPack(r.pack, admin).pageConflicts).toEqual(['Bartolo']);
 		const done = importPack(r.pack, { conflict: 'rename', calendar: true }, admin);
 		expect(done).toMatchObject({ pages: 4, maps: 2, templates: 1, events: 2 });
 
@@ -170,7 +170,7 @@ describe('pacchetto mondo', () => {
 		});
 		const r = readPack(zip);
 		if (!r.ok) throw new Error(r.error);
-		expect(previewPack(r.pack).pageConflicts).toEqual([]);
+		expect(previewPack(r.pack, admin).pageConflicts).toEqual([]);
 		const done = importPack(r.pack, { conflict: 'rename', calendar: false }, admin);
 		expect(done).toMatchObject({ pages: 1, maps: 2, templates: 1, events: 1 });
 		const regno = getPageBySlug('regno')!;
@@ -251,7 +251,7 @@ describe('pacchetto mondo', () => {
 			expect(JSON.parse(strFromU8(unzipSync(bytes)['manifest.json'])).home).toBe(home.slug);
 			const before = pagesOf(FIRST_CAMPAIGN).length;
 
-			const { campaign, done } = importAsCampaign(read(bytes), { name: 'Faerûn, di nuovo', master: dm }, admin);
+			const { campaign, done } = importAsCampaign(read(bytes), { name: 'Faerûn, di nuovo', master: dm });
 			expect(done).toMatchObject({ templates: BUILTIN_TEMPLATES.length, skipped: 0 });
 			expect(getCampaign(campaign.id)).toMatchObject({ name: 'Faerûn, di nuovo', masterId: 2, calendar: { name: 'Harptos' } });
 			inCampaign(getCampaign(campaign.id)!, () => {
@@ -270,13 +270,27 @@ describe('pacchetto mondo', () => {
 			expect(pagesOf(FIRST_CAMPAIGN)).toHaveLength(before);
 		});
 
+		it("un Admin che qui è giocatore: i segreti del pacchetto vanno al Master della campagna nuova, e non vede i titoli del Master di qui", () => {
+			createPage({ ...base, title: 'Bartolo', content: { type: 'doc', content: [p('Oste.'), { type: 'secret', content: [p('Spia.')] }] } }, admin);
+			createPage({ ...base, visibility: 'master', title: 'Piano segreto', content: { type: 'doc', content: [p('x')] } }, admin);
+			const bytes = exportWorld({ ...all, secrets: true }, admin);
+			const player = { ...admin, role: 'player' as const };
+			expect(previewPack(read(bytes), player).pageConflicts).toEqual(['Bartolo']);
+
+			const { campaign } = importAsCampaign(read(bytes), { name: 'Altrove', master: dm });
+			inCampaign(getCampaign(campaign.id)!, () => {
+				expect(JSON.stringify(getPageBySlug('bartolo')!.content)).toContain('Spia.');
+				expect(getPageBySlug('piano-segreto')).toMatchObject({ visibility: 'master', authorId: dm.id });
+			});
+		});
+
 		it('quello che il pacchetto non ha arriva come in ogni campagna nuova', () => {
 			// Senza home (es. un pacchetto della 0.11), senza template e senza cronologie.
 			createPage({ ...base, title: 'Bartolo' }, admin);
 			const bytes = exportWorld({ ...all, templates: false, timeline: false }, admin);
 			expect(JSON.parse(strFromU8(unzipSync(bytes)['manifest.json'])).home).toBeNull();
 
-			const { campaign } = importAsCampaign(read(bytes), { name: 'Bartolo', master: dm }, admin);
+			const { campaign } = importAsCampaign(read(bytes), { name: 'Bartolo', master: dm });
 			inCampaign(getCampaign(campaign.id)!, () => {
 				// La home nasce dopo il pacchetto: le sue pagine tengono il loro indirizzo.
 				expect(getPageBySlug('bartolo')!.id).not.toBe(homePage(dm)!.id);

@@ -11,7 +11,7 @@ import {
 import { getSettings } from '#lib/server/settings.ts';
 import { AS_PLAYER_COOKIE, CAMPAIGN_COOKIE, NO_CAMPAIGN, campaignsFor, inCampaign, roleIn } from '#lib/server/campaigns.ts';
 import { allPlugins, extraThemes } from '#lib/server/plugins.ts';
-import { isMaster } from '#lib/access.ts';
+import { isAdmin, isMaster } from '#lib/access.ts';
 import { cleanPrefs, PREFS_COOKIE } from '#lib/prefs.ts';
 import { fromAcceptLanguage, isLocale, DEFAULT_LOCALE } from '#lib/i18n/index.ts';
 
@@ -65,6 +65,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 	locals.asPlayer = !mcp && isMaster(locals.user) && cookies.get(AS_PLAYER_COOKIE) === '1';
 	if (locals.asPlayer) {
 		locals.user!.role = 'player';
+		locals.user!.admin = false;
 		locals.user!.asPlayer = true;
 	}
 
@@ -87,7 +88,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 	}
 	if (locals.user && !locals.campaign && !open) {
 		// L'Admin che le ha eliminate tutte riparte da una nuova; il resto dell'amministrazione lavora sulla campagna corrente.
-		const start = locals.user.role === 'admin' ? '/admin/campaigns' : '/campaign';
+		const start = isAdmin(locals.user) ? '/admin/campaigns' : '/campaign';
 		if (path !== start && !WITHOUT_CAMPAIGN.includes(path)) redirect(303, start);
 	}
 	if (locals.asPlayer && !READS.includes(event.request.method) && !AS_PLAYER_WRITES.includes(path)) error(403, 'Forbidden');

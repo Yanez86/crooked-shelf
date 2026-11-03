@@ -19,7 +19,10 @@ export interface SessionUser {
 	id: number;
 	username: string;
 	displayName: string;
+	/** Il ruolo dell'account; hooks.server.ts lo sostituisce col ruolo nella campagna (vedi roleIn). */
 	role: Role;
+	/** L'account è Admin: resta vero anche quando `role` diventa il ruolo nella campagna. */
+	admin: boolean;
 	prefs: Record<string, string>;
 	/** Nome di un'icona delle pagine; senza, la sagoma di una persona. */
 	icon: string | null;
@@ -137,7 +140,7 @@ export function validateSession(token: string): { user: SessionUser; expires?: D
 }
 
 function sessionUser({ id, username, displayName, role, prefs, icon }: typeof users.$inferSelect): SessionUser {
-	return { id, username, displayName, role, prefs: prefs ?? {}, icon };
+	return { id, username, displayName, role, admin: role === 'admin', prefs: prefs ?? {}, icon };
 }
 
 export function deleteSession(token: string) {

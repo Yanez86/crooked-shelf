@@ -21,7 +21,7 @@ export interface TreePage {
 	canTrash?: boolean;
 	/** La pagina iniziale del sito: in cima alla radice, non si sposta. */
 	home?: boolean;
-	/** Solo per Master e Admin, che la cambiano dalla barra: chi può vedere la pagina, e se l'hanno scritta loro. */
+	/** Solo per il Master, che la cambia dalla barra: chi può vedere la pagina, e se l'hanno scritta loro. */
 	visibility?: Visibility;
 	mine?: boolean;
 }

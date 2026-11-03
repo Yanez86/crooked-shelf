@@ -141,7 +141,7 @@
 		"admin": "Admin",
 		"master": "Master",
 		"player": "Giocatore",
-		"adminHint": "Tutto: impostazioni, utenti, inviti, e tutti i poteri del Master.",
+		"adminHint": "Gestisce il sito: impostazioni, utenti, campagne, inviti, backup. Nelle campagne è Master solo in quelle che tiene: nelle altre è un giocatore e non vede i segreti.",
 		"masterHint": "Crea e modifica tutte le pagine, vede e scrive i segreti, gestisce categorie e tag.",
 		"playerHint": "Legge le pagine dei giocatori, crea pagine e modifica le proprie e quelle aperte ai giocatori."
 	},
@@ -152,7 +152,7 @@
 		"personal": "Personale",
 		"publicHint": "anche i visitatori senza account, se l'accesso dei visitatori è attivo",
 		"playersHint": "tutti quelli che hanno un account",
-		"masterHint": "solo Master e Admin",
+		"masterHint": "solo il Master",
 		"personalHint": "solo tu"
 	},
 	"themes": {
@@ -948,7 +948,7 @@
 		"kind": "Di chi è",
 		"kindMine": "Personale (solo tu)",
 		"kindShared": "Del gruppo (tutti possono aggiungere e spostare schede)",
-		"masterOnly": "Solo per Master e Admin",
+		"masterOnly": "Solo per il Master",
 		"columns": "Colonne",
 		"columnsHint": "Una per riga.",
 		"defaultColumns": "Indizi\nDomande\nRisolto",
@@ -1061,6 +1061,7 @@
 		"openCampaign": "Apri la campagna",
 		"errFile": "Il file non è un pacchetto mondo valido.",
 		"errExpired": "Il file caricato non è più disponibile: caricalo di nuovo.",
+		"errNotMaster": "In questa campagna sei un giocatore: puoi importare il pacchetto solo in una campagna nuova.",
 		"done": {
 			"pages": "{n} pagine",
 			"skipped": "{n} pagine saltate",

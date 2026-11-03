@@ -38,18 +38,20 @@ export const ofCampaign = (t: { campaignId: SQLiteColumn }) => eq(t.campaignId, 
 /** Condizione SQL per le tabelle legate a una pagina: la pagina indicata sta nella campagna della richiesta. */
 export const pageInCampaign = (pageId: SQLiteColumn) => sql`${pageId} IN (SELECT ${pages.id} FROM ${pages} WHERE ${pages.campaignId} = ${campaignId()})`;
 
-/** Le campagne in cui si può entrare: l'Admin in tutte, gli altri nelle proprie, i visitatori in tutte se sono ammessi. */
+/**
+ * Le campagne in cui si può entrare: quelle che si tengono e quelle in cui si è invitati, anche per l'Admin
+ * (le altre le gestisce da Amministrazione › Campagne, senza entrarci); i visitatori in tutte se sono ammessi.
+ */
 export function campaignsFor(u: Viewer | null, visitors: boolean): CampaignRow[] {
 	if (!u && !visitors) return [];
-	const mine =
-		u && u.role !== 'admin'
-			? or(eq(campaigns.masterId, u.id), sql`${campaigns.id} IN (SELECT ${campaignMembers.campaignId} FROM ${campaignMembers} WHERE ${campaignMembers.userId} = ${u.id})`)
-			: undefined;
+	const mine = u
+		? or(eq(campaigns.masterId, u.id), sql`${campaigns.id} IN (SELECT ${campaignMembers.campaignId} FROM ${campaignMembers} WHERE ${campaignMembers.userId} = ${u.id})`)
+		: undefined;
 	return getDb().select().from(campaigns).where(mine).orderBy(asc(campaigns.id)).all();
 }
 
-/** Il ruolo in una campagna: l'Admin resta Admin, Master è solo chi la tiene, tutti gli altri sono giocatori. */
-export const roleIn = (c: CampaignRow, u: Viewer): Role => (u.role === 'admin' ? 'admin' : c.masterId === u.id ? 'master' : 'player');
+/** Il ruolo in una campagna: Master è solo chi la tiene, tutti gli altri (Admin compresi) sono giocatori. */
+export const roleIn = (c: CampaignRow, u: Viewer): Role => (c.masterId === u.id ? 'master' : 'player');
 
 /** Chi può tenere una campagna: gli account attivi da Master o Admin, e chi ne tiene già una (per non cambiarlo di nascosto salvando il nome). */
 export const masterCandidates = () =>

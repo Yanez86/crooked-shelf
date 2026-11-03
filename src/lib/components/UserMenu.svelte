@@ -15,7 +15,7 @@
 		user,
 		campaign,
 		campaigns
-	}: { user: { username: string; displayName: string; role: Role; icon: string | null } | null; campaign: Campaign | null; campaigns: Campaign[] } = $props();
+	}: { user: { username: string; displayName: string; role: Role; admin?: boolean; icon: string | null } | null; campaign: Campaign | null; campaigns: Campaign[] } = $props();
 	const t = getT();
 
 	// <details>: si apre anche senza JavaScript. Con JavaScript si chiude da solo: lo stato è quello di <details>,
@@ -82,7 +82,7 @@
 					{user ? t('profile.title') : t('nav.preferences')}
 				</a>
 			</li>
-			{#if campaign && (user?.role === 'master' || user?.role === 'admin')}
+			{#if campaign && user?.role === 'master'}
 				<li><a href="/campaign" aria-current={current('/campaign')} onclick={(e) => openPanel(e, '/campaign', t('campaign.title'))}>{t('campaign.title')}</a></li>
 				<li>
 					<form method="post" action="/campaign?/asPlayer">
@@ -91,7 +91,7 @@
 					</form>
 				</li>
 			{/if}
-			{#if user?.role === 'admin'}
+			{#if user?.admin}
 				<li><a href="/admin" aria-current={current('/admin')} onclick={(e) => openPanel(e, '/admin', t('nav.admin'))}>{t('nav.admin')}</a></li>
 			{/if}
 			{#if user}

@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { canEdit, canView, canManage, canWrite, type PageAccessInfo } from './access.ts';
+import { canEdit, canView, canManage, canWrite, isAdmin, isMaster, type PageAccessInfo } from './access.ts';
 import { canCreateKind } from './pageKinds.ts';
 
-const admin = { id: 1, role: 'admin' as const };
+// Un Admin che in questa campagna è giocatore (vedi roleIn): amministra il sito, ma qui non ha poteri in più.
+const admin = { id: 1, role: 'player' as const, admin: true };
 const master = { id: 2, role: 'master' as const };
 const alice = { id: 3, role: 'player' as const };
 const bob = { id: 4, role: 'player' as const };
@@ -25,6 +26,16 @@ describe('permessi', () => {
 		expect(canView(page({ visibility: 'personal', authorId: 3 }), alice)).toBe(true);
 		expect(canView(page({ visibility: 'personal', authorId: 3 }), bob)).toBe(false);
 		expect(canView(page({ visibility: 'personal', authorId: 3 }), admin)).toBe(false);
+	});
+	it("l'Admin non vede i segreti di una campagna in cui non è Master", () => {
+		expect(isAdmin(admin)).toBe(true);
+		expect(isMaster(admin)).toBe(false);
+		expect(canView(page({ visibility: 'master' }), admin)).toBe(false);
+		expect(canEdit(page({ hasSecret: true, playersCanEdit: true }), admin)).toBe(false);
+		expect(canManage(page({ hasSecret: true }), admin)).toBe(false);
+		// Nella campagna che tiene è il Master.
+		expect(canView(page({ visibility: 'master' }), { ...admin, role: 'master' })).toBe(true);
+		expect(isAdmin(master)).toBe(false);
 	});
 	it('modifica', () => {
 		expect(canEdit(page(), alice)).toBe(false);

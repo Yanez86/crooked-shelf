@@ -29,8 +29,12 @@
 			<UserIcon icon={user.icon} size="4.5rem" />
 			<div>
 				<p class="name">{user.displayName}</p>
-				<p class="muted"><span class="badge">{t('roles.' + user.role)}</span> @{user.username}</p>
+				<p class="muted">
+					{#if user.admin}<span class="badge">{t('roles.admin')}</span>{/if}
+					<span class="badge">{t('roles.' + user.role)}</span> @{user.username}
+				</p>
 				<p class="hint">{t('roles.' + user.role + 'Hint')}</p>
+				{#if user.admin}<p class="hint">{t('roles.adminHint')}</p>{/if}
 			</div>
 		</div>
 	{/if}

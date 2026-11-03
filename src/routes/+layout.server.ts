@@ -16,7 +16,7 @@ export const load: LayoutServerLoad = ({ locals, cookies, request, depends }) =>
 	// Barra a sinistra (pagine, risorse e sezioni): niente titoli a chi non può ancora leggere la wiki (es. nella pagina di accesso).
 	const tree = !!u || s.allowVisitors;
 	return {
-		user: u ? { id: u.id, username: u.username, displayName: u.displayName, role: u.role, icon: u.icon, asPlayer: locals.asPlayer } : null,
+		user: u ? { id: u.id, username: u.username, displayName: u.displayName, role: u.role, admin: !!u.admin, icon: u.icon, asPlayer: locals.asPlayer } : null,
 		prefs: locals.prefs,
 		treeHidden: cookies.get(TREE_COOKIE) === '1',
 		sideHidden: cookies.get(SIDE_COOKIE) === '1',

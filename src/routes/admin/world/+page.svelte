@@ -7,7 +7,7 @@
 	const t = getT();
 	let pagesMode = $state('all');
 	// Dove va il pacchetto. Un errore nel modulo della campagna nuova torna qui col file ancora caricato.
-	let target = $derived(form && 'error' in form && 'preview' in form ? 'new' : 'here');
+	let target = $derived((form && 'error' in form && 'preview' in form) || !data.master ? 'new' : 'here');
 	const DONE = ['pages', 'skipped', 'categories', 'maps', 'templates', 'events', 'themes'] as const;
 </script>
 
@@ -55,10 +55,12 @@
 				<label class="choice"><input type="checkbox" name="themes" /><span>{t('admin.themes')}</span></label>
 			</fieldset>
 		</div>
-		<label class="choice secrets">
-			<input type="checkbox" name="secrets" aria-describedby="secrets-hint" />
-			<span>{t('world.secrets')}<br /><span id="secrets-hint" class="hint">{t('world.secretsHint')}</span></span>
-		</label>
+		{#if data.master}
+			<label class="choice secrets">
+				<input type="checkbox" name="secrets" aria-describedby="secrets-hint" />
+				<span>{t('world.secrets')}<br /><span id="secrets-hint" class="hint">{t('world.secretsHint')}</span></span>
+			</label>
+		{/if}
 		<button class="btn btn-primary" type="submit">{t('world.download')}</button>
 	</form>
 </section>
@@ -72,7 +74,7 @@
 			<strong>{'campaign' in form && form.campaign ? t('world.importedNew', { name: form.campaign.name }) : t('world.imported')}</strong>
 			<ul>{#each DONE.filter((k) => form.done[k] > 0) as k (k)}<li>{t('world.done.' + k, { n: form.done[k] })}</li>{/each}</ul>
 		</div>
-		{#if 'campaign' in form && form.campaign}
+		{#if 'campaign' in form && form.campaign?.open}
 			<!-- L'Amministrazione può stare in un pannello: la campagna si apre nella finestra intera. -->
 			<form method="post" action="/campaign?/switch" target="_top">
 				<input type="hidden" name="id" value={form.campaign.id} />
@@ -91,7 +93,9 @@
 			<input type="hidden" name="token" value={form.token} />
 			<fieldset>
 				<legend>{t('world.target')}</legend>
-				<label class="choice"><input type="radio" name="target" value="here" bind:group={target} /><span>{t('world.targetHere', { name: data.campaign?.name ?? '' })}</span></label>
+				{#if data.master}
+					<label class="choice"><input type="radio" name="target" value="here" bind:group={target} /><span>{t('world.targetHere', { name: data.campaign?.name ?? '' })}</span></label>
+				{/if}
 				<label class="choice"><input type="radio" name="target" value="new" bind:group={target} /><span>{t('world.targetNew')}</span></label>
 			</fieldset>
 			{#if target === 'new'}

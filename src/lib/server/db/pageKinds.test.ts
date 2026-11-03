@@ -11,7 +11,7 @@ import { getTimeline, listEvents } from '../timeline.ts';
 import { listTemplates } from '../templates.ts';
 import { searchPages } from '../search.ts';
 
-const admin = { id: 1, role: 'admin' as const };
+const admin = { id: 1, role: 'master' as const, admin: true };
 const alice = { id: 2, role: 'player' as const };
 
 describe('migrazione dopo la 0.10: template, mappe e cronologie diventano pagine', () => {

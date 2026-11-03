@@ -4,7 +4,7 @@
 
 | Ruolo | Cosa può fare |
 |---|---|
-| **Admin** | Tutto, in tutte le campagne: crea le campagne, impostazioni, utenti, inviti, temi, plugin, backup, pacchetti mondo |
+| **Admin** | Gestisce il sito: crea le campagne e ne sceglie il Master, impostazioni, utenti, inviti, temi, plugin, backup, pacchetti mondo. Nelle campagne non ha poteri in più: è Master in quelle che tiene e giocatore in quelle in cui è invitato |
 | **Master** | Nella sua campagna: crea e modifica tutte le pagine, scrive e vede i segreti, gestisce categorie, tag, mappe, risorse, calendario, cronologia del mondo e giocatori |
 | **Giocatore** | Legge, crea pagine, modifica le sue e quelle aperte ai giocatori, aggiunge eventi alla cronologia della campagna, usa le bacheche |
 | **Visitatore** | Solo le pagine pubbliche, e solo se l'Admin ha acceso l'accesso dei visitatori |
@@ -19,7 +19,7 @@ Una installazione può contenere più campagne. Ognuna è una wiki a sé: pagine
 - **Invitare i giocatori**: il Master apre **Campagna** dal menu del profilo e crea un link di invito. Chi non ha un account lo crea; chi lo ha già accede ed entra nella campagna col suo. Dalla stessa pagina il Master rinomina la campagna e rimuove i giocatori.
 - **Cambiare campagna**: chi ne ha più di una le trova in cima al menu del profilo. La scelta resta sul dispositivo. Un collegamento a una pagina si apre nella campagna in cui ti trovi.
 - **Eliminarne una**: il Master elimina la sua dalla pagina Campagna, l'Admin qualsiasi da Amministrazione › Campagne, anche l'ultima; per conferma si riscrive il nome. Spariscono per tutti pagine, mappe, cronologie, bacheche, risorse e immagini, e torna solo ripristinando un backup. Chi resta senza campagne può ancora accedere e aspetta un invito.
-- Si è Master solo nella propria campagna: nelle altre si è giocatori, se si è stati invitati. L'Admin entra in tutte e vede anche i segreti.
+- Si è Master solo nella propria campagna: nelle altre si è giocatori, se si è stati invitati. Vale anche per l'Admin: entra solo nelle campagne che tiene o in cui è invitato, e vede i segreti solo nelle sue. Le altre le gestisce da Amministrazione › Campagne senza entrarci.
 - Esportazione e pacchetti mondo riguardano la campagna in cui ti trovi; il backup riguarda tutta l'installazione.
 
 ## La barra a sinistra
@@ -29,13 +29,13 @@ Tutta la wiki si raggiunge dalla barra a sinistra (in alto non c'è più il menu
 - in cima tre linguette, ognuna con l'icona e il nome sotto: **Pagine** (il foglio), **Risorse** (l'immagine: immagini, audio e altri file, vedi sotto) e **Template** (i fogli sovrapposti: tutti i template, in ordine di titolo);
 - sotto, le icone: **Nuova pagina**, **Nuova cartella** e **Nuovo divisorio** (o **Carica una risorsa**, nelle Risorse; **Nuovo template**, nei Template), chiudi tutto e apri tutto;
 - l'**albero**: le categorie sono cartelle che si aprono e si chiudono con un clic (o con Invio da tastiera); dentro ci sono le sottocartelle e le pagine di ogni tipo (pagine, mappe, cronologie, bacheche), ognuna con la sua icona. Le pagine senza categoria stanno in fondo, alla radice. La cartella della pagina che stai leggendo si apre da sola.
-- **Nuova cartella** (l'icona della cartella col «+», per Master e Admin): la cartella compare subito in cima all'albero col nome da scrivere; Invio la crea, Esc la lascia perdere. Rinominarle si fa in **Cartelle**, all'indirizzo `/categories`.
-- **Riordinare** (Master e Admin): trascina una cartella o una pagina per metterla prima o dopo un'altra, oppure lasciala nel mezzo di una riga per annidarla dentro quella cartella o pagina. Una pagina con voci dentro ha la freccia per aprirle; il titolo porta alla pagina. Da tastiera, sulla riga: **Alt** e le frecce su e giù spostano, destra la mette dentro la voce sopra, sinistra la riporta fuori. Le voci mai spostate restano in fondo, in ordine alfabetico.
+- **Nuova cartella** (l'icona della cartella col «+», per il Master): la cartella compare subito in cima all'albero col nome da scrivere; Invio la crea, Esc la lascia perdere. Rinominarle si fa in **Cartelle**, all'indirizzo `/categories`.
+- **Riordinare** (il Master): trascina una cartella o una pagina per metterla prima o dopo un'altra, oppure lasciala nel mezzo di una riga per annidarla dentro quella cartella o pagina. Una pagina con voci dentro ha la freccia per aprirle; il titolo porta alla pagina. Da tastiera, sulla riga: **Alt** e le frecce su e giù spostano, destra la mette dentro la voce sopra, sinistra la riporta fuori. Le voci mai spostate restano in fondo, in ordine alfabetico.
 - **Nuovo divisorio** (l'icona con le tre righe): aggiunge una riga in fondo all'albero, da trascinare tra una cartella e l'altra. Si elimina dalla sua crocetta.
-- **Cestino**: passando su una pagina o una cartella, a destra nella riga compare il cestino (lo vede chi può eliminare quella pagina; le cartelle solo Master e Admin). Una cartella ci va con tutto quello che contiene e, dal **Cestino**, torna intera. Le pagine annidate in una pagina eliminata invece restano e risalgono alla sua cartella.
-- **Visibilità** (Master e Admin): accanto al cestino c'è l'icona di chi può vedere la pagina: il globo per Pubblica, l'occhio per Giocatori, l'occhio barrato per Solo Master, il lucchetto per Personale. Solo Master e Personale si vedono sempre; le altre compaiono passando sulla riga (sul telefono si vedono tutte). Cliccandola si sceglie un altro livello. Se la pagina ne contiene altre (anche dentro sue cartelle), si chiede se cambiarle tutte o solo lei. «Personale» vale solo per le pagine scritte da te: quelle degli altri restano come sono. La home non ha l'icona: si cambia dalla sua matita.
+- **Cestino**: passando su una pagina o una cartella, a destra nella riga compare il cestino (lo vede chi può eliminare quella pagina; le cartelle solo il Master). Una cartella ci va con tutto quello che contiene e, dal **Cestino**, torna intera. Le pagine annidate in una pagina eliminata invece restano e risalgono alla sua cartella.
+- **Visibilità** (il Master): accanto al cestino c'è l'icona di chi può vedere la pagina: il globo per Pubblica, l'occhio per Giocatori, l'occhio barrato per Solo Master, il lucchetto per Personale. Solo Master e Personale si vedono sempre; le altre compaiono passando sulla riga (sul telefono si vedono tutte). Cliccandola si sceglie un altro livello. Se la pagina ne contiene altre (anche dentro sue cartelle), si chiede se cambiarle tutte o solo lei. «Personale» vale solo per le pagine scritte da te: quelle degli altri restano come sono. La home non ha l'icona: si cambia dalla sua matita.
 
-La **home** è la pagina iniziale del sito, nata con la wiki: dalla matita si scrive la presentazione, con blocchi, riquadri, copertina e icona. A destra, sotto i suoi riquadri, ci sono le pagine modificate e aggiunte di recente. Sta sempre in cima alla barra a sinistra, fuori dalle cartelle, e non si sposta. Non si può eliminare e ce n'è una sola: per cambiarla, Master e Admin spuntano **Pagina home** modificando un'altra pagina, che deve essere Pubblica o Giocatori. Quella di prima torna una pagina come le altre.
+La **home** è la pagina iniziale del sito, nata con la wiki: dalla matita si scrive la presentazione, con blocchi, riquadri, copertina e icona. A destra, sotto i suoi riquadri, ci sono le pagine modificate e aggiunte di recente. Sta sempre in cima alla barra a sinistra, fuori dalle cartelle, e non si sposta. Non si può eliminare e ce n'è una sola: per cambiarla, il Master spunta **Pagina home** modificando un'altra pagina, che deve essere Pubblica o Giocatori. Quella di prima torna una pagina come le altre.
 
 In fondo alla barra, su entrambe le linguette, c'è sempre il **Cestino**. Le altre sezioni della wiki (Pagine, cioè l'elenco con i filtri, Tag, Galleria, Regole, Calendario, Cartelle) non hanno una voce di menu: si aprono dal loro indirizzo (`/wiki`, `/tags`, `/gallery`, `/rules`, `/calendar`, `/categories`).
 
@@ -133,7 +133,7 @@ Le bacheche sono pagine: **Nuova pagina › Nuova bacheca**, con le colonne di p
 
 ## Profilo
 
-In alto a destra c'è il tuo profilo: la tua icona, il tuo nome e il tuo grado (Admin, Master o Giocatore). Cliccandoci si apre il menu con **Profilo**, **Amministrazione** (solo per l'Admin) ed **Esci**; sul telefono in alto resta solo l'icona, e nome e grado si leggono nel menu.
+In alto a destra c'è il tuo profilo: la tua icona, il tuo nome e il tuo grado nella campagna (Master o Giocatore). Cliccandoci si apre il menu con **Profilo**, **Amministrazione** (solo per l'Admin) ed **Esci**; sul telefono in alto resta solo l'icona, e nome e grado si leggono nel menu.
 
 **Profilo** e **Amministrazione** si aprono in un popup sopra la wiki: lo chiudi con Esc, con la X o cliccando fuori, e sotto ritrovi la pagina che stavi leggendo. Con Ctrl+clic si aprono come pagine, in un'altra scheda. Sul telefono si aprono direttamente come pagine.
 

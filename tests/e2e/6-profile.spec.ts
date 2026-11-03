@@ -38,7 +38,7 @@ test('in alto a destra: icona, nome e grado', async () => {
 	const header = admin.locator('header.site-header');
 	const toggle = header.locator('.user-menu summary');
 	await expect(toggle).toBeVisible();
-	await expect(toggle).toHaveAccessibleName('Profilo: Davide Admin');
+	await expect(toggle).toHaveAccessibleName('Profilo: Davide Master');
 
 	// Si apre con il menu del profilo; Esc lo richiude.
 	const menu = header.locator('.user-menu .panel');
@@ -130,7 +130,7 @@ test('profilo e amministrazione si aprono sopra la wiki, che resta sotto', async
 	await admin.keyboard.press('Escape');
 	await expect(profile).toBeHidden();
 	await expect(admin).toHaveURL(url);
-	await expect(toggle).toHaveAccessibleName('Profilo: Davide il Saggio Admin');
+	await expect(toggle).toHaveAccessibleName('Profilo: Davide il Saggio Master');
 	await expect(toggle).toBeFocused();
 
 	// Le sezioni si cambiano dentro il popup, anche dopo un modulo che ricarica la pagina. Si chiude con la X o cliccando fuori.
@@ -157,7 +157,7 @@ test('profilo e amministrazione si aprono sopra la wiki, che resta sotto', async
 	await expect(frame.getByLabel('Nome visualizzato')).toBeVisible();
 	await draft.getByRole('button', { name: 'Chiudi' }).click();
 	await expect(draft).toBeHidden();
-	await expect(toggle).toHaveAccessibleName('Profilo: Davide il Saggio Admin');
+	await expect(toggle).toHaveAccessibleName('Profilo: Davide il Saggio Master');
 	await expect(admin.getByLabel('Titolo', { exact: true })).toHaveValue('Bozza non salvata');
 });
 

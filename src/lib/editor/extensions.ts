@@ -65,7 +65,7 @@ const Callout = Node.create<{ labels: EditorLabels }>({
 	}
 });
 
-/** Blocco segreto: visibile solo a Master e Admin. */
+/** Blocco segreto: visibile solo al Master della campagna. */
 const Secret = Node.create<{ labels: EditorLabels }>({
 	name: 'secret',
 	group: 'block',
