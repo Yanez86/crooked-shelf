@@ -35,7 +35,7 @@
 				<tr>
 					<th scope="row">
 						<span class="who">
-							<UserIcon icon={u.icon} />
+							<UserIcon icon={u.icon} avatar={u.avatar} />
 							<span>{u.displayName}{#if u.id === me}{' '}<span class="badge">{t('admin.you')}</span>{/if}<br /><span class="hint">@{u.username}</span></span>
 						</span>
 					</th>

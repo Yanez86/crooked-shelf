@@ -447,7 +447,10 @@
 		"title": "Profilo",
 		"guest": "Ospite",
 		"icon": "Icona",
-		"iconHint": "Si vede in alto a destra, accanto al tuo nome e al tuo grado."
+		"iconHint": "Si vede in alto a destra, accanto al tuo nome e al tuo grado.",
+		"avatar": "Immagine",
+		"avatarHint": "Una tua foto o un disegno, al posto dell'icona: PNG, JPEG, GIF o WebP.",
+		"avatarRemove": "Togli l'immagine e torna all'icona"
 	},
 	"claude": {
 		"title": "Claude",

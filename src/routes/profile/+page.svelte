@@ -26,7 +26,7 @@
 	<h1>{user ? t('profile.title') : t('prefs.title')}</h1>
 	{#if user}
 		<div class="card who">
-			<UserIcon icon={user.icon} size="4.5rem" />
+			<UserIcon icon={user.icon} avatar={user.avatar} size="4.5rem" />
 			<div>
 				<p class="name">{user.displayName}</p>
 				<p class="muted">
@@ -111,7 +111,28 @@
 			<h2 id="profile-title">{t('prefs.profile')}</h2>
 			<FormError error={msg('profile')?.error} />
 			<FormOk message={msg('profile')?.ok} />
-			<form method="post" action="?/profile" class="card" use:enhance={() => async ({ update }) => update({ reset: false })}>
+			<form
+				method="post"
+				action="?/profile"
+				enctype="multipart/form-data"
+				class="card"
+				use:enhance={({ formElement }) =>
+					async ({ update }) => {
+						await update({ reset: false });
+						// Salvata l'immagine, il campo si svuota: un secondo «Salva» non la ricarica.
+						formElement.querySelector<HTMLInputElement>('input[name=avatar]')!.value = '';
+						const remove = formElement.querySelector<HTMLInputElement>('input[name=removeAvatar]');
+						if (remove) remove.checked = false;
+					}}
+			>
+				<div class="field">
+					<label for="avatar">{t('profile.avatar')}</label>
+					<input id="avatar" name="avatar" type="file" accept="image/png,image/jpeg,image/gif,image/webp" aria-describedby="avatar-hint" />
+					<span id="avatar-hint" class="hint">{t('profile.avatarHint')}</span>
+					{#if user.avatar}
+						<label class="choice"><input type="checkbox" name="removeAvatar" value="1" />{t('profile.avatarRemove')}</label>
+					{/if}
+				</div>
 				<fieldset>
 					<legend>{t('profile.icon')}</legend>
 					<p class="hint">{t('profile.iconHint')}</p>

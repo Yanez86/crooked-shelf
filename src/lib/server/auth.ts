@@ -26,6 +26,8 @@ export interface SessionUser {
 	prefs: Record<string, string>;
 	/** Nome di un'icona delle pagine; senza, la sagoma di una persona. */
 	icon: string | null;
+	/** Id del file dell'immagine caricata, che prende il posto dell'icona. */
+	avatar: string | null;
 	/** Vista giocatore (la imposta hooks.server.ts): vedi Viewer. */
 	asPlayer?: boolean;
 }
@@ -139,8 +141,8 @@ export function validateSession(token: string): { user: SessionUser; expires?: D
 	return { user: sessionUser(row.u), expires };
 }
 
-function sessionUser({ id, username, displayName, role, prefs, icon }: typeof users.$inferSelect): SessionUser {
-	return { id, username, displayName, role, admin: role === 'admin', prefs: prefs ?? {}, icon };
+function sessionUser({ id, username, displayName, role, prefs, icon, avatar }: typeof users.$inferSelect): SessionUser {
+	return { id, username, displayName, role, admin: role === 'admin', prefs: prefs ?? {}, icon, avatar };
 }
 
 export function deleteSession(token: string) {

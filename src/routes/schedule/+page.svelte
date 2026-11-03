@@ -161,7 +161,7 @@
 																{#each CHOICES as k (k)}
 																	{#each o.answers[k] as p (p.id)}
 																		<span class="face {k}" title="{p.displayName}: {t('schedule.answer.' + k)}">
-																			<UserIcon icon={p.icon} size="1.25rem" />
+																			<UserIcon icon={p.icon} avatar={p.avatar} size="1.25rem" />
 																			{#if k !== 'in_person'}<span class="mark"><Icon name={k === 'remote' ? 'headphones' : 'close'} /></span>{/if}
 																		</span>
 																	{/each}

@@ -390,5 +390,9 @@ export const MIGRATIONS: (string | ((db: Database.Database) => void) | { rebuild
 		created_at INTEGER NOT NULL,
 		PRIMARY KEY (appointment_id, date, user_id)
 	);
+	`,
+	// Avatar: un'immagine caricata dall'utente al posto dell'icona.
+	`
+	ALTER TABLE users ADD COLUMN avatar TEXT REFERENCES files(id) ON DELETE SET NULL;
 	`
 ];

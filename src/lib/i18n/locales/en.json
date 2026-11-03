@@ -447,7 +447,10 @@
 		"title": "Profile",
 		"guest": "Guest",
 		"icon": "Icon",
-		"iconHint": "Shown at the top right, next to your name and rank."
+		"iconHint": "Shown at the top right, next to your name and rank.",
+		"avatar": "Picture",
+		"avatarHint": "A photo or drawing of yours, in place of the icon: PNG, JPEG, GIF or WebP.",
+		"avatarRemove": "Remove the picture and go back to the icon"
 	},
 	"claude": {
 		"title": "Claude",

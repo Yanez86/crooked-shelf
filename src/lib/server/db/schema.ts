@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer, real, primaryKey, index, uniqueIndex } from 'drizzle-orm/sqlite-core';
+import { sqliteTable, text, integer, real, primaryKey, index, uniqueIndex, type AnySQLiteColumn } from 'drizzle-orm/sqlite-core';
 
 import { ROLES, VISIBILITIES } from '../../roles.ts';
 import { PAGE_KINDS, TIMELINE_MODES } from '../../pageKinds.ts';
@@ -15,6 +15,8 @@ export const users = sqliteTable('users', {
 	disabled: integer('disabled', { mode: 'boolean' }).notNull().default(false),
 	prefs: text('prefs', { mode: 'json' }).$type<Record<string, string>>().notNull().default({}),
 	icon: text('icon'),
+	/** Immagine caricata dall'utente: se c'è, prende il posto dell'icona. Il tipo esplicito rompe il giro users → files → users. */
+	avatar: text('avatar').references((): AnySQLiteColumn => files.id, { onDelete: 'set null' }),
 	createdAt: integer('created_at').notNull()
 });
 

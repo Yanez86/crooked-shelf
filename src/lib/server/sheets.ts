@@ -134,9 +134,9 @@ export function tableOf(u: Viewer | null) {
 	if (!u) return null;
 	const c = currentCampaign();
 	const db = getDb();
-	const master = c.masterId ? db.select({ name: users.displayName, icon: users.icon }).from(users).where(eq(users.id, c.masterId)).get() : undefined;
+	const master = c.masterId ? db.select({ name: users.displayName, icon: users.icon, avatar: users.avatar }).from(users).where(eq(users.id, c.masterId)).get() : undefined;
 	const players = db
-		.select({ id: users.id, name: users.displayName, icon: users.icon })
+		.select({ id: users.id, name: users.displayName, icon: users.icon, avatar: users.avatar })
 		.from(campaignMembers)
 		.innerJoin(users, eq(users.id, campaignMembers.userId))
 		.where(eq(campaignMembers.campaignId, c.id))
@@ -145,9 +145,9 @@ export function tableOf(u: Viewer | null) {
 	const sheets = sheetsByPlayer();
 	return {
 		master: master ?? null,
-		players: players.map(({ id, name, icon }) => {
+		players: players.map(({ id, name, icon, avatar }) => {
 			const sheet = sheets.get(id);
-			return { name, icon, sheet: sheet && canView(sheet, u) ? { slug: sheet.slug, title: sheet.title } : null };
+			return { name, icon, avatar, sheet: sheet && canView(sheet, u) ? { slug: sheet.slug, title: sheet.title } : null };
 		})
 	};
 }

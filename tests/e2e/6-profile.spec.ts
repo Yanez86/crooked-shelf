@@ -104,6 +104,27 @@ test('profilo: preferenze, icona e nome', async () => {
 	await admin.reload();
 	await expect(identity.getByRole('radio', { name: 'Corona' })).toBeChecked();
 	await shot(admin, '51-profilo');
+
+	// Un'immagine caricata prende il posto dell'icona; un file che non è un'immagine no.
+	await identity.getByLabel('Immagine').setInputFiles({ name: 'nota.txt', mimeType: 'image/png', buffer: Buffer.from('non sono un png') });
+	await identity.getByRole('button', { name: 'Salva' }).click();
+	await expect(identity.getByRole('alert')).toBeVisible();
+	await expect(admin.locator('.user-menu summary img')).toHaveCount(0);
+	await identity.getByLabel('Immagine').setInputFiles('tests/fixtures/city.png');
+	await identity.getByRole('button', { name: 'Salva' }).click();
+	await expect(identity.getByRole('status')).toContainText('Modifiche salvate');
+	const src = await admin.locator('.user-menu summary img').getAttribute('src');
+	expect(src).toMatch(/^\/files\//);
+	expect((await admin.request.get(src!)).status()).toBe(200);
+	await expect(admin.locator('.who img')).toHaveAttribute('src', src!);
+	await axe(admin, 'profilo con immagine');
+
+	// Tolta, torna l'icona e il file sparisce.
+	await identity.getByLabel("Togli l'immagine e torna all'icona").check();
+	await identity.getByRole('button', { name: 'Salva' }).click();
+	await expect(admin.locator('.user-menu summary img')).toHaveCount(0);
+	await expect(admin.locator('.user-menu summary path')).not.toHaveAttribute('d', before!);
+	expect((await admin.request.get(src!)).status()).toBe(404);
 });
 
 test('profilo e amministrazione si aprono sopra la wiki, che resta sotto', async () => {

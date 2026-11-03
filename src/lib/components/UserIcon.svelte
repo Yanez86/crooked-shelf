@@ -1,12 +1,15 @@
 <script lang="ts">
 	import { PAGE_ICONS } from '../pageIcons.ts';
 
-	let { icon, size = '2.25rem' }: { icon: string | null | undefined; size?: string } = $props();
+	let { icon, avatar = null, size = '2.25rem' }: { icon: string | null | undefined; avatar?: string | null; size?: string } = $props();
 	// Senza icona scelta: la sagoma di una persona.
 	const d = $derived(PAGE_ICONS[icon ?? ''] ?? PAGE_ICONS.person);
 </script>
 
-<span class="user-icon" style:--size={size} aria-hidden="true"><svg viewBox="0 0 24 24"><path {d} /></svg></span>
+<!-- L'immagine caricata, se c'è, prende il posto dell'icona. -->
+<span class="user-icon" style:--size={size} aria-hidden="true">
+	{#if avatar}<img src="/files/{avatar}" alt="" />{:else}<svg viewBox="0 0 24 24"><path {d} /></svg>{/if}
+</span>
 
 <style>
 	.user-icon {
@@ -15,10 +18,16 @@
 		flex: none;
 		width: var(--size);
 		height: var(--size);
+		overflow: hidden;
 		border-radius: var(--radius);
 		background: var(--c-surface2);
 		border: 1px solid var(--c-border);
 		color: var(--c-primary);
+	}
+	img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
 	}
 	svg {
 		width: 60%;

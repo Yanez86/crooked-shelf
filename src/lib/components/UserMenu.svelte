@@ -15,7 +15,7 @@
 		user,
 		campaign,
 		campaigns
-	}: { user: { username: string; displayName: string; role: Role; admin?: boolean; icon: string | null } | null; campaign: Campaign | null; campaigns: Campaign[] } = $props();
+	}: { user: { username: string; displayName: string; role: Role; admin?: boolean; icon: string | null; avatar: string | null } | null; campaign: Campaign | null; campaigns: Campaign[] } = $props();
 	const t = getT();
 
 	// <details>: si apre anche senza JavaScript. Con JavaScript si chiude da solo: lo stato è quello di <details>,
@@ -52,7 +52,7 @@
 
 <details class="user-menu" bind:this={root}>
 	<summary>
-		<UserIcon icon={user?.icon} />
+		<UserIcon icon={user?.icon} avatar={user?.avatar} />
 		<span class="who">
 			<span class="visually-hidden">{t('profile.title')}:</span>
 			<span class="name">{user ? user.displayName : t('profile.guest')}</span>

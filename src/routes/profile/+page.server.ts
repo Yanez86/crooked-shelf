@@ -6,6 +6,7 @@ import { isLocale, localeNames } from '#lib/i18n/index.ts';
 import { getDb, schema } from '#lib/server/db/index.ts';
 import { PASSWORD_MIN, deleteUserSessions, createSession, hashPassword, setSessionCookie, verifyPassword } from '#lib/server/auth.ts';
 import { str } from '#lib/server/forms.ts';
+import { deleteFile, saveImage } from '#lib/server/files.ts';
 import { extraThemes } from '#lib/server/plugins.ts';
 import { PAGE_ICONS } from '#lib/pageIcons.ts';
 
@@ -47,11 +48,21 @@ export const actions: Actions = {
 		if (!displayName) return fail(400, { error: 'errors.nameRequired', section: 'profile' });
 		// Solo le icone che conosciamo; le altre tornano alla sagoma di una persona.
 		const icon = String(f.get('icon') ?? '');
+		// L'immagine: una nuova sostituisce la vecchia, «togli» torna all'icona; senza nessuna delle due resta com'è.
+		const old = locals.user.avatar;
+		let avatar = f.get('removeAvatar') ? null : old;
+		const file = f.get('avatar');
+		if (file instanceof File && file.size > 0) {
+			const r = saveImage(Buffer.from(await file.arrayBuffer()), file.name, locals.user.id);
+			if (!r.ok) return fail(400, { error: r.error, section: 'profile' });
+			avatar = r.file.id;
+		}
 		getDb()
 			.update(schema.users)
-			.set({ displayName, icon: Object.hasOwn(PAGE_ICONS, icon) ? icon : null })
+			.set({ displayName, icon: Object.hasOwn(PAGE_ICONS, icon) ? icon : null, avatar })
 			.where(eq(schema.users.id, locals.user.id))
 			.run();
+		if (old && old !== avatar) deleteFile(old);
 		return { ok: 'common.saved', section: 'profile' };
 	},
 	password: async ({ request, locals, cookies, url }) => {

@@ -227,10 +227,10 @@ describe('al tavolo', () => {
 		here(() => ensureSheets('it'));
 		expect(here(() => tableOf(null))).toBeNull();
 		const t = here(() => tableOf(bob))!;
-		expect(t.master).toEqual({ name: 'Davide', icon: null });
+		expect(t.master).toEqual({ name: 'Davide', icon: null, avatar: null });
 		expect(t.players).toEqual([
-			{ name: 'Alice', icon: 'bow', sheet: { slug: 'alice', title: 'Alice' } },
-			{ name: 'Bruno', icon: null, sheet: { slug: 'bruno', title: 'Bruno' } }
+			{ name: 'Alice', icon: 'bow', avatar: null, sheet: { slug: 'alice', title: 'Alice' } },
+			{ name: 'Bruno', icon: null, avatar: null, sheet: { slug: 'bruno', title: 'Bruno' } }
 		]);
 		removeMember(c.id, bob.id);
 		expect(here(() => tableOf(alice))!.players.map((p) => p.name)).toEqual(['Alice']);

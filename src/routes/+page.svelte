@@ -37,8 +37,8 @@
 	</div>
 {/snippet}
 
-{#snippet person(icon: string | null, name: string, sub: string)}
-	<UserIcon {icon} size="1.5rem" />
+{#snippet person(icon: string | null, avatar: string | null, name: string, sub: string)}
+	<UserIcon {icon} {avatar} size="1.5rem" />
 	<span>
 		<span class="title">{name}</span>
 		<span class="when muted">{sub}</span>
@@ -51,15 +51,15 @@
 		<h2 id="table-title">{t('sheets.table')}</h2>
 		<ul class="list-plain">
 			{#if tb.master}
-				<li><span class="row">{@render person(tb.master.icon, tb.master.name, t('campaign.master'))}</span></li>
+				<li><span class="row">{@render person(tb.master.icon, tb.master.avatar, tb.master.name, t('campaign.master'))}</span></li>
 			{/if}
 			{#each tb.players as p, i (i)}
 				{@const sub = p.sheet && p.sheet.title !== p.name ? p.sheet.title : t('sheets.player')}
 				<li>
 					{#if p.sheet}
-						<a class="row" href="/wiki/{p.sheet.slug}">{@render person(p.icon, p.name, sub)}</a>
+						<a class="row" href="/wiki/{p.sheet.slug}">{@render person(p.icon, p.avatar, p.name, sub)}</a>
 					{:else}
-						<span class="row">{@render person(p.icon, p.name, sub)}</span>
+						<span class="row">{@render person(p.icon, p.avatar, p.name, sub)}</span>
 					{/if}
 				</li>
 			{/each}
