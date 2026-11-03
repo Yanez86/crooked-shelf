@@ -503,7 +503,18 @@
 		"campaignPlayers": "Giocatori: {n}",
 		"siteName": "Nome del sito",
 		"campaignDeleted": "Campagna eliminata.",
-		"noCampaigns": "Non c'è nessuna campagna: creane una qui sotto per ricominciare."
+		"noCampaigns": "Non c'è nessuna campagna: creane una qui sotto per ricominciare.",
+		"version": "Versione",
+		"versionInstalled": "Versione installata:",
+		"versionChecking": "Controllo della versione su GitHub…",
+		"versionCurrent": "Aggiornata:",
+		"versionCurrentHint": "è l'ultima versione pubblicata su GitHub.",
+		"versionOutdated": "Non aggiornata:",
+		"versionOutdatedHint": "su GitHub c'è la versione {v}.",
+		"versionUnknown": "Non è stato possibile controllare la versione: GitHub non risponde. Si riprova tra qualche minuto.",
+		"versionOff": "Il controllo della versione su GitHub è spento (CS_UPDATE_CHECK=0).",
+		"versionNews": "Novità della nuova versione",
+		"versionHowTo": "Come aggiornare"
 	},
 	"files": {
 		"empty": "Scegli un file da caricare.",

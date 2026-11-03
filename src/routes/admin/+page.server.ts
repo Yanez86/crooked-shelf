@@ -4,8 +4,10 @@ import { getSettings, saveSettings } from '#lib/server/settings.ts';
 import { isLocale, localeNames } from '#lib/i18n/index.ts';
 import { requireAdmin } from '#lib/server/guard.ts';
 import { str } from '#lib/server/forms.ts';
+import { checkUpdate } from '#lib/server/updates.ts';
 
-export const load: PageServerLoad = () => ({ settings: getSettings(), locales: localeNames() });
+// Il controllo della versione non si aspetta: la pagina arriva subito e il risultato la raggiunge appena GitHub risponde.
+export const load: PageServerLoad = () => ({ settings: getSettings(), locales: localeNames(), update: checkUpdate() });
 
 export const actions: Actions = {
 	default: async ({ request, locals }) => {

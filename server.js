@@ -6,6 +6,7 @@
 //   CS_DATA_DIR     cartella dei dati (predefinita ./data)
 //   CS_ORIGIN       indirizzo pubblico, es. https://wiki.esempio.it (consigliato dietro un proxy)
 //   CS_TRUST_PROXY  1 = fidati delle intestazioni X-Forwarded-* del proxy (Caddy, nginx…)
+//   CS_UPDATE_CHECK 0 = Amministrazione non controlla su GitHub se c'è una versione nuova
 //
 // Senza CS_ORIGIN la wiki usa l'indirizzo con cui viene raggiunta, in http: così funziona
 // subito anche in rete locale (es. http://192.168.1.20:3000) senza certificati.

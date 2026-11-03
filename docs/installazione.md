@@ -135,8 +135,11 @@ Va bene per provarla, non per giocarci una campagna: per quello usa uno dei modi
 | `CS_ORIGIN` | indirizzo pubblico, es. `https://wiki.esempio.it` | — |
 | `CS_TRUST_PROXY` | `1` dietro un proxy che invia `X-Forwarded-*` | — |
 | `CS_PLUGINS_BUNDLED` | cartella dei plugin inclusi | `./plugins` |
+| `CS_UPDATE_CHECK` | `0` = non controllare su GitHub se c'è una versione nuova | — |
 
 Senza `CS_ORIGIN` la wiki usa l'indirizzo con cui viene raggiunta, in `http`: così funziona subito in rete locale.
+
+In Amministrazione › Impostazioni la wiki confronta la sua versione con quella del `package.json` sul ramo `main` di GitHub. Il server lo legge solo quando un Admin apre la pagina, al massimo una volta all'ora, e non manda nulla della wiki; con `CS_UPDATE_CHECK=0` non contatta GitHub.
 
 ## Backup e ripristino
 

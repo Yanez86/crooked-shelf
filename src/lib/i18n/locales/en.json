@@ -503,7 +503,18 @@
 		"campaignPlayers": "Players: {n}",
 		"siteName": "Site name",
 		"campaignDeleted": "Campaign deleted.",
-		"noCampaigns": "There are no campaigns: create one below to start again."
+		"noCampaigns": "There are no campaigns: create one below to start again.",
+		"version": "Version",
+		"versionInstalled": "Installed version:",
+		"versionChecking": "Checking the version on GitHub…",
+		"versionCurrent": "Up to date:",
+		"versionCurrentHint": "this is the latest version published on GitHub.",
+		"versionOutdated": "Not up to date:",
+		"versionOutdatedHint": "version {v} is available on GitHub.",
+		"versionUnknown": "Couldn't check the version: GitHub is not responding. It will try again in a few minutes.",
+		"versionOff": "The version check on GitHub is turned off (CS_UPDATE_CHECK=0).",
+		"versionNews": "What's new in the new version",
+		"versionHowTo": "How to update"
 	},
 	"files": {
 		"empty": "Choose a file to upload.",

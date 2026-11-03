@@ -1,6 +1,6 @@
 import { test, expect, type Page, type Browser } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
-import { mkdirSync } from 'node:fs';
+import { mkdirSync, readFileSync } from 'node:fs';
 
 // Un'unica storia, in ordine: configurazione, pagine, invito di un giocatore, permessi, preferenze, accessibilità.
 test.describe.configure({ mode: 'serial' });
@@ -783,6 +783,18 @@ test('utenti: la tabella scorre dentro il suo riquadro, anche sul telefono', asy
 	await axe(admin, 'utenti');
 	expect(await admin.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBe(0);
 	await admin.setViewportSize({ width: 1280, height: 720 });
+});
+
+test('amministrazione: versione installata e controllo su GitHub', async () => {
+	await admin.goto('/admin');
+	const card = admin.getByRole('region', { name: 'Versione' });
+	const { version } = JSON.parse(readFileSync('package.json', 'utf8'));
+	await expect(card.getByRole('link', { name: version, exact: true })).toHaveAttribute('href', '/changelog');
+	// Il risultato dipende dalla rete: aggiornata, non aggiornata o GitHub irraggiungibile, ma mai fermo su «Controllo…».
+	const status = card.locator('[aria-live]');
+	await expect(status).toContainText(/Aggiornata:|Non aggiornata:|Non è stato possibile|è spento/, { timeout: 15_000 });
+	await expect(status).not.toContainText('Controllo della versione');
+	await axe(admin, 'versione');
 });
 
 test('tastiera: link per saltare al contenuto', async () => {

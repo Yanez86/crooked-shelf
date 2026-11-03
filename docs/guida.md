@@ -153,6 +153,7 @@ Tutta la wiki si usa da tastiera e con i lettori di schermo; i colori rispettano
 
 ## Amministrazione
 
+- **Impostazioni**: nome del sito, lingua predefinita e visitatori. Sotto c'è la **versione** installata, confrontata con l'ultima su GitHub: «Aggiornata» o «Non aggiornata», con il link alle novità e a come aggiornare.
 - **Temi**: copia un tema e cambia i colori; si salva solo se il testo resta leggibile. Un tema può avere un'immagine di sfondo, che sta dietro i riquadri e si vede solo sugli schermi larghi. Esporta e importa come file (solo i colori: lo sfondo viaggia col pacchetto mondo).
 - **Plugin**: accendi e spegni i plugin installati; cliccandone uno si apre una finestra con scopo, istruzioni, autore e contenuto (per crearne uno, vedi [plugin.md](plugin.md)).
 - **Backup**, **Pacchetto mondo**, **Esporta in Markdown**: vedi [installazione.md](installazione.md#backup-e-ripristino).

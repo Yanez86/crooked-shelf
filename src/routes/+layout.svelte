@@ -19,6 +19,7 @@
 	import Icon from '#lib/components/Icon.svelte';
 	import { iconCss } from '#lib/icons.ts';
 	import { LOGO_BOOKS } from '#lib/logo.ts';
+	import { REPO } from '#lib/version.ts';
 	import type { LayoutProps } from './$types';
 
 	let { data, children }: LayoutProps = $props();
@@ -29,8 +30,6 @@
 	setI18n(() => data.locale);
 	// Il layout non può leggere il contesto che crea: traduce direttamente.
 	const t = (k: string, p?: Record<string, string | number>) => translate(data.locale, k, p);
-
-	const REPO = 'https://github.com/yanez86/crooked-shelf';
 
 	// Le preferenze cambiate senza ricaricare la pagina vanno applicate anche a <html>.
 	$effect(() => {
