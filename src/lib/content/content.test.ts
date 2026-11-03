@@ -101,6 +101,12 @@ describe('campi e immagini', () => {
 		expect(ex.body).toContain('Residenza: la locanda');
 		expect(ex.links).toEqual([{ target: 'locanda-del-grifone', secret: false }]);
 	});
+	it('titoletto e didascalia delle immagini entrano in ricerca', () => {
+		const ex = extract({ type: 'doc', content: [] }, [{ label: 'Il mago nella sua torre', value: '', image: 'abc', title: 'Ritratto' }]);
+		expect(ex.body).toContain('Ritratto');
+		expect(ex.body).toContain('Il mago nella sua torre');
+		expect(ex.body).not.toContain(':');
+	});
 	it('renderInline scappa il testo e crea i link', () => {
 		const html = renderInline('<b>Vive a [[Bartolo]]', { resolve, labels });
 		expect(html).toBe('&lt;b&gt;Vive a <a class="wikilink" href="/wiki/bartolo">Bartolo Pancia</a>');

@@ -185,6 +185,7 @@ test('il giocatore vede il suo nome e il suo grado, senza Amministrazione', asyn
 test('la home: una sola, in cima all\'albero, fuori dalle cartelle, non si elimina', async () => {
 	const tree = admin.getByRole('navigation', { name: 'Pagine e risorse' });
 	const box = admin.getByRole('checkbox', { name: 'Pagina home' });
+	const options = admin.getByRole('button', { name: 'Opzioni pagina' });
 	const first = tree.locator('.level.root > li').first();
 	await admin.goto('/');
 	await expect(first).toContainText('Le Cronache di Faerûn');
@@ -192,6 +193,7 @@ test('la home: una sola, in cima all\'albero, fuori dalle cartelle, non si elimi
 
 	// Una pagina che sta in una cartella diventa la home: si apre dalla radice del sito.
 	await admin.goto('/wiki/locanda-del-grifone/edit');
+	await options.click();
 	await box.check();
 	await admin.getByRole('button', { name: 'Salva' }).click();
 	await expect(admin).toHaveURL(/\/$/);
@@ -203,6 +205,7 @@ test('la home: una sola, in cima all\'albero, fuori dalle cartelle, non si elimi
 
 	// In modifica: niente eliminazione, niente cartella, e la casella non si può togliere.
 	await admin.getByRole('link', { name: 'Modifica: Locanda del Grifone' }).click();
+	await options.click();
 	await expect(box).toBeChecked();
 	await expect(box).toBeDisabled();
 	await expect(admin.getByLabel('Categoria')).toHaveCount(0);
@@ -211,10 +214,12 @@ test('la home: una sola, in cima all\'albero, fuori dalle cartelle, non si elimi
 	// La home la deve vedere chi apre il sito; la vecchia home è una pagina come le altre e può tornare a esserlo.
 	await admin.goto('/wiki/le-cronache-di-faerun/edit');
 	await expect(admin.getByRole('heading', { name: 'Eliminare la pagina' })).toHaveCount(1);
+	await options.click();
 	await admin.getByRole('radio', { name: 'Solo Master' }).check();
 	await box.check();
 	await admin.getByRole('button', { name: 'Salva' }).click();
 	await expect(admin.getByRole('alert')).toContainText('La home deve poterla vedere');
+	await options.click();
 	await admin.getByRole('radio', { name: 'Pubblica' }).check();
 	await box.check();
 	await admin.getByRole('button', { name: 'Salva' }).click();

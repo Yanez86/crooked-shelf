@@ -343,7 +343,10 @@
 		"delete": "Elimina la pagina",
 		"deleted": "Pagina eliminata.",
 		"newFromTemplate": "Nuova pagina: {name}",
-		"related": "Collegamenti"
+		"related": "Collegamenti",
+		"options": "Opzioni pagina",
+		"versions": "Versioni della pagina",
+		"leaveUnsaved": "Le modifiche non salvate andranno perse. Vuoi uscire lo stesso?"
 	},
 	"editor": {
 		"toolbar": "Formattazione",
@@ -582,7 +585,11 @@
 		"uploaded": "Immagine caricata.",
 		"moveUp": "Sposta su",
 		"moveDown": "Sposta giù",
-		"moved": "Riquadro spostato."
+		"moved": "Riquadro spostato.",
+		"drag": "Trascina per spostare il riquadro",
+		"box": "Riquadro {n}",
+		"imageTitle": "Titoletto dell'immagine {n}",
+		"titlePlaceholder": "Titoletto (facoltativo)"
 	},
 	"cover": {
 		"title": "Copertina",

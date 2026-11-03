@@ -18,12 +18,14 @@ export function isDoc(v: unknown): v is DocNode {
 
 /**
  * Riquadro della colonna a lato di una pagina. Di testo: titolo e valore (es. "Allineamento: Caotico buono"),
- * il valore accetta [[collegamenti]]. Immagine: `image` è l'id del file, `label` la didascalia, `value` resta vuoto.
+ * il valore accetta [[collegamenti]]. Immagine: `image` è l'id del file, `title` il titoletto sopra l'immagine (facoltativo),
+ * `label` la didascalia, `value` resta vuoto.
  */
 export interface PageField {
 	label: string;
 	value: string;
 	image?: string;
+	title?: string;
 }
 
 /** Data nel calendario del mondo: mese e giorno possono mancare ("anno 1490"). Mese e giorno partono da 1. */

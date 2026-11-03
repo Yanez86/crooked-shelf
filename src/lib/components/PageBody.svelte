@@ -5,7 +5,7 @@
 	import { SIDE_COOKIE } from '../prefs.ts';
 	import Icon from './Icon.svelte';
 
-	type Field = { label: string; html: string; image?: { url: string; width: number; height: number } };
+	type Field = { label: string; html: string; title?: string; image?: { url: string; width: number; height: number } };
 
 	/** Il corpo di una pagina: testo, e in alto a destra la colonna a lato. Lo stesso nella pagina e sopra la mappa. */
 	let {
@@ -98,7 +98,8 @@
 							</dl>
 						{:else if g.image}
 							<figure>
-								<img src={g.image.url} alt={g.label || title} width={g.image.width} height={g.image.height} />
+								{#if g.title}<p class="fig-title">{g.title}</p>{/if}
+								<img src={g.image.url} alt={g.label || g.title || title} width={g.image.width} height={g.image.height} />
 								{#if g.label}<figcaption>{g.label}</figcaption>{/if}
 							</figure>
 						{/if}
@@ -219,6 +220,12 @@
 	}
 	figure {
 		margin: 0;
+	}
+	/* Il titoletto sopra l'immagine: come il nome di un riquadro di testo. */
+	.fig-title {
+		margin: 0 0 0.4rem;
+		font-weight: 700;
+		overflow-wrap: anywhere;
 	}
 	figure img {
 		display: block;

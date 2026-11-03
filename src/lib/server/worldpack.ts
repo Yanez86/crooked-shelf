@@ -621,7 +621,7 @@ export function exportMarkdown(u: Viewer): Uint8Array {
 		const side: DocNode[] = [
 			...(coverImage ? [{ type: 'image', attrs: { src: `/files/${coverImage}`, alt: p.title } }] : []),
 			...(map ? [{ type: 'image', attrs: { src: `/files/${map.fileId}`, alt: p.title } }] : []),
-			...(p.fields ?? []).flatMap((f) => (f.image ? [{ type: 'image', attrs: { src: `/files/${f.image}`, alt: f.label || p.title } }] : []))
+			...(p.fields ?? []).flatMap((f) => (f.image ? [{ type: 'image', attrs: { src: `/files/${f.image}`, alt: f.label || f.title || p.title } }] : []))
 		];
 		// Gli eventi della cronologia in fondo, uno per riga: data, titolo, descrizione.
 		const tl = p.kind === 'timeline' ? getTimeline(p.id) : undefined;

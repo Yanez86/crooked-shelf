@@ -16,7 +16,7 @@
 		slug: string;
 		title: string;
 		html: string;
-		fields: { label: string; html: string; image?: { url: string; width: number; height: number } }[];
+		fields: { label: string; html: string; title?: string; image?: { url: string; width: number; height: number } }[];
 		session: { number: number | null; realDate: string | null; world: string | null } | null;
 	}
 

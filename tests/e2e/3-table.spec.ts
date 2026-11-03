@@ -193,6 +193,7 @@ test('bacheche: sono pagine', async ({ browser }) => {
 	// Bacheca personale dell'Admin: il giocatore non la vede.
 	await admin.goto('/wiki/new?kind=board');
 	await admin.getByLabel('Titolo').fill('Idee segrete');
+	await admin.getByRole('button', { name: 'Opzioni pagina' }).click();
 	await admin.getByRole('radio', { name: 'Personale' }).check();
 	await admin.getByRole('button', { name: 'Crea la pagina' }).click();
 	await expect(admin.getByRole('heading', { level: 1, name: 'Idee segrete' })).toBeVisible();

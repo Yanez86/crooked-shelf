@@ -42,6 +42,7 @@
 		multipart={kind === 'map'}
 		submitLabel={t('common.save')}
 		cancelHref="/wiki/{data.page.slug}"
+		historyHref="/wiki/{data.page.slug}/history"
 		settings={hasSettings ? settings : undefined}
 	/>
 {/key}

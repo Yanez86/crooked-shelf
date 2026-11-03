@@ -10,6 +10,7 @@ Questo file è anche la pagina «Novità» della wiki (`/changelog`).
 - Tema Neon, scuro e cyberpunk: notte viola, magenta e ciano, fuoco giallo acido. Oltre ai colori ha uno stile suo: titoli larghi con bagliore e ombra cromatica, intestazione in vetro col filo di luce, riquadri con due angoli tagliati e staffe luminose, griglia in prospettiva e scanline sullo sfondo, segreti a strisce come un fascicolo riservato. Gli effetti stanno dietro al testo, quindi i contrasti WCAG AA restano quelli misurati; il movimento si ferma con «Riduci il movimento» e con i colori forzati del sistema restano solo testo e bordi. Una copia del tema prende i colori ma non gli effetti.
 - Il marchio nell'intestazione e l'icona della scheda del browser prendono i colori del tema: fondo nel colore principale, libri nel colore che ci sta sopra. Vale anche per i temi creati dall'Admin; con «Automatico» l'icona segue il chiaro o scuro del sistema.
 - Plugin per Claude Code: Claude cerca e legge le pagine di una campagna per rispondere alle tue domande, con i tuoi stessi permessi. Se lo permetti quando crei il token, può anche creare pagine e cambiarne il testo: niente eliminazioni, niente impostazioni, e ogni modifica lascia una versione. Il token si crea da Profilo › Claude; le istruzioni sono in [docs/claude.md](docs/claude.md).
+- Colonna a lato: i riquadri si spostano anche trascinandoli dalla maniglia a sinistra del titolo, col mouse o col dito; vicino al bordo dello schermo la pagina scorre da sola. Le frecce restano per la tastiera. I riquadri immagine hanno un titoletto facoltativo, sopra l'immagine.
 
 ### Modifiche
 - Telefono: tutta la wiki rivista per il dito. Testo a 16px e campi che non fanno più ingrandire la pagina; intestazione su una riga, sempre in vista, con la ricerca dietro la lente; scheda della pagina compatta, nome e valore sulla stessa riga; elenchi a righe, filtri a due a due, miniature a due per riga; in modifica Salva segue il pollice; bersagli più grandi e mappa più bassa, così la pagina si scorre. I collegamenti aprono la pagina invece del popup, e Indietro funziona.
@@ -54,10 +55,12 @@ Questo file è anche la pagina «Novità» della wiki (`/changelog`).
 - Profilo e Amministrazione si aprono in un popup sopra la wiki: si chiude con Esc, con la X o cliccando fuori, e sotto c'è ancora la pagina che stavi leggendo.
 - La cronologia delle modifiche si apre dall'icona dell'orologio in fondo alla pagina, accanto a chi l'ha creata e modificata.
 - Tutti i testi della wiki sono leggermente più piccoli. La dimensione si regola sempre dal Profilo, fino al 200%.
+- Modifica di una pagina: chi la vede, «Anche i giocatori possono modificarla», template e home stanno in «Opzioni pagina», il pulsante accanto ad Annulla, insieme al link alle versioni della pagina. Chiuse, le scelte si salvano lo stesso; se ci sono modifiche non salvate, prima di aprire le versioni si chiede conferma.
 
 ### Correzioni
 - Sul telefono la tabella degli utenti non allarga più tutta la pagina.
 - Il contorno del fuoco non compare più usando il mouse: resta per chi si muove con la tastiera, da Tab in poi.
+- Colonna a lato sul telefono: le frecce dei riquadri immagine coprivano la matita e la × sull'immagine. Ora stanno nella riga in cima al riquadro, sopra l'immagine.
 
 ## 0.10.0 — 2026-10-29
 

@@ -31,7 +31,10 @@ async function newPage(page: Page, title: string, write: (p: Page) => Promise<vo
 	await write(page);
 	if (opts.category) await page.getByLabel('Categoria').selectOption({ label: opts.category });
 	if (opts.tags) await page.getByLabel('Tag', { exact: true }).fill(opts.tags);
-	if (opts.visibility) await page.getByRole('radio', { name: new RegExp(opts.visibility) }).check();
+	if (opts.visibility) {
+		await page.getByRole('button', { name: 'Opzioni pagina' }).click();
+		await page.getByRole('radio', { name: new RegExp(opts.visibility) }).check();
+	}
 	await page.getByRole('button', { name: 'Crea la pagina' }).click();
 	await expect(page.getByRole('heading', { level: 1, name: title })).toBeVisible();
 }
@@ -538,6 +541,8 @@ test('il giocatore non vede i segreti', async ({ browser }) => {
 	// Il giocatore crea una sua pagina, senza pulsante "Segreto".
 	await p.goto('/wiki/new?template=none');
 	await expect(p.getByRole('button', { name: /Segreto del Master/ })).toHaveCount(0);
+	await p.getByRole('button', { name: 'Opzioni pagina' }).click();
+	await expect(p.getByRole('radio', { name: 'Personale' })).toBeVisible();
 	await expect(p.getByRole('radio', { name: /Solo Master/ })).toHaveCount(0);
 	await newPage(p, 'Diario di Alice', async (pg) => {
 		await pg.keyboard.type('Oggi ho incontrato Bartolo.');

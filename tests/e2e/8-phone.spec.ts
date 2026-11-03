@@ -94,3 +94,50 @@ test('in modifica Salva resta a portata di dito', async ({ page }) => {
 	await page.locator('.editor-content').scrollIntoViewIfNeeded();
 	await expect(save).toBeInViewport();
 });
+
+test('colonna a lato col dito: maniglia e frecce stanno sopra l\'immagine, e il riquadro si trascina', async ({ page }) => {
+	await page.goto('/wiki/vicolo-del-drago/edit');
+	await page.getByRole('button', { name: 'Aggiungi la colonna a lato' }).click();
+	const side = page.getByRole('region', { name: 'Colonna a lato' });
+	await side.getByRole('button', { name: 'Immagine', exact: true }).click();
+	const box = side.getByRole('group', { name: 'Immagine 1' });
+	await box.getByLabel("File dell'immagine 1").setInputFiles('tests/fixtures/city.png');
+	await expect(box.locator('img')).toBeVisible();
+	await box.getByLabel("Titoletto dell'immagine 1").fill('La bottega');
+
+	// Nella riga del titoletto, sopra l'immagine: la matita e la × sull'immagine restano libere. E grandi per il dito.
+	const image = (await box.locator('img').boundingBox())!;
+	for (const tool of [box.locator('.grip'), box.getByRole('button', { name: 'Sposta su: Immagine 1' }), box.getByRole('button', { name: 'Sposta giù: Immagine 1' })]) {
+		const b = (await tool.boundingBox())!;
+		expect(b.y + b.height).toBeLessThanOrEqual(image.y);
+		expect(b.height).toBeGreaterThanOrEqual(32);
+	}
+	await expect(box.getByRole('button', { name: 'Cambia immagine: Immagine 1' })).toBeVisible();
+	await page.screenshot({ path: 'test-results/screens/80-telefono-colonna.png' });
+
+	// Col dito, dalla maniglia: il riquadro di testo va sopra l'immagine, e la pagina non scorre.
+	await side.getByRole('button', { name: 'Testo', exact: true }).click();
+	await page.getByLabel('Nome del campo 2').fill('Insegna');
+	await box.evaluate((el) => el.scrollIntoView({ block: 'center' }));
+	const grip = (await side.getByRole('group', { name: 'Riquadro 2' }).locator('.grip').boundingBox())!;
+	const top = (await box.boundingBox())!.y + 10;
+	const scrolled = await page.evaluate(() => scrollY);
+	const cdp = await page.context().newCDPSession(page);
+	const x = grip.x + grip.width / 2;
+	const y0 = grip.y + grip.height / 2;
+	await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x, y: y0 }] });
+	for (let i = 1; i <= 10; i++) await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x, y: y0 + ((top - y0) * i) / 10 }] });
+	await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+	await expect(page.getByLabel('Nome del campo 1')).toHaveValue('Insegna');
+	await expect(side.getByRole('group', { name: 'Immagine 2' })).toBeVisible();
+	expect(await page.evaluate(() => scrollY)).toBe(scrolled);
+
+	// Le opzioni della pagina stanno nello schermo, anche a 320px.
+	await page.setViewportSize({ width: 320, height: 700 });
+	await page.getByRole('button', { name: 'Opzioni pagina' }).click();
+	const panel = (await page.locator('#page-options').boundingBox())!;
+	expect(panel.x).toBeGreaterThanOrEqual(0);
+	expect(panel.x + panel.width).toBeLessThanOrEqual(320);
+	expect(await overflow(page)).toBeLessThanOrEqual(0);
+	await page.screenshot({ path: 'test-results/screens/81-telefono-opzioni.png' });
+});

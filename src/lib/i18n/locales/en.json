@@ -343,7 +343,10 @@
 		"delete": "Delete page",
 		"deleted": "Page deleted.",
 		"newFromTemplate": "New page: {name}",
-		"related": "Connections"
+		"related": "Connections",
+		"options": "Page options",
+		"versions": "Page versions",
+		"leaveUnsaved": "Unsaved changes will be lost. Leave anyway?"
 	},
 	"editor": {
 		"toolbar": "Formatting",
@@ -582,7 +585,11 @@
 		"uploaded": "Image uploaded.",
 		"moveUp": "Move up",
 		"moveDown": "Move down",
-		"moved": "Box moved."
+		"moved": "Box moved.",
+		"drag": "Drag to move the box",
+		"box": "Box {n}",
+		"imageTitle": "Heading of image {n}",
+		"titlePlaceholder": "Heading (optional)"
 	},
 	"cover": {
 		"title": "Cover",

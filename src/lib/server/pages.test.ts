@@ -4,7 +4,7 @@ import { getDb, useMemoryDb, schema } from './db/index.ts';
 import { backlinks, createPage, deletePage, findPageChoice, getPageById, getPageBySlug, listPages, listTrash, listTrashedFolders, pageChoices, pageMeta, purgeFolder, renderPage, restoreFolder, restorePage, suggestPages, trashFolder, updatePage } from './pages.ts';
 import { searchPages } from './search.ts';
 import { categoryPath, categoryTree, createCategory, createDivider, listCategories, listTags, moveTreeNode, pageTree } from './taxonomy.ts';
-import { readPageForm } from './pageForm.ts';
+import { cleanFields, readPageForm } from './pageForm.ts';
 import type { Viewer } from '../access.ts';
 import type { DocNode } from '../content/types.ts';
 
@@ -266,5 +266,27 @@ describe('riordino e cestino nell\'albero', () => {
 		expect(listTrashedFolders()).toEqual([]);
 		expect(getDb().select().from(schema.pages).where(eq(schema.pages.id, citta.id)).get()).toBeUndefined();
 		expect(getPageById(nota.id)).toMatchObject({ categoryId: null });
+	});
+});
+
+describe('colonna a lato', () => {
+	it('il titoletto resta solo sulle immagini, ripulito', () => {
+		const keep = (id: string) => id;
+		expect(
+			cleanFields(
+				[
+					{ label: ' Didascalia ', value: '', image: 'abc', title: '  Ritratto  ' },
+					{ label: 'Senza', value: '', image: 'def', title: '   ' },
+					{ label: 'Ruolo', value: 'Fixer', title: 'ignorato' },
+					{ label: '', value: '', image: 'ghi', title: 'x'.repeat(100) }
+				],
+				keep
+			)
+		).toEqual([
+			{ label: 'Didascalia', value: '', image: 'abc', title: 'Ritratto' },
+			{ label: 'Senza', value: '', image: 'def' },
+			{ label: 'Ruolo', value: 'Fixer' },
+			{ label: '', value: '', image: 'ghi', title: 'x'.repeat(60) }
+		]);
 	});
 });

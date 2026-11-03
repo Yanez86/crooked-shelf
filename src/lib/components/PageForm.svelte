@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { untrack, type Snippet } from 'svelte';
+	import { onMount, tick, untrack, type Snippet } from 'svelte';
 	import Editor from '../editor/Editor.svelte';
 	import SideColumn from './SideColumn.svelte';
 	import WorldDateInput from './WorldDateInput.svelte';
@@ -32,6 +32,7 @@
 		canHome = false,
 		isHome = false,
 		multipart = false,
+		historyHref,
 		settings
 	}: {
 		values: {
@@ -66,6 +67,8 @@
 		isHome?: boolean;
 		/** Il modulo porta un file (l'immagine di una mappa). */
 		multipart?: boolean;
+		/** Le versioni della pagina (solo modificandone una che c'è già). */
+		historyHref?: string;
 		/** Impostazioni del tipo di pagina (mappa, cronologia), sotto i dati della pagina. */
 		settings?: Snippet;
 	} = $props();
@@ -84,10 +87,36 @@
 	let coverEdit = $state<ReturnType<typeof CoverEdit>>();
 	const kind = $derived(values.kind ?? 'page');
 	let asTemplate = $state(untrack(() => values.kind === 'template'));
+
+	// Le opzioni della pagina (chi la vede, chi la modifica, template, home) stanno dietro un pulsante, con il link alle versioni.
+	// Chiuse restano nel modulo: si salvano lo stesso.
+	const templateSwitch = $derived(canTemplate && !isHome && (kind === 'page' || kind === 'template'));
+	const sessionSwitch = $derived(asTemplate || (!canTemplate && kind === 'template'));
+	const hasOptions = $derived(canManage || templateSwitch || canHome || sessionSwitch || !!historyHref);
+	let optionsOpen = $state(false);
+	async function closeOptions(refocus: boolean) {
+		optionsOpen = false;
+		await tick();
+		if (refocus) document.getElementById('page-options-toggle')?.focus();
+	}
+	function outside(e: PointerEvent) {
+		if (optionsOpen && !(e.target as HTMLElement).closest('.options-wrap')) closeOptions(false);
+	}
+
+	// Uscendo verso le versioni il lavoro non salvato andrebbe perso: se c'è, si chiede prima.
+	let form = $state<HTMLFormElement>();
+	let start = '';
+	const snapshot = () => JSON.stringify([...new FormData(form)].map(([k, v]) => [k, typeof v === 'string' ? v : `${v.name}:${v.size}`]));
+	onMount(() => (start = snapshot()));
+	function leave(e: MouseEvent) {
+		if (snapshot() !== start && !confirm(t('page.leaveUnsaved'))) e.preventDefault();
+	}
 </script>
 
+<svelte:window onpointerdown={outside} />
+
 <!-- Stesso aspetto della pagina: si scrive dove si legge. -->
-<form method="post" action="?/save" class="page-form" enctype={multipart ? 'multipart/form-data' : undefined}>
+<form bind:this={form} method="post" action="?/save" class="page-form" enctype={multipart ? 'multipart/form-data' : undefined}>
 	<input type="hidden" name="kind" value={kind} />
 	{#if updatedAt}<input type="hidden" name="updatedAt" value={updatedAt} />{/if}
 	{#if values.slug}<input type="hidden" name="slug" value={values.slug} />{/if}
@@ -141,6 +170,61 @@
 								<Icon name="image" /><span class="visually-hidden">{t('cover.add')}</span>
 							</button>
 						{/if}
+						{#if hasOptions}
+							<!-- svelte-ignore a11y_no_static_element_interactions (Esc chiude il pannello, come nei menu) -->
+							<div class="options-wrap" onkeydown={(e) => e.key === 'Escape' && optionsOpen && (e.preventDefault(), closeOptions(true))}>
+								<button
+									id="page-options-toggle"
+									class="icon-action"
+									type="button"
+									title={t('page.options')}
+									aria-expanded={optionsOpen}
+									aria-controls="page-options"
+									onclick={() => (optionsOpen = !optionsOpen)}
+								>
+									<Icon name="sliders" /><span class="visually-hidden">{t('page.options')}</span>
+								</button>
+								<div id="page-options" class="options" hidden={!optionsOpen}>
+									{#if canManage}
+										<fieldset class="visibility">
+											<legend>{t('page.visibility')}</legend>
+											{#each visibilities as v (v)}
+												<label title={t('visibility.' + v + 'Hint')}>
+													<input type="radio" name="visibility" value={v} checked={values.visibility === v} />
+													<span>{t('visibility.' + v)}</span>
+												</label>
+											{/each}
+										</fieldset>
+										<label class="check">
+											<input type="checkbox" name="playersCanEdit" checked={values.playersCanEdit} />
+											<span>{t('page.playersCanEdit')}</span>
+										</label>
+									{/if}
+									{#if templateSwitch}
+										<input type="hidden" name="kindSwitch" value="1" />
+										<label class="check" title={t('kinds.asTemplateHint')}>
+											<input type="checkbox" name="asTemplate" bind:checked={asTemplate} />
+											<span>{t('kinds.asTemplate')}</span>
+										</label>
+									{/if}
+									{#if canHome && !asTemplate}
+										<label class="check" title={t(isHome ? 'page.homeCurrent' : 'page.homeHint')}>
+											<input type="checkbox" name="home" checked={isHome} disabled={isHome} />
+											<span>{t('page.home')}</span>
+										</label>
+									{/if}
+									{#if sessionSwitch}
+										<label class="check">
+											<input type="checkbox" name="sessionTemplate" checked={!!values.session} />
+											<span>{t('kinds.sessionTemplate')}</span>
+										</label>
+									{/if}
+									{#if historyHref}
+										<a class="versions" href={historyHref} onclick={leave}><Icon name="clock" />{t('page.versions')}</a>
+									{/if}
+								</div>
+							</div>
+						{/if}
 						<a class="icon-action" href={cancelHref} title={t('common.cancel')}><Icon name="close" /><span class="visually-hidden">{t('common.cancel')}</span></a>
 						<button class="icon-action save" type="submit" title={submitLabel}><Icon name="save" /><span class="visually-hidden">{submitLabel}</span></button>
 					</div>
@@ -165,42 +249,9 @@
 					<datalist id="known-tags">
 						{#each knownTags as tag (tag)}<option value={tag}></option>{/each}
 					</datalist>
-					{#if canManage}
-						<fieldset class="chip visibility">
-							<legend class="visually-hidden">{t('page.visibility')}</legend>
-							{#each visibilities as v (v)}
-								<label title={t('visibility.' + v + 'Hint')}>
-									<input type="radio" name="visibility" value={v} checked={values.visibility === v} />
-									<span>{t('visibility.' + v)}</span>
-								</label>
-							{/each}
-						</fieldset>
-						<label class="chip">
-							<input type="checkbox" name="playersCanEdit" checked={values.playersCanEdit} />
-							<span>{t('page.playersCanEdit')}</span>
-						</label>
-					{:else}
+					{#if !canManage}
 						<input type="hidden" name="visibility" value={values.visibility} />
 						{#if values.playersCanEdit}<input type="hidden" name="playersCanEdit" value="on" />{/if}
-					{/if}
-					{#if canTemplate && !isHome && (kind === 'page' || kind === 'template')}
-						<input type="hidden" name="kindSwitch" value="1" />
-						<label class="chip" title={t('kinds.asTemplateHint')}>
-							<input type="checkbox" name="asTemplate" bind:checked={asTemplate} />
-							<span>{t('kinds.asTemplate')}</span>
-						</label>
-					{/if}
-					{#if canHome && !asTemplate}
-						<label class="chip" title={t(isHome ? 'page.homeCurrent' : 'page.homeHint')}>
-							<input type="checkbox" name="home" checked={isHome} disabled={isHome} />
-							<span>{t('page.home')}</span>
-						</label>
-					{/if}
-					{#if asTemplate || (!canTemplate && kind === 'template')}
-						<label class="chip">
-							<input type="checkbox" name="sessionTemplate" checked={!!values.session} />
-							<span>{t('kinds.sessionTemplate')}</span>
-						</label>
 					{/if}
 				</div>
 
@@ -255,9 +306,51 @@
 		margin: 0.5rem 0 0.75rem;
 	}
 	.head-actions {
+		position: relative;
 		display: flex;
 		gap: 0.25rem;
 		margin-left: auto;
+	}
+	/* Le opzioni della pagina: un pannello sotto i comandi, allineato al loro bordo destro. */
+	.options {
+		position: absolute;
+		z-index: 10;
+		top: calc(100% + 0.25rem);
+		right: 0;
+		width: max-content;
+		max-width: min(26rem, calc(100vw - 2.5rem));
+		display: flex;
+		flex-direction: column;
+		gap: 0.35rem;
+		padding: 0.75rem;
+		background: var(--c-surface);
+		border: 1px solid var(--c-border);
+		border-radius: var(--radius);
+		box-shadow: 0 6px 18px rgb(0 0 0 / 0.2);
+		font-size: var(--fs-sm);
+	}
+	.options[hidden] {
+		display: none;
+	}
+	.options legend {
+		padding: 0;
+		margin-bottom: 0.25rem;
+		font-weight: 700;
+	}
+	.check,
+	.versions {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		min-height: 2rem;
+		margin: 0;
+		font-weight: 400;
+		cursor: pointer;
+	}
+	.options > * + .versions {
+		margin-top: 0.25rem;
+		padding-top: 0.5rem;
+		border-top: 1px solid var(--c-border);
 	}
 	/* Stessa misura della matita della pagina; Salva nel colore principale. */
 	.icon-action {
@@ -438,11 +531,20 @@
 	.settings {
 		margin: 1rem 0 0;
 	}
-	/* I fieldset non vanno a capo da soli: senza questo escono dallo schermo del telefono. */
+	/* Chi la vede: le scelte in fila, e vanno a capo sul telefono. */
 	.visibility {
+		display: flex;
 		flex-wrap: wrap;
+		gap: 0.25rem;
 		min-width: 0;
-		max-width: 100%;
+		margin: 0 0 0.25rem;
+		padding: 0 0 0.5rem;
+		border: 0;
+		border-bottom: 1px solid var(--c-border);
+	}
+	.visibility legend {
+		float: left;
+		width: 100%;
 	}
 	.visibility label {
 		display: inline-flex;

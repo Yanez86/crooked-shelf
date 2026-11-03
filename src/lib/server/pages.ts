@@ -276,10 +276,10 @@ export function renderPage(page: PageRow, u: Viewer | null, labels: RenderOption
 	return {
 		html: renderDoc(doc, { showSecrets: isMaster(u), resolve, labels, hasRule }),
 		// I riquadri immagine il cui file non c'è più (es. risorsa eliminata) non si mostrano.
-		fields: fields.flatMap((f): { label: string; html: string; image?: { url: string; width: number; height: number } }[] => {
+		fields: fields.flatMap((f): { label: string; html: string; title?: string; image?: { url: string; width: number; height: number } }[] => {
 			if (f.image === undefined) return [{ label: f.label, html: renderInline(f.value, { resolve, labels, hasRule }) }];
 			const file = getFile(f.image);
-			return file ? [{ label: f.label, html: '', image: { url: `/files/${file.id}`, width: file.width, height: file.height } }] : [];
+			return file ? [{ label: f.label, html: '', title: f.title, image: { url: `/files/${file.id}`, width: file.width, height: file.height } }] : [];
 		})
 	};
 }

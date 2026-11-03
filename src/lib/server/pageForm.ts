@@ -45,7 +45,8 @@ export function cleanFields(raw: unknown, image: (id: string) => string | null):
 		const value = typeof f.value === 'string' ? f.value.trim() : '';
 		if (f.image !== undefined) {
 			const id = typeof f.image === 'string' ? image(f.image) : null;
-			if (id) out.push({ label: label.slice(0, 200), value: '', image: id });
+			const title = typeof f.title === 'string' ? f.title.trim().slice(0, 60) : '';
+			if (id) out.push({ label: label.slice(0, 200), value: '', image: id, ...(title ? { title } : {}) });
 		} else if (label || value) out.push({ label: label.slice(0, 60), value: value.slice(0, 500) });
 	}
 	return out.slice(0, 30);

@@ -73,6 +73,7 @@ test('il Master vede solo la sua campagna e scrive una pagina segreta', async ()
 
 	await dm.goto('/wiki/new?template=none');
 	await dm.getByLabel('Titolo', { exact: true }).fill('Pagina di Avalon');
+	await dm.getByRole('button', { name: 'Opzioni pagina' }).click();
 	await dm.getByRole('radio', { name: /Solo Master/ }).check();
 	await dm.getByRole('button', { name: 'Crea la pagina' }).click();
 	await dm.waitForURL(`**/wiki/${SECRET_SLUG}`);

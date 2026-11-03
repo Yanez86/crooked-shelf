@@ -1,4 +1,4 @@
-import { test, expect, type Page, type Browser } from '@playwright/test';
+import { test, expect, type Page, type Browser, type Locator } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { readFileSync } from 'node:fs';
 
@@ -127,6 +127,7 @@ test('i template sono pagine: si modificano e si fotocopiano', async () => {
 
 	// La struttura la decide chi lo scrive: si aggiunge una sezione.
 	await admin.getByRole('link', { name: 'Modifica: Luogo' }).click();
+	await admin.getByRole('button', { name: 'Opzioni pagina' }).click();
 	await expect(admin.getByRole('checkbox', { name: 'È un template' })).toBeChecked();
 	const editor = admin.locator('.editor-content');
 	await expect(editor).toHaveAttribute('contenteditable', 'true');
@@ -147,6 +148,7 @@ test('i template sono pagine: si modificano e si fotocopiano', async () => {
 	await expect(admin.getByRole('heading', { level: 1 })).toHaveText('Nuova pagina: Luogo');
 	await expect(admin.locator('.editor-content').getByRole('heading', { name: 'Clima', exact: true })).toBeVisible();
 	await expect(admin.getByLabel('Nome del campo 1')).toHaveValue('Tipo');
+	await admin.getByRole('button', { name: 'Opzioni pagina' }).click();
 	await expect(admin.getByRole('checkbox', { name: 'È un template' })).not.toBeChecked();
 	await admin.getByLabel('Titolo', { exact: true }).fill('Neverwinter');
 	await admin.getByRole('button', { name: 'Crea la pagina' }).click();
@@ -156,12 +158,14 @@ test('i template sono pagine: si modificano e si fotocopiano', async () => {
 
 	// Una pagina qualsiasi diventa un template e compare tra le scelte.
 	await admin.goto('/wiki/neverwinter/edit');
+	await admin.getByRole('button', { name: 'Opzioni pagina' }).click();
 	await admin.getByRole('checkbox', { name: 'È un template' }).check();
 	await admin.getByRole('button', { name: 'Salva' }).click();
 	await expect(admin.locator('main .meta')).toContainText('Template');
 	await admin.goto('/wiki/new');
 	await expect(admin.locator('main').getByRole('link', { name: /^Neverwinter/ })).toBeVisible();
 	await admin.goto('/wiki/neverwinter/edit');
+	await admin.getByRole('button', { name: 'Opzioni pagina' }).click();
 	await admin.getByRole('checkbox', { name: 'È un template' }).uncheck();
 	await admin.getByRole('button', { name: 'Salva' }).click();
 	await admin.goto('/wiki/new');
@@ -223,6 +227,7 @@ test('colonna a lato: si aggiunge modificando la pagina, con riquadri di testo e
 	await expect(box.getByRole('status')).toContainText('Immagine caricata');
 	await expect(box.locator('img')).toBeVisible();
 	await box.getByLabel("Didascalia dell'immagine 7").fill('Il mago nella sua torre');
+	await box.getByLabel("Titoletto dell'immagine 7").fill('Ritratto');
 
 	// In cima con la freccia, da tastiera: il fuoco resta sulla freccia.
 	await box.getByRole('button', { name: 'Sposta su: Immagine 7' }).focus();
@@ -241,10 +246,12 @@ test('colonna a lato: si aggiunge modificando la pagina, con riquadri di testo e
 	await admin.evaluate(() => scrollTo(0, 0));
 	await admin.getByRole('button', { name: 'Salva' }).click();
 
-	// In lettura: immagine in cima con la didascalia, poi la scheda; nessun pulsante.
+	// In lettura: immagine in cima col titoletto sopra e la didascalia sotto, poi la scheda; nessun pulsante.
 	const img = column.getByRole('img', { name: 'Il mago nella sua torre' });
 	await expect(img).toBeVisible();
 	await expect(column.locator('figcaption')).toHaveText('Il mago nella sua torre');
+	const heading = column.locator('figure').getByText('Ritratto', { exact: true });
+	expect((await heading.boundingBox())!.y).toBeLessThan((await img.boundingBox())!.y);
 	await expect(column.locator(':scope > *').first()).toHaveJSProperty('tagName', 'FIGURE');
 	await expect(column).toContainText('Caotico buono');
 	await expect(column.getByRole('button')).toHaveCount(0);
@@ -253,16 +260,93 @@ test('colonna a lato: si aggiunge modificando la pagina, con riquadri di testo e
 	await axe(admin, 'pagina con immagine');
 	await shot(admin, '11e-colonna-con-immagine');
 
-	// In modifica la matita e la × stanno sull'immagine stessa; senza mouse la matita apre la scelta del file.
+	// In modifica la matita e la × stanno sull'immagine stessa; le frecce nella riga del titoletto, sopra l'immagine.
 	await admin.goto('/wiki/elminster/edit');
+	await expect(box.getByLabel("Titoletto dell'immagine 1")).toHaveValue('Ritratto');
 	const onImage = box.locator('.frame');
 	await expect(onImage.getByRole('button', { name: 'Cambia immagine: Immagine 1' })).toBeVisible();
 	await expect(onImage.getByRole('button', { name: 'Elimina: Immagine 1' })).toBeVisible();
+	const frameTop = (await onImage.boundingBox())!.y;
+	for (const tool of [box.locator('.grip'), box.getByRole('button', { name: 'Sposta giù: Immagine 1' })]) {
+		const b = (await tool.boundingBox())!;
+		expect(b.y + b.height).toBeLessThanOrEqual(frameTop);
+	}
+
+	// Col mouse si trascina dalla maniglia: giù di due riquadri, poi di nuovo in cima.
+	const dragTo = async (grip: Locator, target: Locator, where: number) => {
+		const g = (await grip.boundingBox())!;
+		const to = (await target.boundingBox())!;
+		await admin.mouse.move(g.x + g.width / 2, g.y + g.height / 2);
+		await admin.mouse.down();
+		await admin.mouse.move(g.x + g.width / 2, to.y + to.height * where, { steps: 12 });
+		await admin.mouse.up();
+	};
+	await dragTo(box.locator('.grip'), side.getByRole('group', { name: 'Riquadro 3' }), 0.8);
+	box = side.getByRole('group', { name: 'Immagine 3' });
+	await expect(box.getByLabel("Titoletto dell'immagine 3")).toHaveValue('Ritratto');
+	await expect(side.getByRole('group', { name: 'Riquadro 1' })).toBeVisible();
+	await expect(side.locator('[aria-live]')).toHaveText('Riquadro spostato.');
+	await dragTo(box.locator('.grip'), side.getByRole('group', { name: 'Riquadro 1' }), 0.2);
+	box = side.getByRole('group', { name: 'Immagine 1' });
+	await expect(box.getByRole('button', { name: 'Sposta su: Immagine 1' })).toBeDisabled();
+
+	// Senza mouse la matita apre la scelta del file.
 	await box.getByLabel("File dell'immagine 1").setInputFiles('tests/fixtures/city.png');
 	await expect(box.getByRole('status')).toContainText('Immagine caricata');
 	await admin.getByRole('button', { name: 'Salva' }).click();
 	await expect(img).toBeVisible();
 	await expect(img).not.toHaveAttribute('src', first);
+});
+
+test('opzioni della pagina: chi la vede e le altre caselle dietro un pulsante, col link alle versioni', async () => {
+	await admin.goto('/wiki/locanda-del-grifone/edit');
+	const toggle = admin.getByRole('button', { name: 'Opzioni pagina' });
+	const panel = admin.locator('#page-options');
+	const who = panel.getByRole('group', { name: 'Chi può vedere questa pagina' });
+	await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+	await expect(panel).toBeHidden();
+	await toggle.click();
+	await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+	await expect(who).toBeVisible();
+	await expect(panel.getByRole('checkbox', { name: 'Anche i giocatori possono modificarla' })).toBeVisible();
+	await expect(panel.getByRole('checkbox', { name: 'È un template' })).toBeVisible();
+	await expect(panel.getByRole('checkbox', { name: 'Pagina home' })).toBeVisible();
+	await axe(admin, 'opzioni della pagina');
+	await shot(admin, '11h-opzioni-pagina');
+
+	// Esc chiude e il fuoco torna al pulsante; un clic fuori chiude anche lui.
+	const was = (await who.locator('input:checked').getAttribute('value'))!;
+	await who.getByRole('radio', { name: 'Solo Master' }).check();
+	await admin.keyboard.press('Escape');
+	await expect(panel).toBeHidden();
+	await expect(toggle).toBeFocused();
+	await toggle.click();
+	await admin.getByLabel('Titolo', { exact: true }).click();
+	await expect(panel).toBeHidden();
+
+	// Chiuse, le scelte si salvano lo stesso.
+	await admin.getByRole('button', { name: 'Salva' }).click();
+	await expect(admin.locator('main .meta')).toContainText('Solo Master');
+	await admin.goto('/wiki/locanda-del-grifone/edit');
+	await toggle.click();
+	await who.locator(`input[value="${was}"]`).check();
+
+	// Con modifiche non salvate, le versioni si aprono solo dopo averlo confermato.
+	const versions = panel.getByRole('link', { name: 'Versioni della pagina' });
+	let asked = '';
+	admin.once('dialog', (d) => ((asked = d.message()), d.dismiss()));
+	await versions.click();
+	expect(asked).toContain('non salvate');
+	await expect(admin).toHaveURL(/\/edit$/);
+	await admin.getByRole('button', { name: 'Salva' }).click();
+	await expect(admin.locator('main .meta')).not.toContainText('Solo Master');
+
+	// Senza modifiche si va dritti alle versioni.
+	await admin.goto('/wiki/locanda-del-grifone/edit');
+	await toggle.click();
+	await versions.click();
+	await expect(admin).toHaveURL(/\/wiki\/locanda-del-grifone\/history$/);
+	await expect(admin.getByRole('heading', { level: 1 })).toHaveText('Modifiche di «Locanda del Grifone»');
 });
 
 test('copertina: dalla galleria, riposizionata da tastiera, poi un colore e un file nuovo', async () => {
