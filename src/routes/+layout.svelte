@@ -263,7 +263,11 @@ ${iconCss()}</style>`}
 		font-weight: 700;
 		cursor: pointer;
 	}
+	/* Sopra il contenuto, perché il menu utente che si apre ci scende dentro: un tema che dà all'header un
+	   backdrop-filter lo chiude in un suo strato, e senza z-index le colonne gli passerebbero sopra. */
 	.site-header {
+		position: relative;
+		z-index: 20;
 		background: var(--c-surface);
 		border-bottom: 1px solid var(--c-border);
 		margin-bottom: 1.5rem;

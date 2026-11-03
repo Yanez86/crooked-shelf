@@ -181,9 +181,11 @@
 		align-self: start;
 		padding: 0;
 	}
-	/* Dentro il riquadro, dal lato del testo: lo specchio della freccia della barra a sinistra. */
+	/* Dentro il riquadro, dal lato del testo: lo specchio della freccia della barra a sinistra. Sopra il riquadro, che
+	   può essere posizionato anche lui (la home usa .side-panel, sticky) e altrimenti la coprirebbe. */
 	.side-hide {
 		position: absolute;
+		z-index: 1;
 		top: calc(4px + 0.35rem);
 		left: 0.35rem;
 		display: inline-flex;

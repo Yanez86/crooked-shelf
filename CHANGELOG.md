@@ -3,6 +3,12 @@
 Le versioni seguono il [versionamento semantico](https://semver.org/lang/it/): MAGGIORE.MINORE.CORRETTIVA.
 Questo file è anche la pagina «Novità» della wiki (`/changelog`).
 
+## 0.11.1 — 2026-11-03
+
+### Correzioni
+- Il menu utente non finisce più sotto il contenuto della pagina con i temi che danno all'intestazione un effetto vetro, come Neon.
+- Home: il pulsante per nascondere la colonna a lato non resta più coperto dalla colonna stessa.
+
 ## 0.11.0 — 2026-11-03
 
 ### Aggiunte
