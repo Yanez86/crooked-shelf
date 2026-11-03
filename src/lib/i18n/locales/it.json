@@ -260,6 +260,9 @@
 		"recent": "Modificate di recente",
 		"added": "Aggiunte di recente",
 		"allPages": "Tutte le pagine ({n})",
+		"next": "Prossima sessione",
+		"toAnswer": "Da rispondere questo mese",
+		"notAnswered": "Non hai ancora risposto",
 		"world": "Il mondo"
 	},
 	"list": {

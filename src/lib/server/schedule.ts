@@ -1,7 +1,7 @@
 import { and, asc, eq, gte, inArray, isNull, lte, or } from 'drizzle-orm';
 import { getDb, schema } from './db/index.ts';
 import { campaignId, currentCampaign, membersOf, ofCampaign } from './campaigns.ts';
-import { ANSWERS, lastOfMonth, localDate, occurrences, sessionStatus, shiftDay, starWishSession, type Answer } from '../schedule.ts';
+import { ANSWERS, endsAt, lastOfMonth, localDate, occurrences, sessionStatus, shiftDay, starWishSession, type Answer } from '../schedule.ts';
 
 const { appointments, appointmentAnswers, starWishes, users } = schema;
 
@@ -104,6 +104,31 @@ function scheduleBetween(from: string, to: string, now: number) {
 			})
 		)
 		.sort((x, y) => (x.date + x.starts).localeCompare(y.date + y.starts));
+}
+
+/**
+ * Per la home: la prossima sessione che non salta (anche se è in corso) e le altre date del mese a cui il giocatore non ha ancora risposto.
+ * ponytail: la prossima si cerca entro un anno, come per Stars & Wishes.
+ */
+export function upcoming(userId: number, now = Date.now()) {
+	const today = localDate(new Date(now));
+	// Da ieri: una sessione che passa la mezzanotte è ancora in corso.
+	const items = scheduleBetween(shiftDay(today, -1), shiftDay(today, 366), now).filter((o) => endsAt(o.date, o.starts, o.ends) > now);
+	const view = (o: (typeof items)[number]) => ({
+		id: o.id,
+		title: o.title,
+		date: o.date,
+		starts: o.starts,
+		ends: o.ends,
+		status: o.status,
+		answer: ANSWERS.find((a) => o.answers[a].some((p) => p.id === userId)) ?? null
+	});
+	const next = items.find((o) => o.status !== 'cancelled');
+	const end = lastOfMonth(today.slice(0, 7));
+	return {
+		next: next ? view(next) : null,
+		toAnswer: items.filter((o) => o !== next && o.date <= end && o.answers.waiting.some((p) => p.id === userId)).map(view)
+	};
 }
 
 /**

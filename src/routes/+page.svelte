@@ -8,11 +8,14 @@
 	import { getT } from '#lib/i18n/index.ts';
 	import { canWrite } from '#lib/access.ts';
 	import { pageIcon } from '#lib/tree.ts';
+	import { iconPath } from '#lib/icons.ts';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
 	const t = getT();
 	const user = $derived(page.data.user);
+	// Date "di parete", come negli Appuntamenti: in UTC, così il fuso di chi guarda non sposta il giorno.
+	const day = (d: string) => new Intl.DateTimeFormat(page.data.locale as string, { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' }).format(new Date(d + 'T00:00:00Z'));
 </script>
 
 <svelte:head><title>{page.data.siteName}</title></svelte:head>
@@ -24,6 +27,8 @@
 {#snippet lists()}
 	<div class="lists side-panel panel">
 		{#if data.table}{@render table(data.table)}{/if}
+		{#if data.schedule?.next}{@render sessions('next', [data.schedule.next])}{/if}
+		{#if data.schedule?.toAnswer.length}{@render sessions('toAnswer', data.schedule.toAnswer)}{/if}
 		{#if !data.empty}
 			{@render recent('recent', data.recent, 'updatedAt')}
 			{@render recent('added', data.added, 'createdAt')}
@@ -60,6 +65,29 @@
 			{/each}
 		</ul>
 		{#if !tb.players.length}<p class="none muted">{t('campaign.noPlayers')}</p>{/if}
+	</section>
+{/snippet}
+
+<!-- Gli appuntamenti: la prossima sessione e le date del mese a cui il giocatore deve ancora rispondere. Portano alla data nel calendario. -->
+{#snippet sessions(id: 'next' | 'toAnswer', rows: NonNullable<typeof data.schedule>['toAnswer'])}
+	<section aria-labelledby="{id}-title">
+		<h2 id="{id}-title">{t('home.' + id)}</h2>
+		<ul class="list-plain">
+			{#each rows as o (o.id + o.date)}
+				<li>
+					<a class="row" href="/schedule?m={o.date.slice(0, 7)}#o-{o.id}-{o.date}">
+						<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d={iconPath('calendar')} /></svg>
+						<span>
+							<span class="title">{o.title}</span>
+							<span class="when muted"><time datetime="{o.date}T{o.starts}">{day(o.date)}, {o.starts}</time></span>
+							{#if id === 'next'}
+								<span class="when muted">{#if o.status}{t('schedule.status.' + o.status)} · {/if}{o.answer ? t('schedule.answer.' + o.answer) : t('home.notAnswered')}</span>
+							{/if}
+						</span>
+					</a>
+				</li>
+			{/each}
+		</ul>
 	</section>
 {/snippet}
 

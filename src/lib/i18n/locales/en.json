@@ -260,6 +260,9 @@
 		"recent": "Recently edited",
 		"added": "Recently added",
 		"allPages": "All pages ({n})",
+		"next": "Next session",
+		"toAnswer": "To answer this month",
+		"notAnswered": "You haven't answered yet",
 		"world": "The world"
 	},
 	"list": {

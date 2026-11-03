@@ -338,14 +338,29 @@ test('appuntamenti: il Master fissa i giovedì, i giocatori rispondono, sotto il
 	await expect(tenth).toContainText('Confermata');
 	await expect(tenth).toContainText(/Vengono da remoto\s*Alice/);
 	await axe(p, 'appuntamenti: giocatore');
+	// Nel calendario la sua figura, con la cuffia; cliccando, il popup con le specifiche.
+	const cell = p.getByRole('table', { name: 'gennaio 2030' }).getByRole('link', { name: /20:00 Serata al Grifone/ }).nth(1);
+	await expect(cell.locator('.face.remote')).toHaveAttribute('title', 'Alice: Ci sono, da remoto');
+	await cell.click();
+	const dlg = p.getByRole('dialog', { name: 'Serata al Grifone' });
+	await expect(dlg).toContainText(/Vengono da remoto\s*Alice/);
+	await expect(dlg.getByRole('button', { name: 'Ci sono, da remoto' })).toHaveAttribute('aria-pressed', 'true');
+	await axe(p, 'appuntamenti: popup');
+	await shot(p, '23c-appuntamenti-popup');
+	await dlg.getByRole('button', { name: 'Ci sono, in presenza' }).click();
+	await expect(dlg.getByRole('button', { name: 'Ci sono, in presenza' })).toHaveAttribute('aria-pressed', 'true');
+	await expect(cell.locator('.face.in_person')).toHaveCount(1);
+	await dlg.getByRole('button', { name: 'Chiudi' }).click();
+	await expect(dlg).toBeHidden();
+	await shot(p, '23c-appuntamenti-risposte');
 	// Il giocatore non scrive appuntamenti.
 	await expect(p.getByRole('link', { name: 'Nuovo appuntamento' })).toHaveCount(0);
 	expect((await p.goto('/schedule/new'))?.status()).toBe(404);
 	await p.context().close();
 
-	// Il Master annulla il 17 e vede la risposta di Alice.
+	// Il Master annulla il 17 e vede la risposta di Alice, cambiata nel popup.
 	await admin.reload();
-	await expect(dates.nth(1)).toContainText(/Vengono da remoto\s*Alice/);
+	await expect(dates.nth(1)).toContainText(/Vengono in presenza\s*Alice/);
 	await dates.nth(2).getByRole('button', { name: /^Annulla questa data/ }).click();
 	await expect(dates).toHaveCount(4);
 	await expect(admin.locator('time[datetime="2030-01-17T20:00"]')).toHaveCount(0);
@@ -357,6 +372,22 @@ test('appuntamenti: il Master fissa i giovedì, i giocatori rispondono, sotto il
 	await expect(rules.getByRole('status')).toContainText('Modifiche salvate');
 	await admin.goto('/schedule?m=2030-01');
 	await expect(dates.first()).not.toContainText('In forse');
+
+	// In home, sotto il tavolo: la prossima sessione, a cui Alice non ha ancora risposto.
+	const d = new Date(Date.now() + 86_400_000);
+	const tomorrow = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+	await admin.goto('/schedule/new');
+	await admin.getByLabel('Titolo', { exact: true }).fill('Il porto');
+	await admin.getByLabel('Data', { exact: true }).fill(tomorrow);
+	await admin.getByRole('button', { name: "Crea l'appuntamento" }).click();
+	await admin.waitForURL(`**/schedule?m=${tomorrow.slice(0, 7)}`);
+	const a = await login(browser, PLAYER);
+	await a.goto('/');
+	const next = a.getByRole('region', { name: 'Prossima sessione' });
+	await expect(next.getByRole('link', { name: /Il porto/ })).toContainText('Non hai ancora risposto');
+	await next.getByRole('link', { name: /Il porto/ }).click();
+	await a.waitForURL(`**/schedule?m=${tomorrow.slice(0, 7)}#o-*`);
+	await a.context().close();
 });
 
 test('Stars & Wishes: chi c\'era risponde entrando nella campagna, una volta sola; il Master legge', async ({ browser }) => {

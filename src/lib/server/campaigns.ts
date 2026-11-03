@@ -153,7 +153,7 @@ export function deleteCampaign(id: number) {
 /** I giocatori di una campagna (il Master no). */
 export function membersOf(id: number) {
 	return getDb()
-		.select({ id: users.id, username: users.username, displayName: users.displayName })
+		.select({ id: users.id, username: users.username, displayName: users.displayName, icon: users.icon })
 		.from(campaignMembers)
 		.innerJoin(users, eq(users.id, campaignMembers.userId))
 		.where(eq(campaignMembers.campaignId, id))

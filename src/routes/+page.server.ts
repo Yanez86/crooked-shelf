@@ -6,6 +6,7 @@ import { homePage } from '#lib/server/templates.ts';
 import { listMaps } from '#lib/server/maps.ts';
 import { listTimelines } from '#lib/server/timeline.ts';
 import { tableOf } from '#lib/server/sheets.ts';
+import { upcoming } from '#lib/server/schedule.ts';
 
 export const load: PageServerLoad = ({ locals }) => {
 	const u = locals.user;
@@ -25,6 +26,8 @@ export const load: PageServerLoad = ({ locals }) => {
 		empty: listPages(u, { kind: 'page', limit: 1, exclude: found?.id, noSheets: true }).total === 0,
 		// Chi è al tavolo: il Master e i giocatori, con le loro schede (non per i visitatori).
 		table: tableOf(u),
+		// Gli appuntamenti, come la pagina Appuntamenti: per chi ha un account nella campagna.
+		schedule: u && locals.campaign ? upcoming(u.id) : null,
 		recent: rows,
 		added: listPages(u, { ...recent, sort: 'created' }).rows,
 		world: [

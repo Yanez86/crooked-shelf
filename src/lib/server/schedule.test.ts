@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { schema, useMemoryDb } from './db/index.ts';
 import { addMember, inCampaign, insertCampaign, removeMember, saveCampaign, type CampaignRow } from './campaigns.ts';
-import { getAppointment, monthSchedule, monthStarWishes, openStarWish, saveAppointment, saveStarWish, setAnswer, skipDate, type AppointmentInput } from './schedule.ts';
+import { getAppointment, monthSchedule, monthStarWishes, openStarWish, saveAppointment, saveStarWish, setAnswer, skipDate, upcoming, type AppointmentInput } from './schedule.ts';
 
 const thursdays: AppointmentInput = { title: 'Sessione', date: '2026-11-05', starts: '20:00', ends: '00:00', inPerson: true, remote: false, place: 'Da Marco', link: null, repeat: 'week', until: null };
 const names = ['Davide', 'Alice', 'Bruno', 'Carla'];
@@ -81,5 +81,18 @@ describe('appuntamenti nel server', () => {
 		expect(here(() => monthStarWishes('2026-11'))).toEqual({ [`${a.id}/2026-11-05`]: [{ name: 'Alice', star: 'Il drago', wish: 'La torre' }] });
 		// Un'altra campagna non le vede.
 		expect(inCampaign(other, () => monthStarWishes('2026-11'))).toEqual({});
+	});
+
+	it('in home: la prossima sessione e le date del mese ancora senza risposta', () => {
+		const a = here(() => saveAppointment(thursdays))!;
+		here(() => setAnswer(a.id, '2026-11-19', 2, 'no'));
+		// Giovedì 12 alle 21: la sessione è in corso, ed è la prossima.
+		const now = new Date(2026, 10, 12, 21).getTime();
+		const u = here(() => upcoming(2, now));
+		expect(u.next).toMatchObject({ date: '2026-11-12', answer: null });
+		// Il 19 Alice ha già risposto; dicembre è un altro mese.
+		expect(u.toAnswer.map((o) => o.date)).toEqual(['2026-11-26']);
+		// Il Master non risponde: niente da chiedergli.
+		expect(here(() => upcoming(1, now)).toAnswer).toEqual([]);
 	});
 });
