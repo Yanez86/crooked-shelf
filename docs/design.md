@@ -36,7 +36,7 @@ Wiki self-hosted per creare, curare e registrare campagne di giochi di ruolo da 
 | **Giocatore** | Legge le pagine per giocatori, modifica quelle consentite (es. il proprio personaggio, i resoconti), usa la bacheca |
 | **Visitatore** | Solo lettura delle pagine pubbliche (accesso anonimo attivabile o disattivabile) |
 
-Un utente può essere Admin e Master insieme: Admin vale per il sito, Master solo nella campagna che tiene. Un Admin che non tiene una campagna ci entra solo se è invitato, da giocatore, e non ne vede i segreti.
+Un utente può essere Admin e Master insieme: Admin vale per il sito, Master solo nella campagna che tiene. Un Admin che non tiene una campagna ci entra solo se è invitato, da giocatore, e non ne vede i segreti. Non può nominarsi Master di una campagna che esiste già (`canAppoint`): glielo fa un altro Admin, così i segreti non se li apre da solo; una campagna nuova, che segreti non ne ha, la può tenere.
 
 ### Visibilità
 Ogni **pagina** e ogni **singolo blocco** ha una visibilità:

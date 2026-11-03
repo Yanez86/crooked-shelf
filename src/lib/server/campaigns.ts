@@ -83,6 +83,13 @@ export function removeMember(id: number, userId: number) {
 }
 
 /** Un altro Master: quello di prima resta nella campagna, come giocatore. */
+/**
+ * Chi può diventare Master di una campagna che esiste già, se a sceglierlo è `by`. Non ci si nomina da soli:
+ * il Master vede i segreti, quindi un Admin non se li apre da sé (glieli può dare un altro Admin, o resta suo se lo è già).
+ * Una campagna nuova invece non ha ancora segreti, e la si può tenere.
+ */
+export const canAppoint = (c: Pick<CampaignRow, 'masterId'>, masterId: number, by: Viewer) => masterId !== by.id || c.masterId === by.id;
+
 export function setMaster(id: number, masterId: number) {
 	const old = getCampaign(id)?.masterId;
 	getDb().transaction(() => {

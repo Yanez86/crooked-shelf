@@ -61,6 +61,19 @@ test("l'Admin crea una campagna e la dà a un Master", async () => {
 	await form.getByRole('button', { name: 'Nuova campagna' }).click();
 	await expect(admin.getByRole('status')).toContainText('Campagna creata');
 	await expect(admin.locator('form[action="?/update"]').last().getByLabel('Nome della campagna')).toHaveValue('Avalon');
+
+	// Di Avalon, che è di Merlino, l'Admin non può nominarsi Master: non c'è nell'elenco, e il server lo rifiuta.
+	const avalon = admin.locator('form[action="?/update"]').last();
+	await expect(avalon.getByLabel('Master').locator('option', { hasText: '@davide' })).toHaveCount(0);
+	await expect(admin.locator('form[action="?/update"]').first().getByLabel('Master').locator('option', { hasText: '@davide' })).toHaveCount(1);
+	const id = await avalon.locator('input[name="id"]').inputValue();
+	const davide = await admin.locator('form[action="?/create"] option', { hasText: '@davide' }).getAttribute('value');
+	const origin = new URL(admin.url()).origin;
+	const res = await admin.request.post('/admin/campaigns?/update', { form: { id, name: 'Avalon', masterId: davide! }, headers: { origin } });
+	expect(await res.text()).toContain('selfAppoint');
+	await admin.reload();
+	await expect(admin.locator('form[action="?/update"]').last().getByLabel('Master')).toHaveValue(/.+/);
+	await expect(admin.locator('form[action="?/update"]').last().getByLabel('Master').locator('option:checked')).toHaveText(/@merlino/);
 });
 
 test('il Master vede solo la sua campagna e scrive una pagina segreta', async () => {

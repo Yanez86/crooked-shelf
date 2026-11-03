@@ -2,7 +2,7 @@ import { fail, redirect } from '@sveltejs/kit';
 import { asc, sql } from 'drizzle-orm';
 import type { Actions, PageServerLoad } from './$types';
 import { getDb, schema } from '#lib/server/db/index.ts';
-import { deleteCampaign, getCampaign, masterCandidates, saveCampaign, setMaster } from '#lib/server/campaigns.ts';
+import { canAppoint, deleteCampaign, getCampaign, masterCandidates, saveCampaign, setMaster } from '#lib/server/campaigns.ts';
 import { getSettings } from '#lib/server/settings.ts';
 import { newCampaign } from '#lib/server/templates.ts';
 import { requireAdmin } from '#lib/server/guard.ts';
@@ -10,7 +10,8 @@ import { str } from '#lib/server/forms.ts';
 
 const { campaigns, campaignMembers } = schema;
 
-export const load: PageServerLoad = () => ({
+export const load: PageServerLoad = ({ locals }) => ({
+	me: locals.user?.id ?? null,
 	campaigns: getDb()
 		.select({
 			id: campaigns.id,
@@ -42,13 +43,15 @@ export const actions: Actions = {
 		return { ok: 'admin.campaignCreated' };
 	},
 	update: async ({ request, locals }) => {
-		requireAdmin(locals.user);
+		const u = requireAdmin(locals.user);
 		const f = await request.formData();
-		const id = Number(f.get('id'));
+		const c = getCampaign(Number(f.get('id')));
+		if (!c) return fail(404, { error: 'errors.generic' });
 		const r = read(f);
 		if ('error' in r) return fail(400, { error: r.error });
-		saveCampaign(id, { name: r.name });
-		setMaster(id, r.masterId);
+		if (!canAppoint(c, r.masterId, u)) return fail(403, { error: 'admin.selfAppoint' });
+		saveCampaign(c.id, { name: r.name });
+		setMaster(c.id, r.masterId);
 		return { ok: 'common.saved' };
 	},
 	delete: async ({ request, locals }) => {

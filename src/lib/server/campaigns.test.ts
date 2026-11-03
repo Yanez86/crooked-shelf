@@ -6,7 +6,7 @@ import { eq } from 'drizzle-orm';
 import { getDb, getSqlite, migrate, useMemoryDb, schema } from './db/index.ts';
 import { MIGRATIONS } from './db/migrations.ts';
 import { campaignsMigration } from './db/campaigns.ts';
-import { campaignsFor, currentCampaign, deleteCampaign, FIRST_CAMPAIGN, getCampaign, inCampaign, membersOf, ofCampaign, roleIn, saveCampaign, setMaster, addMember, type CampaignRow } from './campaigns.ts';
+import { campaignsFor, canAppoint, currentCampaign, deleteCampaign, FIRST_CAMPAIGN, getCampaign, inCampaign, membersOf, ofCampaign, roleIn, saveCampaign, setMaster, addMember, type CampaignRow } from './campaigns.ts';
 import { createInvite, activeInvites, joinInvite, redeemInvite } from './auth.ts';
 import { createPage, getPageById, getPageBySlug, listPages, listTrash, deletePage, renderPage, resolverFor, backlinks, updatePage } from './pages.ts';
 import { filePath, getFile, saveImage } from './files.ts';
@@ -162,6 +162,15 @@ describe('campagne e persone', () => {
 			createPage({ ...base, visibility: 'master', title: 'Piano del capo', content: text('x') }, { id: admin.id, role: 'master' });
 			expect(listPages({ ...admin, role: roleIn(mine, admin) }, { limit: 100 }).rows.map((r) => r.title)).toContain('Piano del capo');
 		});
+	});
+
+	it("l'Admin non si nomina Master di una campagna che esiste già", () => {
+		expect(canAppoint(a, admin.id, admin)).toBe(false);
+		expect(canAppoint({ masterId: null }, admin.id, admin)).toBe(false);
+		// Un altro può nominarlo, e lui può dare la campagna a un altro o tenere la sua.
+		expect(canAppoint(a, admin.id, { id: 9, role: 'player', admin: true })).toBe(true);
+		expect(canAppoint(a, otherDm.id, admin)).toBe(true);
+		expect(canAppoint({ masterId: admin.id }, admin.id, admin)).toBe(true);
 	});
 
 	it('si entra solo nelle proprie campagne', () => {

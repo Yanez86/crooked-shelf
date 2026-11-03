@@ -29,7 +29,8 @@
 			<label for="master-{c.id}">{t('campaign.master')}</label>
 			<select id="master-{c.id}" name="masterId" required>
 				{#if c.masterId === null}<option value="" selected>—</option>{/if}
-				{#each data.masters as m (m.id)}<option value={m.id} selected={m.id === c.masterId}>{m.displayName} (@{m.username})</option>{/each}
+				<!-- Ci si nomina Master solo di una campagna nuova: in quelle che esistono già ci sono i segreti di un altro. -->
+				{#each data.masters.filter((m) => m.id !== data.me || m.id === c.masterId) as m (m.id)}<option value={m.id} selected={m.id === c.masterId}>{m.displayName} (@{m.username})</option>{/each}
 			</select>
 		</div>
 		<p class="field muted">{t('admin.campaignPlayers', { n: c.players })}</p>
