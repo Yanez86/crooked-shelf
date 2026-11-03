@@ -3,6 +3,11 @@
 Le versioni seguono il [versionamento semantico](https://semver.org/lang/it/): MAGGIORE.MINORE.CORRETTIVA.
 Questo file è anche la pagina «Novità» della wiki (`/changelog`).
 
+## 0.12.0 — 2026-11-03
+
+### Aggiunte
+- Appuntamenti: ogni campagna ha il calendario delle sessioni di gioco, un mese per pagina, da «Appuntamenti» in fondo alla barra a sinistra. Il Master fissa un appuntamento con data, orario e modo (in presenza con il luogo, da remoto, o tutti e due), anche ripetuto ogni settimana, ogni 2 settimane od ogni mese (lo stesso giorno della settimana, es. il primo giovedì), fino a una data o senza fine; una sola data della serie si annulla. I giocatori rispondono per ogni data: in presenza, da remoto o «Non ci sono», e sotto ogni data si vede chi viene e come, chi no e chi non ha risposto. In Campagna › Appuntamenti il Master mette il link per giocare da remoto (Discord o altro) e la regola del minimo: sotto un certo numero di giocatori confermati la sessione salta, decisa un certo numero di ore prima (di base 24). Lo vedono il Master e i giocatori, non i visitatori. L'ora è quella del server: con Docker si imposta con `TZ`.
+
 ## 0.11.1 — 2026-11-03
 
 ### Correzioni
