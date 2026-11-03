@@ -273,7 +273,9 @@ test('colonna a lato: si aggiunge modificando la pagina, con riquadri di testo e
 	}
 
 	// Col mouse si trascina dalla maniglia: giù di due riquadri, poi di nuovo in cima.
+	// Si misura a riquadri fermi: subito dopo uno spostamento scivolano ancora al loro posto (animate:flip).
 	const dragTo = async (grip: Locator, target: Locator, where: number) => {
+		await side.evaluate((el) => Promise.all(el.getAnimations({ subtree: true }).map((a) => a.finished)));
 		const g = (await grip.boundingBox())!;
 		const to = (await target.boundingBox())!;
 		await admin.mouse.move(g.x + g.width / 2, g.y + g.height / 2);
