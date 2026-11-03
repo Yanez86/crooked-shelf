@@ -21,7 +21,8 @@ async function axe(page: Page, label: string) {
 	expect(found, found.join('\n')).toEqual([]);
 }
 
-const shot = (page: Page, name: string) => page.screenshot({ path: `${SHOTS}/${name}.png`, fullPage: true });
+// Animazioni ferme: immagini ripetibili, e il tema Neon (griglia e scanline animate) non rallenta lo scatto.
+const shot = (page: Page, name: string) => page.screenshot({ path: `${SHOTS}/${name}.png`, fullPage: true, animations: 'disabled' });
 
 async function newPage(page: Page, title: string, write: (p: Page) => Promise<void>, opts: { visibility?: string; tags?: string; category?: string } = {}) {
 	await page.goto('/wiki/new?template=none');
@@ -699,11 +700,16 @@ test('visitatori: spenti di default', async ({ browser }) => {
 });
 
 test('temi: contrasti e accessibilità', async () => {
-	for (const theme of ['Chiaro', 'Scuro', 'Neon']) {
+	// Dodici controlli axe; con il Neon il browser ridisegna di continuo griglia e scanline e tutto va tre volte più piano.
+	test.slow();
+	const choose = async (theme: string) => {
 		await admin.goto('/preferences');
 		await admin.getByRole('radio', { name: theme, exact: true }).check();
 		await admin.getByRole('button', { name: 'Salva' }).first().click();
 		await expect(admin.getByRole('status').first()).toContainText('Preferenze salvate');
+	};
+	for (const theme of ['Chiaro', 'Scuro', 'Neon']) {
+		await choose(theme);
 		for (const url of ['/', '/wiki', '/wiki/locanda-del-grifone', '/tags']) {
 			await admin.goto(url);
 			await axe(admin, `${theme} ${url}`);
@@ -711,6 +717,8 @@ test('temi: contrasti e accessibilità', async () => {
 		await admin.goto('/wiki/locanda-del-grifone');
 		await shot(admin, `08-tema-${theme.toLowerCase().replace(' ', '-')}`);
 	}
+	// I test che seguono girano col tema chiaro, non col Neon che li rallenterebbe.
+	await choose('Chiaro');
 });
 
 test('la barra a sinistra si può tenere chiusa', async () => {
