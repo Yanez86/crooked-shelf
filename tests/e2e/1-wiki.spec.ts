@@ -605,7 +605,7 @@ test('visitatori: spenti di default', async ({ browser }) => {
 });
 
 test('temi: contrasti e accessibilità', async () => {
-	for (const theme of ['Chiaro', 'Scuro']) {
+	for (const theme of ['Chiaro', 'Scuro', 'Neon']) {
 		await admin.goto('/preferences');
 		await admin.getByRole('radio', { name: theme, exact: true }).check();
 		await admin.getByRole('button', { name: 'Salva' }).first().click();

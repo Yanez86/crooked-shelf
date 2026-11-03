@@ -1,0 +1,410 @@
+/* Tema Neon: tutto ciò che va oltre i colori. Vale solo con data-theme="neon".
+   Regole del gioco:
+   - gli effetti stanno dietro o intorno al testo, mai sopra: i contrasti misurati in themes.ts restano veri;
+   - gli angoli tagliati sono corner-shape: bevel, che smussa bordo, ombra e contorno del fuoco senza tagliare
+     il contenuto (i popup dentro un riquadro restano interi). Dove il browser non lo conosce, gli angoli restano vivi;
+   - movimento solo decorativo e breve: con «Riduci il movimento» (o l'impostazione del sistema) si ferma, come ovunque;
+   - con i colori forzati del sistema (Contrasto elevato di Windows) restano solo testo e bordi. */
+
+:root[data-theme='neon'] {
+	--neon-magenta: #ff3db8;
+	--neon-cyan: #3ee8ff;
+	--neon-violet: #8b5cff;
+	--neon-glow-m: 0 0 0.5rem color-mix(in srgb, var(--neon-magenta) 55%, transparent);
+	--neon-glow-c: 0 0 0.5rem color-mix(in srgb, var(--neon-cyan) 55%, transparent);
+	/* Il taglio degli angoli dei riquadri e dei pulsanti pieni. */
+	--neon-cut: 0.85rem;
+	--neon-cut-sm: 0.5rem;
+	--font-head: 'Archivo Variable', 'Inter Variable', system-ui, sans-serif;
+	scrollbar-color: var(--c-control) var(--c-bg);
+	accent-color: var(--neon-magenta);
+}
+
+/* --- Il fondale: una città di notte, fuori fuoco --- */
+
+:root[data-theme='neon'] body {
+	background:
+		radial-gradient(60rem 40rem at 10% -10%, color-mix(in srgb, var(--neon-magenta) 16%, transparent), transparent 70%),
+		radial-gradient(50rem 35rem at 100% 0%, color-mix(in srgb, var(--neon-cyan) 12%, transparent), transparent 70%),
+		radial-gradient(70rem 30rem at 50% 115%, color-mix(in srgb, var(--neon-violet) 20%, transparent), transparent 70%),
+		var(--c-bg);
+	background-attachment: fixed;
+	caret-color: var(--neon-magenta);
+}
+/* Griglia in prospettiva verso l'orizzonte, ferma in fondo allo schermo. */
+:root[data-theme='neon'] body::before {
+	content: '';
+	position: fixed;
+	left: -50%;
+	right: -50%;
+	bottom: 0;
+	height: 55vh;
+	z-index: -2;
+	pointer-events: none;
+	background:
+		repeating-linear-gradient(90deg, color-mix(in srgb, var(--neon-magenta) 34%, transparent) 0 1px, transparent 1px 4rem),
+		repeating-linear-gradient(0deg, color-mix(in srgb, var(--neon-cyan) 26%, transparent) 0 1px, transparent 1px 4rem);
+	transform: perspective(30vh) rotateX(58deg);
+	transform-origin: 50% 100%;
+	-webkit-mask: linear-gradient(to top, #000 0%, transparent 85%);
+	mask: linear-gradient(to top, #000 0%, transparent 85%);
+	animation: neon-grid 6s linear infinite;
+}
+/* Scanline e una banda di luce che scende piano: sullo sfondo, sotto i riquadri. */
+:root[data-theme='neon'] body::after {
+	content: '';
+	position: fixed;
+	inset: 0;
+	z-index: -1;
+	pointer-events: none;
+	background:
+		linear-gradient(to bottom, transparent 0%, color-mix(in srgb, var(--neon-cyan) 7%, transparent) 50%, transparent 100%) 0 0 / 100% 30vh no-repeat,
+		repeating-linear-gradient(to bottom, rgb(255 255 255 / 0.025) 0 1px, transparent 1px 3px);
+	animation: neon-sweep 9s linear infinite;
+}
+@keyframes neon-grid {
+	to {
+		background-position:
+			0 4rem,
+			0 4rem;
+	}
+}
+@keyframes neon-sweep {
+	from {
+		background-position:
+			0 -30vh,
+			0 0;
+	}
+	to {
+		background-position:
+			0 130vh,
+			0 0;
+	}
+}
+
+:root[data-theme='neon'] ::selection {
+	background: color-mix(in srgb, #ff3db8 45%, transparent);
+	color: #ffffff;
+}
+
+/* --- Titoli: larghi, con bagliore e un'ombra cromatica sfalsata --- */
+
+:root[data-theme='neon'] h1 {
+	font-stretch: 125%;
+	font-weight: 800;
+	letter-spacing: 0.01em;
+	text-shadow:
+		-0.04em 0 0 color-mix(in srgb, var(--neon-cyan) 70%, transparent),
+		0.04em 0 0 color-mix(in srgb, var(--neon-magenta) 70%, transparent),
+		0 0 1.2rem color-mix(in srgb, var(--neon-magenta) 45%, transparent);
+}
+:root[data-theme='neon'] h2 {
+	font-stretch: 115%;
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+	font-size: var(--fs-md);
+	padding-bottom: 0.3rem;
+	border-bottom: 1px solid transparent;
+	border-image: linear-gradient(90deg, var(--neon-magenta), var(--neon-cyan) 40%, transparent) 1;
+}
+:root[data-theme='neon'] h2::before {
+	content: '// ';
+	color: var(--c-primary);
+	font-family: var(--font-mono);
+	letter-spacing: 0;
+}
+:root[data-theme='neon'] h3 {
+	font-stretch: 110%;
+	letter-spacing: 0.03em;
+	color: var(--c-link);
+}
+
+/* --- Collegamenti: ciano, si accendono al passaggio --- */
+
+:root[data-theme='neon'] a {
+	transition:
+		text-shadow 0.15s ease-out,
+		color 0.15s ease-out;
+}
+:root[data-theme='neon'] a:hover {
+	text-shadow: var(--neon-glow-c);
+}
+
+:root[data-theme='neon'] :focus-visible {
+	outline-style: solid;
+	box-shadow: 0 0 0 calc(var(--focus-width) + 2px) color-mix(in srgb, var(--c-focus) 25%, transparent);
+}
+
+/* --- Intestazione: una barra di comando con il filo di luce sotto --- */
+
+:root[data-theme='neon'] .site-header {
+	background: color-mix(in srgb, var(--c-surface) 82%, transparent);
+	-webkit-backdrop-filter: blur(10px) saturate(1.4);
+	backdrop-filter: blur(10px) saturate(1.4);
+	border-bottom: 2px solid transparent;
+	border-image: linear-gradient(90deg, var(--neon-magenta), var(--neon-violet) 50%, var(--neon-cyan)) 1;
+	box-shadow: 0 0.4rem 1.5rem -0.6rem color-mix(in srgb, var(--neon-magenta) 50%, transparent);
+}
+:root[data-theme='neon'] .brand {
+	font-stretch: 125%;
+	text-transform: uppercase;
+	letter-spacing: 0.12em;
+	text-shadow: var(--neon-glow-m);
+	animation: neon-flicker 2.4s steps(1, end) 1 both;
+}
+/* Come un'insegna che si accende: due sfarfallii e poi resta. */
+@keyframes neon-flicker {
+	0% {
+		opacity: 0.35;
+		text-shadow: none;
+	}
+	8% {
+		opacity: 1;
+	}
+	12% {
+		opacity: 0.4;
+		text-shadow: none;
+	}
+	20%,
+	100% {
+		opacity: 1;
+	}
+}
+
+/* --- Riquadri: pannelli da terminale, con due angoli tagliati e due staffe di luce --- */
+
+:root[data-theme='neon'] .panel,
+:root[data-theme='neon'] .card {
+	--cut: var(--neon-cut);
+	border: 1px solid var(--c-border);
+	background:
+		/* Staffe in alto a destra e in basso a sinistra, dove l'angolo non è tagliato. */
+		linear-gradient(var(--neon-cyan), var(--neon-cyan)) right top / 1.25rem 2px no-repeat,
+		linear-gradient(var(--neon-cyan), var(--neon-cyan)) right top / 2px 1.25rem no-repeat,
+		linear-gradient(var(--neon-magenta), var(--neon-magenta)) left bottom / 1.25rem 2px no-repeat,
+		linear-gradient(var(--neon-magenta), var(--neon-magenta)) left bottom / 2px 1.25rem no-repeat,
+		var(--c-surface);
+	box-shadow: inset 0 0 2.5rem -1rem color-mix(in srgb, var(--neon-violet) 45%, transparent);
+}
+/* La colonna centrale ha il bordo alto in luce piena: è il pannello principale. */
+:root[data-theme='neon'] .column.panel {
+	border-top: 2px solid var(--neon-magenta);
+	box-shadow:
+		0 -0.4rem 1.2rem -0.8rem var(--neon-magenta),
+		inset 0 0 3rem -1.2rem color-mix(in srgb, var(--neon-magenta) 40%, transparent);
+}
+@supports (corner-shape: bevel) {
+	:root[data-theme='neon'] .panel,
+	:root[data-theme='neon'] .card {
+		border-radius: var(--cut) 0 var(--cut) 0;
+		corner-shape: bevel;
+	}
+	:root[data-theme='neon'] .btn-primary {
+		border-radius: var(--neon-cut-sm) 0 var(--neon-cut-sm) 0;
+		corner-shape: bevel;
+	}
+}
+
+/* --- Pulsanti --- */
+
+:root[data-theme='neon'] .btn {
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	font-size: var(--fs-sm);
+	transition:
+		background-color 0.15s ease-out,
+		border-color 0.15s ease-out,
+		box-shadow 0.15s ease-out,
+		color 0.15s ease-out,
+		transform 0.1s ease-out;
+}
+:root[data-theme='neon'] .btn:hover {
+	border-color: var(--neon-cyan);
+	box-shadow:
+		var(--neon-glow-c),
+		inset 0 0 0.6rem -0.2rem color-mix(in srgb, var(--neon-cyan) 60%, transparent);
+}
+:root[data-theme='neon'] .btn-ghost:hover {
+	border-color: var(--c-border);
+	box-shadow: none;
+}
+/* Il pulsante pieno: sfumato, con gli angoli tagliati come i riquadri (vedi sopra). */
+:root[data-theme='neon'] .btn-primary {
+	padding-inline: 1.25rem;
+	background: linear-gradient(100deg, var(--neon-magenta), color-mix(in srgb, var(--neon-magenta) 75%, var(--neon-violet)));
+	font-weight: 800;
+}
+:root[data-theme='neon'] .btn-primary:hover {
+	filter: none;
+	border-color: var(--neon-magenta);
+	background: var(--neon-magenta);
+	box-shadow:
+		var(--neon-glow-m),
+		inset 0 0 1rem color-mix(in srgb, #ffffff 35%, transparent);
+}
+:root[data-theme='neon'] .btn-danger:hover {
+	border-color: var(--c-danger);
+	box-shadow: 0 0 0.5rem color-mix(in srgb, var(--c-danger) 55%, transparent);
+}
+:root[data-theme='neon'] .skip-link {
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+	box-shadow: var(--neon-glow-m);
+}
+
+/* --- Campi: un prompt che si accende quando ci scrivi --- */
+
+:root[data-theme='neon'] :is(input[type='text'], input[type='password'], input[type='search'], input[type='number'], input[type='date'], select, textarea) {
+	background: var(--c-bg);
+	border-width: 1px 1px 2px;
+	transition:
+		border-color 0.15s ease-out,
+		box-shadow 0.15s ease-out;
+}
+:root[data-theme='neon'] :is(input[type='text'], input[type='password'], input[type='search'], input[type='number'], input[type='date'], select, textarea):focus {
+	border-color: var(--neon-cyan);
+	box-shadow:
+		var(--neon-glow-c),
+		0 0 0 calc(var(--focus-width) + 2px) color-mix(in srgb, var(--c-focus) 25%, transparent);
+}
+:root[data-theme='neon'] ::placeholder {
+	color: var(--c-muted);
+	opacity: 1;
+}
+:root[data-theme='neon'] input[type='checkbox']:checked {
+	box-shadow: var(--neon-glow-m);
+}
+:root[data-theme='neon'] label,
+:root[data-theme='neon'] legend {
+	letter-spacing: 0.03em;
+}
+
+/* --- Etichette, tabelle, codice --- */
+
+:root[data-theme='neon'] .badge {
+	font-family: var(--font-mono);
+	letter-spacing: 0.02em;
+	background: var(--c-bg);
+	border-color: color-mix(in srgb, var(--neon-violet) 70%, var(--c-control));
+}
+:root[data-theme='neon'] a.badge:hover {
+	border-color: var(--neon-cyan);
+	box-shadow: var(--neon-glow-c);
+}
+:root[data-theme='neon'] table.data thead th,
+:root[data-theme='neon'] .prose th {
+	font-family: var(--font-mono);
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+}
+:root[data-theme='neon'] table.data thead th {
+	border-bottom-color: var(--neon-magenta);
+}
+:root[data-theme='neon'] table.data tbody tr {
+	transition: background-color 0.1s ease-out;
+}
+:root[data-theme='neon'] table.data tbody tr:hover {
+	background: color-mix(in srgb, var(--c-surface2) 70%, transparent);
+	box-shadow: inset 2px 0 0 var(--neon-cyan);
+}
+:root[data-theme='neon'] pre {
+	border-left: 2px solid var(--neon-cyan);
+	box-shadow: inset 0 0 1.5rem -0.8rem color-mix(in srgb, var(--neon-cyan) 50%, transparent);
+}
+:root[data-theme='neon'] hr {
+	border: 0;
+	height: 1px;
+	background: linear-gradient(90deg, transparent, var(--neon-magenta) 20%, var(--neon-cyan) 80%, transparent);
+	box-shadow: var(--neon-glow-m);
+}
+:root[data-theme='neon'] mark {
+	background: color-mix(in srgb, var(--neon-magenta) 22%, var(--c-bg));
+	outline-color: var(--neon-magenta);
+}
+
+/* --- Testo delle pagine --- */
+
+:root[data-theme='neon'] .prose blockquote {
+	border-left: 2px solid var(--neon-violet);
+	background: linear-gradient(90deg, color-mix(in srgb, var(--neon-violet) 12%, transparent), transparent 70%);
+}
+:root[data-theme='neon'] .callout,
+:root[data-theme='neon'] .secret {
+	border-left-width: 3px;
+	box-shadow:
+		inset 0 0 0 1px var(--c-border),
+		-0.3rem 0 1rem -0.5rem var(--c-note-border);
+}
+:root[data-theme='neon'] .callout-tip {
+	box-shadow:
+		inset 0 0 0 1px var(--c-border),
+		-0.3rem 0 1rem -0.5rem var(--c-tip-border);
+}
+:root[data-theme='neon'] .callout-warning {
+	box-shadow:
+		inset 0 0 0 1px var(--c-border),
+		-0.3rem 0 1rem -0.5rem var(--c-warning-border);
+}
+:root[data-theme='neon'] .callout-title,
+:root[data-theme='neon'] .secret-title {
+	font-family: var(--font-mono);
+	text-transform: uppercase;
+	letter-spacing: 0.1em;
+	font-size: var(--fs-sm);
+}
+/* Il segreto è un fascicolo riservato: righe diagonali appena accennate, il testo resta sul suo sfondo. */
+:root[data-theme='neon'] .secret {
+	background:
+		repeating-linear-gradient(-45deg, rgb(197 107 255 / 0.06) 0 0.6rem, transparent 0.6rem 1.2rem),
+		var(--c-secret-bg);
+	box-shadow:
+		inset 0 0 0 1px var(--c-secret-border),
+		0 0 1.2rem -0.4rem color-mix(in srgb, var(--c-secret-border) 70%, transparent);
+}
+:root[data-theme='neon'] .page-icon {
+	filter: drop-shadow(0 0 0.35rem color-mix(in srgb, var(--neon-magenta) 70%, transparent));
+}
+/* La copertina come uno schermo: righe orizzontali e un velo di colore sul bordo basso. */
+:root[data-theme='neon'] .page-cover::after {
+	content: '';
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+	background:
+		repeating-linear-gradient(to bottom, rgb(0 0 0 / 0.18) 0 1px, transparent 1px 3px),
+		linear-gradient(to top, color-mix(in srgb, var(--neon-magenta) 30%, transparent), transparent 45%);
+}
+
+:root[data-theme='neon'] .site-footer {
+	font-family: var(--font-mono);
+	letter-spacing: 0.04em;
+}
+
+/* --- Telefono: niente griglia in prospettiva (costa e sullo schermo piccolo distrae), il resto rimane --- */
+
+@media (max-width: 48rem) {
+	:root[data-theme='neon'] body::before {
+		display: none;
+	}
+	:root[data-theme='neon'] .site-header {
+		border-top: 0;
+	}
+	:root[data-theme='neon'] .panel,
+	:root[data-theme='neon'] .card {
+		--cut: var(--neon-cut-sm);
+	}
+}
+
+/* --- Colori forzati: via gli effetti, restano testo e bordi del sistema --- */
+
+@media (forced-colors: active) {
+	:root[data-theme='neon'] body::before,
+	:root[data-theme='neon'] body::after,
+	:root[data-theme='neon'] .page-cover::after {
+		display: none;
+	}
+	:root[data-theme='neon'] h1,
+	:root[data-theme='neon'] .brand {
+		text-shadow: none;
+	}
+}

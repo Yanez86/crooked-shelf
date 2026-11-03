@@ -141,7 +141,7 @@ Nel **Profilo** ci sono le preferenze di lettura (sotto), l'icona da scegliere t
 
 Nel **Profilo** ognuno sceglie:
 
-- tema: chiaro, scuro o automatico, come il sistema (o quelli creati dall'Admin);
+- tema: chiaro, scuro o automatico, come il sistema; Lago, Lago di notte, Neon (o quelli creati dall'Admin);
 - dimensione del testo fino al 200%;
 - carattere Atkinson Hyperlegible o OpenDyslexic;
 - spaziatura ampia, animazioni ridotte, lingua;

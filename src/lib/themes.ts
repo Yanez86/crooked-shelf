@@ -143,6 +143,35 @@ export const THEMES: Theme[] = [
 			warningBorder: '#efb259',
 			codeBg: '#1f292d'
 		}
+	},
+	// Neon: notte viola quasi nera, accento magenta, collegamenti ciano, fuoco giallo acido che non somiglia a nessuno dei due.
+	// Bagliori, scanline e angoli tagliati sono in styles/neon.css: valgono solo per questo tema.
+	{
+		id: 'neon',
+		scheme: 'dark',
+		colors: {
+			bg: '#08060f',
+			surface: '#110c1d',
+			surface2: '#1c1430',
+			text: '#eef4ff',
+			muted: '#ab9fcc',
+			border: '#2f2350',
+			control: '#8d7cc0',
+			primary: '#ff3db8',
+			onPrimary: '#16000d',
+			link: '#3ee8ff',
+			missing: '#ff7a95',
+			focus: '#e8ff3a',
+			danger: '#ff6f8a',
+			success: '#4dffa6',
+			secretBg: '#200c33',
+			secretText: '#f3dcff',
+			secretBorder: '#c56bff',
+			noteBorder: '#36cfff',
+			tipBorder: '#4dffa6',
+			warningBorder: '#ffb12e',
+			codeBg: '#1c1430'
+		}
 	}
 ];
 

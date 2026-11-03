@@ -7,6 +7,7 @@ Questo file è anche la pagina «Novità» della wiki (`/changelog`).
 
 ### Aggiunte
 - Due temi nuovi, Lago e Lago di notte: grigi freddi, accento verde petrolio, contrasti WCAG AA con margine. Si scelgono da Profilo.
+- Tema Neon, scuro e cyberpunk: notte viola, magenta e ciano, fuoco giallo acido. Oltre ai colori ha uno stile suo: titoli larghi con bagliore e ombra cromatica, intestazione in vetro col filo di luce, riquadri con due angoli tagliati e staffe luminose, griglia in prospettiva e scanline sullo sfondo, segreti a strisce come un fascicolo riservato. Gli effetti stanno dietro al testo, quindi i contrasti WCAG AA restano quelli misurati; il movimento si ferma con «Riduci il movimento» e con i colori forzati del sistema restano solo testo e bordi. Una copia del tema prende i colori ma non gli effetti.
 - Plugin per Claude Code: Claude cerca e legge le pagine di una campagna per rispondere alle tue domande, con i tuoi stessi permessi. Se lo permetti quando crei il token, può anche creare pagine e cambiarne il testo: niente eliminazioni, niente impostazioni, e ogni modifica lascia una versione. Il token si crea da Profilo › Claude; le istruzioni sono in [docs/claude.md](docs/claude.md).
 
 ### Modifiche
