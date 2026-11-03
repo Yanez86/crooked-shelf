@@ -6,6 +6,8 @@
 	let { data, form }: PageProps = $props();
 	const t = getT();
 	let pagesMode = $state('all');
+	// Dove va il pacchetto. Un errore nel modulo della campagna nuova torna qui col file ancora caricato.
+	let target = $derived(form && 'error' in form && 'preview' in form ? 'new' : 'here');
 	const DONE = ['pages', 'skipped', 'categories', 'maps', 'templates', 'events', 'themes'] as const;
 </script>
 
@@ -67,9 +69,16 @@
 
 	{#if form && 'done' in form && form.done}
 		<div class="alert alert-ok" role="status">
-			<strong>{t('world.imported')}</strong>
+			<strong>{'campaign' in form && form.campaign ? t('world.importedNew', { name: form.campaign.name }) : t('world.imported')}</strong>
 			<ul>{#each DONE.filter((k) => form.done[k] > 0) as k (k)}<li>{t('world.done.' + k, { n: form.done[k] })}</li>{/each}</ul>
 		</div>
+		{#if 'campaign' in form && form.campaign}
+			<!-- L'Amministrazione può stare in un pannello: la campagna si apre nella finestra intera. -->
+			<form method="post" action="/campaign?/switch" target="_top">
+				<input type="hidden" name="id" value={form.campaign.id} />
+				<button class="btn btn-primary" type="submit">{t('world.openCampaign')}<span class="visually-hidden"> {form.campaign.name}</span></button>
+			</form>
+		{/if}
 	{:else if form && 'preview' in form && form.preview}
 		{@const pv = form.preview}
 		<div role="status">
@@ -77,20 +86,41 @@
 			<ul>
 				{#each Object.entries(pv.counts) as [k, n] (k)}{#if n}<li>{t('world.done.' + k, { n })}</li>{/if}{/each}
 			</ul>
-			{#if pv.pageConflicts.length}
-				<p class="alert alert-error">{t('world.conflicts', { list: pv.pageConflicts.join(', ') })}</p>
-			{/if}
 		</div>
 		<form method="post" action="?/import">
 			<input type="hidden" name="token" value={form.token} />
 			<fieldset>
-				<legend>{t('world.conflictTitle')}</legend>
-				<label class="choice"><input type="radio" name="conflict" value="rename" checked /><span>{t('world.rename')}</span></label>
-				<label class="choice"><input type="radio" name="conflict" value="skip" /><span>{t('world.skip')}</span></label>
-				<label class="choice"><input type="radio" name="conflict" value="replace" /><span>{t('world.replace')}</span></label>
+				<legend>{t('world.target')}</legend>
+				<label class="choice"><input type="radio" name="target" value="here" bind:group={target} /><span>{t('world.targetHere', { name: data.campaign?.name ?? '' })}</span></label>
+				<label class="choice"><input type="radio" name="target" value="new" bind:group={target} /><span>{t('world.targetNew')}</span></label>
 			</fieldset>
-			{#if pv.hasCalendar}
-				<label class="choice"><input type="checkbox" name="calendar" /><span>{t('world.useCalendar')}</span></label>
+			{#if target === 'new'}
+				<div class="cols">
+					<div class="field">
+						<label for="campaign-name">{t('campaign.name')}</label>
+						<input id="campaign-name" name="name" type="text" required maxlength="80" value={pv.name} />
+					</div>
+					<div class="field">
+						<label for="campaign-master">{t('campaign.master')}</label>
+						<select id="campaign-master" name="masterId" required>
+							{#each data.masters as m (m.id)}<option value={m.id} selected={m.id === data.me}>{m.displayName} (@{m.username})</option>{/each}
+						</select>
+					</div>
+				</div>
+				<p class="hint">{t('world.newHint')}</p>
+			{:else}
+				{#if pv.pageConflicts.length}
+					<p class="alert alert-error">{t('world.conflicts', { list: pv.pageConflicts.join(', ') })}</p>
+				{/if}
+				<fieldset>
+					<legend>{t('world.conflictTitle')}</legend>
+					<label class="choice"><input type="radio" name="conflict" value="rename" checked /><span>{t('world.rename')}</span></label>
+					<label class="choice"><input type="radio" name="conflict" value="skip" /><span>{t('world.skip')}</span></label>
+					<label class="choice"><input type="radio" name="conflict" value="replace" /><span>{t('world.replace')}</span></label>
+				</fieldset>
+				{#if pv.hasCalendar}
+					<label class="choice"><input type="checkbox" name="calendar" /><span>{t('world.useCalendar')}</span></label>
+				{/if}
 			{/if}
 			<div class="actions">
 				<button class="btn btn-primary" type="submit">{t('world.confirm')}</button>

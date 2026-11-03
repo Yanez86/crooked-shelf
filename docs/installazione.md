@@ -161,4 +161,4 @@ Il database che c'era prima non viene cancellato: viene rinominato `crooked-shel
 Altri modi di portare via i dati (Amministrazione):
 
 - **Esporta in Markdown**: tutte le pagine come file di testo, apribili con Obsidian o qualsiasi editor.
-- **Pacchetto mondo** (`.shelf`): mappe, pagine, regole della casa, template, calendario e cronologia del mondo, da importare in un'altra wiki.
+- **Pacchetto mondo** (`.shelf`): mappe, pagine, regole della casa, template, calendario e cronologia del mondo, da importare in un'altra wiki: in una campagna che c'è già oppure in una nuova, creata apposta, che riprende anche la home del pacchetto.

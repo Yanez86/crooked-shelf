@@ -1,23 +1,14 @@
 import { fail, redirect } from '@sveltejs/kit';
-import { and, asc, eq, inArray, or, sql } from 'drizzle-orm';
+import { asc, sql } from 'drizzle-orm';
 import type { Actions, PageServerLoad } from './$types';
 import { getDb, schema } from '#lib/server/db/index.ts';
-import { deleteCampaign, getCampaign, saveCampaign, setMaster } from '#lib/server/campaigns.ts';
+import { deleteCampaign, getCampaign, masterCandidates, saveCampaign, setMaster } from '#lib/server/campaigns.ts';
 import { getSettings } from '#lib/server/settings.ts';
 import { newCampaign } from '#lib/server/templates.ts';
 import { requireAdmin } from '#lib/server/guard.ts';
 import { str } from '#lib/server/forms.ts';
 
-const { campaigns, campaignMembers, users } = schema;
-
-/** Chi può tenere una campagna: gli account attivi da Master o Admin, e chi ne tiene già una (per non cambiarlo di nascosto salvando il nome). */
-const masters = () =>
-	getDb()
-		.select({ id: users.id, displayName: users.displayName, username: users.username })
-		.from(users)
-		.where(or(and(inArray(users.role, ['master', 'admin']), eq(users.disabled, false)), sql`${users.id} IN (SELECT ${campaigns.masterId} FROM ${campaigns})`))
-		.orderBy(asc(users.displayName))
-		.all();
+const { campaigns, campaignMembers } = schema;
 
 export const load: PageServerLoad = () => ({
 	campaigns: getDb()
@@ -30,7 +21,7 @@ export const load: PageServerLoad = () => ({
 		.from(campaigns)
 		.orderBy(asc(campaigns.id))
 		.all(),
-	masters: masters()
+	masters: masterCandidates()
 });
 
 /** Nome e Master letti dal modulo; `error` se uno dei due non va bene. */
@@ -38,7 +29,7 @@ function read(f: FormData) {
 	const name = str(f, 'name', 80);
 	const masterId = Number(f.get('masterId'));
 	if (!name) return { error: 'errors.nameRequired' };
-	if (!masters().some((m) => m.id === masterId)) return { error: 'errors.generic' };
+	if (!masterCandidates().some((m) => m.id === masterId)) return { error: 'errors.generic' };
 	return { name, masterId };
 }
 

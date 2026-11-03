@@ -6,10 +6,10 @@ import { createPage, getPageBySlug, pageCover, pageMeta, uniquePageSlug, updateP
 import { cleanFields } from './pageForm.ts';
 import { categoryWithDescendants, createCategory, listCategories, categoryPath } from './taxonomy.ts';
 import { getCalendar, getSettings, customThemes } from './settings.ts';
-import { campaignId, ofCampaign, saveCampaign } from './campaigns.ts';
+import { campaignId, currentCampaign, ofCampaign, saveCampaign, type CampaignRow } from './campaigns.ts';
 import { getTimeline, listEvents, listTimelines, recomputeSortKeys, saveEvent, setTimelineMode, type EventVisibility } from './timeline.ts';
 import { createMap, getMap, getMapOfPage, saveLayer, savePin, updateMap } from './maps.ts';
-import { importTemplate } from './templates.ts';
+import { importTemplate, newCampaign, setHomePage } from './templates.ts';
 import { pageIcon } from '../pageIcons.ts';
 import { cleanCover, type PageCover } from '../covers.ts';
 import { storeTheme } from './themesAdmin.ts';
@@ -316,7 +316,9 @@ export function exportWorld(o: ExportOptions, u: Viewer): Uint8Array {
 		createdAt: new Date().toISOString(),
 		app: `Crooked Shelf ${__APP_VERSION__}`,
 		secrets,
-		counts
+		counts,
+		// La home, se è nel pacchetto: in una campagna nuova fatta dal pacchetto torna a essere la home. Manca nei pacchetti della 0.11 e precedenti.
+		home: list.find((p) => p.id === currentCampaign().homePageId)?.slug ?? null
 	});
 	return zipSync(out, { level: 6 });
 }
@@ -324,7 +326,7 @@ export function exportWorld(o: ExportOptions, u: Viewer): Uint8Array {
 // --- Importazione ---
 
 export interface Pack {
-	manifest: { format: string; version: number; name: string; secrets: boolean; counts: Record<string, number> };
+	manifest: { format: string; version: number; name: string; secrets: boolean; counts: Record<string, number>; home?: unknown };
 	entries: Record<string, Uint8Array>;
 }
 
@@ -404,7 +406,8 @@ const vis = (v: unknown): Visibility => (VIS3.includes(String(v)) ? (v as Visibi
 const eventVis = (v: unknown): EventVisibility => (VIS3.includes(String(v)) ? (v as EventVisibility) : 'players');
 const num = (v: unknown) => (typeof v === 'number' && Number.isInteger(v) ? v : null);
 
-export function importPack(pack: Pack, opts: { conflict: Conflict; calendar: boolean }, u: Viewer) {
+/** `home`: la home indicata dal pacchetto diventa la home della campagna (in una campagna nuova fatta dal pacchetto). */
+export function importPack(pack: Pack, opts: { conflict: Conflict; calendar: boolean; home?: boolean }, u: Viewer) {
 	const done = { pages: 0, skipped: 0, maps: 0, templates: 0, events: 0, themes: 0, categories: 0 };
 	const db = getDb();
 	const locale = getSettings().defaultLocale;
@@ -476,6 +479,8 @@ export function importPack(pack: Pack, opts: { conflict: Conflict; calendar: boo
 		written.push({ p, kind, page, replaced: !!existing });
 		done[kind === 'template' ? 'templates' : kind === 'map' ? 'maps' : 'pages']++;
 	}
+	const home = opts.home ? written.find((w) => w.kind === 'page' && w.p.slug === pack.manifest.home) : undefined;
+	if (home) setHomePage(home.page.id);
 
 	// La mappa di una pagina, dall'indirizzo che aveva nel pacchetto (o di una mappa che c'era già).
 	const mapIdOf = (slug: unknown) => {
@@ -594,6 +599,20 @@ export function importPack(pack: Pack, opts: { conflict: Conflict; calendar: boo
 		}
 	}
 	return done;
+}
+
+export type ImportDone = ReturnType<typeof importPack>;
+
+/**
+ * Il pacchetto in una campagna nuova, col suo calendario e la sua home. Le pagine di partenza arrivano dopo, e solo quelle
+ * che il pacchetto non ha: i template preinstallati se non porta template, la cronologia del mondo se non ne porta una.
+ */
+export function importAsCampaign(pack: Pack, o: { name: string; master: Viewer }, u: Viewer): { campaign: CampaignRow; done: ImportDone } {
+	let done: ImportDone | undefined;
+	const campaign = newCampaign(o.name, o.master, getSettings().defaultLocale, () => {
+		done = importPack(pack, { conflict: 'rename', calendar: true, home: true }, u);
+	});
+	return { campaign, done: done! };
 }
 
 // --- Esportazione in Markdown (tutta la wiki, come la vede chi esporta) ---

@@ -1,7 +1,7 @@
 import { and, eq, sql } from 'drizzle-orm';
 import { getDb, schema } from './db/index.ts';
 import { createPage, getPageById, getPageBySlug, type PageRow } from './pages.ts';
-import { campaignId, currentCampaign, inCampaign, insertCampaign, ofCampaign, saveCampaign, type CampaignRow } from './campaigns.ts';
+import { campaignId, currentCampaign, deleteCampaign, inCampaign, insertCampaign, ofCampaign, saveCampaign, type CampaignRow } from './campaigns.ts';
 import { createCategory, getCategoryBySlug, syncBranch } from './taxonomy.ts';
 import { setTimelineMode } from './timeline.ts';
 import { enabledPlugins, pluginTemplates } from './plugins.ts';
@@ -12,9 +12,9 @@ import { EMPTY_DOC, isDoc, type DocNode, type PageField } from '../content/types
 import { canView, isMaster, type Viewer } from '../access.ts';
 import { translate } from '../i18n/index.ts';
 import { slugify } from '../slug.ts';
-import { TIMELINE_MODES } from '../pageKinds.ts';
+import { TIMELINE_MODES, type TimelineMode } from '../pageKinds.ts';
 
-const { pages } = schema;
+const { pages, timelines } = schema;
 
 /** I template che chi guarda può fotocopiare, per titolo. */
 export function listTemplates(u: Viewer | null) {
@@ -99,17 +99,24 @@ export function setHomePage(id: number) {
 	syncBranch(id, null);
 }
 
+const hasTemplates = () => !!getDb().select({ id: pages.id }).from(pages).where(and(ofCampaign(pages), eq(pages.kind, 'template'))).get();
+const hasTimeline = (mode: TimelineMode) =>
+	!!getDb().select({ id: pages.id }).from(timelines).innerJoin(pages, eq(pages.id, timelines.pageId)).where(and(ofCampaign(pages), eq(timelines.mode, mode))).get();
+
 /**
  * Le pagine di partenza di una campagna nuova, nella sua lingua: la home, i template preinstallati nella cartella Template
- * e le due cronologie (del mondo e della campagna).
+ * e le due cronologie (del mondo e della campagna). Solo quelle che mancano: in una campagna nata da un pacchetto mondo
+ * la home, i template e la cronologia del mondo possono venire dal pacchetto.
  */
 export function seedWiki(locale: string, u: Viewer) {
 	const t = (k: string) => translate(locale, k);
 	getDb().transaction(() => {
-		createHomePage(u);
-		const folder = templateFolder(locale);
-		for (const id of BUILTIN_TEMPLATES) createTemplatePage(builtinTemplate(id, locale), `b:${id}`, folder, u);
-		for (const mode of TIMELINE_MODES)
+		if (!currentCampaign().homePageId) createHomePage(u);
+		if (!hasTemplates()) {
+			const folder = templateFolder(locale);
+			for (const id of BUILTIN_TEMPLATES) createTemplatePage(builtinTemplate(id, locale), `b:${id}`, folder, u);
+		}
+		for (const mode of TIMELINE_MODES.filter((m) => !hasTimeline(m)))
 			createPage(
 				{
 					kind: 'timeline',
@@ -128,13 +135,23 @@ export function seedWiki(locale: string, u: Viewer) {
 	});
 }
 
-/** Una campagna nuova, già pronta per il suo Master: pagine di partenza e template dei plugin accesi. */
-export function newCampaign(name: string, master: Viewer, locale: string): CampaignRow {
+/**
+ * Una campagna nuova, già pronta per il suo Master: pagine di partenza e template dei plugin accesi. `fill` la riempie
+ * prima (es. con un pacchetto mondo), così le pagine di partenza e i template che porta non si aggiungono due volte.
+ * Se qualcosa va storto la campagna sparisce: non ne resta una a metà.
+ */
+export function newCampaign(name: string, master: Viewer, locale: string, fill?: () => void): CampaignRow {
 	const c = insertCampaign(name, master.id);
-	inCampaign(c, () => {
-		seedWiki(locale, master);
-		for (const p of enabledPlugins()) installPluginTemplates(p.id, locale, master);
-	});
+	try {
+		inCampaign(c, () => {
+			fill?.();
+			seedWiki(locale, master);
+			for (const p of enabledPlugins()) installPluginTemplates(p.id, locale, master);
+		});
+	} catch (e) {
+		deleteCampaign(c.id);
+		throw e;
+	}
 	return c;
 }
 

@@ -178,7 +178,9 @@ L'Admin sceglie cosa includere:
 
 Esclusi di default: utenti e password, resoconti di sessione, cronologia della campagna, bacheche, contenuti `personale`. I contenuti segreti del Master sono esclusi di default ma includibili.
 
-In importazione: anteprima, gestione dei conflitti (pagina già esistente → salta / rinomina / sostituisci).
+In importazione: anteprima, poi si sceglie dove metterlo.
+- **In questa campagna**: gestione dei conflitti (pagina già esistente → salta / rinomina / sostituisci); il calendario del pacchetto solo se lo si chiede.
+- **In una campagna nuova** (nome e Master come in Amministrazione › Campagne): si importa tutto, col calendario del pacchetto; la pagina indicata come `home` nel manifest diventa la home. Dopo arrivano solo le pagine di partenza che mancano: la home vuota se il pacchetto non ne indica una, i template preinstallati se non porta template, la cronologia del mondo se non ne porta una, e sempre la cronologia della campagna; poi i template dei plugin accesi che non ha già. Se l'importazione si interrompe, la campagna viene eliminata.
 
 ### Export Markdown
 - Esportazione dell'intera wiki in cartelle Markdown, compatibile con altri strumenti (es. Obsidian).
@@ -262,7 +264,7 @@ Ogni fase si chiude con test automatici (unità, interfaccia con Playwright, acc
 - **Fotocopia**: alla nuova pagina passano blocchi, colonna a lato e icona del template (i segreti solo se chi crea è Master); se il template è di resoconti, anche i dati di sessione con la data di oggi. La pagina ricorda da quale template viene (colonna `template`), solo per informazione.
 - **Template dei plugin**: accendendo un plugin i suoi template diventano pagine della cartella Template, una volta sola; restano anche a plugin spento.
 - **Aggiornamento di una wiki esistente** (migrazione): ogni mappa diventa una pagina nella cartella Mappe (con lo stesso indirizzo se è libero, e la descrizione come testo); le due cronologie diventano due pagine con i loro eventi; i template del Master e quelli preinstallati diventano pagine della cartella Template. I vecchi indirizzi `/maps/…`, `/timeline/…` e `/templates` portano alle pagine nuove.
-- **Pacchetto mondo**: versione 2, le mappe (con pin e livelli), le cronologie del mondo (con gli eventi) e i template sono pagine di `pages.json` con il loro tipo; i pacchetti di versione 1 (`maps.json`, `timeline.json`, `templates.json`) si importano ancora. Nell'esportazione Markdown la mappa va in cima alla pagina e gli eventi in fondo, in elenco.
+- **Pacchetto mondo**: versione 2, le mappe (con pin e livelli), le cronologie del mondo (con gli eventi) e i template sono pagine di `pages.json` con il loro tipo; i pacchetti di versione 1 (`maps.json`, `timeline.json`, `templates.json`) si importano ancora. Il manifest indica la home (`home`, l'indirizzo della pagina, `null` se non è nel pacchetto); manca nei pacchetti della 0.11 e precedenti, che in una campagna nuova ricevono una home vuota. Nell'esportazione Markdown la mappa va in cima alla pagina e gli eventi in fondo, in elenco.
 
 ## 23. Decisioni prese
 

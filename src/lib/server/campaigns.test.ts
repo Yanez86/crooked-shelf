@@ -250,6 +250,18 @@ describe('eliminare una campagna', () => {
 		expect(currentCampaign().id).toBe(0);
 		expect(newCampaign('Da capo', dm, 'it').id).toBeGreaterThan(b.id);
 	});
+
+	it('una campagna nuova che si rompe mentre si riempie non resta a metà', () => {
+		const before = campaignsFor(admin, false).map((c) => c.id);
+		expect(() =>
+			newCampaign('A metà', dm, 'it', () => {
+				createPage({ ...base, title: 'Prima pagina' }, dm);
+				throw new Error('pacchetto rotto');
+			})
+		).toThrow('pacchetto rotto');
+		expect(campaignsFor(admin, false).map((c) => c.id)).toEqual(before);
+		expect(getDb().select().from(schema.pages).where(eq(schema.pages.title, 'Prima pagina')).all()).toEqual([]);
+	});
 });
 
 describe('migrazione', () => {

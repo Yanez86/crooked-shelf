@@ -149,9 +149,54 @@ test('il Master elimina la sua campagna, ma solo col nome giusto', async () => {
 	expect((await dm.goto('/')) && new URL(dm.url()).pathname).toBe('/campaign');
 });
 
+test("l'Admin fa una campagna nuova da un pacchetto mondo e la dà a un Master", async () => {
+	const templates = async () => {
+		await admin.goto('/wiki?kind=template');
+		return admin.locator('main .page-list > li').count();
+	};
+	const before = await templates();
+	expect(before).toBeGreaterThan(0);
+
+	await admin.goto('/admin/world');
+	await admin.getByLabel('Nome del pacchetto').fill('Costa della Spada');
+	const [download] = await Promise.all([admin.waitForEvent('download'), admin.getByRole('button', { name: 'Scarica il pacchetto' }).click()]);
+	await admin.getByLabel('File del pacchetto (.shelf)').setInputFiles((await download.path())!);
+	await admin.getByRole('button', { name: 'Controlla il contenuto' }).click();
+	await expect(admin.getByRole('radio', { name: /In questa campagna \(Le Cronache di Faerûn\)/ })).toBeChecked();
+	await expect(admin.locator('main')).toContainText('Esistono già');
+
+	// In una campagna nuova non c'è niente che esista già: si sceglie il nome (quello del pacchetto, di partenza) e il Master.
+	await admin.getByRole('radio', { name: 'In una campagna nuova' }).check();
+	await expect(admin.locator('main')).not.toContainText('Esistono già');
+	await expect(admin.getByRole('group', { name: 'Se una pagina o una mappa esiste già' })).toHaveCount(0);
+	await expect(admin.getByLabel('Nome della campagna')).toHaveValue('Costa della Spada');
+	await admin.getByLabel('Nome della campagna').fill('Ritorno a Faerûn');
+	await admin.getByLabel('Master', { exact: true }).selectOption({ label: 'Merlino (@merlino)' });
+	await axe(admin, 'pacchetto mondo: campagna nuova');
+	await admin.getByRole('button', { name: 'Importa', exact: true }).click();
+	await expect(admin.getByRole('status').first()).toContainText('Pacchetto importato nella campagna nuova «Ritorno a Faerûn».');
+	await axe(admin, 'pacchetto mondo: importato in una campagna nuova');
+
+	// La home è quella del pacchetto, e i template preinstallati non si sono aggiunti a quelli che porta.
+	await admin.getByRole('button', { name: 'Apri la campagna Ritorno a Faerûn' }).click();
+	await admin.waitForURL((u) => u.pathname === '/');
+	await expect(admin.locator('.brand')).toContainText('Ritorno a Faerûn');
+	await expect(admin.getByRole('heading', { level: 1, name: 'Le Cronache di Faerûn' })).toBeVisible();
+	expect(await templates()).toBe(before);
+
+	// Il Master, rimasto senza campagne, la trova pronta; i segreti non sono venuti col pacchetto.
+	await dm.goto('/');
+	await expect(dm.locator('.brand')).toContainText('Ritorno a Faerûn');
+	await dm.goto('/wiki/locanda-del-grifone');
+	await expect(dm.getByRole('heading', { level: 1, name: 'Locanda del Grifone' })).toBeVisible();
+	await expect(dm.locator('.content .secret')).toHaveCount(0);
+});
+
 test("l'Admin le elimina tutte e riparte da una nuova", async () => {
 	await admin.goto('/admin/campaigns');
 	await axe(admin, 'campagne: eliminazione');
+	await deleteCampaign(admin, 'Ritorno a Faerûn');
+	await expect(admin.getByRole('status')).toContainText('Campagna eliminata');
 	await deleteCampaign(admin, 'Le Cronache di Faerûn');
 	await expect(admin.getByRole('status')).toContainText('Campagna eliminata');
 	await expect(admin.getByRole('main')).toContainText('nessuna campagna');

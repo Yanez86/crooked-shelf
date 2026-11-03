@@ -3,20 +3,22 @@ import { readFileSync, mkdtempSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { strFromU8, strToU8, unzipSync, zipSync } from 'fflate';
+import { eq } from 'drizzle-orm';
 import { useMemoryDb, schema } from './db/index.ts';
 import { resetSettingsCache, getCalendar, customThemes } from './settings.ts';
 import { storeTheme } from './themesAdmin.ts';
-import { FIRST_CAMPAIGN, saveCampaign } from './campaigns.ts';
-import { createPage, getPageBySlug, listPages, pageCover } from './pages.ts';
+import { FIRST_CAMPAIGN, getCampaign, inCampaign, saveCampaign } from './campaigns.ts';
+import { createPage, getPageBySlug, listPages, pageCover, updatePage } from './pages.ts';
 import { createCategory } from './taxonomy.ts';
 import { createMap, listMaps, pinsOf, saveLayer, layersOf, savePin } from './maps.ts';
 import { getFile, saveImage } from './files.ts';
 import { saveEvent, listEvents, setTimelineMode, getTimeline, listTimelines } from './timeline.ts';
-import { listTemplates } from './templates.ts';
-import { exportMarkdown, exportWorld, importPack, previewPack, readPack, type ExportOptions } from './worldpack.ts';
+import { homePage, listTemplates, seedWiki } from './templates.ts';
+import { exportMarkdown, exportWorld, importAsCampaign, importPack, previewPack, readPack, type ExportOptions, type Pack } from './worldpack.ts';
 import { hasRule } from './rules/index.ts';
 import { preset } from '../calendar.ts';
 import { THEMES } from '../themes.ts';
+import { BUILTIN_TEMPLATES } from '../templates.ts';
 import { inlineLinks, stripSecrets } from '../content/extract.ts';
 import { ruleTarget, type RuleKind } from '../rules/index.ts';
 import type { DocNode } from '../content/types.ts';
@@ -225,6 +227,73 @@ describe('pacchetto mondo', () => {
 			}
 			if (page.visibility !== 'master') expect(JSON.stringify([stripSecrets(content), page.fields])).not.toMatch(spoiler);
 		}
+	});
+
+	describe('in una campagna nuova', () => {
+		const dm = { id: 2, role: 'master' as const };
+		const read = (bytes: Uint8Array): Pack => {
+			const r = readPack(bytes);
+			if (!r.ok) throw new Error(r.error);
+			return r.pack;
+		};
+		const pagesOf = (id: number) => db.select().from(schema.pages).where(eq(schema.pages.campaignId, id)).all();
+		beforeEach(() => {
+			db.insert(schema.users).values({ id: 2, username: 'm', displayName: 'M', passwordHash: 'x', role: 'master', createdAt: 0 }).run();
+		});
+
+		it('la home e i template sono quelli del pacchetto: niente doppioni delle pagine di partenza', () => {
+			saveCampaign(FIRST_CAMPAIGN, { name: 'Faerûn', calendar: preset('harptos', 'it') });
+			seedWiki('it', admin);
+			const home = homePage(admin)!;
+			updatePage(home, { ...base, visibility: 'public', title: home.title, content: { type: 'doc', content: [p('Benvenuti sulla Costa.')] } }, admin, true);
+			createPage({ ...base, title: 'Bartolo' }, admin);
+			const bytes = exportWorld(all, admin);
+			expect(JSON.parse(strFromU8(unzipSync(bytes)['manifest.json'])).home).toBe(home.slug);
+			const before = pagesOf(FIRST_CAMPAIGN).length;
+
+			const { campaign, done } = importAsCampaign(read(bytes), { name: 'Faerûn, di nuovo', master: dm }, admin);
+			expect(done).toMatchObject({ templates: BUILTIN_TEMPLATES.length, skipped: 0 });
+			expect(getCampaign(campaign.id)).toMatchObject({ name: 'Faerûn, di nuovo', masterId: 2, calendar: { name: 'Harptos' } });
+			inCampaign(getCampaign(campaign.id)!, () => {
+				const newHome = homePage(dm)!;
+				expect(newHome.title).toBe('Faerûn');
+				expect(JSON.stringify(newHome.content)).toContain('Benvenuti sulla Costa.');
+				expect(getCalendar().name).toBe('Harptos');
+				expect(listTemplates(dm)).toHaveLength(BUILTIN_TEMPLATES.length);
+				expect(listTimelines(dm, 'world').map((t) => t.slug)).toEqual(['cronologia-del-mondo']);
+				expect(listTimelines(dm, 'campaign')).toHaveLength(1);
+				expect(getPageBySlug('bartolo')).toBeDefined();
+			});
+			// Tutte quelle del pacchetto, più la cronologia della campagna (che il pacchetto non porta mai); la prima campagna è com'era.
+			expect(pagesOf(campaign.id).filter((x) => !x.slug.endsWith('-2'))).toHaveLength(pagesOf(campaign.id).length);
+			expect(pagesOf(campaign.id)).toHaveLength(before);
+			expect(pagesOf(FIRST_CAMPAIGN)).toHaveLength(before);
+		});
+
+		it('quello che il pacchetto non ha arriva come in ogni campagna nuova', () => {
+			// Senza home (es. un pacchetto della 0.11), senza template e senza cronologie.
+			createPage({ ...base, title: 'Bartolo' }, admin);
+			const bytes = exportWorld({ ...all, templates: false, timeline: false }, admin);
+			expect(JSON.parse(strFromU8(unzipSync(bytes)['manifest.json'])).home).toBeNull();
+
+			const { campaign } = importAsCampaign(read(bytes), { name: 'Bartolo', master: dm }, admin);
+			inCampaign(getCampaign(campaign.id)!, () => {
+				// La home nasce dopo il pacchetto: le sue pagine tengono il loro indirizzo.
+				expect(getPageBySlug('bartolo')!.id).not.toBe(homePage(dm)!.id);
+				expect(homePage(dm)).toMatchObject({ title: 'Bartolo', slug: 'bartolo-2' });
+				expect(listTemplates(dm)).toHaveLength(BUILTIN_TEMPLATES.length);
+				expect(listTimelines(dm).map((t) => t.mode).sort()).toEqual(['campaign', 'world']);
+			});
+		});
+
+		it('in una campagna che esiste già la home del pacchetto resta una pagina', () => {
+			seedWiki('it', admin);
+			const home = homePage(admin)!;
+			const bytes = exportWorld(all, admin);
+			importPack(read(bytes), { conflict: 'rename', calendar: false }, admin);
+			expect(homePage(admin)!.id).toBe(home.id);
+			expect(getPageBySlug(`${home.slug}-2`)).toBeDefined();
+		});
 	});
 
 	it('rifiuta file che non sono pacchetti', () => {
