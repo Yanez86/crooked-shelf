@@ -59,11 +59,20 @@
 	},
 	"footer": {
 		"source": "Source code",
-		"changelog": "What's new in version {v}"
+		"changelog": "What's new in version {v}",
+		"info": "About"
 	},
 	"changelog": {
 		"title": "What's new",
 		"current": "Running version: {v}."
+	},
+	"info": {
+		"title": "About",
+		"what": "Crooked Shelf is a wiki for tabletop role-playing campaigns. It holds your group's pages, maps, timelines, calendars and sessions.",
+		"free": "It is an open source project, free as in freedom and free of charge: you can use it, study it, change it and share it. The code is on GitHub, under the AGPL-3.0 license.",
+		"ai": "It is built with the help of artificial intelligence.",
+		"links": "Links",
+		"soon": "(under construction)"
 	},
 	"search": {
 		"label": "Search the wiki",

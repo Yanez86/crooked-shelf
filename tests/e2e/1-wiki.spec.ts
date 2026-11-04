@@ -930,6 +930,20 @@ test('amministrazione: versione installata e controllo su GitHub', async () => {
 	await axe(admin, 'versione');
 });
 
+test('pagina Info: che cos\'è Crooked Shelf e i collegamenti', async () => {
+	await admin.goto('/wiki');
+	await admin.getByRole('contentinfo').getByRole('link', { name: 'Info', exact: true }).click();
+	await expect(admin).toHaveURL(/\/info$/);
+	await expect(admin.getByRole('heading', { level: 1, name: 'Info' })).toBeVisible();
+	await expect(admin.getByText('open source, libero e gratuito')).toBeVisible();
+	const links = admin.getByRole('navigation', { name: 'Collegamenti' });
+	await expect(links.getByRole('link', { name: 'GitHub' })).toHaveAttribute('href', 'https://github.com/yanez86/crooked-shelf');
+	await expect(links.getByRole('link', { name: 'happysquid.ink' })).toHaveAttribute('href', 'https://happysquid.ink');
+	await expect(links.getByRole('link', { name: /crookedshelf\.quest \(in costruzione\)/ })).toHaveAttribute('href', 'https://crookedshelf.quest');
+	await shot(admin, 'info');
+	await axe(admin, 'info');
+});
+
 test('tastiera: link per saltare al contenuto', async () => {
 	await admin.goto('/wiki');
 	await admin.keyboard.press('Tab');

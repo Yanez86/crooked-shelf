@@ -221,6 +221,7 @@ ${iconCss()}</style>`}
 		<div class="container" class:wide class:bare>
 			<p>
 				<a href="/changelog" title={t('footer.changelog', { v: data.version })}>Crooked Shelf {data.version}</a> ·
+				<a href="/info">{t('footer.info')}</a> ·
 				<a href={REPO} rel="noopener noreferrer">{t('footer.source')}</a> ·
 				<a href="{REPO}/blob/main/LICENSE" rel="noopener noreferrer" hreflang="en">AGPL-3.0</a>
 			</p>
