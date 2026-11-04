@@ -13,7 +13,9 @@
 	const t = getT();
 
 	// Una scheda per indirizzo (?tab=…): i moduli ci tornano dopo l'invio, e l'esito si vede accanto al modulo che l'ha prodotto.
-	const TABS = ['general', 'players', 'schedule', 'claude'] as const;
+	// La scheda Appuntamenti c'è solo con l'opzione accesa (in Generale).
+	const ALL_TABS = ['general', 'players', 'schedule', 'claude'] as const;
+	const TABS = $derived(ALL_TABS.filter((x) => x !== 'schedule' || data.campaign?.schedule));
 	const tab = $derived(TABS.find((x) => x === page.url.searchParams.get('tab')) ?? 'general');
 	const msg = (s: string) => (form?.section === s ? form : null);
 	const claudeOn = $derived(!!data.claude && (!!data.claude.access || data.claude.clients.length > 0));
@@ -51,6 +53,16 @@
 					<input id="campaign-name" name="name" type="text" required maxlength="80" value={data.campaign.name} />
 				</div>
 				<p>{t('campaign.master')}: <strong>{data.master ?? '—'}</strong></p>
+				<button class="btn btn-primary" type="submit"><Icon name="save" />{t('common.save')}</button>
+			</form>
+
+			<h2 id="features-title">{t('campaign.features')}</h2>
+			<form method="post" action="?/features" class="card" aria-labelledby="features-title">
+				<FormOk message={msg('features')?.ok} />
+				<div class="field">
+					<label class="choice"><input type="checkbox" name="schedule" checked={data.campaign.schedule} aria-describedby="schedule-hint" />{t('campaign.scheduleToggle')}</label>
+					<span id="schedule-hint" class="hint">{t('campaign.scheduleHint')}</span>
+				</div>
 				<button class="btn btn-primary" type="submit"><Icon name="save" />{t('common.save')}</button>
 			</form>
 

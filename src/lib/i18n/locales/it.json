@@ -1234,7 +1234,10 @@
 		"noSheet": "Nessuna scheda",
 		"claudeOn": "Collegato",
 		"claudeOff": "Non collegato",
-		"danger": "Zona pericolosa"
+		"danger": "Zona pericolosa",
+		"features": "Opzioni",
+		"scheduleToggle": "Appuntamenti",
+		"scheduleHint": "Il calendario delle sessioni: date, risposte dei giocatori in presenza o da remoto, regola del minimo e Stars & Wishes. Spenti, non si vedono più, ma niente viene cancellato."
 	},
 	"schedule": {
 		"title": "Appuntamenti",

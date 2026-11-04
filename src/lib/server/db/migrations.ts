@@ -426,7 +426,13 @@ export const MIGRATIONS: (string | ((db: Database.Database) => void) | { rebuild
 	CREATE INDEX audit_log_at ON audit_log(at);
 	`,
 	// Il segreto del Master è la visibilità di un blocco, e ogni blocco ha il suo id (vedi db/blocks.ts).
-	blocksMigration
+	blocksMigration,
+	// Appuntamenti come opzione della campagna: spenti per le nuove, accesi per quelle che c'erano già.
+	// Su un database nuovo la prima campagna nasce dalle migrazioni prima che ci siano utenti: quella resta spenta.
+	`
+	ALTER TABLE campaigns ADD COLUMN schedule INTEGER NOT NULL DEFAULT 0;
+	UPDATE campaigns SET schedule = 1 WHERE EXISTS (SELECT 1 FROM users);
+	`
 ];
 
 /** Tabella file_uses, riempita da pagine (testo, colonna a lato, copertina, anche nel cestino e nelle versioni), mappe, risorse, temi e avatar. */

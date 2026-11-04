@@ -6,9 +6,9 @@ import { str } from '#lib/server/forms.ts';
 import { monthSchedule, monthStarWishes, saveStarWish, setAnswer, skipDate } from '#lib/server/schedule.ts';
 import { ANSWERS, DATE_RE, localDate, MONTH_RE, shiftMonth, type Answer } from '#lib/schedule.ts';
 
-/** Gli appuntamenti sono del tavolo: il Master e i giocatori della campagna, non i visitatori (c'è il link del remoto). */
+/** Gli appuntamenti sono del tavolo: il Master e i giocatori della campagna, non i visitatori (c'è il link del remoto). Solo se la campagna li ha accesi. */
 function table(locals: App.Locals) {
-	if (!locals.user || !locals.campaign) error(404, 'Not found');
+	if (!locals.user || !locals.campaign?.schedule) error(404, 'Not found');
 	return { campaign: locals.campaign, me: locals.user };
 }
 

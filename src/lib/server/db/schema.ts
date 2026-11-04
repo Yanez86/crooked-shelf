@@ -35,6 +35,8 @@ export const campaigns = sqliteTable('campaigns', {
 	pcFolderId: integer('pc_folder_id'),
 	/** Il template delle schede nuove; null = pagina bianca. */
 	sheetTemplateId: integer('sheet_template_id'),
+	/** Appuntamenti (calendario delle sessioni, remoto, regola del minimo, Stars & Wishes): un'opzione che il Master accende. Spenta, i dati restano. */
+	schedule: integer('schedule', { mode: 'boolean' }).notNull().default(false),
 	/** Appuntamenti: il link per giocare da remoto (Discord o altro), se l'appuntamento non ne ha uno suo. */
 	remoteLink: text('remote_link'),
 	/** Sotto questi giocatori confermati la sessione salta (0 = nessuna regola)… */

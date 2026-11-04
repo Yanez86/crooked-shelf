@@ -1234,7 +1234,10 @@
 		"noSheet": "No sheet",
 		"claudeOn": "Connected",
 		"claudeOff": "Not connected",
-		"danger": "Danger zone"
+		"danger": "Danger zone",
+		"features": "Options",
+		"scheduleToggle": "Schedule",
+		"scheduleHint": "The game session calendar: dates, players' answers in person or remote, the minimum rule and Stars & Wishes. When off they're hidden, but nothing is deleted."
 	},
 	"schedule": {
 		"title": "Schedule",

@@ -26,8 +26,8 @@ export const load: PageServerLoad = ({ locals }) => {
 		empty: listPages(u, { kind: 'page', limit: 1, exclude: found?.id, noSheets: true }).total === 0,
 		// Chi è al tavolo: il Master e i giocatori, con le loro schede (non per i visitatori).
 		table: tableOf(u),
-		// Gli appuntamenti, come la pagina Appuntamenti: per chi ha un account nella campagna.
-		schedule: u && locals.campaign ? upcoming(u.id) : null,
+		// Gli appuntamenti, come la pagina Appuntamenti: per chi ha un account nella campagna, se la campagna li ha accesi.
+		schedule: u && locals.campaign?.schedule ? upcoming(u.id) : null,
 		recent: rows,
 		added: listPages(u, { ...recent, sort: 'created' }).rows,
 		world: [

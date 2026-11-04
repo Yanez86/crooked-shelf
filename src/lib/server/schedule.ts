@@ -112,6 +112,7 @@ function scheduleBetween(from: string, to: string, now: number) {
  * ponytail: la prossima si cerca entro un anno, come per Stars & Wishes.
  */
 export function upcoming(userId: number, now = Date.now()) {
+	if (!currentCampaign().schedule) return null;
 	const today = localDate(new Date(now));
 	const master = currentCampaign().masterId;
 	// Da ieri: una sessione che passa la mezzanotte è ancora in corso.
@@ -139,7 +140,7 @@ export function upcoming(userId: number, now = Date.now()) {
  * ponytail: si guarda un anno indietro e uno avanti; una sessione di più di un anno fa non chiede più niente.
  */
 export function openStarWish(userId: number, now = Date.now()) {
-	if (!currentCampaign().starWishes) return null;
+	if (!currentCampaign().schedule || !currentCampaign().starWishes) return null;
 	const today = localDate(new Date(now));
 	const o = starWishSession(scheduleBetween(shiftDay(today, -366), shiftDay(today, 366), now), now);
 	if (!o || ![...o.answers.in_person, ...o.answers.remote].some((p) => p.id === userId)) return null;

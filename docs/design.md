@@ -2,7 +2,7 @@
 
 Wiki self-hosted per creare, curare e registrare campagne di giochi di ruolo da tavolo (pensata per D&D 5.5, aperta ad altri sistemi).
 
-> Stato: **in uso**, versione 0.14.0. Le novità di ogni versione sono in [CHANGELOG.md](../CHANGELOG.md).
+> Stato: **in uso**, versione 0.15.0. Le novità di ogni versione sono in [CHANGELOG.md](../CHANGELOG.md).
 
 ## 1. Obiettivi
 

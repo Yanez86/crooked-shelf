@@ -33,7 +33,8 @@ export const load: LayoutServerLoad = ({ locals, cookies, request, url, depends,
 		locale: locals.locale,
 		siteName: s.siteName,
 		asPlayer: locals.asPlayer,
-		campaign: locals.campaign && { id: locals.campaign.id, name: locals.campaign.name },
+		// Gli appuntamenti sono un'opzione della campagna: spenti, la barra non ne ha la voce.
+		campaign: locals.campaign && { id: locals.campaign.id, name: locals.campaign.name, schedule: locals.campaign.schedule },
 		campaigns: locals.campaigns.map(({ id, name }) => ({ id, name })),
 		version: __APP_VERSION__,
 		themeCss: themeCss(extra),
@@ -46,6 +47,6 @@ export const load: LayoutServerLoad = ({ locals, cookies, request, url, depends,
 		treeTags: tree ? listTags(u, isMaster(u)).map(({ id, name, slug, color, count }) => ({ id, name, slug, color, count })) : null,
 		resources: tree ? resourceEntries(u).map(({ id, title, kind }) => ({ id, title, kind })) : null,
 		// Nella vista giocatore il Master guarda soltanto: niente domande.
-		starWish: entered && !locals.asPlayer ? openStarWish(u!.id) : null
+		starWish: entered && !locals.asPlayer && locals.campaign!.schedule ? openStarWish(u!.id) : null
 	};
 };

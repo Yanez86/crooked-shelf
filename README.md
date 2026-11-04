@@ -2,7 +2,7 @@
 
 **English** · [Italiano](#italiano)
 
-A self-hosted wiki for tabletop RPG campaigns. Built for D&D 5.5, usable with any system. Version 0.14.0.
+A self-hosted wiki for tabletop RPG campaigns. Built for D&D 5.5, usable with any system. Version 0.15.0.
 
 ## How it works
 
@@ -14,7 +14,7 @@ You install it once on a computer (PC, Raspberry Pi or VPS) and everyone uses it
 - **Master's secrets**: the Master hides single blocks with the eye icon. Players never receive them, not even in search, versions or exports, and can still edit the page.
 - **Page types**: page, template, map (pins and layers), timeline (fantasy calendars), board (cards in columns).
 - **Player sheets**: every player gets a page in the PCs folder when they join.
-- **Sessions**: a calendar of game dates. Players answer in person, remote or absent; below a minimum the session is cancelled. After each session, optional Stars & Wishes feedback.
+- **Sessions**: a calendar of game dates. Players answer in person, remote or absent; below a minimum the session is cancelled. After each session, optional Stars & Wishes feedback. An option the Master turns on per campaign.
 - **Rules**: `@spell[Fireball]` shows the SRD 5.2 text; the D&D Beyond plugin links to the site.
 - **Resources and gallery**: images, audio and files of the campaign in one place.
 - **History**: every save is a version; deleted pages go to the trash.
@@ -58,7 +58,7 @@ SRD 5.2 texts: Wizards of the Coast, CC-BY-4.0; data from the 5e-database projec
 
 [English](#crooked-shelf) · **Italiano**
 
-Una wiki self-hosted per campagne di giochi di ruolo da tavolo. Pensata per D&D 5.5, usabile con ogni sistema. Versione 0.14.0.
+Una wiki self-hosted per campagne di giochi di ruolo da tavolo. Pensata per D&D 5.5, usabile con ogni sistema. Versione 0.15.0.
 
 ## Come funziona
 
@@ -70,7 +70,7 @@ La installi una volta su un computer (PC, Raspberry Pi o VPS) e tutti la usano d
 - **Segreti del Master**: il Master oscura un singolo blocco con l'occhio. Ai giocatori non arriva mai, neanche nella ricerca, nelle versioni o nelle esportazioni, e possono comunque modificare la pagina.
 - **Tipi di pagina**: pagina, template, mappa (pin e livelli), cronologia (calendari fantasy), bacheca (schede in colonne).
 - **Schede giocatore**: ogni giocatore ha una pagina nella cartella PG, creata quando entra.
-- **Appuntamenti**: il calendario delle sessioni. I giocatori rispondono in presenza, da remoto o assenti; sotto il minimo la sessione salta. Dopo ogni sessione, Stars & Wishes facoltativo.
+- **Appuntamenti**: il calendario delle sessioni. I giocatori rispondono in presenza, da remoto o assenti; sotto il minimo la sessione salta. Dopo ogni sessione, Stars & Wishes facoltativo. È un'opzione che il Master accende per ogni campagna.
 - **Regole**: `@incantesimo[Fireball]` mostra il testo SRD 5.2; il plugin D&D Beyond porta al sito.
 - **Risorse e galleria**: immagini, audio e file della campagna in un posto solo.
 - **Storia**: ogni salvataggio è una versione; le pagine eliminate vanno nel cestino.

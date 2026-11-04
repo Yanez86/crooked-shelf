@@ -5,9 +5,9 @@ import { str } from '#lib/server/forms.ts';
 import { deleteAppointment, getAppointment, saveAppointment, type AppointmentInput } from '#lib/server/schedule.ts';
 import { DATE_RE, localDate, MODES, REPEATS, TIME_RE, webLink, type Mode, type Repeat } from '#lib/schedule.ts';
 
-/** Gli appuntamenti li scrive solo il Master della campagna. `new` per uno nuovo. */
+/** Gli appuntamenti li scrive solo il Master della campagna, se li ha accesi. `new` per uno nuovo. */
 function target(locals: App.Locals, id: string) {
-	if (!locals.campaign || !isMaster(locals.user)) error(404, 'Not found');
+	if (!locals.campaign?.schedule || !isMaster(locals.user)) error(404, 'Not found');
 	if (id === 'new') return null;
 	return getAppointment(Number(id)) ?? error(404, 'Not found');
 }

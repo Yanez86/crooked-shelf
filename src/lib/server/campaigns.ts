@@ -19,7 +19,7 @@ export const AS_PLAYER_COOKIE = 'cs_as_player';
 /** Creata dalla migrazione, così la configurazione iniziale la trova pronta; poi si può eliminare come le altre. */
 export const FIRST_CAMPAIGN = 1;
 /** Per chi non ha campagne: nessuna riga ha questo id, quindi non si legge niente e non si scrive niente. */
-export const NO_CAMPAIGN: CampaignRow = { id: 0, name: '', masterId: null, homePageId: null, calendar: null, createdAt: 0, pcFolderId: null, sheetTemplateId: null, remoteLink: null, minPlayers: 0, quorumHours: 24, starWishes: false };
+export const NO_CAMPAIGN: CampaignRow = { id: 0, name: '', masterId: null, homePageId: null, calendar: null, createdAt: 0, pcFolderId: null, sheetTemplateId: null, remoteLink: null, minPlayers: 0, quorumHours: 24, starWishes: false, schedule: false };
 
 const current = new AsyncLocalStorage<CampaignRow>();
 

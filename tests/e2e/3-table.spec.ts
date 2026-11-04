@@ -306,6 +306,29 @@ test('schede giocatore: la cartella PG, chi è al tavolo, le pagine dentro la sc
 	await expect(admin.locator('.content .secret')).toContainText('corona del duca');
 });
 
+test('appuntamenti: un\'opzione della campagna, spenta finché il Master non la accende', async ({ browser }) => {
+	const p = await login(browser, PLAYER);
+	// Spenti: niente voce nella barra, niente scheda nella pagina Campagna, e le pagine non ci sono.
+	await admin.goto('/');
+	await expect(admin.locator('#explorer').getByRole('link', { name: 'Appuntamenti' })).toHaveCount(0);
+	expect((await admin.goto('/schedule'))?.status()).toBe(404);
+	expect((await admin.goto('/schedule/new'))?.status()).toBe(404);
+	expect((await p.goto('/schedule'))?.status()).toBe(404);
+	await admin.goto('/campaign?tab=schedule');
+	await expect(admin.getByRole('navigation', { name: 'Sezioni della campagna' }).getByRole('link', { name: 'Appuntamenti' })).toHaveCount(0);
+	await expect(admin.locator('form[action="?/schedule&tab=schedule"]')).toHaveCount(0);
+	// Il Master li accende in Generale.
+	const opts = admin.locator('form[action="?/features"]');
+	await opts.getByLabel('Appuntamenti').check();
+	await opts.getByRole('button', { name: 'Salva' }).click();
+	await expect(opts.getByRole('status')).toContainText('Modifiche salvate');
+	await axe(admin, 'campagna: opzioni');
+	await expect(admin.locator('#explorer').getByRole('link', { name: 'Appuntamenti' })).toHaveCount(1);
+	await p.goto('/');
+	await expect(p.locator('#explorer').getByRole('link', { name: 'Appuntamenti' })).toHaveCount(1);
+	await p.context().close();
+});
+
 test('appuntamenti: il Master fissa i giovedì, i giocatori rispondono, sotto il minimo si salta', async ({ browser }) => {
 	// Nella pagina Campagna: il link per il remoto e la regola del minimo.
 	await admin.goto('/campaign?tab=schedule');

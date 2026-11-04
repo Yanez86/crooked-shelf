@@ -13,7 +13,8 @@ const here = <T>(fn: () => T) => inCampaign(c, fn);
 beforeEach(() => {
 	const db = useMemoryDb();
 	names.forEach((n, i) => db.insert(schema.users).values({ id: i + 1, role: i ? 'player' : 'master', username: n.toLowerCase(), displayName: n, passwordHash: 'x', createdAt: 0 }).run());
-	c = insertCampaign('Ombre', 1);
+	// Gli appuntamenti sono un'opzione: qui accesa.
+	c = saveCampaign(insertCampaign('Ombre', 1).id, { schedule: true });
 	other = insertCampaign('Altra', 1);
 	addMember(c.id, 2);
 	addMember(c.id, 3);
@@ -88,15 +89,31 @@ describe('appuntamenti nel server', () => {
 		here(() => setAnswer(a.id, '2026-11-19', 2, 'no'));
 		// Giovedì 12 alle 21: la sessione è in corso, ed è la prossima.
 		const now = new Date(2026, 10, 12, 21).getTime();
-		const u = here(() => upcoming(2, now));
+		const u = here(() => upcoming(2, now))!;
 		expect(u.next).toMatchObject({ date: '2026-11-12', answer: null });
 		// Il 19 Alice ha già risposto; dicembre è un altro mese.
 		expect(u.toAnswer.map((o) => o.date)).toEqual(['2026-11-26']);
 		// Il Master non risponde: niente da chiedergli, e la sua prossima sessione ha il modo scelto nell'appuntamento.
-		expect(here(() => upcoming(1, now)).toAnswer).toEqual([]);
-		expect(here(() => upcoming(1, now)).next).toMatchObject({ date: '2026-11-12', answer: 'in_person' });
+		expect(here(() => upcoming(1, now))!.toAnswer).toEqual([]);
+		expect(here(() => upcoming(1, now))!.next).toMatchObject({ date: '2026-11-12', answer: 'in_person' });
 		here(() => saveAppointment({ ...thursdays, remote: true, masterMode: 'remote' }, a.id));
-		expect(here(() => upcoming(1, now)).next).toMatchObject({ answer: 'remote' });
+		expect(here(() => upcoming(1, now))!.next).toMatchObject({ answer: 'remote' });
 		expect(here(() => monthSchedule('2026-11'))[0]).toMatchObject({ masterMode: 'remote' });
+	});
+
+	it('con gli appuntamenti spenti: niente in home e niente Stars & Wishes, ma i dati restano', () => {
+		saveCampaign(c.id, { starWishes: true });
+		c = { ...c, starWishes: true };
+		const a = here(() => saveAppointment(thursdays))!;
+		here(() => setAnswer(a.id, '2026-11-05', 2, 'in_person'));
+		const friday = new Date(2026, 10, 6, 12).getTime();
+		expect(here(() => openStarWish(2, friday))).not.toBeNull();
+		c = saveCampaign(c.id, { schedule: false });
+		expect(here(() => upcoming(2, friday))).toBeNull();
+		expect(here(() => openStarWish(2, friday))).toBeNull();
+		expect(here(() => saveStarWish(2, 'Il drago', '', friday))).toBe(false);
+		// Riaccesi, tutto torna com'era.
+		c = saveCampaign(c.id, { schedule: true });
+		expect(here(() => openStarWish(2, friday))).toEqual({ id: a.id, title: 'Sessione', date: '2026-11-05' });
 	});
 });
