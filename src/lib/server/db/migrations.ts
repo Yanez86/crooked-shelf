@@ -394,5 +394,10 @@ export const MIGRATIONS: (string | ((db: Database.Database) => void) | { rebuild
 	// Avatar: un'immagine caricata dall'utente al posto dell'icona.
 	`
 	ALTER TABLE users ADD COLUMN avatar TEXT REFERENCES files(id) ON DELETE SET NULL;
+	`,
+	// Appuntamenti: anche il Master dice come gioca, in presenza o da remoto.
+	`
+	ALTER TABLE appointments ADD COLUMN master_mode TEXT NOT NULL DEFAULT 'in_person' CHECK (master_mode IN ('in_person','remote'));
+	UPDATE appointments SET master_mode = 'remote' WHERE in_person = 0;
 	`
 ];

@@ -4,7 +4,7 @@ import { ROLES, VISIBILITIES } from '../../roles.ts';
 import { PAGE_KINDS, TIMELINE_MODES } from '../../pageKinds.ts';
 import type { PageField, SessionInfo } from '../../content/types.ts';
 import type { Calendar } from '../../calendar.ts';
-import { ANSWERS, REPEATS } from '../../schedule.ts';
+import { ANSWERS, MODES, REPEATS } from '../../schedule.ts';
 
 export const users = sqliteTable('users', {
 	id: integer('id').primaryKey({ autoIncrement: true }),
@@ -384,6 +384,8 @@ export const appointments = sqliteTable(
 		ends: text('ends').notNull(),
 		inPerson: integer('in_person', { mode: 'boolean' }).notNull(),
 		remote: integer('remote', { mode: 'boolean' }).notNull(),
+		/** Come gioca il Master che prepara l'appuntamento: uno dei modi ammessi. */
+		masterMode: text('master_mode', { enum: MODES }).notNull().default('in_person'),
 		/** Dove ci si trova, in presenza. */
 		place: text('place').notNull().default(''),
 		/** Il link per il remoto; null = quello della campagna. */

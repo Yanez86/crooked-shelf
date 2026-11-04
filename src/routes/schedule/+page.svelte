@@ -56,6 +56,12 @@
 			<dt>{t('schedule.remote')}</dt>
 			<dd>{#if o.link}<a href={o.link} target="_blank" rel="noopener noreferrer">{o.link}</a>{:else}—{/if}</dd>
 		{/if}
+		{#if data.master}
+			<dt>{t('campaign.master')}</dt>
+			<dd>
+				<span class="people master-row"><UserIcon icon={data.master.icon} avatar={data.master.avatar} size="1.5rem" />{data.master.name} · {t(o.masterMode === 'in_person' ? 'schedule.inPerson' : 'schedule.remote')}</span>
+			</dd>
+		{/if}
 		{#each [...CHOICES, 'waiting'] as k (k)}
 			{#if o.answers[k as Answer | 'waiting'].length}
 				<dt>{t('schedule.answers.' + k)}</dt>
@@ -165,7 +171,7 @@
 														{#if data.master || o.answers.in_person.length + o.answers.remote.length + o.answers.no.length}
 															<span class="faces" aria-hidden="true">
 																{#if data.master}
-																	<span class="face master" title="{data.master.name}: {t('campaign.master')}"><UserIcon icon={data.master.icon} avatar={data.master.avatar} size="1.25rem" /></span>
+																	<span class="face master" title="{data.master.name}: {t('campaign.master')}, {t(o.masterMode === 'in_person' ? 'schedule.inPerson' : 'schedule.remote').toLowerCase()}"><UserIcon icon={data.master.icon} avatar={data.master.avatar} size="1.25rem" /></span>
 																{/if}
 																{#each CHOICES as k (k)}
 																	{#each o.answers[k] as p (p.id)}
@@ -375,7 +381,8 @@
 		flex-wrap: wrap;
 		gap: 0.25rem 0.75rem;
 	}
-	.people li {
+	.people li,
+	.master-row {
 		display: inline-flex;
 		align-items: center;
 		gap: 0.35rem;

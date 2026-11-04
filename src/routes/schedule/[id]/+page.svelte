@@ -2,7 +2,7 @@
 	import { getT } from '#lib/i18n/index.ts';
 	import Icon from '#lib/components/Icon.svelte';
 	import FormError from '#lib/components/FormError.svelte';
-	import { REPEATS } from '#lib/schedule.ts';
+	import { MODES, REPEATS } from '#lib/schedule.ts';
 	import { untrack } from 'svelte';
 	import type { PageProps } from './$types';
 
@@ -13,6 +13,10 @@
 	let inPerson = $state(untrack(() => data.appointment.inPerson));
 	let remote = $state(untrack(() => data.appointment.remote));
 	let repeat = $state(untrack(() => data.appointment.repeat));
+	// Come gioca il Master: tra i modi scelti sopra. Con un modo solo è quello.
+	let masterMode = $state(untrack(() => data.appointment.masterMode));
+	const masterModes = $derived(MODES.filter((m) => (m === 'in_person' ? inPerson : remote)));
+	const chosenMode = $derived(masterModes.length === 1 ? masterModes[0] : masterMode);
 	const title = $derived(data.isNew ? t('schedule.new') : t('schedule.editTitle', { title: a.title }));
 </script>
 
@@ -76,6 +80,14 @@
 				</div>
 			{/if}
 		</fieldset>
+		{#if masterModes.length}
+			<fieldset>
+				<legend>{t('schedule.fields.masterMode')}</legend>
+				{#each masterModes as m (m)}
+					<label class="choice"><input type="radio" name="masterMode" value={m} checked={chosenMode === m} onchange={() => (masterMode = m)} />{t(m === 'in_person' ? 'schedule.inPerson' : 'schedule.remote')}</label>
+				{/each}
+			</fieldset>
+		{/if}
 		<div class="actions">
 			<button class="btn btn-primary" type="submit"><Icon name="save" />{data.isNew ? t('schedule.create') : t('common.save')}</button>
 		</div>

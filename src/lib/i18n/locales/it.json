@@ -1222,6 +1222,7 @@
 		"answered": "Risposta salvata.",
 		"untilBefore": "La ripetizione non può finire prima della prima data.",
 		"modeRequired": "Scegli almeno un modo: in presenza o da remoto.",
+		"masterModeRequired": "Scegli come gioca il Master: in presenza o da remoto.",
 		"badLink": "Il link deve essere un indirizzo web (https://…).",
 		"status": {
 			"confirmed": "Confermata",
@@ -1273,6 +1274,7 @@
 			"untilHint": "Vuoto: senza fine. «Ogni mese» è lo stesso giorno della settimana nella stessa posizione (es. il primo giovedì).",
 			"mode": "Come si gioca",
 			"modeHint": "Se scegli entrambi, ogni giocatore dice come partecipa.",
+			"masterMode": "Il Master gioca",
 			"place": "Dove",
 			"placePlaceholder": "Da Marco, via Roma 3",
 			"link": "Link per il remoto",

@@ -3,6 +3,14 @@
 Le versioni seguono il [versionamento semantico](https://semver.org/lang/it/): MAGGIORE.MINORE.CORRETTIVA.
 Questo file è anche la pagina «Novità» della wiki (`/changelog`).
 
+## 0.12.4 — 2026-11-04
+
+### Aggiunte
+- Appuntamenti: il Master che prepara l'appuntamento sceglie come gioca, in presenza o da remoto (con un modo solo è quello). Si vede nella scheda e nel popup di ogni data, accanto al suo nome.
+
+### Correzioni
+- Home: nella prossima sessione il Master non risulta più «Non hai ancora risposto», ma col modo scelto nell'appuntamento.
+
 ## 0.12.3 — 2026-11-04
 
 ### Aggiunte

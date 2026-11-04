@@ -8,6 +8,10 @@ export type Repeat = (typeof REPEATS)[number];
 export const ANSWERS = ['in_person', 'remote', 'no'] as const;
 export type Answer = (typeof ANSWERS)[number];
 
+/** I modi di giocare: quelli dell'appuntamento e quello del Master. */
+export const MODES = ['in_person', 'remote'] as const;
+export type Mode = (typeof MODES)[number];
+
 export interface Series {
 	date: string;
 	repeat: Repeat;

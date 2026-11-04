@@ -317,6 +317,10 @@ test('appuntamenti: il Master fissa i giovedì, i giocatori rispondono, sotto il
 	await admin.getByLabel('Si ripete').selectOption({ label: 'Ogni settimana' });
 	await admin.getByLabel('Dove', { exact: true }).fill('Locanda del Grifone');
 	await admin.getByLabel('Da remoto', { exact: true }).check();
+	// Con tutti e due i modi il Master sceglie come gioca.
+	const masterMode = admin.getByRole('group', { name: 'Il Master gioca' });
+	await expect(masterMode.getByLabel('In presenza')).toBeChecked();
+	await masterMode.getByLabel('Da remoto').check();
 	await axe(admin, 'nuovo appuntamento');
 	await admin.getByRole('button', { name: "Crea l'appuntamento" }).click();
 	await admin.waitForURL('**/schedule?m=2030-01');
@@ -325,6 +329,7 @@ test('appuntamenti: il Master fissa i giovedì, i giocatori rispondono, sotto il
 	await expect(admin.getByRole('table', { name: 'gennaio 2030' }).getByRole('link', { name: /20:00 Serata al Grifone/ })).toHaveCount(5);
 	await expect(dates.first()).toContainText('In forse');
 	await expect(dates.first().getByRole('link', { name: 'https://discord.gg/grifone' })).toBeVisible();
+	await expect(dates.first()).toContainText(/Master\s*\S.* · Da remoto/);
 	await axe(admin, 'appuntamenti');
 	await shot(admin, '23c-appuntamenti');
 
@@ -341,7 +346,7 @@ test('appuntamenti: il Master fissa i giovedì, i giocatori rispondono, sotto il
 	// Nel calendario la sua figura (col bordo del remoto) accanto a quella del Master; cliccando, il popup con le specifiche.
 	const cell = p.getByRole('table', { name: 'gennaio 2030' }).getByRole('link', { name: /20:00 Serata al Grifone/ }).nth(1);
 	await expect(cell.locator('.face.remote')).toHaveAttribute('title', 'Alice: Ci sono, da remoto');
-	await expect(cell.locator('.face.master')).toHaveAttribute('title', /: Master$/);
+	await expect(cell.locator('.face.master')).toHaveAttribute('title', /: Master, da remoto$/);
 	await cell.click();
 	const dlg = p.getByRole('dialog', { name: 'Serata al Grifone' });
 	await expect(dlg).toContainText(/Vengono da remoto\s*Alice/);
@@ -382,6 +387,9 @@ test('appuntamenti: il Master fissa i giovedì, i giocatori rispondono, sotto il
 	await admin.getByLabel('Data', { exact: true }).fill(tomorrow);
 	await admin.getByRole('button', { name: "Crea l'appuntamento" }).click();
 	await admin.waitForURL(`**/schedule?m=${tomorrow.slice(0, 7)}`);
+	// Il Master non risulta da confermare: c'è, nel modo dell'appuntamento.
+	await admin.goto('/');
+	await expect(admin.getByRole('region', { name: 'Prossima sessione' }).getByRole('link', { name: /Il porto/ })).toContainText('Ci sono, in presenza');
 	const a = await login(browser, PLAYER);
 	await a.goto('/');
 	const next = a.getByRole('region', { name: 'Prossima sessione' });

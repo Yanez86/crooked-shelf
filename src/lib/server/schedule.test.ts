@@ -3,7 +3,7 @@ import { schema, useMemoryDb } from './db/index.ts';
 import { addMember, inCampaign, insertCampaign, removeMember, saveCampaign, type CampaignRow } from './campaigns.ts';
 import { getAppointment, monthSchedule, monthStarWishes, openStarWish, saveAppointment, saveStarWish, setAnswer, skipDate, upcoming, type AppointmentInput } from './schedule.ts';
 
-const thursdays: AppointmentInput = { title: 'Sessione', date: '2026-11-05', starts: '20:00', ends: '00:00', inPerson: true, remote: false, place: 'Da Marco', link: null, repeat: 'week', until: null };
+const thursdays: AppointmentInput = { title: 'Sessione', date: '2026-11-05', starts: '20:00', ends: '00:00', inPerson: true, remote: false, masterMode: 'in_person', place: 'Da Marco', link: null, repeat: 'week', until: null };
 const names = ['Davide', 'Alice', 'Bruno', 'Carla'];
 
 let c: CampaignRow;
@@ -92,7 +92,11 @@ describe('appuntamenti nel server', () => {
 		expect(u.next).toMatchObject({ date: '2026-11-12', answer: null });
 		// Il 19 Alice ha già risposto; dicembre è un altro mese.
 		expect(u.toAnswer.map((o) => o.date)).toEqual(['2026-11-26']);
-		// Il Master non risponde: niente da chiedergli.
+		// Il Master non risponde: niente da chiedergli, e la sua prossima sessione ha il modo scelto nell'appuntamento.
 		expect(here(() => upcoming(1, now)).toAnswer).toEqual([]);
+		expect(here(() => upcoming(1, now)).next).toMatchObject({ date: '2026-11-12', answer: 'in_person' });
+		here(() => saveAppointment({ ...thursdays, remote: true, masterMode: 'remote' }, a.id));
+		expect(here(() => upcoming(1, now)).next).toMatchObject({ answer: 'remote' });
+		expect(here(() => monthSchedule('2026-11'))[0]).toMatchObject({ masterMode: 'remote' });
 	});
 });

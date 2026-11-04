@@ -1222,6 +1222,7 @@
 		"answered": "Answer saved.",
 		"untilBefore": "The series can't end before its first date.",
 		"modeRequired": "Choose at least one way to play: in person or remote.",
+		"masterModeRequired": "Choose how the Master plays: in person or remote.",
 		"badLink": "The link must be a web address (https://…).",
 		"status": {
 			"confirmed": "Confirmed",
@@ -1273,6 +1274,7 @@
 			"untilHint": "Empty: no end. “Every month” is the same weekday in the same position (e.g. the first Thursday).",
 			"mode": "How you play",
 			"modeHint": "If you pick both, each player says how they'll join.",
+			"masterMode": "The Master plays",
 			"place": "Where",
 			"placePlaceholder": "At Mark's, 3 Main Street",
 			"link": "Remote link",

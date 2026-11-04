@@ -95,6 +95,7 @@ function scheduleBetween(from: string, to: string, now: number) {
 					ends: a.ends,
 					inPerson: a.inPerson,
 					remote: a.remote,
+					masterMode: a.masterMode,
 					place: a.place,
 					link: a.link ?? c.remoteLink,
 					repeat: a.repeat,
@@ -112,6 +113,7 @@ function scheduleBetween(from: string, to: string, now: number) {
  */
 export function upcoming(userId: number, now = Date.now()) {
 	const today = localDate(new Date(now));
+	const master = currentCampaign().masterId;
 	// Da ieri: una sessione che passa la mezzanotte è ancora in corso.
 	const items = scheduleBetween(shiftDay(today, -1), shiftDay(today, 366), now).filter((o) => endsAt(o.date, o.starts, o.ends) > now);
 	const view = (o: (typeof items)[number]) => ({
@@ -121,7 +123,8 @@ export function upcoming(userId: number, now = Date.now()) {
 		starts: o.starts,
 		ends: o.ends,
 		status: o.status,
-		answer: ANSWERS.find((a) => o.answers[a].some((p) => p.id === userId)) ?? null
+		// Il Master non risponde: per lui conta il modo scelto nell'appuntamento.
+		answer: userId === master ? o.masterMode : (ANSWERS.find((a) => o.answers[a].some((p) => p.id === userId)) ?? null)
 	});
 	const next = items.find((o) => o.status !== 'cancelled');
 	const end = lastOfMonth(today.slice(0, 7));
