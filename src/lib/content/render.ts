@@ -33,12 +33,12 @@ export function safeImageSrc(src: unknown): string | null {
 	return null;
 }
 
-/** Solo indirizzi sicuri: http(s), mailto e percorsi interni. */
+/** Solo indirizzi sicuri: http(s), mailto e percorsi interni (una barra sola: `//` e `/\\` portano a un altro sito). */
 export function safeHref(href: unknown): string | null {
 	if (typeof href !== 'string') return null;
 	const h = href.trim();
 	if (/^(https?:|mailto:)/i.test(h)) return h;
-	if (/^\/(?!\/)/.test(h) || h.startsWith('#')) return h;
+	if (/^\/(?![/\\])/.test(h) && !h.includes('\\') || h.startsWith('#')) return h;
 	return null;
 }
 

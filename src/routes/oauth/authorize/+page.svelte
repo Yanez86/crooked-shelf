@@ -26,8 +26,15 @@
 		<p>{t('oauth.intro', { campaign: data.campaign })}</p>
 		<p class="host">{data.host}</p>
 		{#if data.local}<p>{t('oauth.local')}</p>{/if}
+		{#if !data.known}<div class="alert alert-error" role="alert"><span>{t('oauth.unknownHost', { host: data.host })}</span></div>{/if}
 		<FormError error={form?.error} />
 		<form method="post" class="card" use:enhance>
+			{#if !data.known}
+				<label class="choice">
+					<input type="checkbox" name="trust" />
+					<span>{t('oauth.trust', { host: data.host })}</span>
+				</label>
+			{/if}
 			<label class="choice">
 				<input type="checkbox" name="write" aria-describedby="write-hint" />
 				<span>{t('claude.write')}<br /><span id="write-hint" class="hint">{t('claude.writeHint')}</span></span>

@@ -46,10 +46,38 @@ describe('codice', () => {
 		const own = createApiToken(1, FIRST_CAMPAIGN, true);
 		const connector = redeemCode(issueCode(grant), back, verifier)!;
 		expect(apiTokenAccess(1, FIRST_CAMPAIGN)).toBe('write');
-		expect(apiTokenClients(1, FIRST_CAMPAIGN)).toEqual(['claude.ai']);
+		expect(apiTokenClients(1, FIRST_CAMPAIGN).map((c) => c.client)).toEqual(['claude.ai']);
 		expect(validateApiToken(`Bearer ${own}`)).not.toBeNull();
 		revokeApiToken(1, FIRST_CAMPAIGN);
 		expect(validateApiToken(`Bearer ${own}`)).toBeNull();
 		expect(validateApiToken(`Bearer ${connector}`)).toBeNull();
+	});
+});
+
+describe('siti conosciuti e token fermi', () => {
+	it('solo i siti di Claude e il computer locale sono conosciuti', async () => {
+		const { isKnownHost } = await import('./oauth.ts');
+		expect(isKnownHost('claude.ai')).toBe(true);
+		expect(isKnownHost('api.claude.com')).toBe(true);
+		expect(isKnownHost('localhost')).toBe(true);
+		expect(isKnownHost('claude-ai.example')).toBe(false);
+		expect(isKnownHost('notclaude.ai')).toBe(false);
+	});
+
+	it('un token fermo da 90 giorni smette di valere; ogni uso aggiorna la data', async () => {
+		const { TOKEN_IDLE_DAYS, apiTokenInfo, purgeIdleApiTokens } = await import('./auth.ts');
+		const own = createApiToken(1, FIRST_CAMPAIGN, false);
+		expect(apiTokenInfo(1, FIRST_CAMPAIGN)?.lastUsedAt).toBeNull();
+		expect(validateApiToken(`Bearer ${own}`)).not.toBeNull();
+		expect(apiTokenInfo(1, FIRST_CAMPAIGN)?.lastUsedAt).toBeTypeOf('number');
+		const future = Date.now() + (TOKEN_IDLE_DAYS + 1) * 24 * 60 * 60 * 1000;
+		purgeIdleApiTokens(future);
+		expect(validateApiToken(`Bearer ${own}`)).toBeNull();
+	});
+
+	it('al massimo dieci codici in attesa per persona: oltre, il più vecchio sparisce', () => {
+		const first = issueCode(grant);
+		for (let i = 0; i < 10; i++) issueCode(grant);
+		expect(redeemCode(first, back, verifier)).toBeNull();
 	});
 });

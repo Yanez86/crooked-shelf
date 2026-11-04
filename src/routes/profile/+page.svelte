@@ -186,6 +186,11 @@
 				</div>
 				<button class="btn btn-primary" type="submit">{t('prefs.changePassword')}</button>
 			</form>
+			<h3>{t('prefs.sessions')}</h3>
+			<form method="post" action="?/logoutOthers&tab=password" class="card stack">
+				<p>{t('prefs.sessionsHint', { n: data.sessions })}</p>
+				<div><button class="btn" type="submit" disabled={data.sessions < 2}>{t('prefs.logoutOthers')}</button></div>
+			</form>
 		</section>
 	{/if}
 </div>

@@ -399,5 +399,78 @@ export const MIGRATIONS: (string | ((db: Database.Database) => void) | { rebuild
 	`
 	ALTER TABLE appointments ADD COLUMN master_mode TEXT NOT NULL DEFAULT 'in_person' CHECK (master_mode IN ('in_person','remote'));
 	UPDATE appointments SET master_mode = 'remote' WHERE in_person = 0;
+	`,
+	// Dove è usato ogni file: un file si scarica solo da chi può vedere ciò che lo usa (files.ts). Riempita da ciò che c'è già.
+	fileUsesMigration,
+	// Sessioni con data di inizio (scadenza assoluta) e token di Claude con scadenza e ultimo uso.
+	`
+	ALTER TABLE sessions ADD COLUMN created_at INTEGER NOT NULL DEFAULT 0;
+	ALTER TABLE api_tokens ADD COLUMN created_at INTEGER NOT NULL DEFAULT 0;
+	ALTER TABLE api_tokens ADD COLUMN last_used_at INTEGER;
+	UPDATE sessions SET created_at = expires_at - 30 * 24 * 60 * 60 * 1000;
+	CREATE TABLE password_resets (
+		token_hash TEXT PRIMARY KEY,
+		user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+		created_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
+		expires_at INTEGER NOT NULL
+	);
+	CREATE TABLE audit_log (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		at INTEGER NOT NULL,
+		user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+		ip TEXT NOT NULL DEFAULT '',
+		action TEXT NOT NULL,
+		detail TEXT NOT NULL DEFAULT ''
+	);
+	CREATE INDEX audit_log_at ON audit_log(at);
 	`
 ];
+
+/** Tabella file_uses, riempita da pagine (testo, colonna a lato, copertina, anche nel cestino e nelle versioni), mappe, risorse, temi e avatar. */
+function fileUsesMigration(db: Database.Database) {
+	db.exec(`
+	CREATE TABLE file_uses (
+		file_id TEXT NOT NULL REFERENCES files(id) ON DELETE CASCADE,
+		kind TEXT NOT NULL CHECK (kind IN ('page','map','resource','theme','avatar')),
+		ref_id INTEGER NOT NULL,
+		PRIMARY KEY (file_id, kind, ref_id)
+	);
+	CREATE INDEX file_uses_ref ON file_uses(kind, ref_id);
+	`);
+	const files = new Set((db.prepare('SELECT id FROM files').all() as { id: string }[]).map((r) => r.id));
+	const ins = db.prepare('INSERT OR IGNORE INTO file_uses (file_id, kind, ref_id) VALUES (?, ?, ?)');
+	const add = (id: unknown, kind: string, ref: number) => {
+		if (typeof id === 'string' && files.has(id)) ins.run(id, kind, ref);
+	};
+	const walk = (n: unknown, pageId: number) => {
+		if (!n || typeof n !== 'object') return;
+		const node = n as { type?: string; attrs?: { src?: unknown }; content?: unknown[] };
+		if (node.type === 'image') add(/^\/files\/([\w-]+)$/.exec(String(node.attrs?.src ?? ''))?.[1], 'page', pageId);
+		for (const c of Array.isArray(node.content) ? node.content : []) walk(c, pageId);
+	};
+	const page = (pageId: number, content: string, fields: string, ...extra: unknown[]) => {
+		try {
+			walk(JSON.parse(content), pageId);
+		} catch {
+			/* contenuto non valido: nessuna immagine */
+		}
+		try {
+			for (const f of JSON.parse(fields || '[]')) add(f?.image, 'page', pageId);
+		} catch {
+			/* campi non validi */
+		}
+		for (const e of extra) add(e, 'page', pageId);
+	};
+	for (const r of db.prepare('SELECT id, content, fields, image_id, cover_image_id FROM pages').all() as { id: number; content: string; fields: string; image_id: unknown; cover_image_id: unknown }[])
+		page(r.id, r.content, r.fields, r.image_id, r.cover_image_id);
+	for (const r of db.prepare('SELECT page_id, content, fields FROM page_revisions').all() as { page_id: number; content: string; fields: string }[]) page(r.page_id, r.content, r.fields);
+	for (const r of db.prepare('SELECT id, file_id FROM maps').all() as { id: number; file_id: string }[]) add(r.file_id, 'map', r.id);
+	for (const r of db.prepare('SELECT id, file_id FROM resources').all() as { id: number; file_id: string }[]) add(r.file_id, 'resource', r.id);
+	for (const r of db.prepare('SELECT id, avatar FROM users WHERE avatar IS NOT NULL').all() as { id: number; avatar: string }[]) add(r.avatar, 'avatar', r.id);
+	const themes = db.prepare("SELECT value FROM settings WHERE key = 'themes'").get() as { value: string } | undefined;
+	try {
+		for (const t of themes ? JSON.parse(themes.value) : []) add(t?.background, 'theme', 0);
+	} catch {
+		/* temi non validi */
+	}
+}

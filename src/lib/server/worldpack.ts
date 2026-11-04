@@ -27,8 +27,10 @@ import type { Visibility } from '../roles.ts';
 export const PACK_FORMAT = 'crooked-shelf-world';
 /** 2 = template, mappe e cronologie sono pagine. I pacchetti 1 si leggono ancora. */
 const PACK_VERSION = 2;
-const MAX_ENTRY = 30 * 1024 * 1024;
-const MAX_TOTAL = 500 * 1024 * 1024;
+const MB = 1024 * 1024;
+const MAX_ENTRY = 30 * MB;
+/** Il pacchetto si legge in memoria: CS_PACK_MAX_MB (200 di base) è il massimo decompresso. */
+const maxTotal = () => Math.max(1, Number(process.env.CS_PACK_MAX_MB ?? 200)) * MB;
 
 export interface ExportOptions {
 	name: string;
@@ -348,7 +350,7 @@ export function readPack(buf: Uint8Array): { ok: true; pack: Pack } | { ok: fals
 		entries = unzipSync(buf, {
 			filter: (f) => {
 				total += f.originalSize;
-				if (f.originalSize > MAX_ENTRY || total > MAX_TOTAL) throw new Error('too big');
+				if (f.originalSize > MAX_ENTRY || total > maxTotal()) throw new Error('too big');
 				return !f.name.endsWith('/');
 			}
 		});

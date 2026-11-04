@@ -1,7 +1,7 @@
 import { and, desc, eq, inArray, sql, type SQL } from 'drizzle-orm';
 import { getDb, getSqlite, schema } from './db/index.ts';
 import { slugify } from '../slug.ts';
-import { extract, stripSecrets } from '../content/extract.ts';
+import { extract, stripSecrets, uploadedImages } from '../content/extract.ts';
 import { renderDoc, renderInline, type LinkTarget, type RenderOptions } from '../content/render.ts';
 import { EMPTY_DOC, isDoc, type DocNode, type PageField, type SessionInfo } from '../content/types.ts';
 import { authorKey, canView, isMaster, SHEET_VISIBILITIES, type Viewer } from '../access.ts';
@@ -13,7 +13,7 @@ import { isHomePage } from './settings.ts';
 import { ensureTags, pageTree, syncBranch, tagsForPages } from './taxonomy.ts';
 import { syncSessionEvent } from './timeline.ts';
 import { hasRule } from './rules/index.ts';
-import { getFile } from './files.ts';
+import { addFileUses, clearFileUses, getFile } from './files.ts';
 import type { PageCover } from '../covers.ts';
 import { childrenOf, locate, type TreeNode } from '../tree.ts';
 
@@ -99,6 +99,11 @@ function coverOf(fields: PageField[]): string | null {
 	return fields.find((f) => f.image && getFile(f.image))?.image ?? null;
 }
 
+/** I file della pagina (testo, colonna a lato, copertina) segnati come usati da lei: da qui si decide chi li può scaricare. */
+function noteFiles(id: number, doc: DocNode, fields: PageField[], cover: string | null | undefined) {
+	addFileUses('page', id, [...uploadedImages(doc).map((i) => i.id), ...fields.map((f) => f.image), cover]);
+}
+
 function writeIndex(id: number, title: string, doc: DocNode, fields: PageField[]) {
 	const ex = extract(doc, fields);
 	const db = getDb();
@@ -182,6 +187,7 @@ export function createPage(input: PageInput, u: Viewer, extra?: (page: PageRow) 
 			.returning()
 			.get();
 		writeIndex(row.id, row.title, doc, input.fields);
+		noteFiles(row.id, doc, input.fields, row.coverImageId);
 		writeTags(row.id, input.tags);
 		syncSessionEvent(row, sessionOf(kind, input.session));
 		writeRevision(row.id);
@@ -227,6 +233,7 @@ export function updatePage(page: PageRow, input: PageInput, u: Viewer, manage: b
 			.run();
 		if (moved) syncBranch(page.id, categoryId);
 		writeIndex(page.id, input.title, doc, input.fields);
+		noteFiles(page.id, doc, input.fields, input.cover !== undefined ? input.cover?.image : page.coverImageId);
 		writeTags(page.id, input.tags);
 		syncSessionEvent({ id: page.id, title: input.title, visibility, authorId: page.authorId }, sessionOf(kind, input.session));
 		writeRevision(page.id);
@@ -476,6 +483,9 @@ export function restorePage(id: number) {
 /** Elimina per sempre (con versioni e collegamenti). */
 export function purgePage(id: number) {
 	getDb().transaction(() => {
+		const map = getDb().select({ id: schema.maps.id }).from(schema.maps).where(eq(schema.maps.pageId, id)).get();
+		if (map) clearFileUses('map', map.id);
+		clearFileUses('page', id);
 		getSqlite().prepare('DELETE FROM pages_fts WHERE rowid = ?').run(id);
 		getDb().delete(pages).where(and(eq(pages.id, id), sql`${pages.deletedAt} IS NOT NULL`)).run();
 	});

@@ -64,8 +64,34 @@ export const sessions = sqliteTable('sessions', {
 	userId: integer('user_id')
 		.notNull()
 		.references(() => users.id, { onDelete: 'cascade' }),
+	expiresAt: integer('expires_at').notNull(),
+	/** Inizio: oltre SESSION_MAX_DAYS da qui la sessione scade comunque, anche se usata. */
+	createdAt: integer('created_at').notNull().default(0)
+});
+
+/** Link per reimpostare la password, creato dall'Admin per chi l'ha dimenticata: una volta sola, pochi giorni. */
+export const passwordResets = sqliteTable('password_resets', {
+	tokenHash: text('token_hash').primaryKey(),
+	userId: integer('user_id')
+		.notNull()
+		.references(() => users.id, { onDelete: 'cascade' }),
+	createdBy: integer('created_by').references(() => users.id, { onDelete: 'set null' }),
 	expiresAt: integer('expires_at').notNull()
 });
+
+/** Registro delle azioni che contano per la sicurezza (vedi audit.ts). */
+export const auditLog = sqliteTable(
+	'audit_log',
+	{
+		id: integer('id').primaryKey({ autoIncrement: true }),
+		at: integer('at').notNull(),
+		userId: integer('user_id').references(() => users.id, { onDelete: 'set null' }),
+		ip: text('ip').notNull().default(''),
+		action: text('action').notNull(),
+		detail: text('detail').notNull().default('')
+	},
+	(t) => [index('audit_log_at').on(t.at)]
+);
 
 /** Il token con cui Claude legge una campagna (/mcp), coi permessi di chi l'ha creato. */
 export const apiTokens = sqliteTable(
@@ -80,7 +106,10 @@ export const apiTokens = sqliteTable(
 		/** '' per il token creato nel profilo; per il connettore (OAuth), il sito a cui è andato, es. claude.ai. */
 		client: text('client').notNull().default(''),
 		tokenHash: text('token_hash').notNull().unique(),
-		canWrite: integer('can_write', { mode: 'boolean' }).notNull().default(false)
+		canWrite: integer('can_write', { mode: 'boolean' }).notNull().default(false),
+		createdAt: integer('created_at').notNull().default(0),
+		/** Ultimo uso (aggiornato al più una volta all'ora); un token fermo da TOKEN_IDLE_DAYS smette di valere. */
+		lastUsedAt: integer('last_used_at')
 	},
 	(t) => [primaryKey({ columns: [t.userId, t.campaignId, t.client] })]
 );
@@ -220,6 +249,19 @@ export const files = sqliteTable('files', {
 	uploadedBy: integer('uploaded_by').references(() => users.id, { onDelete: 'set null' }),
 	createdAt: integer('created_at').notNull()
 });
+
+/** Dove è usato un file: decide chi lo può scaricare (vedi files.ts). `refId`: id della pagina, mappa, risorsa o utente; 0 per i temi. */
+export const fileUses = sqliteTable(
+	'file_uses',
+	{
+		fileId: text('file_id')
+			.notNull()
+			.references(() => files.id, { onDelete: 'cascade' }),
+		kind: text('kind', { enum: ['page', 'map', 'resource', 'theme', 'avatar'] }).notNull(),
+		refId: integer('ref_id').notNull()
+	},
+	(t) => [primaryKey({ columns: [t.fileId, t.kind, t.refId] }), index('file_uses_ref').on(t.kind, t.refId)]
+);
 
 /**
  * La mappa di una pagina «mappa». Titolo, testo e visibilità sono quelli della pagina; `slug`, `title`,

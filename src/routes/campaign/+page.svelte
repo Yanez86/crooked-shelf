@@ -17,6 +17,7 @@
 	const tab = $derived(TABS.find((x) => x === page.url.searchParams.get('tab')) ?? 'general');
 	const msg = (s: string) => (form?.section === s ? form : null);
 	const claudeOn = $derived(!!data.claude && (!!data.claude.access || data.claude.clients.length > 0));
+	const when = (ms: number) => new Date(ms).toLocaleDateString(data.locale, { year: 'numeric', month: 'short', day: 'numeric' });
 
 	let copied = $state(false);
 	async function copy(text: string) {
@@ -161,8 +162,17 @@
 			<section aria-labelledby="claude-status">
 				<h2 id="claude-status">{t('claude.statusTitle')}</h2>
 				<div class="card stack">
-					<p>{t('claude.access.' + (data.claude.access ?? 'none'))}</p>
-					<p>{data.claude.clients.length ? t('claude.clients', { clients: data.claude.clients.join(', ') }) : t('claude.noClients')}</p>
+					<p>{t('claude.access.' + (data.claude.access ?? 'none'))}{#if data.claude.token} <span class="muted">{t('claude.when', { created: when(data.claude.token.createdAt), used: data.claude.token.lastUsedAt ? when(data.claude.token.lastUsedAt) : t('claude.never') })}</span>{/if}</p>
+					{#if data.claude.clients.length}
+						<ul>
+							{#each data.claude.clients as c (c.client)}
+								<li>{t('claude.client', { client: c.client })} <span class="muted">{t('claude.when', { created: when(c.createdAt), used: c.lastUsedAt ? when(c.lastUsedAt) : t('claude.never') })}</span></li>
+							{/each}
+						</ul>
+					{:else}
+						<p>{t('claude.noClients')}</p>
+					{/if}
+					<p class="hint">{t('claude.idleHint')}</p>
 					{#if claudeOn}
 						<form method="post" action="?/claudeRevoke&tab=claude">
 							<button class="btn btn-danger" type="submit" aria-describedby="claude-revoke-hint">{t('admin.revoke')}</button>

@@ -1,5 +1,6 @@
 import { and, asc, eq, inArray, sql } from 'drizzle-orm';
 import { getDb, schema } from './db/index.ts';
+import { addFileUses, clearFileUses } from './files.ts';
 import { slugify } from '../slug.ts';
 import { canView, isMaster, type Viewer } from '../access.ts';
 import { visibleTo } from './visibility.ts';
@@ -66,7 +67,7 @@ export interface MapInput {
 
 export function createMap(page: Pick<PageRow, 'id' | 'slug' | 'title'>, input: MapInput, file: { id: string; width: number; height: number }, userId: number): MapRow {
 	const now = Date.now();
-	return getDb()
+	const row = getDb()
 		.insert(maps)
 		.values({
 			...input,
@@ -83,6 +84,8 @@ export function createMap(page: Pick<PageRow, 'id' | 'slug' | 'title'>, input: M
 		})
 		.returning()
 		.get();
+	addFileUses('map', row.id, [file.id]);
+	return row;
 }
 
 export function updateMap(id: number, input: MapInput, file?: { id: string; width: number; height: number }) {
@@ -95,6 +98,10 @@ export function updateMap(id: number, input: MapInput, file?: { id: string; widt
 		})
 		.where(eq(maps.id, id))
 		.run();
+	if (file) {
+		clearFileUses('map', id);
+		addFileUses('map', id, [file.id]);
+	}
 }
 
 /** Una mappa non può essere contenuta in sé stessa (anche indirettamente). */

@@ -4,14 +4,19 @@ import type { Actions, PageServerLoad } from './$types';
 import { cleanPrefs, PREFS_COOKIE, PREF_OPTIONS } from '#lib/prefs.ts';
 import { isLocale, localeNames } from '#lib/i18n/index.ts';
 import { getDb, schema } from '#lib/server/db/index.ts';
-import { PASSWORD_MIN, deleteUserSessions, createSession, hashPassword, setSessionCookie, verifyPassword } from '#lib/server/auth.ts';
+import { PASSWORD_MIN, countSessions, deleteOtherSessions, deleteUserSessions, createSession, hashPassword, sessionCookie, setSessionCookie, verifyPassword } from '#lib/server/auth.ts';
+import { audit } from '#lib/server/audit.ts';
+import { commonPassword } from '#lib/server/forms.ts';
 import { str } from '#lib/server/forms.ts';
-import { deleteFile, saveImage } from '#lib/server/files.ts';
+import { hashSlot } from '#lib/server/ratelimit.ts';
+import { addFileUses, deleteFile, saveImage, withinQuota } from '#lib/server/files.ts';
 import { extraThemes } from '#lib/server/plugins.ts';
 import { PAGE_ICONS } from '#lib/pageIcons.ts';
 
 // Claude si collega dalla pagina Campagna, scheda Claude: è del Master, una campagna per volta.
 export const load: PageServerLoad = ({ locals }) => ({
+	// Le sessioni aperte (dispositivi e browser), per chiuderle tutte tranne questa.
+	sessions: locals.user ? countSessions(locals.user.id) : 0,
 	options: PREF_OPTIONS,
 	custom: extraThemes().map(({ id, name, scheme, colors }) => ({ id, name: name ?? id, scheme, colors })),
 	locales: localeNames(),
@@ -53,9 +58,11 @@ export const actions: Actions = {
 		let avatar = f.get('removeAvatar') ? null : old;
 		const file = f.get('avatar');
 		if (file instanceof File && file.size > 0) {
+			if (!withinQuota(locals.user, file.size)) return fail(400, { error: 'files.quota', section: 'profile' });
 			const r = saveImage(Buffer.from(await file.arrayBuffer()), file.name, locals.user.id);
 			if (!r.ok) return fail(400, { error: r.error, section: 'profile' });
 			avatar = r.file.id;
+			addFileUses('avatar', locals.user.id, [avatar]);
 		}
 		getDb()
 			.update(schema.users)
@@ -70,12 +77,14 @@ export const actions: Actions = {
 		const f = await request.formData();
 		const current = String(f.get('current') ?? '');
 		const next = String(f.get('password') ?? '');
+		if (!hashSlot()) return fail(429, { error: 'errors.busy', section: 'password' });
 		const row = getDb().select().from(schema.users).where(eq(schema.users.id, locals.user.id)).get();
 		if (!row || !(await verifyPassword(row.passwordHash, current)))
 			return fail(400, { error: 'errors.currentPassword', section: 'password' });
 		if (next.length < PASSWORD_MIN) return fail(400, { error: 'errors.passwordShort', section: 'password' });
 		if (next.length > 256) return fail(400, { error: 'errors.passwordLong', section: 'password' });
 		if (next !== String(f.get('confirm') ?? '')) return fail(400, { error: 'errors.passwordMismatch', section: 'password' });
+		if (commonPassword(next, row.username)) return fail(400, { error: 'errors.passwordCommon', section: 'password' });
 		getDb()
 			.update(schema.users)
 			.set({ passwordHash: await hashPassword(next) })
@@ -83,8 +92,16 @@ export const actions: Actions = {
 			.run();
 		// Chiude le sessioni sugli altri dispositivi.
 		deleteUserSessions(row.id);
+		audit('password_changed', { userId: row.id, ip: locals.ip });
 		const s = createSession(row.id);
 		setSessionCookie(cookies, url, s.token, s.expires);
 		return { ok: 'prefs.passwordChanged', section: 'password' };
+	},
+	logoutOthers: async ({ locals, cookies, url }) => {
+		if (!locals.user) return fail(401, { error: 'errors.forbidden', section: 'password' });
+		const token = cookies.get(sessionCookie(url));
+		if (token) deleteOtherSessions(locals.user.id, token);
+		audit('sessions_closed', { userId: locals.user.id, ip: locals.ip });
+		return { ok: 'prefs.othersClosed', section: 'password' };
 	}
 };

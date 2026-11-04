@@ -19,7 +19,7 @@ export default defineConfig({
 		? undefined
 		: {
 		// Database nuovo a ogni esecuzione.
-		command: `rm -rf .e2e-data && npm run build && CS_DATA_DIR=.e2e-data PORT=${PORT} node server.js`,
+		command: `rm -rf .e2e-data && npm run build && CS_DATA_DIR=.e2e-data CS_SETUP_TOKEN=e2e-setup PORT=${PORT} node server.js`,
 		url: `http://localhost:${PORT}/login`,
 		timeout: 180_000,
 		reuseExistingServer: false

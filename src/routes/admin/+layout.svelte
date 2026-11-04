@@ -16,7 +16,8 @@
 		['/admin/plugins', 'admin.plugins'],
 		['/admin/backup', 'admin.backup'],
 		['/admin/world', 'admin.world'],
-		['/admin/export', 'admin.export']
+		['/admin/export', 'admin.export'],
+		['/admin/audit', 'admin.audit']
 	];
 	const path = $derived(page.url.pathname);
 </script>

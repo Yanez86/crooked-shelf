@@ -17,6 +17,12 @@
 	<FormError error={form?.error} />
 
 	<form method="post" class="card">
+		<div class="field">
+			<label for="token">{t('setup.token')}</label>
+			<input id="token" name="token" type="text" required autocomplete="off" spellcheck="false" aria-describedby="token-hint" />
+			<span id="token-hint" class="hint">{t('setup.tokenHint')}</span>
+		</div>
+
 		<h2>{t('setup.site')}</h2>
 		<div class="field">
 			<label for="siteName">{t('setup.siteName')}</label>
@@ -59,7 +65,7 @@
 		max-width: 34rem;
 		margin: 1.5rem auto 0;
 	}
-	.card h2:first-child {
-		margin-top: 0;
+	.card h2 {
+		margin-top: 1rem;
 	}
 </style>

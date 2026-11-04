@@ -33,7 +33,7 @@ cd crooked-shelf
 docker compose up -d
 ```
 
-Apri http://localhost:3000: la prima volta si crea la wiki e l'account amministratore.
+Apri http://localhost:3000: la prima volta si crea la wiki e l'account amministratore, col codice di configurazione che trovi in `docker compose logs`.
 
 Senza Docker, su Raspberry Pi, su internet con HTTPS, backup e ripristino: **[docs/installazione.md](docs/installazione.md)**.
 

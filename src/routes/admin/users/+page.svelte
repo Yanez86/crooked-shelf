@@ -18,6 +18,15 @@
 <p>{t('admin.usersIntro')} <a href="/admin/invites">{t('admin.invites')}</a></p>
 <FormError error={form && 'error' in form ? form.error : null} />
 <FormOk message={form && 'ok' in form ? form.ok : null} />
+{#if form && 'resetLink' in form}
+	<div class="card stack" role="status">
+		<p>{t('admin.resetCreated', { user: form.resetFor ?? '' })}</p>
+		<div class="field">
+			<label for="reset-link">{t('admin.resetLink')}</label>
+			<input id="reset-link" type="text" readonly value={form.resetLink} onfocus={(e) => e.currentTarget.select()} />
+		</div>
+	</div>
+{/if}
 
 <div class="card scroll">
 	<table class="data">
@@ -52,7 +61,10 @@
 							<span class="visually-hidden">{t('admin.disabled')}: {u.username}</span>
 						</label>
 					</td>
-					<td class="col-end"><button class="btn btn-small" type="submit" form="user-{u.id}"><Icon name="save" />{t('common.save')}<span class="visually-hidden">: {u.username}</span></button></td>
+					<td class="col-end">
+						<button class="btn btn-small" type="submit" form="user-{u.id}"><Icon name="save" />{t('common.save')}<span class="visually-hidden">: {u.username}</span></button>
+						<form method="post" action="?/reset" class="inline"><input type="hidden" name="id" value={u.id} /><button class="btn btn-small" type="submit" disabled={u.disabled}>{t('admin.resetPassword')}<span class="visually-hidden">: {u.username}</span></button></form>
+					</td>
 				</tr>
 			{/each}
 		</tbody>
@@ -68,6 +80,10 @@
 </dl>
 
 <style>
+	.inline {
+		display: inline;
+		margin-inline-start: 0.25rem;
+	}
 	.scroll {
 		overflow-x: auto;
 	}

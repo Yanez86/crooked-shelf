@@ -1,7 +1,8 @@
 import { error, fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { isMaster } from '#lib/access.ts';
-import { activeInvites, apiTokenAccess, apiTokenClients, createApiToken, createInvite, revokeApiToken, revokeInvite } from '#lib/server/auth.ts';
+import { activeInvites, apiTokenAccess, apiTokenClients, apiTokenInfo, createApiToken, createInvite, revokeApiToken, revokeInvite } from '#lib/server/auth.ts';
+import { audit } from '#lib/server/audit.ts';
 import { getDb, schema } from '#lib/server/db/index.ts';
 import { AS_PLAYER_COOKIE, deleteCampaign, membersOf, removeMember, saveCampaign, setCampaignCookie } from '#lib/server/campaigns.ts';
 import { safeNext, str } from '#lib/server/forms.ts';
@@ -32,6 +33,7 @@ export const load: PageServerLoad = ({ locals, url }) => {
 		claude: {
 			connector: `${url.origin}/mcp/${campaign.id}`,
 			access: apiTokenAccess(me.id, campaign.id),
+			token: apiTokenInfo(me.id, campaign.id) ?? null,
 			clients: apiTokenClients(me.id, campaign.id)
 		}
 	};
@@ -85,6 +87,7 @@ export const actions: Actions = {
 		const { campaign, me } = mine(locals);
 		const days = Number((await request.formData()).get('days'));
 		if (![1, 7, 30].includes(days)) return fail(400, { section: 'players', error: 'errors.generic' });
+		audit('invite_created', { userId: me.id, ip: locals.ip }, `player ${campaign.name}`);
 		return { section: 'players', link: `${url.origin}/invite/${createInvite('player', me.id, days, campaign.id)}`, role: 'player' as const };
 	},
 	revoke: async ({ request, locals }) => {
@@ -101,6 +104,7 @@ export const actions: Actions = {
 	delete: async ({ request, locals }) => {
 		const { campaign } = mine(locals);
 		if (str(await request.formData(), 'confirm', 80) !== campaign.name) return fail(400, { section: 'general', error: 'campaign.deleteMismatch' });
+		audit('campaign_deleted', { userId: locals.user!.id, ip: locals.ip }, campaign.name);
 		deleteCampaign(campaign.id);
 		redirect(303, '/');
 	},
@@ -108,12 +112,14 @@ export const actions: Actions = {
 	claude: async ({ request, locals, url }) => {
 		const { campaign, me } = mine(locals);
 		const write = (await request.formData()).get('write') === 'on';
+		audit('token_created', { userId: me.id, ip: locals.ip }, `${write ? 'write' : 'read'} ${campaign.name}`);
 		return { section: 'claude', token: createApiToken(me.id, campaign.id, write), url: `${url.origin}/mcp` };
 	},
 	// Chiude tutto: il token del plugin e i connettori.
 	claudeRevoke: async ({ locals }) => {
 		const { campaign, me } = mine(locals);
 		revokeApiToken(me.id, campaign.id);
+		audit('token_revoked', { userId: me.id, ip: locals.ip }, campaign.name);
 		return { section: 'claude', ok: 'claude.revoked' };
 	}
 };

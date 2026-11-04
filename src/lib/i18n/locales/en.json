@@ -109,7 +109,9 @@
 		"lastAdmin": "There must be at least one active Admin.",
 		"notFoundTitle": "Page not found",
 		"notFound": "This page doesn't exist or you don't have permission to see it.",
-		"unexpected": "An unexpected error occurred. Please try again shortly."
+		"unexpected": "An unexpected error occurred. Please try again shortly.",
+		"busy": "The server is busy: try again in a few seconds.",
+		"passwordCommon": "This password is too common or contains the username: choose another one."
 	},
 	"auth": {
 		"username": "Username",
@@ -129,7 +131,10 @@
 		"siteName": "Campaign name",
 		"locale": "Default language",
 		"admin": "Administrator account",
-		"submit": "Create the wiki"
+		"submit": "Create the wiki",
+		"token": "Setup code",
+		"tokenHint": "You will find it in the server messages (with Docker: docker compose logs), or it is the value of CS_SETUP_TOKEN. It makes sure the wiki is set up by you, not by whoever reaches the address first.",
+		"badToken": "The setup code is not correct: copy it from the server messages."
 	},
 	"invite": {
 		"title": "Join the wiki",
@@ -443,7 +448,11 @@
 		"currentPassword": "Current password",
 		"newPassword": "New password",
 		"changePassword": "Change password",
-		"passwordChanged": "Password changed. Sessions on other devices have been closed and Claude tokens revoked."
+		"passwordChanged": "Password changed. Sessions on other devices have been closed and Claude tokens revoked.",
+		"sessions": "Connected devices",
+		"sessionsHint": "Open sessions with your account, including this one: {n}. If you signed in on a computer that is not yours, close the others.",
+		"logoutOthers": "Sign out of other devices",
+		"othersClosed": "The other sessions have been closed."
 	},
 	"profile": {
 		"title": "Profile",
@@ -489,7 +498,11 @@
 		"canRead": "It searches, reads and lists the campaign's pages, with the side column and the pages that mention them.",
 		"canWrite": "If you allow it, it creates pages (only you see them by default) and changes the text of those you can edit. Every change leaves a version in your name in the history.",
 		"cannot": "It deletes nothing and doesn't touch titles, visibility, folders, templates, maps, timelines, boards, files, users or settings.",
-		"safety": "Page text reaches Claude, and so Anthropic. Keep confirmation on before every write: a page could contain instructions written to trick Claude, for example into copying a secret where players can see it."
+		"safety": "Page text reaches Claude, and so Anthropic. Keep confirmation on before every write: a page could contain instructions written to trick Claude, for example into copying a secret where players can see it.",
+		"when": "(created on {created}, last used: {used})",
+		"never": "never",
+		"client": "Connector linked from {client}",
+		"idleHint": "A token unused for 90 days stops working by itself."
 	},
 	"admin": {
 		"settings": "Settings",
@@ -544,12 +557,23 @@
 		"versionUnknown": "Couldn't check the version: GitHub is not responding. It will try again in a few minutes.",
 		"versionOff": "The version check on GitHub is turned off (CS_UPDATE_CHECK=0).",
 		"versionNews": "What's new in the new version",
-		"versionHowTo": "How to update"
+		"versionHowTo": "How to update",
+		"resetCreated": "Link to reset the password of {user}: send it to them. It lasts two days and works once; their open sessions close when they use it.",
+		"resetLink": "Reset link",
+		"resetPassword": "Reset password",
+		"audit": "Log",
+		"auditIntro": "Sign-ins, role and password changes, invites, Claude tokens, backups: the last 300 entries, kept for six months. No page content.",
+		"auditWhen": "When",
+		"auditWho": "Who",
+		"auditAction": "Action",
+		"auditDetail": "Detail",
+		"auditEmpty": "No entries yet."
 	},
 	"files": {
 		"empty": "Choose a file to upload.",
 		"tooBig": "The file is too big (max 25 MB).",
-		"badType": "Unsupported format: use PNG, JPEG, WebP or GIF."
+		"badType": "Unsupported format: use PNG, JPEG, WebP or GIF.",
+		"quota": "You have used up your image space: delete the ones you no longer need or ask the Master to upload them."
 	},
 	"gallery": {
 		"title": "Gallery",
@@ -1294,6 +1318,38 @@
 		"back": "Back to {host}",
 		"revoke": "You can revoke it from Campaign › Claude, in this campaign.",
 		"invalid": "This connection request isn't valid. Try again from Claude.",
-		"notMaster": "Claude can connect to a campaign only with its Master. Sign in with the Master's account, or ask them for the right connector address."
+		"notMaster": "Claude can connect to a campaign only with its Master. Sign in with the Master's account, or ask them for the right connector address.",
+		"unknownHost": "{host} is not a Claude site. Whoever receives this connection reads the whole campaign, secrets included, and writes in your name if you allow it. Allow it only if you know exactly what it is.",
+		"trust": "I know what {host} is and I want to give it access",
+		"untrusted": "For a site that is not Claude you must tick the box."
+	},
+	"reset": {
+		"title": "New password",
+		"intro": "Choose a new password for the account {user}.",
+		"invalid": "This link is not valid: it may have expired or already been used. Ask the Admin for a new one.",
+		"submit": "Save and sign in"
+	},
+	"audit": {
+		"login": "Sign-in",
+		"login_failed": "Failed sign-in",
+		"logout": "Sign-out",
+		"setup": "First setup",
+		"register": "Registration from invite",
+		"password_changed": "Password changed",
+		"password_reset_link": "Reset link created",
+		"password_reset": "Password reset from link",
+		"user_updated": "User updated",
+		"invite_created": "Invite created",
+		"invite_revoked": "Invite revoked",
+		"campaign_master": "Master changed",
+		"campaign_deleted": "Campaign deleted",
+		"token_created": "Claude token created",
+		"token_revoked": "Claude tokens revoked",
+		"oauth_consent": "Claude connector authorised",
+		"backup_downloaded": "Backup downloaded",
+		"export_downloaded": "Export downloaded",
+		"world_imported": "World pack imported",
+		"settings_changed": "Settings changed",
+		"sessions_closed": "Other sessions closed"
 	}
 }

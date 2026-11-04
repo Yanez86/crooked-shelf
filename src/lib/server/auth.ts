@@ -6,11 +6,17 @@ import { getDb, schema } from './db/index.ts';
 import { addMember } from './campaigns.ts';
 import type { Role } from '../roles.ts';
 
-const { users, sessions, invites, campaigns, apiTokens } = schema;
+const { users, sessions, invites, campaigns, apiTokens, passwordResets } = schema;
 
-export const SESSION_COOKIE = 'cs_session';
+/** In HTTPS il cookie ha il prefisso __Host-: il browser lo accetta solo sicuro, su tutto il sito e senza dominio. */
+export const sessionCookie = (url: URL) => (url.protocol === 'https:' ? '__Host-cs_session' : 'cs_session');
 const DAY = 24 * 60 * 60 * 1000;
+/** Senza visite la sessione scade dopo questi giorni (la scadenza si allunga a ogni visita)… */
 const SESSION_DAYS = 30;
+/** …ma mai oltre questi dall'accesso: dopo si rifà il login. */
+export const SESSION_MAX_DAYS = 90;
+/** Un token di Claude non usato da questi giorni smette di valere. */
+export const TOKEN_IDLE_DAYS = 90;
 
 export const PASSWORD_MIN = 10;
 export const USERNAME_RE = /^[\p{L}\p{N}._-]{3,32}$/u;
@@ -23,6 +29,8 @@ export interface SessionUser {
 	role: Role;
 	/** L'account è Admin: resta vero anche quando `role` diventa il ruolo nella campagna. */
 	admin: boolean;
+	/** Il ruolo dell'account (admin, master, player), che non cambia con la campagna: decide la quota di spazio. */
+	accountRole: Role;
 	prefs: Record<string, string>;
 	/** Nome di un'icona delle pagine; senza, la sagoma di una persona. */
 	icon: string | null;
@@ -111,8 +119,9 @@ export function joinInvite(token: string, userId: number): number | null {
 
 export function createSession(userId: number): { token: string; expires: Date } {
 	const token = newToken();
-	const expiresAt = Date.now() + SESSION_DAYS * DAY;
-	getDb().insert(sessions).values({ id: sha256(token), userId, expiresAt }).run();
+	const now = Date.now();
+	const expiresAt = now + SESSION_DAYS * DAY;
+	getDb().insert(sessions).values({ id: sha256(token), userId, expiresAt, createdAt: now }).run();
 	return { token, expires: new Date(expiresAt) };
 }
 
@@ -128,13 +137,14 @@ export function validateSession(token: string): { user: SessionUser; expires?: D
 		.get();
 	if (!row) return null;
 	const now = Date.now();
-	if (row.s.expiresAt < now || row.u.disabled) {
+	const end = row.s.createdAt + SESSION_MAX_DAYS * DAY;
+	if (row.s.expiresAt < now || end < now || row.u.disabled) {
 		db.delete(sessions).where(eq(sessions.id, id)).run();
 		return null;
 	}
 	let expires: Date | undefined;
-	if (row.s.expiresAt - now < (SESSION_DAYS / 2) * DAY) {
-		const expiresAt = now + SESSION_DAYS * DAY;
+	if (row.s.expiresAt - now < (SESSION_DAYS / 2) * DAY && row.s.expiresAt < end) {
+		const expiresAt = Math.min(end, now + SESSION_DAYS * DAY);
 		db.update(sessions).set({ expiresAt }).where(eq(sessions.id, id)).run();
 		expires = new Date(expiresAt);
 	}
@@ -142,7 +152,7 @@ export function validateSession(token: string): { user: SessionUser; expires?: D
 }
 
 function sessionUser({ id, username, displayName, role, prefs, icon, avatar }: typeof users.$inferSelect): SessionUser {
-	return { id, username, displayName, role, admin: role === 'admin', prefs: prefs ?? {}, icon, avatar };
+	return { id, username, displayName, role, admin: role === 'admin', accountRole: role, prefs: prefs ?? {}, icon, avatar };
 }
 
 export function deleteSession(token: string) {
@@ -155,12 +165,25 @@ export function deleteUserSessions(userId: number) {
 	getDb().delete(apiTokens).where(eq(apiTokens.userId, userId)).run();
 }
 
-export function purgeExpiredSessions() {
-	getDb().delete(sessions).where(lt(sessions.expiresAt, Date.now())).run();
+export function purgeExpiredSessions(now = Date.now()) {
+	getDb()
+		.delete(sessions)
+		.where(sql`${sessions.expiresAt} < ${now} OR ${sessions.createdAt} < ${now - SESSION_MAX_DAYS * DAY}`)
+		.run();
+}
+
+/** Quante sessioni aperte ha una persona (dispositivi e browser). */
+export function countSessions(userId: number): number {
+	return getDb().select({ n: sql<number>`count(*)` }).from(sessions).where(eq(sessions.userId, userId)).get()?.n ?? 0;
+}
+
+/** Chiude le sessioni di una persona tranne quella in uso. */
+export function deleteOtherSessions(userId: number, token: string) {
+	getDb().delete(sessions).where(and(eq(sessions.userId, userId), ne(sessions.id, sha256(token)))).run();
 }
 
 export function setSessionCookie(cookies: Cookies, url: URL, token: string, expires: Date) {
-	cookies.set(SESSION_COOKIE, token, {
+	cookies.set(sessionCookie(url), token, {
 		path: '/',
 		httpOnly: true,
 		sameSite: 'lax',
@@ -170,8 +193,46 @@ export function setSessionCookie(cookies: Cookies, url: URL, token: string, expi
 	});
 }
 
-export function clearSessionCookie(cookies: Cookies) {
-	cookies.delete(SESSION_COOKIE, { path: '/' });
+export function clearSessionCookie(cookies: Cookies, url: URL) {
+	cookies.delete(sessionCookie(url), { path: '/' });
+}
+
+// --- Reimpostazione della password (link creato dall'Admin) ---
+
+const RESET_DAYS = 2;
+
+export function createPasswordReset(userId: number, createdBy: number): string {
+	const token = newToken();
+	getDb().delete(passwordResets).where(eq(passwordResets.userId, userId)).run();
+	getDb().insert(passwordResets).values({ tokenHash: sha256(token), userId, createdBy, expiresAt: Date.now() + RESET_DAYS * DAY }).run();
+	return token;
+}
+
+export function findPasswordReset(token: string) {
+	return getDb()
+		.select({ userId: passwordResets.userId, username: users.username })
+		.from(passwordResets)
+		.innerJoin(users, eq(users.id, passwordResets.userId))
+		.where(and(eq(passwordResets.tokenHash, sha256(token)), gt(passwordResets.expiresAt, Date.now()), eq(users.disabled, false)))
+		.get();
+}
+
+/** Nuova password dal link: il link si consuma e tutte le sessioni e i token di prima si chiudono. */
+export async function redeemPasswordReset(token: string, password: string): Promise<number | null> {
+	const r = findPasswordReset(token);
+	if (!r) return null;
+	const passwordHash = await hashPassword(password);
+	return getDb().transaction(() => {
+		if (!findPasswordReset(token)) return null;
+		getDb().update(users).set({ passwordHash }).where(eq(users.id, r.userId)).run();
+		getDb().delete(passwordResets).where(eq(passwordResets.userId, r.userId)).run();
+		deleteUserSessions(r.userId);
+		return r.userId;
+	});
+}
+
+export function purgeExpiredResets(now = Date.now()) {
+	getDb().delete(passwordResets).where(lt(passwordResets.expiresAt, now)).run();
 }
 
 // --- Token per Claude ---
@@ -180,10 +241,11 @@ export function clearSessionCookie(cookies: Cookies) {
 export function createApiToken(userId: number, campaignId: number, canWrite = false, client = ''): string {
 	const token = newToken();
 	const tokenHash = sha256(token);
+	const createdAt = Date.now();
 	getDb()
 		.insert(apiTokens)
-		.values({ userId, campaignId, client, tokenHash, canWrite })
-		.onConflictDoUpdate({ target: [apiTokens.userId, apiTokens.campaignId, apiTokens.client], set: { tokenHash, canWrite } })
+		.values({ userId, campaignId, client, tokenHash, canWrite, createdAt, lastUsedAt: null })
+		.onConflictDoUpdate({ target: [apiTokens.userId, apiTokens.campaignId, apiTokens.client], set: { tokenHash, canWrite, createdAt, lastUsedAt: null } })
 		.run();
 	return token;
 }
@@ -198,14 +260,30 @@ export function apiTokenAccess(userId: number, campaignId: number): 'read' | 'wr
 	return row ? (row.canWrite ? 'write' : 'read') : null;
 }
 
-/** I siti collegati col connettore (OAuth) a una campagna, es. claude.ai. */
-export function apiTokenClients(userId: number, campaignId: number): string[] {
+/** I siti collegati col connettore (OAuth) a una campagna, es. claude.ai, con quando e quanto scrivono. */
+export function apiTokenClients(userId: number, campaignId: number) {
 	return getDb()
-		.select({ client: apiTokens.client })
+		.select({ client: apiTokens.client, canWrite: apiTokens.canWrite, createdAt: apiTokens.createdAt, lastUsedAt: apiTokens.lastUsedAt })
 		.from(apiTokens)
 		.where(and(eq(apiTokens.userId, userId), eq(apiTokens.campaignId, campaignId), ne(apiTokens.client, '')))
-		.all()
-		.map((r) => r.client);
+		.all();
+}
+
+/** Il token del profilo di una persona in una campagna: quando è nato e quando è stato usato. */
+export function apiTokenInfo(userId: number, campaignId: number) {
+	return getDb()
+		.select({ canWrite: apiTokens.canWrite, createdAt: apiTokens.createdAt, lastUsedAt: apiTokens.lastUsedAt })
+		.from(apiTokens)
+		.where(and(eq(apiTokens.userId, userId), eq(apiTokens.campaignId, campaignId), eq(apiTokens.client, '')))
+		.get();
+}
+
+/** I token fermi da troppo smettono di valere. */
+export function purgeIdleApiTokens(now = Date.now()) {
+	getDb()
+		.delete(apiTokens)
+		.where(lt(sql`coalesce(${apiTokens.lastUsedAt}, ${apiTokens.createdAt})`, now - TOKEN_IDLE_DAYS * DAY))
+		.run();
 }
 
 /** Revoca tutti i token di una persona in una campagna: quello del profilo e quelli del connettore. */
@@ -217,13 +295,21 @@ export function revokeApiToken(userId: number, campaignId: number) {
 export function validateApiToken(header: string | null): { user: SessionUser; campaignId: number; canWrite: boolean } | null {
 	const [, token] = /^Bearer (\S+)$/i.exec(header ?? '') ?? [];
 	if (!token) return null;
+	const hash = sha256(token);
 	const row = getDb()
 		.select({ t: apiTokens, u: users })
 		.from(apiTokens)
 		.innerJoin(users, eq(users.id, apiTokens.userId))
-		.where(eq(apiTokens.tokenHash, sha256(token)))
+		.where(eq(apiTokens.tokenHash, hash))
 		.get();
-	return row && !row.u.disabled ? { user: sessionUser(row.u), campaignId: row.t.campaignId, canWrite: row.t.canWrite } : null;
+	if (!row || row.u.disabled) return null;
+	const now = Date.now();
+	if ((row.t.lastUsedAt ?? row.t.createdAt) < now - TOKEN_IDLE_DAYS * DAY) {
+		getDb().delete(apiTokens).where(eq(apiTokens.tokenHash, hash)).run();
+		return null;
+	}
+	if (!row.t.lastUsedAt || now - row.t.lastUsedAt > 60 * 60 * 1000) getDb().update(apiTokens).set({ lastUsedAt: now }).where(eq(apiTokens.tokenHash, hash)).run();
+	return { user: sessionUser(row.u), campaignId: row.t.campaignId, canWrite: row.t.canWrite };
 }
 
 // --- Inviti ---
@@ -282,15 +368,19 @@ const attempts = new Map<string, { n: number; until: number }>();
 const MAX_ATTEMPTS = 5;
 const WINDOW = 15 * 60 * 1000;
 
-export function isLimited(key: string): boolean {
+/** Troppi tentativi falliti per questa chiave (IP e nome utente: 5; `max` più alto per il solo IP). */
+export function isLimited(key: string, max = MAX_ATTEMPTS): boolean {
 	const a = attempts.get(key);
 	if (!a) return false;
 	if (a.until < Date.now()) {
 		attempts.delete(key);
 		return false;
 	}
-	return a.n >= MAX_ATTEMPTS;
+	return a.n >= max;
 }
+
+/** Tentativi falliti da un indirizzo, con qualsiasi nome: oltre questi, l'indirizzo aspetta. */
+export const MAX_ATTEMPTS_PER_IP = 20;
 
 export function recordFailure(key: string) {
 	const a = attempts.get(key);

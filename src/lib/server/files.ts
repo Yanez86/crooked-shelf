@@ -2,8 +2,9 @@ import { createHash, randomBytes } from 'node:crypto';
 import { mkdirSync, readFileSync, rmSync, writeFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { imageSize } from 'image-size';
-import { eq } from 'drizzle-orm';
+import { and, eq, inArray, lt, notInArray, sql } from 'drizzle-orm';
 import { dataDir, getDb, schema } from './db/index.ts';
+import type { Role } from '../roles.ts';
 
 export const MAX_UPLOAD = 25 * 1024 * 1024;
 /** Risorse (musica, dispense…): più grandi delle immagini, ma sotto il limite delle richieste (100 MB). */
@@ -131,4 +132,87 @@ export function parseRange(header: string | null, size: number): { start: number
 	const end = m[1] && m[2] ? Math.min(Number(m[2]), size - 1) : size - 1;
 	if (m[1] && m[2] && Number(m[2]) < start) return null;
 	return start < size && start <= end ? { start, end } : 'invalid';
+}
+
+// --- Dove è usato un file, e chi lo può scaricare ---
+
+export type FileUseKind = (typeof schema.fileUses.$inferSelect)['kind'];
+
+/** Segna che `ids` sono usati da `kind`/`refId` (le pagine accumulano: le versioni vecchie tengono vive le immagini tolte). */
+export function addFileUses(kind: FileUseKind, refId: number, ids: Iterable<string | null | undefined>) {
+	const list = [...new Set([...ids].filter((id): id is string => !!id && !!getFile(id)))];
+	if (!list.length) return;
+	getDb()
+		.insert(schema.fileUses)
+		.values(list.map((fileId) => ({ fileId, kind, refId })))
+		.onConflictDoNothing()
+		.run();
+}
+
+/** Toglie tutti gli usi di `kind`/`refId` (una risorsa eliminata, una mappa con un'altra immagine…). */
+export function clearFileUses(kind: FileUseKind, refId: number, except?: string | null) {
+	getDb()
+		.delete(schema.fileUses)
+		.where(and(eq(schema.fileUses.kind, kind), eq(schema.fileUses.refId, refId), except ? sql`${schema.fileUses.fileId} <> ${except}` : undefined))
+		.run();
+}
+
+export function fileUsesOf(fileId: string) {
+	return getDb().select({ kind: schema.fileUses.kind, refId: schema.fileUses.refId }).from(schema.fileUses).where(eq(schema.fileUses.fileId, fileId)).all();
+}
+
+// --- Quota e pulizia ---
+
+const MB = 1024 * 1024;
+/** Spazio per le immagini di un account giocatore (Master e Admin non hanno limite): CS_UPLOAD_QUOTA_MB, 512 MB di base. */
+export const uploadQuota = () => Math.max(0, Number(process.env.CS_UPLOAD_QUOTA_MB ?? 512)) * MB;
+
+/** Quanto ha caricato una persona. */
+export function usedBy(userId: number): number {
+	return getDb().select({ n: sql<number>`coalesce(sum(${schema.files.size}), 0)` }).from(schema.files).where(eq(schema.files.uploadedBy, userId)).get()?.n ?? 0;
+}
+
+/** Un giocatore resta nella sua quota; chi tiene la wiki (Master, Admin) no. */
+export function withinQuota(u: { id: number; accountRole: Role }, size: number): boolean {
+	return u.accountRole !== 'player' || usedBy(u.id) + size <= uploadQuota();
+}
+
+const ORPHAN_AGE = 24 * 60 * 60 * 1000;
+
+/** Elimina i file che nessuno usa da più di un giorno (caricati nell'editor e poi non salvati, o di pagine eliminate per sempre). */
+export function purgeOrphanFiles(now = Date.now()): number {
+	const db = getDb();
+	const used = db.select({ id: schema.fileUses.fileId }).from(schema.fileUses);
+	const rows = db
+		.select({ id: schema.files.id })
+		.from(schema.files)
+		.where(and(notInArray(schema.files.id, used), lt(schema.files.createdAt, now - ORPHAN_AGE)))
+		.all();
+	for (const r of rows) deleteFile(r.id);
+	return rows.length;
+}
+
+/** Gli usi di pagine che non esistono più (eliminate per sempre, campagne eliminate). */
+export function dropDanglingPageUses() {
+	const db = getDb();
+	db.delete(schema.fileUses)
+		.where(and(eq(schema.fileUses.kind, 'page'), notInArray(schema.fileUses.refId, db.select({ id: schema.pages.id }).from(schema.pages))))
+		.run();
+	db.delete(schema.fileUses)
+		.where(and(eq(schema.fileUses.kind, 'map'), notInArray(schema.fileUses.refId, db.select({ id: schema.maps.id }).from(schema.maps))))
+		.run();
+	db.delete(schema.fileUses)
+		.where(and(eq(schema.fileUses.kind, 'resource'), notInArray(schema.fileUses.refId, db.select({ id: schema.resources.id }).from(schema.resources))))
+		.run();
+}
+
+/** Gli id dei file usati da un elenco di pagine (per sapere cosa resta vivo). */
+export function filesUsedByPages(pageIds: number[]): string[] {
+	if (!pageIds.length) return [];
+	return getDb()
+		.select({ id: schema.fileUses.fileId })
+		.from(schema.fileUses)
+		.where(and(eq(schema.fileUses.kind, 'page'), inArray(schema.fileUses.refId, pageIds)))
+		.all()
+		.map((r) => r.id);
 }

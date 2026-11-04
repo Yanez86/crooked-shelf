@@ -3,7 +3,7 @@ import { and, asc, eq, inArray, or, sql } from 'drizzle-orm';
 import type { SQLiteColumn } from 'drizzle-orm/sqlite-core';
 import type { Cookies } from '@sveltejs/kit';
 import { getDb, getSqlite, schema } from './db/index.ts';
-import { deleteFile } from './files.ts';
+import { deleteFile, dropDanglingPageUses } from './files.ts';
 import { uploadedImages } from '../content/extract.ts';
 import { isDoc, type PageField } from '../content/types.ts';
 import type { Viewer } from '../access.ts';
@@ -146,6 +146,7 @@ export function deleteCampaign(id: number) {
 		for (const t of [treeDividers, resources, tags, pages, categories]) db.delete(t).where(eq(t.campaignId, id)).run();
 		db.delete(campaigns).where(eq(campaigns.id, id)).run();
 	});
+	dropDanglingPageUses();
 	// Dopo la transazione: un file tolto dal disco non si recupera, se qualcosa andasse storto.
 	for (const f of files) deleteFile(f);
 }

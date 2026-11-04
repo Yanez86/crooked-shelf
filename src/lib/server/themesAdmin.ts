@@ -1,4 +1,4 @@
-import { deleteFile } from './files.ts';
+import { addFileUses, deleteFile } from './files.ts';
 import { customThemes, saveSettings } from './settings.ts';
 import { THEMES, type Theme } from '../themes.ts';
 
@@ -9,6 +9,7 @@ export function findTheme(id: string): Theme | undefined {
 /** Salva un tema creato dall'Admin (nuovo se id è null). Restituisce l'id. */
 export function storeTheme(theme: Omit<Theme, 'id'>, id: string | null): string {
 	const list = customThemes();
+	if (theme.background) addFileUses('theme', 0, [theme.background]);
 	if (id) {
 		const old = list.find((t) => t.id === id)?.background;
 		saveSettings({ themes: list.map((t) => (t.id === id ? { ...theme, id } : t)) });

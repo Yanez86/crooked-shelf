@@ -1,6 +1,7 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
-import { CLIENT_ID, isLoopback, issueCode, redirectHost } from '#lib/server/oauth.ts';
+import { CLIENT_ID, isKnownHost, isLoopback, issueCode, redirectHost } from '#lib/server/oauth.ts';
+import { audit } from '#lib/server/audit.ts';
 
 /**
  * La richiesta di Claude, controllata; null se non va: senza un indirizzo di ritorno valido non si rimanda da nessuna parte.
@@ -28,7 +29,7 @@ export const load: PageServerLoad = ({ url, locals }) => {
 	if (!r) return { invalid: true as const };
 	if (!locals.user) redirect(303, `/login?next=${encodeURIComponent(url.pathname + url.search)}`);
 	const campaign = ownCampaign(locals, r.campaignId);
-	return { invalid: false as const, host: r.host, local: isLoopback(r.host), campaign: campaign?.name ?? null };
+	return { invalid: false as const, host: r.host, local: isLoopback(r.host), known: isKnownHost(r.host), campaign: campaign?.name ?? null };
 };
 
 export const actions: Actions = {
@@ -44,7 +45,11 @@ export const actions: Actions = {
 		}
 		const campaign = ownCampaign(locals, r.campaignId);
 		if (!campaign) return fail(403, { error: 'oauth.notMaster' });
-		const code = issueCode({ userId: locals.user.id, campaignId: campaign.id, canWrite: f.get('write') === 'on', redirectUri: r.redirectUri, challenge: r.challenge });
+		// Un sito che non è Claude: serve la conferma esplicita, il token vale quanto il Master.
+		if (!isKnownHost(r.host) && f.get('trust') !== 'on') return fail(400, { error: 'oauth.untrusted' });
+		const write = f.get('write') === 'on';
+		audit('oauth_consent', { userId: locals.user.id, ip: locals.ip }, `${r.host} ${write ? 'write' : 'read'} ${campaign.name}`);
+		const code = issueCode({ userId: locals.user.id, campaignId: campaign.id, canWrite: write, redirectUri: r.redirectUri, challenge: r.challenge });
 		back.searchParams.set('code', code);
 		// Non un redirect: la CSP (form-action 'self') bloccherebbe il ritorno a un altro sito dopo un form.
 		return { location: back.href };

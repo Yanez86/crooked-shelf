@@ -25,7 +25,7 @@ npm run test:e2e   # browser (Playwright) con controlli di accessibilità (axe)
 
 I test nel browser partono da una wiki vuota e sono una storia unica in ordine (`tests/e2e/1-…`, `2-…`, …). Gli screenshot finiscono in `test-results/screens/`.
 
-Per provarli sull'immagine Docker: `docker run -d -p 4300:3000 crooked-shelf` e poi `E2E_BASE_URL=http://localhost:4300 npm run test:e2e`.
+Per provarli sull'immagine Docker: `docker run -d -p 4300:3000 -e CS_SETUP_TOKEN=e2e-setup crooked-shelf` e poi `E2E_BASE_URL=http://localhost:4300 npm run test:e2e` (il codice della prima configurazione deve essere quello dei test: `e2e-setup`, o un altro passato in `CS_SETUP_TOKEN` a entrambi).
 
 ## Come è fatto
 
@@ -44,7 +44,7 @@ Per provarli sull'immagine Docker: `docker run -d -p 4300:3000 crooked-shelf` e 
 
 Regole importanti:
 
-- **Sicurezza**: i permessi si controllano sempre sul server (`src/lib/access.ts`, `visibility.ts`). Il testo segreto non deve mai arrivare al browser di chi non è Master: né nella pagina, né nella ricerca, nei suggerimenti, nelle versioni o nelle esportazioni.
+- **Sicurezza**: i permessi si controllano sempre sul server (`src/lib/access.ts`, `visibility.ts`). Il testo segreto non deve mai arrivare al browser di chi non è Master: né nella pagina, né nella ricerca, nei suggerimenti, nelle versioni o nelle esportazioni. I file si scaricano solo da chi può vedere ciò che li usa: chi salva un file da qualche parte lo segna con `addFileUses` (`src/lib/server/files.ts`), e le azioni che contano (accessi, ruoli, inviti, token) finiscono nel registro con `audit`.
 - **Accessibilità** (WCAG 2.2 AA): tutto usabile da tastiera, etichette su ogni campo, niente informazioni affidate solo al colore, pulsanti di almeno 24×24 px. I test con axe devono passare.
 - **Database**: per cambiarlo aggiungi una migrazione in fondo a `src/lib/server/db/migrations.ts`; non modificare quelle già pubblicate.
 - **Testi**: ogni testo dell'interfaccia passa dalle traduzioni (`t('chiave')`), con la stessa chiave in `it.json` e `en.json` (un test lo controlla).

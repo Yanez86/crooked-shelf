@@ -9,6 +9,8 @@ const SHOTS = 'test-results/screens';
 mkdirSync(SHOTS, { recursive: true });
 
 const ADMIN = { user: 'davide', pass: 'drago-rosso-2024' };
+// Il codice della prima configurazione: lo stesso di playwright.config.ts (o del container, con E2E_BASE_URL).
+const SETUP_TOKEN = process.env.CS_SETUP_TOKEN ?? 'e2e-setup';
 const TREE = 'Pagine e risorse';
 const PLAYER = { user: 'alice', pass: 'elfa-dei-boschi-99' };
 
@@ -59,6 +61,17 @@ test('prima configurazione', async ({ browser }) => {
 	await axe(admin, 'setup');
 	await shot(admin, '01-setup');
 
+	// Senza il codice non si va avanti.
+	await admin.getByLabel('Codice di configurazione').fill('sbagliato');
+	await admin.getByLabel('Nome della campagna').fill('Le Cronache di Faerûn');
+	await admin.getByLabel('Lingua predefinita').selectOption('it');
+	await admin.getByLabel('Nome utente').fill(ADMIN.user);
+	await admin.getByLabel('Password', { exact: true }).fill(ADMIN.pass);
+	await admin.getByLabel('Ripeti la password').fill(ADMIN.pass);
+	await admin.getByRole('button', { name: 'Crea la wiki' }).click();
+	await expect(admin.getByRole('alert')).toContainText('codice di configurazione');
+
+	await admin.getByLabel('Codice di configurazione').fill(SETUP_TOKEN);
 	await admin.getByLabel('Nome della campagna').fill('Le Cronache di Faerûn');
 	await admin.getByLabel('Lingua predefinita').selectOption('it');
 	await admin.getByLabel('Nome utente').fill(ADMIN.user);

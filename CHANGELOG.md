@@ -3,6 +3,28 @@
 Le versioni seguono il [versionamento semantico](https://semver.org/lang/it/): MAGGIORE.MINORE.CORRETTIVA.
 Questo file è anche la pagina «Novità» della wiki (`/changelog`).
 
+## 0.13.0 — 2026-11-04
+
+Versione dedicata alla sicurezza, dopo una revisione completa del codice. Niente cambia per chi gioca; per chi installa c'è un passaggio in più alla prima configurazione.
+
+### Aggiunte
+- Prima configurazione con un codice: finché la wiki non ha utenti, `/setup` chiede il codice scritto nei log del server (o in `CS_SETUP_TOKEN`), così la wiki la configura chi ha il server e non chi arriva prima all'indirizzo. Due richieste insieme non creano più due amministratori.
+- Limiti ai tentativi: accessi falliti per indirizzo (20 ogni 10 minuti, oltre ai 5 per nome utente), e per indirizzo su registrazione, cambio password, connettore di Claude, caricamenti e `/mcp`, più un tetto agli hash delle password in corso: un'ondata di accessi con nomi inventati non satura più il server. All'avvio la wiki avvisa nei log se le intestazioni del proxy e `CS_TRUST_PROXY` non tornano.
+- I file si scaricano solo da chi può vedere ciò che li usa (pagina, anche nel cestino o nelle versioni, mappa, risorsa, tema, avatar): l'indirizzo casuale non basta più. Un file appena caricato lo vede solo chi l'ha caricato; quelli che nessuno usa da un giorno si eliminano da soli.
+- Quota di spazio per le immagini dei giocatori (`CS_UPLOAD_QUOTA_MB`, 512 MB di base; Master e Admin senza limite) e corpo delle richieste limitato per tipo di pagina (64 KB per chi non ha fatto l'accesso).
+- Sessioni: scadono comunque dopo 90 giorni dall'accesso; dal Profilo › Password si vedono quante sono aperte e si chiudono le altre. In HTTPS il cookie ha il prefisso `__Host-`: dopo l'aggiornamento si rifà l'accesso una volta.
+- Token di Claude con data di creazione e ultimo uso, visibili in Campagna › Claude; fermi da 90 giorni smettono di valere. Il consenso del connettore verso un sito che non è di Claude chiede una conferma esplicita.
+- Password dimenticata: l'Admin crea un link di reimpostazione da Amministrazione › Utenti (due giorni, una volta sola). Le password più comuni, o che contengono il nome utente, vengono rifiutate.
+- Amministrazione › Registro: accessi riusciti e falliti, cambi di ruolo e password, inviti, token di Claude, consensi, backup ed esportazioni degli ultimi sei mesi.
+- Intestazioni `Strict-Transport-Security` (in HTTPS), `Permissions-Policy` e `Cross-Origin-Opener-Policy`.
+
+### Modifiche
+- Il backup esce a pezzi, un file alla volta: una wiki con molti GB di immagini non passa più dalla memoria. I pacchetti mondo da importare hanno un limite configurabile (`CS_PACK_MAX_MB`, 200 di base) e i file dell'anteprima si puliscono da soli.
+- Documentazione: cosa può davvero un Admin (il backup contiene tutto), come esporre la wiki dietro un proxy solo su `127.0.0.1`, le nuove variabili.
+- CI: azioni GitHub fissate al commit e `npm audit` sulle dipendenze di produzione.
+
+### Correzioni
+- Open redirect: `/login?next=/\sito.esterno` (barra rovesciata) portava fuori dalla wiki dopo l'accesso; lo stesso nei collegamenti delle pagine. Ora passano solo percorsi interni.
 ## 0.12.4 — 2026-11-04
 
 ### Aggiunte

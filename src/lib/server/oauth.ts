@@ -26,6 +26,13 @@ const codes = new Map<string, Grant>();
 const LOOPBACK = ['localhost', '127.0.0.1', '[::1]'];
 export const isLoopback = (host: string) => LOOPBACK.includes(host);
 
+// I siti di Claude: per gli altri la pagina di consenso chiede una conferma in più, perché il token vale come il Master.
+const KNOWN = ['claude.ai', 'claude.com', 'anthropic.com'];
+export const isKnownHost = (host: string) => isLoopback(host) || KNOWN.some((k) => host === k || host.endsWith('.' + k));
+
+/** Quanti codici in attesa per persona: oltre, il più vecchio se ne va. */
+const CODES_PER_USER = 10;
+
 /** Dove si può mandare il codice: un sito in HTTPS, o un programma su questo computer (Claude Code), su qualsiasi porta. */
 export function redirectHost(uri: unknown): string | null {
 	if (typeof uri !== 'string' || uri.length > 2000) return null;
@@ -43,6 +50,8 @@ export function redirectHost(uri: unknown): string | null {
 export function issueCode(grant: Omit<Grant, 'expires'>): string {
 	const now = Date.now();
 	for (const [k, g] of codes) if (g.expires < now) codes.delete(k);
+	const mine = [...codes].filter(([, g]) => g.userId === grant.userId);
+	if (mine.length >= CODES_PER_USER) codes.delete(mine[0][0]);
 	const code = newToken();
 	codes.set(code, { ...grant, expires: now + CODE_TTL });
 	return code;

@@ -2,7 +2,8 @@
 #   Render › New › Blueprint › scegli questo repository.
 #
 # Sul piano Free la wiki si spegne dopo 15 minuti senza visite e i dati NON restano:
-# a ogni spegnimento, riavvio o nuova versione si riparte da una wiki vuota.
+# a ogni spegnimento, riavvio o nuova versione si riparte da una wiki vuota, e la prima configurazione
+# chiede di nuovo il codice (nei log di Render, o in CS_SETUP_TOKEN tra le variabili del servizio).
 # Per usarla davvero vedi docs/installazione.md.
 services:
   - type: web

@@ -3,6 +3,7 @@ import type { Actions, PageServerLoad } from './$types';
 import {
 	burnTime,
 	clearFailures,
+	MAX_ATTEMPTS_PER_IP,
 	createSession,
 	findUserByName,
 	isLimited,
@@ -11,6 +12,8 @@ import {
 	verifyPassword
 } from '#lib/server/auth.ts';
 import { safeNext, str } from '#lib/server/forms.ts';
+import { hashSlot } from '#lib/server/ratelimit.ts';
+import { audit } from '#lib/server/audit.ts';
 
 export const load: PageServerLoad = ({ locals, url }) => {
 	if (locals.user) redirect(303, safeNext(url.searchParams.get('next')));
@@ -21,16 +24,22 @@ export const actions: Actions = {
 		const f = await request.formData();
 		const username = str(f, 'username', 64);
 		const password = String(f.get('password') ?? '');
-		const key = `${getClientAddress()}|${username.toLowerCase()}`;
+		const ip = getClientAddress();
+		const key = `${ip}|${username.toLowerCase()}`;
+		const ipKey = `${ip}|*`;
 
-		if (isLimited(key)) return fail(429, { error: 'errors.tooMany', username });
+		if (isLimited(key) || isLimited(ipKey, MAX_ATTEMPTS_PER_IP)) return fail(429, { error: 'errors.tooMany', username });
+		if (!hashSlot()) return fail(429, { error: 'errors.busy', username });
 		const user = findUserByName(username);
 		const ok = user ? await verifyPassword(user.passwordHash, password) : (await burnTime(password), false);
 		if (!user || !ok || user.disabled) {
 			recordFailure(key);
+			recordFailure(ipKey);
+			audit('login_failed', { userId: user?.id, ip: getClientAddress() }, username);
 			return fail(400, { error: 'errors.login', username });
 		}
 		clearFailures(key);
+		audit('login', { userId: user.id, ip: getClientAddress() });
 		const s = createSession(user.id);
 		setSessionCookie(cookies, url, s.token, s.expires);
 		redirect(303, safeNext(url.searchParams.get('next')));

@@ -6,6 +6,7 @@ import { canAppoint, deleteCampaign, getCampaign, masterCandidates, saveCampaign
 import { getSettings } from '#lib/server/settings.ts';
 import { newCampaign } from '#lib/server/templates.ts';
 import { requireAdmin } from '#lib/server/guard.ts';
+import { audit } from '#lib/server/audit.ts';
 import { str } from '#lib/server/forms.ts';
 
 const { campaigns, campaignMembers } = schema;
@@ -51,15 +52,17 @@ export const actions: Actions = {
 		if ('error' in r) return fail(400, { error: r.error });
 		if (!canAppoint(c, r.masterId, u)) return fail(403, { error: 'admin.selfAppoint' });
 		saveCampaign(c.id, { name: r.name });
+		if (c.masterId !== r.masterId) audit('campaign_master', { userId: u.id, ip: locals.ip }, `${r.name}: ${r.masterId}`);
 		setMaster(c.id, r.masterId);
 		return { ok: 'common.saved' };
 	},
 	delete: async ({ request, locals }) => {
-		requireAdmin(locals.user);
+		const u = requireAdmin(locals.user);
 		const f = await request.formData();
 		const c = getCampaign(Number(f.get('id')));
 		if (!c) return fail(404, { error: 'errors.generic' });
 		if (str(f, 'confirm', 80) !== c.name) return fail(400, { error: 'campaign.deleteMismatch' });
+		audit('campaign_deleted', { userId: u.id, ip: locals.ip }, c.name);
 		deleteCampaign(c.id);
 		// Una richiesta nuova: questa potrebbe stare proprio nella campagna appena eliminata.
 		redirect(303, '/admin/campaigns?deleted=1');

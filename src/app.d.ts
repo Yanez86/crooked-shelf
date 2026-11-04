@@ -18,6 +18,8 @@ declare global {
 			asPlayer: boolean;
 			prefs: Prefs;
 			locale: string;
+			/** L'indirizzo di chi chiede (dietro un proxy, quello di X-Forwarded-For se CS_TRUST_PROXY=1). */
+			ip: string;
 		}
 	}
 }

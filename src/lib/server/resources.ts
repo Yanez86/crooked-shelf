@@ -2,7 +2,7 @@ import { and, eq, sql, type SQL } from 'drizzle-orm';
 import { getDb, schema } from './db/index.ts';
 import { campaignId, ofCampaign } from './campaigns.ts';
 import { str } from './forms.ts';
-import { deleteFile } from './files.ts';
+import { addFileUses, clearFileUses, deleteFile } from './files.ts';
 import { isMaster, type Viewer } from '../access.ts';
 import { kindOf, type ResourceKind } from '../resources.ts';
 
@@ -59,11 +59,13 @@ export function getResource(id: number, u: Viewer | null): Resource | undefined 
 
 export function createResource(input: ResourceInput, fileId: string, userId: number): number {
 	const now = Date.now();
-	return getDb()
+	const id = getDb()
 		.insert(resources)
 		.values({ ...input, campaignId: campaignId(), fileId, createdBy: userId, createdAt: now, updatedAt: now })
 		.returning({ id: resources.id })
 		.get().id;
+	addFileUses('resource', id, [fileId]);
+	return id;
 }
 
 /** Con `fileId` il file cambia: quello vecchio si elimina. */
@@ -75,12 +77,19 @@ export function updateResource(id: number, input: ResourceInput, fileId?: string
 		.set({ ...input, ...(fileId ? { fileId } : {}), updatedAt: Date.now() })
 		.where(eq(resources.id, id))
 		.run();
-	if (fileId && fileId !== old.fileId) deleteFile(old.fileId);
+	if (fileId && fileId !== old.fileId) {
+		clearFileUses('resource', id);
+		addFileUses('resource', id, [fileId]);
+		deleteFile(old.fileId);
+	}
 }
 
 export function deleteResource(id: number) {
 	const r = getDb().delete(resources).where(and(ofCampaign(resources), eq(resources.id, id))).returning({ fileId: resources.fileId }).get();
-	if (r) deleteFile(r.fileId);
+	if (r) {
+		clearFileUses('resource', id);
+		deleteFile(r.fileId);
+	}
 }
 
 /** Legge il modulo di una risorsa. Senza titolo si usa il nome del file, senza estensione. */

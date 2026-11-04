@@ -109,7 +109,9 @@
 		"lastAdmin": "Deve restare almeno un Admin attivo.",
 		"notFoundTitle": "Pagina non trovata",
 		"notFound": "Questa pagina non esiste oppure non hai il permesso di vederla.",
-		"unexpected": "Si è verificato un errore imprevisto. Riprova tra poco."
+		"unexpected": "Si è verificato un errore imprevisto. Riprova tra poco.",
+		"busy": "Il server è occupato: riprova tra qualche secondo.",
+		"passwordCommon": "Questa password è troppo comune o contiene il nome utente: scegline un'altra."
 	},
 	"auth": {
 		"username": "Nome utente",
@@ -129,7 +131,10 @@
 		"siteName": "Nome della campagna",
 		"locale": "Lingua predefinita",
 		"admin": "Account amministratore",
-		"submit": "Crea la wiki"
+		"submit": "Crea la wiki",
+		"token": "Codice di configurazione",
+		"tokenHint": "Lo trovi nei messaggi del server (con Docker: docker compose logs), oppure è quello scritto in CS_SETUP_TOKEN. Serve perché la wiki la configuri tu e non chi arriva prima all'indirizzo.",
+		"badToken": "Il codice di configurazione non è corretto: copialo dai messaggi del server."
 	},
 	"invite": {
 		"title": "Unisciti alla wiki",
@@ -443,7 +448,11 @@
 		"currentPassword": "Password attuale",
 		"newPassword": "Nuova password",
 		"changePassword": "Cambia password",
-		"passwordChanged": "Password cambiata. Le sessioni sugli altri dispositivi sono state chiuse e i token per Claude revocati."
+		"passwordChanged": "Password cambiata. Le sessioni sugli altri dispositivi sono state chiuse e i token per Claude revocati.",
+		"sessions": "Dispositivi collegati",
+		"sessionsHint": "Sessioni aperte con il tuo account, questa compresa: {n}. Se hai fatto l'accesso da un computer che non è tuo, chiudi le altre.",
+		"logoutOthers": "Esci dagli altri dispositivi",
+		"othersClosed": "Le altre sessioni sono state chiuse."
 	},
 	"profile": {
 		"title": "Profilo",
@@ -489,7 +498,11 @@
 		"canRead": "Cerca, legge ed elenca le pagine della campagna, con la colonna a lato e le pagine che le citano.",
 		"canWrite": "Se glielo permetti, crea pagine (di base le vedi solo tu) e cambia il testo di quelle che puoi modificare. Ogni modifica lascia una versione a tuo nome nella cronologia.",
 		"cannot": "Non elimina nulla e non tocca titoli, visibilità, cartelle, template, mappe, cronologie, bacheche, file, utenti o impostazioni.",
-		"safety": "Il testo delle pagine arriva a Claude, quindi ad Anthropic. Tieni attiva la conferma prima di ogni scrittura: una pagina potrebbe contenere istruzioni scritte per ingannare Claude, per esempio per copiare un segreto dove lo vedono i giocatori."
+		"safety": "Il testo delle pagine arriva a Claude, quindi ad Anthropic. Tieni attiva la conferma prima di ogni scrittura: una pagina potrebbe contenere istruzioni scritte per ingannare Claude, per esempio per copiare un segreto dove lo vedono i giocatori.",
+		"when": "(creato il {created}, ultimo uso: {used})",
+		"never": "mai",
+		"client": "Connettore collegato da {client}",
+		"idleHint": "Un token fermo da 90 giorni smette di valere da solo."
 	},
 	"admin": {
 		"settings": "Impostazioni",
@@ -544,12 +557,23 @@
 		"versionUnknown": "Non è stato possibile controllare la versione: GitHub non risponde. Si riprova tra qualche minuto.",
 		"versionOff": "Il controllo della versione su GitHub è spento (CS_UPDATE_CHECK=0).",
 		"versionNews": "Novità della nuova versione",
-		"versionHowTo": "Come aggiornare"
+		"versionHowTo": "Come aggiornare",
+		"resetCreated": "Link per reimpostare la password di {user}: mandaglielo. Vale due giorni e una volta sola; le sue sessioni aperte si chiudono quando lo usa.",
+		"resetLink": "Link di reimpostazione",
+		"resetPassword": "Reimposta password",
+		"audit": "Registro",
+		"auditIntro": "Accessi, cambi di ruolo e password, inviti, token di Claude, backup: le ultime 300 voci, conservate per sei mesi. Niente contenuti delle pagine.",
+		"auditWhen": "Quando",
+		"auditWho": "Chi",
+		"auditAction": "Azione",
+		"auditDetail": "Dettaglio",
+		"auditEmpty": "Nessuna voce ancora."
 	},
 	"files": {
 		"empty": "Scegli un file da caricare.",
 		"tooBig": "Il file è troppo grande (massimo 25 MB).",
-		"badType": "Formato non supportato: usa PNG, JPEG, WebP o GIF."
+		"badType": "Formato non supportato: usa PNG, JPEG, WebP o GIF.",
+		"quota": "Hai esaurito lo spazio per le immagini: elimina quelle che non servono o chiedi al Master di caricarle."
 	},
 	"gallery": {
 		"title": "Galleria",
@@ -1294,6 +1318,38 @@
 		"back": "Torna a {host}",
 		"revoke": "Si revoca da Campagna › Claude, in questa campagna.",
 		"invalid": "Questa richiesta di collegamento non è valida. Riprova da Claude.",
-		"notMaster": "Claude può collegarsi a una campagna solo col suo Master. Accedi con l'account del Master, o chiedi a lui l'indirizzo del connettore giusto."
+		"notMaster": "Claude può collegarsi a una campagna solo col suo Master. Accedi con l'account del Master, o chiedi a lui l'indirizzo del connettore giusto.",
+		"unknownHost": "{host} non è un sito di Claude. Chi riceve questo collegamento legge tutta la campagna, segreti compresi, e scrive a tuo nome se glielo permetti. Consenti solo se sai esattamente cos'è.",
+		"trust": "So cos'è {host} e voglio dargli l'accesso",
+		"untrusted": "Per un sito che non è Claude devi confermare la casella."
+	},
+	"reset": {
+		"title": "Nuova password",
+		"intro": "Scegli una nuova password per l'account {user}.",
+		"invalid": "Questo link non è valido: forse è scaduto o è già stato usato. Chiedi all'Admin di crearne un altro.",
+		"submit": "Salva e accedi"
+	},
+	"audit": {
+		"login": "Accesso",
+		"login_failed": "Accesso fallito",
+		"logout": "Uscita",
+		"setup": "Prima configurazione",
+		"register": "Registrazione da invito",
+		"password_changed": "Password cambiata",
+		"password_reset_link": "Link di reimpostazione creato",
+		"password_reset": "Password reimpostata dal link",
+		"user_updated": "Utente modificato",
+		"invite_created": "Invito creato",
+		"invite_revoked": "Invito revocato",
+		"campaign_master": "Master cambiato",
+		"campaign_deleted": "Campagna eliminata",
+		"token_created": "Token di Claude creato",
+		"token_revoked": "Token di Claude revocati",
+		"oauth_consent": "Connettore di Claude autorizzato",
+		"backup_downloaded": "Backup scaricato",
+		"export_downloaded": "Esportazione scaricata",
+		"world_imported": "Pacchetto mondo importato",
+		"settings_changed": "Impostazioni cambiate",
+		"sessions_closed": "Altre sessioni chiuse"
 	}
 }

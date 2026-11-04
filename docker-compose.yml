@@ -6,6 +6,7 @@ services:
     image: crooked-shelf:latest
     restart: unless-stopped
     ports:
+      # In rete locale. Dietro un proxy sullo stesso computer usa "127.0.0.1:3000:3000", così da fuori si passa solo dal proxy.
       - "3000:3000"
     volumes:
       - crooked-shelf-data:/data
@@ -13,6 +14,8 @@ services:
       # Dietro un proxy con HTTPS (Caddy, nginx…), togli il # dalle due righe qui sotto:
       # CS_ORIGIN: "https://wiki.esempio.it"
       # CS_TRUST_PROXY: "1"
+      # Il codice della prima configurazione: senza, la wiki ne genera uno e lo scrive nei log (docker compose logs).
+      # CS_SETUP_TOKEN: "scegli-un-codice"
       TZ: "Europe/Rome"
 
 volumes:

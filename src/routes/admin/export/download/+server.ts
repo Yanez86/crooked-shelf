@@ -1,9 +1,11 @@
 import type { RequestHandler } from './$types';
 import { requireAdmin } from '#lib/server/guard.ts';
+import { audit } from '#lib/server/audit.ts';
 import { exportMarkdown } from '#lib/server/worldpack.ts';
 
 export const GET: RequestHandler = ({ locals }) => {
 	const u = requireAdmin(locals.user);
+	audit('export_downloaded', { userId: u.id, ip: locals.ip });
 	const date = new Date().toISOString().slice(0, 10);
 	return new Response(new Uint8Array(exportMarkdown(u)), {
 		headers: {

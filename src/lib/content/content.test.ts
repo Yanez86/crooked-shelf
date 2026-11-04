@@ -89,6 +89,10 @@ describe('renderDoc', () => {
 		expect(safeHref('https://dndbeyond.com')).toBe('https://dndbeyond.com');
 		expect(safeHref('/wiki/x')).toBe('/wiki/x');
 		expect(safeHref('//evil.com')).toBeNull();
+		// La barra rovesciata: per il browser `/\\evil.com` è `//evil.com`.
+		expect(safeHref('/\\evil.com')).toBeNull();
+		expect(safeHref('/wiki\\evil.com')).toBeNull();
+		expect(safeHref('#top')).toBe('#top');
 		expect(safeHref('data:text/html,x')).toBeNull();
 	});
 });

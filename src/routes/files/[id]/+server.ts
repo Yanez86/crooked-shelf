@@ -3,15 +3,17 @@ import { createReadStream, statSync } from 'node:fs';
 import { Readable } from 'node:stream';
 import type { RequestHandler } from './$types';
 import { filePath, getFile, opensInline, parseRange } from '#lib/server/files.ts';
+import { canDownload } from '#lib/server/fileAccess.ts';
 
 // Nome del file da scaricare: in ASCII per i browser vecchi, in UTF-8 per tutti gli altri.
 const attachment = (name: string) =>
 	`attachment; filename="${name.replace(/[^\x20-\x7e]|["\\]/g, '_')}"; filename*=UTF-8''${encodeURIComponent(name).replace(/['()*]/g, (c) => '%' + c.charCodeAt(0).toString(16).toUpperCase())}`;
 
-export const GET: RequestHandler = ({ params, request }) => {
+/** L'indirizzo non si indovina, ma non basta: si scarica solo da chi può vedere ciò che usa il file (vedi fileAccess.ts). */
+export const GET: RequestHandler = ({ params, request, locals }) => {
 	const f = getFile(params.id);
 	const path = f && filePath(f);
-	if (!f || !path) error(404, 'Not found');
+	if (!f || !path || !canDownload(f, { user: locals.user, campaignId: locals.campaign?.id ?? null, asPlayer: locals.asPlayer })) error(404, 'Not found');
 	const etag = `"${f.sha256}"`;
 	const headers: Record<string, string> = {
 		'Content-Type': f.mime,

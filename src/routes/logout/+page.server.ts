@@ -1,14 +1,16 @@
 import { redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
-import { SESSION_COOKIE, clearSessionCookie, deleteSession } from '#lib/server/auth.ts';
+import { clearSessionCookie, deleteSession, sessionCookie } from '#lib/server/auth.ts';
+import { audit } from '#lib/server/audit.ts';
 
 export const load: PageServerLoad = () => redirect(303, '/');
 
 export const actions: Actions = {
-	default: ({ cookies }) => {
-		const token = cookies.get(SESSION_COOKIE);
+	default: ({ cookies, url, locals }) => {
+		const token = cookies.get(sessionCookie(url));
 		if (token) deleteSession(token);
-		clearSessionCookie(cookies);
+		clearSessionCookie(cookies, url);
+		if (locals.user) audit('logout', { userId: locals.user.id, ip: locals.ip });
 		redirect(303, '/login');
 	}
 };

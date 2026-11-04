@@ -2,7 +2,8 @@ import { fail } from '@sveltejs/kit';
 import { and, asc, eq, ne, sql } from 'drizzle-orm';
 import type { Actions, PageServerLoad } from './$types';
 import { getDb, schema } from '#lib/server/db/index.ts';
-import { deleteUserSessions } from '#lib/server/auth.ts';
+import { createPasswordReset, deleteUserSessions } from '#lib/server/auth.ts';
+import { audit } from '#lib/server/audit.ts';
 import { requireAdmin } from '#lib/server/guard.ts';
 import { ROLES, type Role } from '#lib/roles.ts';
 
@@ -51,6 +52,16 @@ export const actions: Actions = {
 			return fail(400, { error: 'errors.lastAdmin' });
 		getDb().update(users).set({ role, disabled }).where(eq(users.id, id)).run();
 		if (disabled) deleteUserSessions(id);
+		audit('user_updated', { userId: me.id, ip: locals.ip }, `${target.username}: ${role}${disabled ? ', disabled' : ''}`);
 		return { ok: 'common.saved' };
+	},
+	// Chi ha dimenticato la password: un link da mandargli, che vale due giorni e una volta sola.
+	reset: async ({ request, locals, url }) => {
+		const me = requireAdmin(locals.user);
+		const id = Number((await request.formData()).get('id'));
+		const target = getDb().select({ id: users.id, username: users.username, disabled: users.disabled }).from(users).where(eq(users.id, id)).get();
+		if (!target || target.disabled) return fail(400, { error: 'errors.generic' });
+		audit('password_reset_link', { userId: me.id, ip: locals.ip }, target.username);
+		return { resetLink: `${url.origin}/reset/${createPasswordReset(target.id, me.id)}`, resetFor: target.username };
 	}
 };

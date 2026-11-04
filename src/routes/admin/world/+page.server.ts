@@ -10,6 +10,7 @@ import { str } from '#lib/server/forms.ts';
 import { importAsCampaign, importPack, previewPack, readPack, type Conflict } from '#lib/server/worldpack.ts';
 import { dataDir } from '#lib/server/db/index.ts';
 import { isMaster } from '#lib/access.ts';
+import { audit } from '#lib/server/audit.ts';
 
 const tmpDir = () => join(dataDir(), 'tmp');
 const tmpPath = (token: string) => join(tmpDir(), `${token}.shelf`);
@@ -57,6 +58,7 @@ export const actions: Actions = {
 			if (error) return fail(400, { error, token, preview: previewPack(r.pack, u) });
 			rmSync(tmpPath(token), { force: true });
 			const { campaign, done } = importAsCampaign(r.pack, { name, master: { id: masterId, role: 'master' } });
+			audit('world_imported', { userId: u.id, ip: locals.ip }, `${r.pack.manifest.name} -> ${name}`);
 			// Si entra solo nelle campagne che si tengono: quella di un altro Master si gestisce da Amministrazione › Campagne.
 			return { done, campaign: { id: campaign.id, name: campaign.name, open: masterId === u.id } };
 		}
@@ -64,6 +66,7 @@ export const actions: Actions = {
 		rmSync(tmpPath(token), { force: true });
 		const conflict = (['skip', 'rename', 'replace'].includes(String(f.get('conflict'))) ? f.get('conflict') : 'rename') as Conflict;
 		const done = importPack(r.pack, { conflict, calendar: f.get('calendar') === 'on' }, u);
+		audit('world_imported', { userId: u.id, ip: locals.ip }, r.pack.manifest.name);
 		return { done };
 	}
 };

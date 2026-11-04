@@ -1,14 +1,10 @@
 import { error, redirect } from '@sveltejs/kit';
 import type { Handle } from '@sveltejs/kit/hooks';
-import {
-	SESSION_COOKIE,
-	clearSessionCookie,
-	hasUsers,
-	setSessionCookie,
-	validateApiToken,
-	validateSession
-} from '#lib/server/auth.ts';
+import { clearSessionCookie, hasUsers, sessionCookie, setSessionCookie, validateApiToken, validateSession } from '#lib/server/auth.ts';
+import { maintenance } from '#lib/server/maintenance.ts';
 import { getSettings } from '#lib/server/settings.ts';
+import { announceSetupToken } from '#lib/server/setup.ts';
+import { limited } from '#lib/server/ratelimit.ts';
 import { AS_PLAYER_COOKIE, CAMPAIGN_COOKIE, NO_CAMPAIGN, campaignsFor, inCampaign, roleIn } from '#lib/server/campaigns.ts';
 import { allPlugins, extraThemes } from '#lib/server/plugins.ts';
 import { ensureSheets } from '#lib/server/sheets.ts';
@@ -18,7 +14,7 @@ import { fromAcceptLanguage, isLocale, DEFAULT_LOCALE } from '#lib/i18n/index.ts
 
 // Pagine raggiungibili senza aver fatto l'accesso. /mcp risponde da sé: 401 senza un token valido.
 // Il connettore di Claude si registra e prende il token dai suoi server; il consenso (/oauth/authorize) chiede l'accesso.
-const OPEN = ['/login', '/setup', '/invite/', '/mcp', '/oauth/register', '/oauth/token', '/.well-known/'];
+const OPEN = ['/login', '/setup', '/invite/', '/reset/', '/mcp', '/oauth/register', '/oauth/token', '/.well-known/'];
 // Il controllo di SvelteKit sui form mandati da altri siti è spento (csrf.trustedOrigins in vite.config.ts) e si fa qui,
 // uguale, tranne che per /oauth/token: lì scrivono i server di Claude, che non mandano Origin.
 const FORM_TYPES = ['', 'application/x-www-form-urlencoded', 'multipart/form-data', 'text/plain', 'application/x-sveltekit-formdata'];
@@ -28,6 +24,21 @@ const WITHOUT_CAMPAIGN = ['/campaign', '/profile', '/logout'];
 // Nella vista giocatore si guarda soltanto: si scrive solo per tornare alla propria vista o cambiare campagna, nel proprio profilo e per uscire.
 const AS_PLAYER_WRITES = ['/campaign', '/profile', '/logout'];
 const READS = ['GET', 'HEAD', 'OPTIONS'];
+const MINUTE = 60_000;
+// Limiti per IP sulle scritture che costano o che qualcuno potrebbe tentare a raffica. Chi li supera riceve 429.
+const LIMITS: { test: (path: string, search: string) => boolean; name: string; max: number; window: number }[] = [
+	// Gli accessi riusciti di una casa dietro un solo indirizzo non devono bloccarsi: qui il tetto è largo, quelli falliti li conta /login (20 ogni 10 minuti per indirizzo).
+	{ test: (p) => p === '/login', name: 'login', max: 120, window: 10 * MINUTE },
+	{ test: (p) => p === '/setup', name: 'setup', max: 20, window: 10 * MINUTE },
+	{ test: (p) => p.startsWith('/invite/') || p.startsWith('/reset/'), name: 'register', max: 20, window: 10 * MINUTE },
+	{ test: (p, s) => p === '/profile' && s.startsWith('?/password'), name: 'password', max: 10, window: 10 * MINUTE },
+	{ test: (p) => p === '/oauth/token', name: 'oauth', max: 30, window: 10 * MINUTE },
+	{ test: (p) => p === '/api/files', name: 'upload', max: 60, window: 10 * MINUTE },
+	{ test: (p) => p.startsWith('/mcp'), name: 'mcp', max: 300, window: MINUTE }
+];
+// Dimensione massima del corpo per tipo di route: i moduli che caricano file hanno il limite del server (BODY_SIZE_LIMIT).
+const UPLOADS = [/^\/api\/files$/, /^\/profile$/, /^\/wiki\/new$/, /^\/wiki\/[^/]+\/edit$/, /^\/resources\//, /^\/admin\/world$/, /^\/admin\/themes\//];
+const KB = 1024;
 
 function readCookiePrefs(raw: string | undefined): Record<string, unknown> | null {
 	if (!raw) return null;
@@ -43,7 +54,20 @@ export const handle: Handle = async ({ event, resolve }) => {
 	const type = (request.headers.get('content-type') ?? '').split(';', 1)[0].trim().toLowerCase();
 	if (url.pathname !== '/oauth/token' && WRITES.includes(request.method) && FORM_TYPES.includes(type) && request.headers.get('origin') !== url.origin)
 		return new Response(`Cross-site ${request.method} form submissions are forbidden`, { status: 403 });
+	let ip = 'unknown';
+	try {
+		ip = event.getClientAddress();
+	} catch {
+		/* senza indirizzo (es. nei test) i limiti valgono per tutti insieme */
+	}
+	locals.ip = ip;
+	if (WRITES.includes(request.method)) {
+		const lim = LIMITS.find((l) => l.test(url.pathname, url.search));
+		if (lim && limited(lim.name, ip, lim.max, lim.window)) return new Response('Too many requests', { status: 429, headers: { 'Retry-After': String(Math.ceil(lim.window / 1000)) } });
+	}
 	const ready = hasUsers();
+	if (!ready) announceSetupToken();
+	else maintenance();
 	allPlugins();
 
 	// Claude entra solo da /mcp (o /mcp/<campagna>, il connettore), col suo token: lì i cookie non contano, e il token non apre il resto della wiki.
@@ -52,13 +76,19 @@ export const handle: Handle = async ({ event, resolve }) => {
 
 	locals.user = api?.user ?? null;
 	locals.mcpWrite = api?.canWrite ?? false;
-	const token = mcp ? undefined : cookies.get(SESSION_COOKIE);
+	const token = mcp ? undefined : cookies.get(sessionCookie(url));
 	if (token) {
 		const s = validateSession(token);
 		if (s) {
 			locals.user = s.user;
 			if (s.expires) setSessionCookie(cookies, url, token, s.expires);
-		} else clearSessionCookie(cookies);
+		} else clearSessionCookie(cookies, url);
+	}
+
+	if (WRITES.includes(request.method)) {
+		const length = Number(request.headers.get('content-length') ?? 0);
+		const max = mcp ? 2 * KB * KB : !locals.user ? 64 * KB : UPLOADS.some((r) => r.test(url.pathname)) ? Infinity : 4 * KB * KB;
+		if (length > max) return new Response('Request body too large', { status: 413 });
 	}
 
 	const settings = getSettings();
@@ -121,5 +151,9 @@ export const handle: Handle = async ({ event, resolve }) => {
 	response.headers.set('Referrer-Policy', 'same-origin');
 	// Non DENY: Profilo, Amministrazione e pagine collegate si aprono in un iframe della wiki stessa (PanelDialog).
 	response.headers.set('X-Frame-Options', 'SAMEORIGIN');
+	response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=()');
+	response.headers.set('Cross-Origin-Opener-Policy', 'same-origin');
+	// Solo in HTTPS (CS_ORIGIN o proxy): in rete locale in http il browser la ignorerebbe comunque.
+	if (url.protocol === 'https:') response.headers.set('Strict-Transport-Security', 'max-age=31536000');
 	return response;
 };

@@ -7,6 +7,9 @@
 //   CS_ORIGIN       indirizzo pubblico, es. https://wiki.esempio.it (consigliato dietro un proxy)
 //   CS_TRUST_PROXY  1 = fidati delle intestazioni X-Forwarded-* del proxy (Caddy, nginx…)
 //   CS_UPDATE_CHECK 0 = Amministrazione non controlla su GitHub se c'è una versione nuova
+//   CS_SETUP_TOKEN  codice della prima configurazione (senza, ne viene generato uno e scritto nei log)
+//   CS_UPLOAD_QUOTA_MB  spazio per le immagini di ogni giocatore (512)
+//   CS_PACK_MAX_MB  dimensione massima decompressa di un pacchetto mondo (200)
 //
 // Senza CS_ORIGIN la wiki usa l'indirizzo con cui viene raggiunta, in http: così funziona
 // subito anche in rete locale (es. http://192.168.1.20:3000) senza certificati.
@@ -25,7 +28,20 @@ const { handler } = await import('./build/handler.js');
 
 const first = (v) => (Array.isArray(v) ? v[0] : v)?.split(',')[0].trim();
 
+// Un avviso, una volta, se la configurazione del proxy non torna: senza CS_TRUST_PROXY dietro un proxy tutti hanno lo
+// stesso indirizzo (e i limiti ai tentativi valgono per tutti insieme); con CS_TRUST_PROXY senza proxy l'indirizzo lo
+// sceglie chi chiede.
+let warned = false;
+function checkProxy(req) {
+	if (warned) return;
+	warned = true;
+	const forwarded = !!req.headers['x-forwarded-for'];
+	if (forwarded && !trustProxy) console.warn('Crooked Shelf: arrivano intestazioni X-Forwarded-* ma CS_TRUST_PROXY non è 1: la wiki non distingue gli indirizzi dei visitatori. Se c\'è un proxy davanti, imposta CS_TRUST_PROXY=1.');
+	if (!forwarded && trustProxy) console.warn('Crooked Shelf: CS_TRUST_PROXY=1 ma questa richiesta non viene da un proxy: senza proxy chiunque può fingere il proprio indirizzo. Togli CS_TRUST_PROXY o metti la wiki dietro al proxy.');
+}
+
 const server = createServer((req, res) => {
+	checkProxy(req);
 	// Le intestazioni interne non possono arrivare da fuori.
 	delete req.headers['x-cs-proto'];
 	delete req.headers['x-cs-host'];
