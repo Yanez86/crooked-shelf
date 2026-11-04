@@ -9,14 +9,15 @@
 | **Giocatore** | Legge, crea pagine, modifica le sue e quelle aperte ai giocatori, ha la sua scheda giocatore, aggiunge eventi alla cronologia della campagna, usa le bacheche |
 | **Visitatore** | Solo le pagine pubbliche, e solo se l'Admin ha acceso l'accesso dei visitatori |
 
-Le persone entrano con un **invito**: Amministrazione › Inviti › «Crea invito», poi mandi il link. Ogni link funziona una volta sola.
+Le persone entrano con un **invito**: il Master lo crea in Campagna › Giocatori, l'Admin in Amministrazione › Inviti. Ogni link funziona una volta sola.
 
 ## Campagne
 
 Una installazione può contenere più campagne. Ognuna è una wiki a sé: pagine, cartelle, tag, mappe, cronologie, bacheche, risorse, home e calendario non si vedono dalle altre, e la stessa pagina può avere lo stesso indirizzo in due campagne.
 
 - **Crearne una**: Amministrazione › Campagne › «Nuova campagna», con il nome e il Master. Ogni campagna ha un solo Master; lo stesso account può tenerne più d'una. Parte con la home, i template, le due cronologie e la cartella PG.
-- **Invitare i giocatori**: il Master apre **Campagna** dal menu del profilo e crea un link di invito. Chi non ha un account lo crea; chi lo ha già accede ed entra nella campagna col suo. Dalla stessa pagina il Master rinomina la campagna e rimuove i giocatori.
+- **La pagina Campagna**: il Master la apre dal menu del profilo. Ha quattro schede: **Generale** (nome, eliminazione), **Giocatori** (inviti, rimozione, template delle schede), **Appuntamenti** (link per il remoto, regola del minimo, Stars & Wishes) e **Claude** (token e connettori).
+- **Invitare i giocatori**: in Campagna › Giocatori il Master crea un link di invito. Chi non ha un account lo crea; chi lo ha già accede ed entra nella campagna col suo.
 - **Cambiare campagna**: chi ne ha più di una le trova in cima al menu del profilo. La scelta resta sul dispositivo. Un collegamento a una pagina si apre nella campagna in cui ti trovi.
 - **Eliminarne una**: il Master elimina la sua dalla pagina Campagna, l'Admin qualsiasi da Amministrazione › Campagne, anche l'ultima; per conferma si riscrive il nome. Spariscono per tutti pagine, mappe, cronologie, bacheche, risorse e immagini, e torna solo ripristinando un backup. Chi resta senza campagne può ancora accedere e aspetta un invito.
 - Si è Master solo nella propria campagna: nelle altre si è giocatori, se si è stati invitati. Vale anche per l'Admin: entra solo nelle campagne che tiene o in cui è invitato, e vede i segreti solo nelle sue. Le altre le gestisce da Amministrazione › Campagne senza entrarci, e non può nominarsi Master di una campagna che esiste già: lo fa un altro Admin. Di una campagna nuova invece può essere lui il Master.
@@ -33,7 +34,7 @@ Ogni campagna ha la cartella **PG** (in inglese «PCs») e dentro una **scheda**
 - **Pagine dentro la scheda**: nella scheda c'è **Nuova pagina qui dentro** (il giocatore nella sua, il Master in tutte). La pagina nuova parte **Personale**: va bene per gli appunti che il giocatore tiene per sé, e che non vede neanche il Master. Si può fare anche una bacheca.
 - **Sta al suo posto**: la scheda non cambia cartella, non diventa un template né la home, e nell'albero si riordina solo dentro la cartella PG. Non va nel cestino finché il giocatore è al tavolo. La cartella PG si rinomina e si sposta, ma non si elimina; se finisce nel cestino la cartella che la contiene, lei risale alla radice.
 - **Chi esce dalla campagna** non compare più nell'elenco «Al tavolo», ma la sua scheda resta: il Master la può eliminare. Se il giocatore rientra ritrova la sua, anche dal cestino.
-- **Il template delle schede**: di base è «Scheda giocatore», generico (il personaggio e gli appunti), nella linguetta Template. Il Master lo modifica come ogni template, oppure ne sceglie un altro in **Campagna › Schede giocatore** (anche nessuno: pagina bianca). Vale per le schede che nasceranno; quelle che ci sono restano come sono. Il plugin D&D Beyond porta il template «Scheda D&D», col link alla scheda del personaggio sul sito.
+- **Il template delle schede**: di base è «Scheda giocatore», generico (il personaggio e gli appunti), nella linguetta Template. Il Master lo modifica come ogni template, oppure ne sceglie un altro in **Campagna › Giocatori** (anche nessuno: pagina bianca). Vale per le schede che nasceranno; quelle che ci sono restano come sono. Il plugin D&D Beyond porta il template «Scheda D&D», col link alla scheda del personaggio sul sito.
 - **Al tavolo**: nella home, in cima alla colonna a destra, ci sono il Master e i giocatori, con l'icona del profilo. Il nome di un giocatore porta alla sua scheda, col nome del personaggio sotto. I visitatori senza account non vedono l'elenco.
 - Le schede e le pagine dentro di loro non entrano nel pacchetto mondo: sono del tavolo, non del mondo. Restano nel backup e nell'esportazione in Markdown.
 
@@ -62,7 +63,7 @@ Dopo una sessione, due domande a chi c'era: **che cosa ti è piaciuto di questa 
 
 Tutta la wiki si raggiunge dalla barra a sinistra (in alto non c'è più il menu orizzontale):
 
-- in cima tre linguette, ognuna con l'icona e il nome sotto: **Pagine** (il foglio), **Risorse** (l'immagine: immagini, audio e altri file, vedi sotto) e **Template** (i fogli sovrapposti: tutti i template, in ordine di titolo);
+- in cima quattro linguette, ognuna con l'icona e il nome sotto: **Pagine** (il foglio), **Tag** (l'etichetta: i tag nel loro colore, col numero di pagine; un clic apre le pagine con quel tag, e il Master ne cambia nome e colore da «Nomi e colori dei tag»), **Risorse** (l'immagine: immagini, audio e altri file, vedi sotto) e **Template** (i fogli sovrapposti: tutti i template, in ordine di titolo);
 - sotto, le icone: **Nuova pagina**, **Nuova cartella** e **Nuovo divisorio** (o **Carica una risorsa**, nelle Risorse; **Nuovo template**, nei Template), chiudi tutto e apri tutto;
 - l'**albero**: le categorie sono cartelle che si aprono e si chiudono con un clic (o con Invio da tastiera); dentro ci sono le sottocartelle e le pagine di ogni tipo (pagine, mappe, cronologie, bacheche), ognuna con la sua icona. Le pagine senza categoria stanno in fondo, alla radice. La cartella della pagina che stai leggendo si apre da sola.
 - **Nuova cartella** (l'icona della cartella col «+», per il Master): la cartella compare subito in cima all'albero col nome da scrivere; Invio la crea, Esc la lascia perdere. Rinominarle si fa in **Cartelle**, all'indirizzo `/categories`.
@@ -73,7 +74,7 @@ Tutta la wiki si raggiunge dalla barra a sinistra (in alto non c'è più il menu
 
 La **home** è la pagina iniziale del sito, nata con la wiki: dalla matita si scrive la presentazione, con blocchi, riquadri, copertina e icona. A destra, sotto i suoi riquadri, ci sono chi è al tavolo (vedi Schede giocatore) e le pagine modificate e aggiunte di recente. Sta sempre in cima alla barra a sinistra, fuori dalle cartelle, e non si sposta. Non si può eliminare e ce n'è una sola: per cambiarla, il Master spunta **Pagina home** modificando un'altra pagina, che deve essere Pubblica o Giocatori. Quella di prima torna una pagina come le altre.
 
-In fondo alla barra, su entrambe le linguette, c'è sempre il **Cestino**. Le altre sezioni della wiki (Pagine, cioè l'elenco con i filtri, Tag, Galleria, Regole, Calendario, Cartelle) non hanno una voce di menu: si aprono dal loro indirizzo (`/wiki`, `/tags`, `/gallery`, `/rules`, `/calendar`, `/categories`).
+In fondo alla barra, su ogni linguetta, ci sono sempre **Appuntamenti** e il **Cestino**. Le altre sezioni della wiki (Pagine, cioè l'elenco con i filtri, Tag, Galleria, Regole, Calendario, Cartelle) non hanno una voce di menu: si aprono dal loro indirizzo (`/wiki`, `/tags`, `/gallery`, `/rules`, `/calendar`, `/categories`).
 
 Sul telefono l'intestazione è una sola riga che resta in vista mentre scorri: il pulsante a sinistra («Menu e pagine») apre la barra, che si chiude con Esc, con × o toccando fuori; la lente apre la ricerca. Col dito i cestini accanto alle righe non ci sono: una pagina si elimina dalla sua modifica, una cartella da Categorie. Sul computer la freccia in cima alla barra la nasconde e la freccia opposta la riapre; il browser se lo ricorda. Una freccia uguale, in cima alla colonna a destra delle pagine quando c'è, fa lo stesso con quella colonna. Il riquadro centrale occupa lo spazio che le colonne lasciano libero. Chi preferisce la pagina più larga la tiene chiusa anche sul computer (Profilo › «Barra a sinistra»). Nel Profilo la barra parte nascosta e si apre con la freccia, in Amministrazione è chiusa e si apre col pulsante.
 
@@ -177,11 +178,17 @@ Le bacheche sono pagine: **Nuova pagina › Nuova bacheca**, con le colonne di p
 
 ## Profilo
 
-In alto a destra c'è il tuo profilo: la tua icona, il tuo nome e il tuo grado nella campagna (Master o Giocatore). Cliccandoci si apre il menu con **Profilo**, **Amministrazione** (solo per l'Admin) ed **Esci**; sul telefono in alto resta solo l'icona, e nome e grado si leggono nel menu.
+In alto a destra c'è il tuo profilo: la tua icona, il tuo nome e il tuo grado nella campagna (Master o Giocatore). Cliccandoci si apre il menu con le tue campagne (se ne hai più d'una), **Profilo**, **Campagna** (per il Master), **Amministrazione** (solo per l'Admin) ed **Esci**; sul telefono in alto resta solo l'icona, e nome e grado si leggono nel menu.
 
 **Profilo** e **Amministrazione** si aprono in un popup sopra la wiki: lo chiudi con Esc, con la X o cliccando fuori, e sotto ritrovi la pagina che stavi leggendo. Con Ctrl+clic si aprono come pagine, in un'altra scheda. Sul telefono si aprono direttamente come pagine.
 
-Nel **Profilo** ci sono le preferenze di lettura (sotto), l'icona da scegliere tra quelle delle pagine (una corona, un cappello da mago, delle spade…), il nome visualizzato e la password. Chi non ha fatto l'accesso trova solo le preferenze, salvate nel browser.
+Il **Profilo** ha tre schede:
+
+- **Icona e nome**: il nome visualizzato e l'icona, scelta tra quelle delle pagine (una corona, un cappello da mago, delle spade…) oppure un'immagine caricata (PNG, JPEG, GIF o WebP);
+- **Lettura e accessibilità**: le preferenze qui sotto;
+- **Password**: cambiarla, vedere quante sessioni sono aperte e chiudere quelle sugli altri dispositivi.
+
+Chi non ha fatto l'accesso trova solo la lettura, salvata nel browser.
 
 ## Lettura e accessibilità
 
@@ -198,6 +205,10 @@ Tutta la wiki si usa da tastiera e con i lettori di schermo; i colori rispettano
 ## Amministrazione
 
 - **Impostazioni**: nome del sito, lingua predefinita e visitatori. Sotto c'è la **versione** installata, confrontata con l'ultima su GitHub: «Aggiornata» o «Non aggiornata», con il link alle novità e a come aggiornare.
+- **Campagne**: crearle, sceglierne il Master, eliminarle.
+- **Utenti**: ruoli, disattivazione e, per chi ha dimenticato la password, un link di reimpostazione (vale due giorni, una volta sola).
+- **Inviti**: link per entrare nel sito, uno per persona.
 - **Temi**: copia un tema e cambia i colori; si salva solo se il testo resta leggibile. Un tema può avere un'immagine di sfondo, che sta dietro i riquadri e si vede solo sugli schermi larghi. Esporta e importa come file (solo i colori: lo sfondo viaggia col pacchetto mondo).
 - **Plugin**: accendi e spegni i plugin installati; cliccandone uno si apre una finestra con scopo, istruzioni, autore e contenuto (per crearne uno, vedi [plugin.md](plugin.md)).
 - **Backup**, **Pacchetto mondo**, **Esporta in Markdown**: vedi [installazione.md](installazione.md#backup-e-ripristino).
+- **Registro**: accessi riusciti e falliti, cambi di ruolo e password, inviti, token di Claude, consensi, backup ed esportazioni degli ultimi sei mesi.

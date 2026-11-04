@@ -2,11 +2,11 @@
 
 Wiki self-hosted per creare, curare e registrare campagne di giochi di ruolo da tavolo (pensata per D&D 5.5, aperta ad altri sistemi).
 
-> Stato: **approvato**. Tutte e quattro le fasi completate (versione 0.9.0, da provare).
+> Stato: **in uso**, versione 0.14.0. Le novità di ogni versione sono in [CHANGELOG.md](../CHANGELOG.md).
 
 ## 1. Obiettivi
 
-- Una wiki per **un gruppo di gioco** per installazione: mondo, personaggi, luoghi, sessioni.
+- Una wiki per **ogni gruppo di gioco**, anche più campagne nella stessa installazione: mondo, personaggi, luoghi, sessioni.
 - Facile da ospitare in casa (Docker, Raspberry Pi, VPS) e da trasferire.
 - Scrittura comoda a blocchi con Markdown e collegamenti tra pagine.
 - Accessibile (WCAG 2.2 AA), in italiano e inglese, estendibile con plugin.
