@@ -53,7 +53,7 @@ Regole importanti:
 
 Versionamento semantico (MAGGIORE.MINORE.CORRETTIVA). Per una nuova versione:
 
-1. aggiungi in cima a `CHANGELOG.md` la sezione `## X.Y.Z — AAAA-MM-GG` con le voci (`### Aggiunte`, `### Modifiche`, `### Correzioni`); è anche la pagina `/changelog`. Le voci sono brevi e generiche, una riga ciascuna: cosa cambia per chi usa o installa la wiki, senza dettagli dell'interfaccia o del codice (quelli vanno nella guida e nei commit). Solo testo semplice: la pagina non interpreta il Markdown;
+1. aggiungi in cima a `CHANGELOG.md` la sezione `## X.Y.Z — AAAA-MM-GG` con le voci (`### Aggiunte`, `### Modifiche`, `### Correzioni`); è anche la pagina `/changelog`. Le voci sono brevi e generiche, una riga ciascuna: dicono cosa cambia, senza spiegare come funziona né cosa fare (quello va nella guida). Le correzioni sono del tipo «Risolto un problema relativo a…», senza dettagli. Solo testo semplice: la pagina non interpreta il Markdown;
 2. `npm version X.Y.Z` aggiorna `package.json` e crea il commit e il tag `vX.Y.Z` (un test controlla che le due versioni coincidano).
 
 ## Traduzioni

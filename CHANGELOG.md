@@ -6,28 +6,28 @@ Questo file è anche la pagina «Novità» della wiki (`/changelog`).
 ## 0.14.0 — 2026-11-04
 
 ### Aggiunte
-- Segreti del Master su singoli blocchi: il Master oscura o mostra qualunque blocco dall'editor, anche nelle schede giocatore.
-- I giocatori modificano anche le pagine che contengono segreti, senza mai vederli.
+- Segreti del Master su singoli blocchi, anche nelle schede giocatore.
+- I giocatori possono modificare anche le pagine che contengono segreti.
 
 ### Modifiche
-- I segreti esistenti si convertono da soli: le pagine si vedono come prima.
+- Segreti esistenti convertiti al nuovo formato.
 - Claude può aggiungere testo segreto.
 
 ### Correzioni
-- Esportazione in Markdown: le immagini dei segreti non arrivano più a chi non è Master.
+- Risolto un problema relativo all'esportazione in Markdown.
 
 ## 0.13.0 — 2026-11-04
 
 Versione dedicata alla sicurezza, dopo una revisione completa del codice.
 
 ### Aggiunte
-- Prima configurazione protetta da un codice, scritto nei log del server.
+- Prima configurazione protetta da un codice.
 - Limiti ai tentativi di accesso e alle richieste.
-- I file si scaricano solo da chi può vedere dove sono usati.
+- Accesso ai file limitato a chi può vedere dove sono usati.
 - Quota di spazio per le immagini dei giocatori.
-- Sessioni con scadenza e chiusura di quelle aperte altrove; dopo l'aggiornamento si rifà l'accesso una volta.
-- Token di Claude che scadono se non si usano.
-- Reimpostazione della password da parte dell'Admin; le password troppo deboli vengono rifiutate.
+- Scadenza e gestione delle sessioni.
+- Scadenza dei token di Claude non usati.
+- Reimpostazione della password da parte dell'Admin e controllo delle password deboli.
 - Registro delle attività in Amministrazione.
 - Intestazioni di sicurezza aggiuntive.
 
@@ -36,7 +36,7 @@ Versione dedicata alla sicurezza, dopo una revisione completa del codice.
 - Documentazione e CI aggiornate sulla sicurezza.
 
 ### Correzioni
-- Dopo l'accesso non si viene più portati fuori dalla wiki.
+- Risolto un problema relativo al reindirizzamento dopo l'accesso.
 
 ## 0.12.4 — 2026-11-04
 
@@ -44,7 +44,7 @@ Versione dedicata alla sicurezza, dopo una revisione completa del codice.
 - Appuntamenti: anche il Master indica se gioca in presenza o da remoto.
 
 ### Correzioni
-- Home: corretta la risposta del Master nella prossima sessione.
+- Risolto un problema relativo alla prossima sessione in home.
 
 ## 0.12.3 — 2026-11-04
 
@@ -57,9 +57,9 @@ Versione dedicata alla sicurezza, dopo una revisione completa del codice.
 ## 0.12.2 — 2026-11-03
 
 ### Aggiunte
-- Appuntamenti: dettagli della sessione e risposta in un popup, e chi viene sotto ogni data.
+- Appuntamenti: dettagli della sessione in un popup e partecipanti sotto ogni data.
 - Home: la prossima sessione e le date ancora senza risposta.
-- Stars & Wishes: due domande facoltative dopo ogni sessione, lette solo dal Master.
+- Stars & Wishes: domande facoltative dopo ogni sessione.
 - Claude come connettore da claude.ai.
 - Avatar nel profilo.
 
@@ -69,35 +69,39 @@ Versione dedicata alla sicurezza, dopo una revisione completa del codice.
 ## 0.12.0 — 2026-11-03
 
 ### Aggiunte
-- Appuntamenti: il calendario delle sessioni di ogni campagna, con date ripetute, risposte dei giocatori e un numero minimo di partecipanti.
+- Appuntamenti: il calendario delle sessioni di ogni campagna.
 
 ## 0.11.1 — 2026-11-03
 
 ### Correzioni
-- Correzioni di visualizzazione nell'intestazione e nella home.
+- Risolto un problema relativo al menu utente.
+- Risolto un problema relativo alla colonna a lato della home.
 
 ## 0.11.0 — 2026-11-03
 
 ### Aggiunte
-- Più campagne nella stessa installazione, ognuna con il suo Master, i suoi giocatori e i suoi contenuti; la wiki esistente diventa la prima campagna.
+- Più campagne nella stessa installazione.
 - Schede giocatore e, in home, chi è al tavolo.
-- Temi Lago, Lago di notte e Neon; marchio e icona seguono i colori del tema.
+- Temi Lago, Lago di notte e Neon.
+- Marchio e icona nei colori del tema.
 - Plugin per Claude Code.
 - Pacchetto mondo importabile in una campagna nuova.
 - Controllo degli aggiornamenti in Amministrazione.
 
 ### Modifiche
-- L'Admin gestisce il sito, ma vede i segreti solo nelle campagne di cui è Master.
+- L'Admin vede i segreti solo nelle campagne di cui è Master.
 - Interfaccia rivista per il telefono.
 - Barra a sinistra, albero delle pagine e impaginazione riorganizzati.
-- La home e le bacheche diventano pagine della wiki.
-- Pulsanti e popup uniformi; collegamenti, Profilo e Amministrazione si aprono in un popup.
-- Editor, mappe e risorse più semplici da usare.
+- Home e bacheche diventano pagine della wiki.
+- Pulsanti e popup uniformi.
+- Editor, mappe e risorse migliorati.
 - Temi con immagine di sfondo.
-- D&D Beyond diventa un plugin incluso, spento di base: chi lo usava lo riaccende da Amministrazione › Plugin.
+- D&D Beyond diventa un plugin incluso.
 
 ### Correzioni
-- Correzioni di visualizzazione sul telefono e nella navigazione da tastiera.
+- Risolto un problema relativo alla tabella degli utenti sul telefono.
+- Risolto un problema relativo al contorno del fuoco.
+- Risolto un problema relativo alla colonna a lato sul telefono.
 
 ## 0.10.0 — 2026-10-29
 
