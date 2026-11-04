@@ -23,7 +23,8 @@ export interface TemplateData {
 
 const h = (text: string): DocNode => ({ type: 'heading', attrs: { level: 2 }, content: [{ type: 'text', text }] });
 const p = (text?: string): DocNode => (text ? { type: 'paragraph', content: [{ type: 'text', text }] } : { type: 'paragraph' });
-const secret = (text: string): DocNode => ({ type: 'secret', content: [p(text)] });
+/** Un paragrafo oscurato: lo vede solo il Master (vedi content/blocks.ts). */
+const secret = (text: string): DocNode => ({ type: 'paragraph', attrs: { visibility: 'master' }, content: [{ type: 'text', text }] });
 
 // Sezioni e campi di ogni template (chiavi di traduzione in templates.*).
 const SPEC: Record<BuiltinTemplate, { fields: string[]; sections: string[]; icon: string; secret?: boolean; session?: boolean }> = {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { canEdit, canView, canManage, canWrite, isAdmin, isMaster, type PageAccessInfo } from './access.ts';
+import { canEdit, canSeeBlock, canView, canManage, canWrite, isAdmin, isMaster, type PageAccessInfo } from './access.ts';
 import { canCreateKind } from './pageKinds.ts';
 
 // Un Admin che in questa campagna è giocatore (vedi roleIn): amministra il sito, ma qui non ha poteri in più.
@@ -31,7 +31,9 @@ describe('permessi', () => {
 		expect(isAdmin(admin)).toBe(true);
 		expect(isMaster(admin)).toBe(false);
 		expect(canView(page({ visibility: 'master' }), admin)).toBe(false);
-		expect(canEdit(page({ hasSecret: true, playersCanEdit: true }), admin)).toBe(false);
+		expect(canSeeBlock('master', admin)).toBe(false);
+		// Modifica il testo che vede, come ogni giocatore: i segreti non gli arrivano e restano dove sono.
+		expect(canEdit(page({ hasSecret: true, playersCanEdit: true }), admin)).toBe(true);
 		expect(canManage(page({ hasSecret: true }), admin)).toBe(false);
 		// Nella campagna che tiene è il Master.
 		expect(canView(page({ visibility: 'master' }), { ...admin, role: 'master' })).toBe(true);
@@ -41,10 +43,23 @@ describe('permessi', () => {
 		expect(canEdit(page(), alice)).toBe(false);
 		expect(canEdit(page({ playersCanEdit: true }), alice)).toBe(true);
 		expect(canEdit(page({ authorId: 3 }), alice)).toBe(true);
-		expect(canEdit(page({ authorId: 3, hasSecret: true }), alice)).toBe(false);
+		// Con un segreto del Master dentro, l'autore modifica ancora il testo (il segreto non gli arriva),
+		// ma non cambia visibilità e non elimina: il segreto resterebbe senza il Master.
+		expect(canEdit(page({ authorId: 3, hasSecret: true }), alice)).toBe(true);
+		expect(canManage(page({ authorId: 3, hasSecret: true }), alice)).toBe(false);
+		expect(canEdit(page({ hasSecret: true }), alice)).toBe(false);
 		expect(canEdit(page({ hasSecret: true }), master)).toBe(true);
 		expect(canManage(page({ playersCanEdit: true }), alice)).toBe(false);
 		expect(canManage(page({ authorId: 3 }), alice)).toBe(true);
+	});
+	it('blocchi: il segreto del Master lo vede solo lui', () => {
+		expect(canSeeBlock('master', master)).toBe(true);
+		expect(canSeeBlock('master', alice)).toBe(false);
+		expect(canSeeBlock('master', null)).toBe(false);
+		expect(canSeeBlock('players', alice)).toBe(true);
+		expect(canSeeBlock('players', null)).toBe(false);
+		expect(canSeeBlock('public', null)).toBe(true);
+		expect(canSeeBlock('personal', master)).toBe(false);
 	});
 	it('vista giocatore: il Master è un giocatore qualunque, e guarda soltanto', () => {
 		// Come lo lascia hooks.server.ts: stesso id, ruolo da giocatore.

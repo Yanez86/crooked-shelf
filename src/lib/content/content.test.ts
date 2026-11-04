@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { extract, stripSecrets } from './extract.ts';
+import { extract } from './extract.ts';
+import { visibleBlocks } from './blocks.ts';
+import type { Visibility } from '../roles.ts';
 import { renderDoc, safeHref, type RenderOptions } from './render.ts';
 import type { DocNode } from './types.ts';
 import { slugify } from '../slug.ts';
@@ -20,6 +22,10 @@ const doc: DocNode = {
 		p(wl('drago-rosso', 'Drago rosso', 'il drago'))
 	]
 };
+
+// Chi vede quali blocchi: un giocatore non vede i segreti del Master, il Master vede tutto.
+const player = (v: Visibility) => v === 'public' || v === 'players';
+const master = () => true;
 
 const labels: RenderOptions['labels'] = {
 	secret: 'Segreto',
@@ -53,23 +59,45 @@ describe('extract', () => {
 			{ target: 'drago-rosso', secret: false }
 		]);
 	});
-	it('stripSecrets toglie i blocchi segreti', () => {
-		expect(extract(stripSecrets(doc)).hasSecret).toBe(false);
+	it('visibleBlocks toglie i blocchi segreti a chi non li vede', () => {
+		expect(extract(visibleBlocks(doc, player)).hasSecret).toBe(false);
+		expect(extract(visibleBlocks(doc, master)).hasSecret).toBe(true);
+	});
+	it('i blocchi oscurati sono segreti come il vecchio riquadro, anche in un elenco o in un riquadro', () => {
+		const ex = extract({
+			type: 'doc',
+			content: [
+				p(txt('Pubblico')),
+				{ type: 'paragraph', attrs: { id: 'aaaaaaaa', visibility: 'master' }, content: [txt('Nascosto '), wl('covo')] },
+				{ type: 'callout', content: [p(txt('Nota')), { type: 'paragraph', attrs: { visibility: 'master' }, content: [txt('Dentro')] }] }
+			]
+		});
+		expect(ex).toMatchObject({ hasSecret: true, body: 'Pubblico\nNota', secretBody: 'Nascosto covo\nDentro' });
+		expect(ex.links).toEqual([{ target: 'covo', secret: true }]);
 	});
 });
 
 describe('renderDoc', () => {
 	it('nasconde i segreti a chi non è Master', () => {
-		const html = renderDoc(doc, { showSecrets: false, resolve, labels });
+		const html = renderDoc(doc, { sees: player, resolve, labels });
 		expect(html).not.toContain('spia');
 		expect(html).toContain('<a class="wikilink" href="/wiki/bartolo">Bartolo Pancia</a>');
 		expect(html).toContain('class="wikilink missing"');
 		expect(html).toContain('il drago');
 	});
 	it('mostra i segreti al Master; le pagine invisibili restano testo', () => {
-		const html = renderDoc(doc, { showSecrets: true, resolve, labels });
+		const html = renderDoc(doc, { sees: master, resolve, labels });
 		expect(html).toContain('class="secret"');
 		expect(html).toContain('<span class="wikilink-hidden">Zhentarim</span>');
+	});
+	it('i blocchi oscurati di fila stanno in un solo riquadro del segreto', () => {
+		const hidden = (text: string): DocNode => ({ type: 'paragraph', attrs: { visibility: 'master' }, content: [txt(text)] });
+		const d: DocNode = { type: 'doc', content: [p(txt('A')), hidden('B'), { type: 'image', attrs: { src: '/files/x1', alt: 'C', visibility: 'master' } }, p(txt('D')), hidden('E')] };
+		const box = '<aside class="secret" aria-label="Segreto"><p class="secret-title">Segreto</p>';
+		expect(renderDoc(d, { sees: master, resolve, labels })).toBe(`<p>A</p>${box}<p>B</p><img src="/files/x1" alt="C" loading="lazy"></aside><p>D</p>${box}<p>E</p></aside>`);
+		expect(renderDoc(d, { sees: player, resolve, labels })).toBe('<p>A</p><p>D</p>');
+		// Una visibilità che non si capisce vale come segreto.
+		expect(renderDoc({ type: 'doc', content: [{ type: 'paragraph', attrs: { visibility: 'boh' }, content: [txt('X')] }] }, { sees: player, resolve, labels })).toBe('');
 	});
 	it('scappa l\'HTML e blocca i link pericolosi', () => {
 		const bad: DocNode = {
@@ -80,7 +108,7 @@ describe('renderDoc', () => {
 				{ type: 'iframe', attrs: { src: 'x' } }
 			]
 		};
-		const html = renderDoc(bad, { showSecrets: false, resolve, labels });
+		const html = renderDoc(bad, { sees: player, resolve, labels });
 		expect(html).toContain('&lt;script&gt;');
 		expect(html).not.toContain('javascript:');
 		expect(html).not.toContain('iframe');
@@ -122,7 +150,7 @@ describe('campi e immagini', () => {
 		expect(safeImageSrc('/files/../x')).toBeNull();
 		const html = renderDoc(
 			{ type: 'doc', content: [{ type: 'image', attrs: { src: '/files/x1', alt: 'Mappa "vecchia"' } }] },
-			{ showSecrets: false, resolve, labels }
+			{ sees: player, resolve, labels }
 		);
 		expect(html).toBe('<img src="/files/x1" alt="Mappa &quot;vecchia&quot;" loading="lazy">');
 	});
@@ -135,7 +163,7 @@ describe('riferimenti alle regole', () => {
 	it('nodo dell\'editor: link alla scheda e anteprima se il testo SRD esiste', () => {
 		const html = renderDoc(
 			{ type: 'doc', content: [p({ type: 'ruleRef', attrs: { kind: 'spell', name: 'Fireball', label: 'Palla di fuoco' } })] },
-			{ showSecrets: false, resolve, labels: ruleLabels, hasRule }
+			{ sees: player, resolve, labels: ruleLabels, hasRule }
 		);
 		expect(html).toContain('href="/rules/spell/fireball"');
 		expect(html).not.toContain('target="_blank"');

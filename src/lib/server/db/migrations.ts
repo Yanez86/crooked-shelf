@@ -1,6 +1,7 @@
 import type Database from 'better-sqlite3';
 import { boardPagesMigration, pageKindsMigration } from './pageKinds.ts';
 import { campaignsMigration } from './campaigns.ts';
+import { blocksMigration } from './blocks.ts';
 
 // Migrazioni in ordine: SQL, oppure una funzione per quelle che devono anche tradurre o convertire dati.
 // `rebuild` è per quelle che rifanno una tabella a cui altre sono legate (girano a chiavi esterne spente).
@@ -423,7 +424,9 @@ export const MIGRATIONS: (string | ((db: Database.Database) => void) | { rebuild
 		detail TEXT NOT NULL DEFAULT ''
 	);
 	CREATE INDEX audit_log_at ON audit_log(at);
-	`
+	`,
+	// Il segreto del Master è la visibilità di un blocco, e ogni blocco ha il suo id (vedi db/blocks.ts).
+	blocksMigration
 ];
 
 /** Tabella file_uses, riempita da pagine (testo, colonna a lato, copertina, anche nel cestino e nelle versioni), mappe, risorse, temi e avatar. */

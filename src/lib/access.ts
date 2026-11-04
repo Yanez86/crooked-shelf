@@ -58,15 +58,37 @@ export function canView(p: PageAccessInfo, u: Viewer | null): boolean {
 	}
 }
 
+/**
+ * Chi vede un blocco con questa visibilità, dentro una pagina che vede già. «Personale» su un blocco non c'è:
+ * non lo vede nessuno (vedi content/blocks.ts, che la trasforma prima di salvare).
+ */
+export function canSeeBlock(v: Visibility, u: Viewer | null): boolean {
+	switch (v) {
+		case 'public':
+			return true;
+		case 'players':
+			return !!u;
+		case 'master':
+			return isMaster(u);
+		case 'personal':
+			return false;
+	}
+}
+
+/**
+ * Modificare il testo. I blocchi che chi scrive non vede (i segreti del Master) non gli arrivano e il server li rimette
+ * al loro posto quando salva (mergeBlocks): così un giocatore modifica anche una pagina in cui il Master ha nascosto qualcosa.
+ */
 export function canEdit(p: PageAccessInfo, u: Viewer | null): boolean {
 	if (!canWrite(u) || !canView(p, u)) return false;
 	if (isMaster(u)) return true;
-	// Un giocatore non modifica pagine con segreti che non può vedere.
-	if (p.hasSecret) return false;
 	return p.authorId === u.id || p.playersCanEdit;
 }
 
-/** Cambiare visibilità e permessi: il Master o l'autore. */
+/**
+ * Cambiare visibilità e permessi, eliminare: il Master o l'autore. Con un segreto del Master dentro, l'autore no:
+ * renderebbe la pagina personale (e il Master non vedrebbe più il suo segreto) o la eliminerebbe.
+ */
 export function canManage(p: PageAccessInfo, u: Viewer | null): boolean {
 	return canWrite(u) && (isMaster(u) || (p.authorId === u.id && !p.hasSecret));
 }

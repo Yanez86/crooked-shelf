@@ -1,7 +1,10 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { eq } from 'drizzle-orm';
-import { getDb, useMemoryDb, schema } from './db/index.ts';
-import { backlinks, createPage, deletePage, findPageChoice, getPageById, getPageBySlug, listPages, listTrash, listTrashedFolders, pageChoices, pageMeta, purgeFolder, renderPage, restoreFolder, restorePage, suggestPages, trashFolder, updatePage } from './pages.ts';
+import { getDb, getSqlite, migrate, useMemoryDb, schema } from './db/index.ts';
+import { MIGRATIONS } from './db/migrations.ts';
+import { blocksMigration } from './db/blocks.ts';
+import { backlinks, createPage, deletePage, findPageChoice, getPageById, getPageBySlug, getRevision, listPages, listRevisions, listTrash, listTrashedFolders, pageChoices, pageMeta, purgeFolder, renderPage, restoreFolder, restorePage, revisionText, suggestPages, trashFolder, updatePage, viewContent } from './pages.ts';
+import { blockVisibility, isBlockId } from '../content/blocks.ts';
 import { searchPages } from './search.ts';
 import { categoryPath, categoryTree, createCategory, createDivider, listCategories, listTags, moveTreeNode, pageTree } from './taxonomy.ts';
 import { cleanFields, readPageForm } from './pageForm.ts';
@@ -120,6 +123,42 @@ describe('pagine', () => {
 		expect(pg.hasSecret).toBe(false);
 		updatePage(pg, { ...base, visibility: 'master', title: 'Diario', content: doc(p('ok')) }, alice, false);
 		expect(getPageBySlug('diario')!.visibility).toBe('players');
+	});
+
+	it('un giocatore modifica una pagina col segreto del Master: il segreto resta al suo posto e non gli arriva mai', () => {
+		const hidden = (text: string): DocNode => ({ type: 'paragraph', attrs: { visibility: 'master' }, content: [{ type: 'text', text }] });
+		createPage({ ...base, playersCanEdit: true, title: 'Torre', content: doc(p('Una torre antica'), hidden('tesoro sotterraneo'), p('In cima vive un gufo')) }, master);
+		const page = getPageBySlug('torre')!;
+		expect(page.hasSecret).toBe(true);
+		// Nell'editor del giocatore il segreto non c'è; gli id dei blocchi sì.
+		const mine = viewContent(page.content, alice);
+		expect(JSON.stringify(mine)).not.toContain('tesoro');
+		expect(mine.content!.every((b) => isBlockId(b.attrs?.id))).toBe(true);
+		const [first, last] = mine.content!;
+		updatePage(page, { ...base, title: 'Torre', content: doc({ ...first, content: [{ type: 'text', text: 'Una torre in rovina' }] }, last, p('Aggiunto da Alice')) }, alice, false);
+
+		const after = getPageBySlug('torre')!;
+		const texts = (after.content as DocNode).content!.map((b) => [b.content?.[0]?.text, blockVisibility(b)]);
+		expect(texts).toEqual([
+			['Una torre in rovina', null],
+			['tesoro sotterraneo', 'master'],
+			['In cima vive un gufo', null],
+			['Aggiunto da Alice', null]
+		]);
+		expect(after.hasSecret).toBe(true);
+		expect(searchPages('tesoro', alice)).toEqual([]);
+		expect(searchPages('tesoro', master).map((h) => h.title)).toEqual(['Torre']);
+		expect(renderPage(after, alice, labels).html).not.toContain('tesoro');
+		expect(renderPage(after, master, labels).html).toContain('<aside class="secret"');
+
+		// Le versioni: Alice le vede senza il segreto, e ripristinandone una il segreto di adesso resta.
+		const [, older] = listRevisions(after, alice);
+		const rev = getRevision(after, older.id, alice)!;
+		expect(revisionText(rev, alice)).not.toContain('tesoro');
+		expect(revisionText(rev, master)).toContain('tesoro');
+		updatePage(after, { ...base, title: 'Torre', content: rev.content }, alice, false);
+		const restored = (getPageBySlug('torre')!.content as DocNode).content!.map((b) => b.content?.[0]?.text);
+		expect(restored).toEqual(['Una torre antica', 'tesoro sotterraneo', 'In cima vive un gufo']);
 	});
 
 	it('nella vista giocatore il Master non vede le sue pagine personali, neanche cercando o nel cestino', () => {
@@ -288,5 +327,39 @@ describe('colonna a lato', () => {
 			{ label: 'Ruolo', value: 'Fixer' },
 			{ label: '', value: '', image: 'ghi', title: 'x'.repeat(60) }
 		]);
+	});
+});
+
+describe('migrazione dei segreti', () => {
+	it('il riquadro del segreto diventa blocchi oscurati, ogni blocco ha il suo id, le versioni riprendono quelli della pagina', () => {
+		useMemoryDb(MIGRATIONS.indexOf(blocksMigration));
+		const s = getSqlite();
+		const legacy = JSON.stringify(
+			doc(p('Pubblico'), { type: 'secret', content: [p('Segreto uno'), p('Segreto due')] }, { type: 'callout', attrs: { kind: 'note' }, content: [p('Nota'), { type: 'secret', content: [p('Nascosto')] }] })
+		);
+		s.prepare('INSERT INTO users (id, username, display_name, password_hash, role, created_at) VALUES (1, ?, ?, ?, ?, 0)').run('dm', 'DM', 'x', 'master');
+		s.prepare("INSERT INTO pages (id, campaign_id, slug, title, content, visibility, has_secret, created_at, updated_at) VALUES (1, 1, 'torre', 'Torre', ?, 'players', 1, 0, 0)").run(legacy);
+		s.prepare("INSERT INTO page_revisions (page_id, title, content, visibility, created_at) VALUES (1, 'Torre', ?, 'players', 0)").run(legacy);
+		s.prepare("INSERT INTO pages_fts (rowid, title, body, secret_body) VALUES (1, 'Torre', 'Pubblico Nota', 'Segreto uno Segreto due Nascosto')").run();
+		migrate(s);
+
+		const page = getPageById(1)!;
+		const blocks = (page.content as DocNode).content!;
+		expect(blocks.map((b) => [b.type, blockVisibility(b)])).toEqual([
+			['paragraph', null],
+			['paragraph', 'master'],
+			['paragraph', 'master'],
+			// Il segreto dentro il riquadro nasconde tutto il riquadro: nel dubbio si nasconde di più.
+			['callout', 'master']
+		]);
+		expect(blocks.every((b) => isBlockId(b.attrs?.id))).toBe(true);
+		expect(new Set(blocks.map((b) => b.attrs!.id)).size).toBe(4);
+		expect(JSON.stringify(blocks)).not.toContain('"secret"');
+		expect(page.hasSecret).toBe(true);
+		// La nota del riquadro ora è nascosta: il giocatore non la trova più.
+		expect(searchPages('nota', alice)).toEqual([]);
+		expect(searchPages('pubblico', alice).map((h) => h.title)).toEqual(['Torre']);
+		const rev = getDb().select().from(schema.pageRevisions).get()!;
+		expect((rev.content as DocNode).content!.map((b) => b.attrs?.id)).toEqual(blocks.map((b) => b.attrs!.id));
 	});
 });

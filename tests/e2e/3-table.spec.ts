@@ -227,13 +227,18 @@ test('schede giocatore: la cartella PG, chi è al tavolo, le pagine dentro la sc
 	await expect(tree.getByRole('button', { name: 'Sposta nel cestino: PG' })).toHaveCount(0);
 	await expect(tree.getByRole('button', { name: 'Sposta nel cestino: Alice' })).toHaveCount(0);
 
-	// Il Master la modifica, ma senza segreti, senza cambiarle cartella, e solo tra Pubblica e Giocatori.
+	// Il Master la modifica, anche con un segreto, ma senza cambiarle cartella, e solo tra Pubblica e Giocatori.
 	await admin.goto('/wiki/alice');
 	await expect(admin.locator('.meta')).toContainText('Scheda di Alice');
 	await expect(admin.getByText('Questa è la scheda di Alice')).toBeVisible();
 	await expect(admin.locator('.content')).toContainText('Il personaggio');
 	await admin.goto('/wiki/alice/edit');
-	await expect(admin.getByRole('button', { name: /Segreto del Master/ })).toHaveCount(0);
+	await admin.locator('.editor-content > p').last().hover();
+	await admin.locator('.block-add').click();
+	await admin.locator('.block-menu').getByRole('button', { name: 'Testo' }).click();
+	await admin.getByRole('toolbar').getByRole('button', { name: 'Segreto del Master' }).click();
+	await admin.keyboard.type('Ha rubato la corona del duca.');
+	await expect(admin.locator('.editor-content [data-visibility="master"]')).toHaveText('Ha rubato la corona del duca.');
 	await expect(admin.getByLabel('Categoria')).toHaveCount(0);
 	await admin.getByRole('button', { name: 'Opzioni pagina' }).click();
 	await expect(admin.getByRole('radio', { name: 'Giocatori' })).toBeChecked();
@@ -243,6 +248,8 @@ test('schede giocatore: la cartella PG, chi è al tavolo, le pagine dentro la sc
 	await expect(admin.getByLabel('È un template')).toHaveCount(0);
 	await expect(admin.getByLabel('Pagina home')).toHaveCount(0);
 	await expect(admin.getByRole('heading', { name: 'Eliminare la pagina' })).toHaveCount(0);
+	await admin.getByRole('button', { name: 'Salva' }).click();
+	await expect(admin.locator('.content .secret')).toContainText('corona del duca');
 
 	// Nella pagina Campagna: il template delle schede nuove, e la scheda di ogni giocatore.
 	await admin.goto('/campaign?tab=players');
@@ -271,6 +278,8 @@ test('schede giocatore: la cartella PG, chi è al tavolo, le pagine dentro la sc
 	await p.getByRole('button', { name: 'Salva' }).click();
 	await expect(p.getByRole('heading', { level: 1, name: 'Thalia' })).toBeVisible();
 	await expect(p.locator('.content')).toContainText('Ranger elfa dei boschi.');
+	// Il segreto del Master nella sua scheda Alice non lo vede, e salvando non lo tocca.
+	await expect(p.locator('.content')).not.toContainText('corona');
 	await p.goto('/');
 	await expect(p.getByRole('region', { name: 'Al tavolo' }).getByRole('link', { name: /^Alice/ })).toContainText('Thalia');
 
@@ -292,6 +301,9 @@ test('schede giocatore: la cartella PG, chi è al tavolo, le pagine dentro la sc
 	await expect(p.locator('#explorer').getByRole('button', { name: 'Sposta nel cestino: Segreti di Thalia' })).toHaveCount(1);
 	await p.context().close();
 	expect((await admin.goto('/wiki/segreti-di-thalia'))?.status()).toBe(404);
+	await admin.goto('/wiki/alice');
+	await expect(admin.locator('.content')).toContainText('Ranger elfa dei boschi.');
+	await expect(admin.locator('.content .secret')).toContainText('corona del duca');
 });
 
 test('appuntamenti: il Master fissa i giovedì, i giocatori rispondono, sotto il minimo si salta', async ({ browser }) => {

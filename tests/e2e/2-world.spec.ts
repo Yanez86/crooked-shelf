@@ -75,7 +75,8 @@ test('template PNG con scheda, segreto e immagine', async () => {
 
 	const editor = admin.locator('.editor-content');
 	await expect(editor.getByRole('heading', { name: 'Aspetto' })).toBeVisible();
-	await expect(editor.locator('aside.secret')).toContainText('solo il Master');
+	await expect(editor.locator('[data-visibility="master"]')).toContainText('solo il Master');
+	await expect(editor.locator('.hidden-label')).toHaveText('Segreto del Master');
 
 	// Immagine: si carica e si descrive.
 	await editor.getByRole('heading', { name: 'Aspetto' }).click();
@@ -241,7 +242,7 @@ test('colonna a lato: si aggiunge modificando la pagina, con riquadri di testo e
 	await admin.evaluate(() => scrollTo(0, 0));
 	const top = async () => (await side.boundingBox())!.y;
 	expect(await top()).toBeCloseTo((await admin.locator('#explorer').boundingBox())!.y, 0);
-	await admin.evaluate(() => scrollTo(0, 300));
+	await admin.evaluate(() => scrollTo(0, 200));
 	await expect.poll(top).toBeCloseTo(16, 0);
 	await admin.evaluate(() => scrollTo(0, 0));
 	await admin.getByRole('button', { name: 'Salva' }).click();
@@ -713,25 +714,29 @@ test('la descrizione della mappa si scrive in modifica e sta in un riquadro sopr
 test('galleria: tutte le immagini della campagna', async () => {
 	await admin.goto('/gallery');
 	const main = admin.locator('main');
-	// Due mappe, la copertina della Locanda, l'immagine della pagina e quella nel testo di Elminster; le più recenti prima.
-	await expect(main.getByRole('status')).toHaveText('5 immagini');
+	// Due mappe, la copertina della Locanda, l'immagine della pagina e quella nel testo di Elminster, quella nel testo
+	// della Torre del mago (la prima caricata, nella fase 1); le più recenti prima.
+	await expect(main.getByRole('status')).toHaveText('6 immagini');
 	const figures = main.locator('figure');
 	await expect(figures.nth(0)).toContainText('Mappa Waterdeep');
 	await expect(figures.nth(2)).toContainText('Immagine della pagina Locanda del Grifone');
 	await expect(figures.nth(3)).toContainText('Immagine della pagina Elminster');
 	await expect(figures.nth(4)).toContainText('Nel testo di Elminster');
+	await expect(figures.nth(5)).toContainText('Nel testo di Torre del mago');
 	await axe(admin, 'galleria');
 	await shot(admin, '16-galleria');
 
 	// Il visore: frecce per scorrere, Esc per chiudere.
 	const thumb = main.getByRole('link', { name: 'Ritratto di un vecchio mago con la barba' });
 	await thumb.click();
-	const viewer = admin.getByRole('dialog', { name: 'Immagine 5 di 5' });
+	const viewer = admin.getByRole('dialog', { name: 'Immagine 5 di 6' });
 	await expect(viewer.getByRole('img', { name: 'Ritratto di un vecchio mago con la barba' })).toBeVisible();
 	await axe(admin, 'galleria: visore');
 	await shot(admin, '17-galleria-visore');
 	await admin.keyboard.press('ArrowRight');
-	await expect(admin.getByRole('dialog', { name: 'Immagine 1 di 5' }).getByRole('img', { name: 'Waterdeep' })).toBeVisible();
+	await expect(admin.getByRole('dialog', { name: 'Immagine 6 di 6' }).getByRole('img', { name: 'La torre al tramonto' })).toBeVisible();
+	await admin.keyboard.press('ArrowRight');
+	await expect(admin.getByRole('dialog', { name: 'Immagine 1 di 6' }).getByRole('img', { name: 'Waterdeep' })).toBeVisible();
 	await admin.keyboard.press('Escape');
 	await expect(admin.getByRole('dialog')).toHaveCount(0);
 	await expect(thumb).toBeFocused();

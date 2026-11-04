@@ -1,5 +1,7 @@
 import { CALLOUT_KINDS, type DocNode } from './types.ts';
 import { INLINE_LINK } from './extract.ts';
+import { blockVisibility } from './blocks.ts';
+import type { Visibility } from '../roles.ts';
 import { slugify } from '../slug.ts';
 import { parseRuleKind, ruleKey, ruleLinks, type RuleKind } from '../rules/index.ts';
 import { iconPath } from '../icons.ts';
@@ -14,7 +16,8 @@ export interface LinkTarget {
 }
 
 export interface RenderOptions {
-	showSecrets: boolean;
+	/** Chi legge vede i blocchi con questa visibilità? (quelli nascosti non entrano nell'HTML) */
+	sees: (v: Visibility) => boolean;
 	resolve: (slug: string) => LinkTarget | undefined;
 	/** Testi dell'interfaccia (già tradotti). `preview` contiene {name}. */
 	labels: { secret: string; note: string; tip: string; warning: string; missing: string; preview?: string; external?: string };
@@ -86,11 +89,33 @@ function cellAttrs(n: DocNode): string {
 /** Trasforma il documento in HTML. Tutto ciò che non è riconosciuto viene ignorato. */
 export function renderDoc(doc: DocNode, opt: RenderOptions): string {
 	const kids = (n: DocNode) => (n.content ?? []).map(node).join('');
+	const secretBox = (html: string) =>
+		`<aside class="secret" aria-label="${esc(opt.labels.secret)}"><p class="secret-title">${esc(opt.labels.secret)}</p>${html}</aside>`;
+
+	/** I blocchi di primo livello: quelli segreti uno dopo l'altro stanno in un solo riquadro. */
+	function blocks(list: DocNode[]): string {
+		let html = '';
+		let secret = '';
+		for (const b of list) {
+			const v = blockVisibility(b);
+			if (v && !opt.sees(v)) continue;
+			if (v === 'master') secret += b.type === 'secret' ? kids(b) : node(b);
+			else {
+				if (secret) html += secretBox(secret);
+				secret = '';
+				html += node(b);
+			}
+		}
+		return html + (secret ? secretBox(secret) : '');
+	}
 
 	function node(n: DocNode): string {
+		// Anche più in basso nel documento, un nodo nascosto non si disegna.
+		const v = blockVisibility(n);
+		if (v && !opt.sees(v)) return '';
 		switch (n.type) {
 			case 'doc':
-				return kids(n);
+				return blocks(n.content ?? []);
 			case 'text':
 				return marks(n.text ?? '', n.marks);
 			case 'paragraph':
@@ -136,8 +161,7 @@ export function renderDoc(doc: DocNode, opt: RenderOptions): string {
 				return `<aside class="callout callout-${k}" aria-label="${esc(label)}"><p class="callout-title">${esc(label)}</p>${kids(n)}</aside>`;
 			}
 			case 'secret':
-				if (!opt.showSecrets) return '';
-				return `<aside class="secret" aria-label="${esc(opt.labels.secret)}"><p class="secret-title">${esc(opt.labels.secret)}</p>${kids(n)}</aside>`;
+				return secretBox(kids(n));
 			case 'ruleRef': {
 				const kind = parseRuleKind(String(n.attrs?.kind ?? ''));
 				const name = String(n.attrs?.name ?? '');

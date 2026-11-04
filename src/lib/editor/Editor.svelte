@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onDestroy, onMount, untrack } from 'svelte';
 	import { Editor } from '@tiptap/core';
-	import { buildExtensions, type SuggestItem, type RuleItem } from './extensions.ts';
+	import { blockAt, buildExtensions, selectedBlocks, type SuggestItem, type RuleItem } from './extensions.ts';
 	import { RULE_KINDS } from '../rules/index.ts';
 	import { getT } from '../i18n/index.ts';
 	import type { DocNode } from '../content/types.ts';
@@ -103,6 +103,12 @@
 	}
 	const chain = () => editor!.chain().focus();
 
+	// Il blocco dove si sta scrivendo è oscurato (per il pulsante della barra).
+	const hiddenHere = $derived.by(() => {
+		void tick;
+		return !!editor && selectedBlocks(editor.state).some((b) => b.node.attrs.visibility);
+	});
+
 	const blockType = $derived.by(() => {
 		void tick;
 		if (!editor) return 'paragraph';
@@ -176,15 +182,39 @@
 
 	// Il blocco sotto il mouse, con il punto dov'è il suo angolo in alto a destra.
 	let hovered = $state.raw<{ el: HTMLElement; top: number; left: number } | null>(null);
+	// Il menu del «+» sul blocco: aggiunge un blocco di testo o un'immagine dopo di lui.
+	let adding = $state(false);
 
 	function trackBlock(e: MouseEvent) {
-		const blocks = [...(editor?.view.dom.children ?? [])] as HTMLElement[];
+		// Il nome sopra i blocchi oscurati non è un blocco.
+		const blocks = [...(editor?.view.dom.children ?? [])].filter((b) => !b.classList.contains('hidden-label')) as HTMLElement[];
 		const el = blocks.find((b) => b.contains(e.target as Node));
-		// Tra un blocco e l'altro, o sul pulsante, resta quello di prima.
+		// Tra un blocco e l'altro, o sui pulsanti, resta quello di prima.
 		if (!el || el === hovered?.el) return;
 		const box = el.getBoundingClientRect();
 		const area = (e.currentTarget as HTMLElement).getBoundingClientRect();
 		hovered = { el, top: box.top - area.top, left: box.right - area.left };
+		adding = false;
+	}
+
+	/** Dove comincia il blocco sotto il mouse (vedi blockAt). */
+	const hoveredPos = () => editor!.view.posAtDOM(hovered!.el, 0);
+
+	const hoveredHidden = $derived.by(() => {
+		void tick;
+		return !!editor && !!hovered && !!blockAt(editor.state.doc, hoveredPos())?.node.attrs.visibility;
+	});
+
+	function addText() {
+		adding = false;
+		chain().insertBlockAfter(hoveredPos()).run();
+	}
+
+	function addImage() {
+		adding = false;
+		// Il cursore va in un paragrafo nuovo dopo il blocco: l'immagine caricata prende il suo posto.
+		chain().insertBlockAfter(hoveredPos()).run();
+		fileInput.click();
 	}
 
 	/** Elimina il blocco di primo livello che contiene pos (un'immagine o una linea non hanno interno: pos è subito prima). */
@@ -270,7 +300,7 @@
 		{@render btn('tip', t('editor.tip'), () => chain().toggleWrap('callout', { kind: 'tip' }).run(), active('callout', { kind: 'tip' }))}
 		{@render btn('warning', t('editor.warning'), () => chain().toggleWrap('callout', { kind: 'warning' }).run(), active('callout', { kind: 'warning' }))}
 		{#if canSecret}
-			{@render btn('lock', t('editor.secret'), () => chain().toggleWrap('secret').run(), active('secret'))}
+			{@render btn('lock', t('editor.secret'), () => chain().toggleHidden().run(), hiddenHere)}
 		{/if}
 		<span class="sep" aria-hidden="true"></span>
 		{@render btn('table', t('editor.table'), () => chain().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run(), undefined, active('table'))}
@@ -335,20 +365,61 @@
 	/>
 	<p class="upload-status" role="status">{status}</p>
 	<!-- svelte-ignore a11y_no_static_element_interactions (il mouse mostra solo il pulsante; da tastiera c'è quello nella barra) -->
-	<div class="area" id="{labelId}-area" bind:this={host} onmousemove={trackBlock} onmouseleave={() => (hovered = null)}>
+	<div
+		class="area"
+		id="{labelId}-area"
+		bind:this={host}
+		onmousemove={trackBlock}
+		onmouseleave={() => {
+			hovered = null;
+			adding = false;
+		}}
+	>
 		{#if hovered}
-			<button
-				type="button"
-				class="block-delete"
-				title={t('editor.deleteBlock')}
-				tabindex="-1"
-				style:top="{hovered.top}px"
-				style:left="{hovered.left}px"
-				onmousedown={(e) => e.preventDefault()}
-				onclick={() => deleteBlock(editor!.view.posAtDOM(hovered!.el, 0))}
-			>
-				<Icon name="trash" /><span class="visually-hidden">{t('editor.deleteBlock')}</span>
-			</button>
+			<!-- Sull'angolo del blocco: aggiungi dopo, oscura o mostra (il Master), elimina. -->
+			<div class="block-tools" style:top="{hovered.top}px" style:left="{hovered.left}px">
+				<button
+					type="button"
+					class="block-add"
+					title={t('editor.addBlock')}
+					tabindex="-1"
+					aria-expanded={adding}
+					onmousedown={(e) => e.preventDefault()}
+					onclick={() => (adding = !adding)}
+				>
+					<Icon name="plus" /><span class="visually-hidden">{t('editor.addBlock')}</span>
+				</button>
+				{#if canSecret}
+					{@const label = hoveredHidden ? t('editor.showBlock') : t('editor.hideBlock')}
+					<button
+						type="button"
+						class="block-hide"
+						title={label}
+						tabindex="-1"
+						aria-pressed={hoveredHidden}
+						onmousedown={(e) => e.preventDefault()}
+						onclick={() => chain().toggleHidden(hoveredPos()).run()}
+					>
+						<Icon name={hoveredHidden ? 'eye' : 'eyeOff'} /><span class="visually-hidden">{label}</span>
+					</button>
+				{/if}
+				<button
+					type="button"
+					class="block-delete"
+					title={t('editor.deleteBlock')}
+					tabindex="-1"
+					onmousedown={(e) => e.preventDefault()}
+					onclick={() => deleteBlock(hoveredPos())}
+				>
+					<Icon name="trash" /><span class="visually-hidden">{t('editor.deleteBlock')}</span>
+				</button>
+				{#if adding}
+					<div class="block-menu" role="group" aria-label={t('editor.addBlock')}>
+						<button type="button" tabindex="-1" onmousedown={(e) => e.preventDefault()} onclick={addText}><Icon name="doc" />{t('editor.addText')}</button>
+						<button type="button" tabindex="-1" onmousedown={(e) => e.preventDefault()} onclick={addImage}><Icon name="image" />{t('editor.image')}</button>
+					</div>
+				{/if}
+			</div>
 		{/if}
 	</div>
 	<input type="hidden" {name} value={json} />
@@ -459,26 +530,74 @@
 	.area {
 		position: relative;
 	}
-	/* Sull'angolo del blocco: non copre il testo e ci si arriva senza uscire dal blocco. */
-	.block-delete {
+	/* Sull'angolo del blocco: non coprono il testo e ci si arriva senza uscire dal blocco. Il cestino resta sull'angolo. */
+	.block-tools {
 		position: absolute;
 		z-index: 1;
-		transform: translate(-50%, -50%);
+		display: flex;
+		gap: 0.25rem;
+		transform: translate(calc(-100% + 0.875rem), -50%);
+	}
+	.block-tools > button {
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
 		width: 1.75rem;
 		height: 1.75rem;
 		padding: 0;
-		border: 1px solid var(--c-danger);
+		border: 1px solid var(--c-control);
 		border-radius: var(--radius);
 		background: var(--c-surface);
-		color: var(--c-danger);
+		color: var(--c-text);
 		cursor: pointer;
 	}
-	.block-delete:hover {
+	.block-tools > button:hover,
+	.block-tools > button[aria-expanded='true'] {
+		background: var(--c-text);
+		color: var(--c-surface);
+	}
+	.block-tools > .block-hide[aria-pressed='true'] {
+		border-color: var(--c-secret-border);
+	}
+	.block-tools > .block-delete {
+		border-color: var(--c-danger);
+		color: var(--c-danger);
+	}
+	.block-tools > .block-delete:hover {
 		background: var(--c-danger);
 		color: var(--c-surface);
+	}
+	.block-menu {
+		position: absolute;
+		top: calc(100% + 0.25rem);
+		right: 0;
+		display: flex;
+		flex-direction: column;
+		min-width: 9rem;
+		padding: 0.25rem;
+		border: 2px solid var(--c-control);
+		border-radius: var(--radius);
+		background: var(--c-surface);
+		box-shadow: 0 6px 18px rgb(0 0 0 / 0.25);
+	}
+	.block-menu button {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		min-height: 2.25rem;
+		padding: 0.25rem 0.6rem;
+		border: 0;
+		border-radius: var(--radius);
+		background: transparent;
+		color: var(--c-text);
+		font: inherit;
+		font-size: var(--fs-sm);
+		text-align: left;
+		cursor: pointer;
+	}
+	.block-menu button:hover {
+		background: var(--c-primary);
+		color: var(--c-on-primary);
 	}
 	.area :global(.editor-content) {
 		min-height: 18rem;
@@ -497,25 +616,58 @@
 		font-weight: 700;
 		margin: 0.25rem 0;
 	}
-	/* Il lucchetto come nella pagina: la stessa icona a tratto, prima del nome del blocco. */
-	.area :global(aside.secret[data-label]) {
-		position: relative;
+	/*
+	 * Blocchi oscurati: i colori del segreto nella pagina, il bordo a sinistra e, sopra il primo di quelli di fila,
+	 * il lucchetto col nome (non solo il colore). Uno dopo l'altro sembrano un riquadro solo.
+	 */
+	.area :global(.editor-content > [data-visibility]),
+	.inline .area :global(.editor-content > [data-visibility]:hover),
+	.inline .area :global(.editor-content.ProseMirror-focused > [data-visibility].has-focus) {
+		margin-top: 0;
+		margin-bottom: 0;
+		padding: 0.5rem 1rem;
+		background: var(--c-secret-bg);
+		color: var(--c-secret-text);
+		border-left: 6px solid var(--c-secret-border);
 	}
-	.area :global(aside.secret[data-label]::before) {
-		padding-left: 1.45em;
+	.area :global(.editor-content > [data-visibility] + :not([data-visibility])) {
+		margin-top: 1.25rem;
 	}
-	.area :global(aside.secret[data-label]::after) {
+	.area :global(.editor-content > img[data-visibility]) {
+		box-sizing: border-box;
+		outline: 2px dashed var(--c-secret-border);
+		outline-offset: -2px;
+	}
+	.area :global(.hidden-label) {
+		display: flex;
+		align-items: center;
+		gap: 0.35em;
+		margin: 1.25rem 0 0;
+		padding: 0.5rem 1rem 0;
+		background: var(--c-secret-bg);
+		color: var(--c-secret-text);
+		border-left: 6px solid var(--c-secret-border);
+		font-weight: 700;
+		user-select: none;
+	}
+	.area :global(.editor-content > .hidden-label:first-child) {
+		margin-top: 0;
+	}
+	.area :global(.hidden-label::before) {
 		content: '';
-		position: absolute;
-		/* Al centro della prima riga: spazio interno (0.5rem) + margine del nome (0.25rem) + metà riga − metà icona. */
-		top: calc(0.75rem + (var(--line) - 1.1) * 0.5em);
-		left: 1rem;
 		width: 1.1em;
 		height: 1.1em;
+		flex: none;
 		background: currentColor;
 		-webkit-mask: var(--icon-lock) center / contain no-repeat;
 		mask: var(--icon-lock) center / contain no-repeat;
 		forced-color-adjust: none;
+	}
+	@media (forced-colors: active) {
+		.area :global(.editor-content > [data-visibility]),
+		.area :global(.hidden-label) {
+			border-left: 6px solid CanvasText;
+		}
 	}
 	.area :global(.wikilink) {
 		cursor: text;

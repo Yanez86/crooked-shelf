@@ -4,10 +4,13 @@ import { Focus } from '@tiptap/extensions';
 import { Table, TableCell, TableHeader, TableRow } from '@tiptap/extension-table';
 import Image from '@tiptap/extension-image';
 import Suggestion, { type SuggestionProps, type SuggestionKeyDownProps } from '@tiptap/suggestion';
-import { PluginKey } from '@tiptap/pm/state';
+import { Plugin, PluginKey, type EditorState } from '@tiptap/pm/state';
+import { Decoration, DecorationSet } from '@tiptap/pm/view';
+import type { Node as PmNode } from '@tiptap/pm/model';
 import { slugify } from '../slug.ts';
 import { safeHref, safeImageSrc } from '../content/render.ts';
 import { CALLOUT_KINDS } from '../content/types.ts';
+import { BLOCK_TYPES, idsToRenew, newBlockId } from '../content/blocks.ts';
 import { parseRuleKind } from '../rules/index.ts';
 
 export interface EditorLabels {
@@ -30,6 +33,12 @@ declare module '@tiptap/core' {
 		};
 		ruleRef: {
 			insertRuleRef: (attrs: { kind: string; name: string; label?: string | null }) => ReturnType;
+		};
+		blocks: {
+			/** Oscura i blocchi (quelli della selezione, o quello in `pos`), o li mostra se lo sono già tutti. */
+			toggleHidden: (pos?: number) => ReturnType;
+			/** Un paragrafo nuovo dopo il blocco in `pos`, nascosto se lo è lui, col cursore dentro. */
+			insertBlockAfter: (pos: number) => ReturnType;
 		};
 	}
 }
@@ -65,20 +74,141 @@ const Callout = Node.create<{ labels: EditorLabels }>({
 	}
 });
 
-/** Blocco segreto: visibile solo al Master della campagna. */
-const Secret = Node.create<{ labels: EditorLabels }>({
-	name: 'secret',
-	group: 'block',
-	content: 'block+',
-	defining: true,
-	addOptions: () => ({ labels: {} as EditorLabels }),
-	parseHTML: () => [{ tag: 'aside[data-secret]' }],
-	renderHTML({ HTMLAttributes }) {
+/** Un blocco di primo livello: il nodo e la posizione dove comincia. */
+export interface TopBlock {
+	node: PmNode;
+	pos: number;
+}
+
+/** Il blocco di primo livello che contiene `pos` (un'immagine o una linea non hanno interno: `pos` è subito prima). */
+export function blockAt(doc: PmNode, pos: number): TopBlock | null {
+	const at = doc.resolve(Math.max(0, Math.min(pos, doc.content.size)));
+	const i = at.index(0);
+	if (i >= doc.childCount) return null;
+	return { node: doc.child(i), pos: at.posAtIndex(i, 0) };
+}
+
+/** I blocchi di primo livello toccati dalla selezione. */
+export function selectedBlocks(state: EditorState): TopBlock[] {
+	const { from, to } = state.selection;
+	const out: TopBlock[] = [];
+	state.doc.forEach((node, pos) => {
+		const end = pos + node.nodeSize;
+		if (from === to ? pos < from && from < end : pos < to && end > from) out.push({ node, pos });
+	});
+	const at = from === to && !out.length ? blockAt(state.doc, from) : null;
+	return at ? [at] : out;
+}
+
+/**
+ * Id e visibilità dei blocchi (vedi content/blocks.ts). L'id non si vede nell'HTML: copiando un blocco, la copia ne ha
+ * uno nuovo. La visibilità sì (`data-visibility`): un segreto copiato e incollato resta un segreto.
+ * Un blocco nuovo nasce nascosto se il cursore era in un blocco nascosto (scrivendo, inserendo un'immagine o una tabella,
+ * incollando), come prima dentro il riquadro del segreto; e un pezzo nascosto dentro un blocco nasconde il blocco intero.
+ * Il blocco nascosto ha in cima il nome «Segreto del Master» (per i lettori di schermo, e per le immagini, che non hanno ::before).
+ */
+const Blocks = Extension.create<{ canSecret: boolean; labels: EditorLabels }>({
+	name: 'blocks',
+	addOptions: () => ({ canSecret: false, labels: {} as EditorLabels }),
+	addGlobalAttributes() {
 		return [
-			'aside',
-			mergeAttributes(HTMLAttributes, { 'data-secret': '', 'data-label': this.options.labels.secret, class: 'secret' }),
-			0
+			{
+				types: BLOCK_TYPES,
+				attributes: {
+					id: { default: null, keepOnSplit: false, rendered: false, parseHTML: () => null },
+					...(this.options.canSecret
+						? {
+								visibility: {
+									default: null,
+									parseHTML: (el: HTMLElement) => (el.getAttribute('data-visibility') === 'master' ? 'master' : null),
+									renderHTML: (a: Record<string, unknown>) => (a.visibility ? { 'data-visibility': a.visibility } : {})
+								}
+							}
+						: {})
+				}
+			}
 		];
+	},
+	addCommands() {
+		return {
+			toggleHidden:
+				(pos?: number) =>
+				({ state, tr, dispatch }) => {
+					const at = pos === undefined ? selectedBlocks(state) : [blockAt(state.doc, pos)].filter((b): b is TopBlock => !!b);
+					const items = at.filter((b) => 'visibility' in b.node.attrs);
+					if (!items.length) return false;
+					const hide = items.some((b) => !b.node.attrs.visibility);
+					if (dispatch) for (const b of items) tr.setNodeAttribute(b.pos, 'visibility', hide ? 'master' : null);
+					return true;
+				},
+			insertBlockAfter:
+				(pos: number) =>
+				({ state, chain }) => {
+					const b = blockAt(state.doc, pos);
+					if (!b) return false;
+					const end = b.pos + b.node.nodeSize;
+					const visibility = this.options.canSecret ? (b.node.attrs.visibility ?? null) : undefined;
+					return chain()
+						.insertContentAt(end, { type: 'paragraph', attrs: { id: newBlockId(), ...(visibility !== undefined ? { visibility } : {}) } })
+						.setTextSelection(end + 1)
+						.run();
+				}
+		};
+	},
+	addProseMirrorPlugins() {
+		const { canSecret, labels } = this.options;
+		const keep = new Plugin({
+			key: new PluginKey('blockIds'),
+			appendTransaction(trs, old, state) {
+				if (!trs.some((t) => t.docChanged)) return null;
+				const items: TopBlock[] = [];
+				state.doc.forEach((node, pos) => items.push({ node, pos }));
+				const renew = idsToRenew(items.map((b) => b.node.attrs.id));
+				// Dove si stava scrivendo: i blocchi nuovi prendono la sua visibilità.
+				const was = canSecret ? (blockAt(old.doc, old.selection.from)?.node.attrs.visibility ?? null) : null;
+				const tr = state.tr;
+				items.forEach(({ node, pos }, i) => {
+					if (!('id' in node.attrs)) return;
+					if (renew.has(i)) tr.setNodeAttribute(pos, 'id', newBlockId());
+					let vis = canSecret ? (node.attrs.visibility ?? null) : null;
+					if (canSecret && renew.has(i) && !vis) vis = was;
+					// Dentro un blocco (un paragrafo in un elenco) niente id né visibilità: valgono quelli del blocco.
+					node.descendants((d, p) => {
+						if (d.attrs.id) tr.setNodeAttribute(pos + 1 + p, 'id', null);
+						if (d.attrs.visibility) {
+							vis = vis ?? d.attrs.visibility;
+							tr.setNodeAttribute(pos + 1 + p, 'visibility', null);
+						}
+					});
+					if (canSecret && vis !== (node.attrs.visibility ?? null)) tr.setNodeAttribute(pos, 'visibility', vis);
+				});
+				return tr.docChanged ? tr : null;
+			}
+		});
+		if (!canSecret) return [keep];
+		const label = () => {
+			const el = document.createElement('div');
+			el.className = 'hidden-label';
+			el.contentEditable = 'false';
+			el.textContent = labels.secret;
+			return el;
+		};
+		const marks = new Plugin({
+			key: new PluginKey('hiddenBlocks'),
+			props: {
+				decorations(state) {
+					const out: Decoration[] = [];
+					let before = false;
+					state.doc.forEach((node, pos) => {
+						const hidden = !!node.attrs.visibility;
+						if (hidden && !before) out.push(Decoration.widget(pos, label, { side: -1, key: 'hidden-label', ignoreSelection: true }));
+						before = hidden;
+					});
+					return DecorationSet.create(state.doc, out);
+				}
+			}
+		});
+		return [keep, marks];
 	}
 });
 
@@ -422,7 +552,7 @@ export function buildExtensions(opts: {
 		TableHeader,
 		TableCell,
 		Callout.configure({ labels: opts.labels }),
-		...(opts.canSecret ? [Secret.configure({ labels: opts.labels })] : []),
+		Blocks.configure({ canSecret: opts.canSecret, labels: opts.labels }),
 		WikiLink.configure({ labels: opts.labels, suggest: opts.suggest }),
 		RuleRef.configure({ labels: opts.labels, search: opts.searchRules }),
 		// Il blocco in cui si sta scrivendo: nella modifica sul posto è evidenziato.

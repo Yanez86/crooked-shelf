@@ -1,10 +1,11 @@
 import { and, desc, eq, inArray, sql, type SQL } from 'drizzle-orm';
 import { getDb, getSqlite, schema } from './db/index.ts';
 import { slugify } from '../slug.ts';
-import { extract, stripSecrets, uploadedImages } from '../content/extract.ts';
+import { extract, uploadedImages } from '../content/extract.ts';
+import { mergeBlocks, visibleBlocks } from '../content/blocks.ts';
 import { renderDoc, renderInline, type LinkTarget, type RenderOptions } from '../content/render.ts';
 import { EMPTY_DOC, isDoc, type DocNode, type PageField, type SessionInfo } from '../content/types.ts';
-import { authorKey, canView, isMaster, SHEET_VISIBILITIES, type Viewer } from '../access.ts';
+import { authorKey, canSeeBlock, canView, isMaster, SHEET_VISIBILITIES, type Viewer } from '../access.ts';
 import type { Visibility } from '../roles.ts';
 import type { PageKind } from '../pageKinds.ts';
 import { visibleTo } from './visibility.ts';
@@ -81,14 +82,20 @@ export function pageCover(p: Pick<PageRow, 'coverImageId' | 'coverColor' | 'cove
 	return null;
 }
 
-/** `sheet`: è una scheda giocatore, dove i segreti non ci vanno (il giocatore non potrebbe più modificarla). */
-function normalizeContent(raw: unknown, u: Viewer, sheet = false): DocNode {
-	const doc = isDoc(raw) ? raw : EMPTY_DOC;
-	// Solo il Master scrive blocchi segreti.
-	return isMaster(u) && !sheet ? doc : stripSecrets(doc);
+/** Il testo di una pagina come lo vede chi guarda: senza i blocchi che non può vedere (i segreti, se non è il Master). */
+export function viewContent(content: unknown, u: Viewer | null): DocNode {
+	return visibleBlocks(isDoc(content) ? content : EMPTY_DOC, (v) => canSeeBlock(v, u));
 }
 
-/** Una scheda giocatore: sta nella cartella PG, la vedono tutti i giocatori, non ha segreti. */
+/**
+ * Il testo da salvare (vedi mergeBlocks): chi scrive non crea blocchi che non vede (solo il Master scrive segreti),
+ * e i blocchi della pagina che non vede (`stored`, la pagina di prima) tornano al loro posto.
+ */
+function normalizeContent(raw: unknown, u: Viewer, stored: unknown = null): DocNode {
+	return mergeBlocks(isDoc(raw) ? raw : EMPTY_DOC, isDoc(stored) ? stored : null, (v) => canSeeBlock(v, u));
+}
+
+/** Una scheda giocatore: sta nella cartella PG e la vedono tutti i giocatori. */
 export const isSheet = (p: Pick<PageRow, 'sheetOf'>) => p.sheetOf !== null;
 
 /** La scheda di chi è al tavolo non va nel cestino; quella di chi ha lasciato la campagna il Master la può eliminare. */
@@ -154,7 +161,7 @@ const sessionOf = (kind: PageKind, session: SessionInfo | null) => (kind === 'te
 
 /** `extra` scrive, nella stessa transazione, ciò che serve al tipo di pagina (mappa, cronologia). */
 export function createPage(input: PageInput, u: Viewer, extra?: (page: PageRow) => void): PageRow {
-	const doc = normalizeContent(input.content, u, !!input.sheetOf);
+	const doc = normalizeContent(input.content, u);
 	const now = Date.now();
 	const base = slugify(input.slug || input.title);
 	const kind = input.kind ?? 'page';
@@ -203,7 +210,7 @@ const nextKind = (page: PageRow, want: PageKind | undefined): PageKind =>
 /** Aggiorna una pagina. `manage` = può cambiare visibilità e permessi. */
 export function updatePage(page: PageRow, input: PageInput, u: Viewer, manage: boolean, extra?: () => void): void {
 	const sheet = isSheet(page);
-	const doc = normalizeContent(input.content, u, sheet);
+	const doc = normalizeContent(input.content, u, page.content);
 	// La scheda resta una pagina, nella sua cartella, visibile ai giocatori.
 	const kind = sheet ? page.kind : nextKind(page, input.kind);
 	const categoryId = sheet ? page.categoryId : input.categoryId;
@@ -299,7 +306,7 @@ export function renderPage(page: PageRow, u: Viewer | null, labels: RenderOption
 	const fields = page.fields ?? [];
 	const resolve = linkResolver(doc, u, fields);
 	return {
-		html: renderDoc(doc, { showSecrets: isMaster(u), resolve, labels, hasRule }),
+		html: renderDoc(doc, { sees: (v) => canSeeBlock(v, u), resolve, labels, hasRule }),
 		// I riquadri immagine il cui file non c'è più (es. risorsa eliminata) non si mostrano.
 		fields: fields.flatMap((f): { label: string; html: string; title?: string; image?: { url: string; width: number; height: number } }[] => {
 			if (f.image === undefined) return [{ label: f.label, html: renderInline(f.value, { resolve, labels, hasRule }) }];

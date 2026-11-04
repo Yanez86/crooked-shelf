@@ -1,9 +1,9 @@
 import { allowedVisibilities, canEdit, canView, isMaster, type Viewer } from '../access.ts';
 import { fromMarkdown } from '../content/markdown.ts';
-import { EMPTY_DOC, isDoc, type DocNode } from '../content/types.ts';
+import type { DocNode } from '../content/types.ts';
 import type { Visibility } from '../roles.ts';
 import { slugify } from '../slug.ts';
-import { backlinks, createPage, getPageBySlug, listPages, pageMeta, TITLE_MAX, updatePage, type PageRow } from './pages.ts';
+import { backlinks, createPage, getPageBySlug, listPages, pageMeta, TITLE_MAX, updatePage, viewContent, type PageRow } from './pages.ts';
 import { CONTENT_MAX } from './pageForm.ts';
 import { pageView } from './pageView.ts';
 import { searchPages } from './search.ts';
@@ -54,7 +54,7 @@ const WRITE_TOOLS = [
 	},
 	{
 		name: 'append_to_page',
-		description: `Aggiunge testo in fondo a una pagina che chi ha creato il token può modificare. Con secret il testo va in un blocco segreto, che vede solo il Master. ${MARKDOWN}`,
+		description: `Aggiunge testo in fondo a una pagina che chi ha creato il token può modificare. Con secret i blocchi aggiunti sono oscurati: li vede solo il Master. ${MARKDOWN}`,
 		inputSchema: { type: 'object', properties: { slug: { type: 'string' }, text: { type: 'string' }, secret: { type: 'boolean' } }, required: ['slug', 'text'] },
 		annotations: { readOnlyHint: false, destructiveHint: false }
 	},
@@ -92,7 +92,10 @@ function blocks(text: unknown): DocNode[] {
 	return out;
 }
 
-/** Cambia solo il testo: titolo, visibilità, permessi, cartella e colonna a lato restano quelli che sono. La versione di prima resta nella cronologia. */
+/**
+ * Cambia solo il testo: titolo, visibilità, permessi, cartella e colonna a lato restano quelli che sono. La versione di prima resta nella cronologia.
+ * `content` parte da viewContent, come nell'editor: i blocchi che chi scrive non vede li rimette updatePage.
+ */
 function saveContent(page: PageRow, content: DocNode, u: Viewer) {
 	if (JSON.stringify(content).length > CONTENT_MAX) throw new ToolError('La pagina diventerebbe troppo lunga.');
 	const { title, visibility, playersCanEdit, categoryId, session } = page;
@@ -120,9 +123,9 @@ function append(args: Record<string, unknown>, u: Viewer) {
 	const page = editable(args.slug, u);
 	const added = blocks(args.text);
 	if (args.secret && !isMaster(u)) throw new ToolError('Solo il Master scrive segreti.');
-	if (args.secret && page.sheetOf !== null) throw new ToolError('Nelle schede giocatore non si scrivono segreti: il giocatore non potrebbe più modificarla. Scrivili in una pagina Solo Master.');
-	const doc = isDoc(page.content) ? page.content : EMPTY_DOC;
-	return saveContent(page, { ...doc, content: [...(doc.content ?? []), ...(args.secret ? [{ type: 'secret', content: added }] : added)] }, u);
+	const doc = viewContent(page.content, u);
+	const more = args.secret ? added.map((b) => ({ ...b, attrs: { ...b.attrs, visibility: 'master' } })) : added;
+	return saveContent(page, { ...doc, content: [...(doc.content ?? []), ...more] }, u);
 }
 
 function replace(args: Record<string, unknown>, u: Viewer) {
@@ -139,7 +142,8 @@ function replace(args: Record<string, unknown>, u: Viewer) {
 		// Un nodo di testo vuoto romperebbe l'editor.
 		return n.content ? { ...n, content: n.content.map(walk).filter((c) => c.type !== 'text' || c.text) } : n;
 	};
-	const doc = walk(isDoc(page.content) ? page.content : EMPTY_DOC);
+	// Solo nel testo che chi scrive vede: dentro un segreto non si cerca e non si cambia.
+	const doc = walk(viewContent(page.content, u));
 	if (hits !== 1) throw new ToolError(hits ? `Il testo compare ${hits} volte: indicane un pezzo più lungo.` : 'Testo non trovato: deve stare tutto in uno stesso stile.');
 	return saveContent(page, doc, u);
 }

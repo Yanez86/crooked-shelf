@@ -70,7 +70,7 @@ Gli stessi colori dell'editor dei temi, in formato `#rrggbb`. Il tema viene **ri
 }
 ```
 
-`content` è il formato dell'editor: il modo più semplice per ottenerlo è creare il template nella wiki (Nuova pagina › Nuovo template) e copiarlo da un pacchetto mondo esportato (in `pages.json`, la pagina con `"kind": "template"`).
+`content` è il formato dell'editor: il modo più semplice per ottenerlo è creare il template nella wiki (Nuova pagina › Nuovo template) e copiarlo da un pacchetto mondo esportato (in `pages.json`, la pagina con `"kind": "template"`). Un blocco con `"attrs": { "visibility": "master" }` è un segreto del Master: le copie lo hanno solo se le fa il Master. Il vecchio riquadro `{ "type": "secret", "content": [...] }` funziona ancora e diventa i blocchi che contiene, oscurati.
 
 Accendendo il plugin, i suoi template diventano pagine della wiki, nella linguetta Template della barra a sinistra (una volta sola): da lì si modificano come ogni pagina, e restano anche se il plugin si spegne.
 

@@ -179,6 +179,27 @@ describe('scrittura', () => {
 		expect(write(alice, 'append_to_page', { slug: 'piano-malvagio', text: 'x' }).text).toBe('Pagina non trovata.');
 	});
 
+	it('il giocatore modifica una pagina col segreto del Master: il segreto resta, e dentro non si cerca', () => {
+		getDb().update(schema.pages).set({ playersCanEdit: true }).where(eq(schema.pages.slug, 'locanda')).run();
+		write(dm, 'append_to_page', { slug: 'locanda', text: 'Tesoro ancora', secret: true });
+		expect(write(alice, 'append_to_page', { slug: 'locanda', text: 'Dice Alice' }).isError).toBe(false);
+		// «Tesoro» c'è due volte, ma tutte e due nei segreti: per lei non c'è.
+		expect(write(alice, 'replace_text', { slug: 'locanda', find: 'Tesoro', replace: 'x' }).text).toContain('Testo non trovato');
+		expect(write(alice, 'replace_text', { slug: 'locanda', find: 'Birra calda', replace: 'Birra fredda' }).isError).toBe(false);
+		const html = call(dm, 'read_page', { slug: 'locanda' }).text;
+		expect(html).toMatch(/Birra fredda.*Tesoro nascosto.*Tesoro ancora.*Dice Alice/s);
+		expect(getPageBySlug('locanda')!.hasSecret).toBe(true);
+		expect(call(alice, 'read_page', { slug: 'locanda' }).text).not.toContain('Tesoro');
+	});
+
+	it('il Master scrive segreti anche nelle schede giocatore', () => {
+		const sheet = createPage({ ...base, title: 'Thalia', visibility: 'players', sheetOf: alice.id, content: { type: 'doc', content: [para('Ladra')] } }, alice);
+		expect(write(dm, 'append_to_page', { slug: sheet.slug, text: 'È la figlia del duca', secret: true }).isError).toBe(false);
+		expect(call(alice, 'read_page', { slug: sheet.slug }).text).not.toContain('duca');
+		expect(write(alice, 'append_to_page', { slug: sheet.slug, text: 'Ha un pugnale' }).isError).toBe(false);
+		expect(call(dm, 'read_page', { slug: sheet.slug }).text).toMatch(/Ladra.*duca.*pugnale/s);
+	});
+
 	it('template, mappe e cronologie non si toccano da qui', () => {
 		const tpl = createPage({ ...base, title: 'Modello', visibility: 'players', kind: 'template', content: { type: 'doc', content: [para('Base')] } }, dm);
 		expect(write(dm, 'append_to_page', { slug: tpl.slug, text: 'x' }).text).toBe('Non puoi modificare questa pagina.');
@@ -198,7 +219,8 @@ describe('scrittura', () => {
 	it('togliere tutto il testo di un nodo non lascia nodi vuoti', () => {
 		write(dm, 'replace_text', { slug: 'locanda', find: 'Birra calda', replace: '' });
 		const [first] = (getPageBySlug('locanda')!.content as DocNode).content!;
-		expect(first).toEqual({ type: 'paragraph', content: [] });
+		expect(first).toMatchObject({ type: 'paragraph', content: [] });
+		expect(first.content).toEqual([]);
 	});
 
 	it('testo vuoto o troppo lungo: non si salva niente', () => {

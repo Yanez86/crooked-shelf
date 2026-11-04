@@ -29,7 +29,7 @@ Ogni campagna ha la cartella **PG** (in inglese «PCs») e dentro una **scheda**
 - **Nasce da sola** quando il giocatore entra nella campagna (con un invito, o quando il Master passa la campagna a un altro e diventa giocatore). Nelle campagne nate prima di questa versione cartella e schede compaiono alla prima visita; una cartella «PG» che c'era già diventa la cartella PG.
 - **Il titolo** all'inizio è il nome del giocatore: lui lo cambia con quello del personaggio.
 - **Chi la vede e chi la modifica**: la vedono tutti i giocatori, la modificano il giocatore e il Master. Nelle opzioni della pagina si sceglie solo tra **Pubblica** e **Giocatori**: niente Solo Master né Personale, così il Master la vede sempre e gli altri giocatori pure.
-- **Niente segreti**: nella scheda il Master non mette il Segreto del Master, altrimenti il giocatore non potrebbe più modificarla. Le sue note segrete su un personaggio vanno in una pagina Solo Master, anche dentro la scheda.
+- **I segreti del Master**: nella scheda il Master può oscurare un blocco, anche uno scritto dal giocatore. Il giocatore non lo vede più e continua a modificare la sua scheda: quando salva, il blocco oscurato resta dov'era. Finché nella scheda c'è un segreto, la visibilità della scheda la cambia solo il Master.
 - **Pagine dentro la scheda**: nella scheda c'è **Nuova pagina qui dentro** (il giocatore nella sua, il Master in tutte). La pagina nuova parte **Personale**: va bene per gli appunti che il giocatore tiene per sé, e che non vede neanche il Master. Si può fare anche una bacheca.
 - **Sta al suo posto**: la scheda non cambia cartella, non diventa un template né la home, e nell'albero si riordina solo dentro la cartella PG. Non va nel cestino finché il giocatore è al tavolo. La cartella PG si rinomina e si sposta, ma non si elimina; se finisce nel cestino la cartella che la contiene, lei risale alla radice.
 - **Chi esce dalla campagna** non compare più nell'elenco «Al tavolo», ma la sua scheda resta: il Master la può eliminare. Se il giocatore rientra ritrova la sua, anche dal cestino.
@@ -114,9 +114,17 @@ Ogni cosa della wiki è una **pagina**, nell'albero a sinistra, con un indirizzo
 | `@` e il nome | suggerimenti di regole (incantesimi, mostri…) |
 | `@incantesimo[Fireball|Palla di fuoco]` | regola con il testo che vuoi |
 
-Con i pulsanti della barra inserisci immagini (con la descrizione per chi non vede), tabelle, riquadri «Nota», «Consiglio», «Attenzione» e il **Segreto del Master**: un riquadro che i giocatori non vedono e non trovano neanche cercando.
+Con i pulsanti della barra inserisci immagini (con la descrizione per chi non vede), tabelle e riquadri «Nota», «Consiglio», «Attenzione».
 
-Passando col mouse su un blocco compare in alto a destra il cestino, che lo elimina per intero; il cestino nella barra elimina invece il blocco in cui stai scrivendo. Il primo pulsante della barra annulla l'ultima azione (come Ctrl+Z).
+La pagina è fatta di **blocchi**: un paragrafo, un titolo, un'immagine, una tabella, un riquadro. Passando col mouse su un blocco compaiono in alto a destra:
+
+- il **più**, che aggiunge subito dopo un blocco di **testo** o un'**immagine**;
+- l'**occhio**, solo per il Master, che **oscura** il blocco: diventa un **segreto del Master**, che i giocatori non vedono e non trovano neanche cercando. Lo stesso occhio lo mostra di nuovo;
+- il **cestino**, che elimina il blocco per intero.
+
+Nell'editor il blocco oscurato ha lo sfondo dei segreti, e sopra il primo di quelli di fila il lucchetto con «Segreto del Master»; nella pagina i blocchi oscurati di fila stanno in un solo riquadro. Da tastiera c'è il lucchetto nella barra, che oscura (o mostra) i blocchi in cui stai scrivendo o che hai selezionato, e il cestino nella barra, che elimina il blocco in cui stai scrivendo. Un blocco nuovo nasce oscurato se lo fai da un blocco oscurato: andando a capo, col più, inserendo un'immagine o una tabella. Copiando e incollando un blocco oscurato, la copia è oscurata anche lei. Il primo pulsante della barra annulla l'ultima azione (come Ctrl+Z).
+
+**Pagine con un segreto**: chi può modificare la pagina la modifica anche se il Master ci ha oscurato qualcosa. Un giocatore non riceve i blocchi oscurati, nemmeno nell'editor; quando salva, ognuno torna subito dopo il blocco che lo precedeva (se l'ha eliminato, dopo il primo blocco prima di quello che c'è ancora). Il giocatore non può oscurare blocchi, e ripristinando una versione vecchia non ne tira fuori i segreti. Visibilità, permessi ed eliminazione di una pagina con un segreto restano al Master, anche se la pagina l'ha scritta il giocatore.
 
 Da tastiera: con Tab entri nella barra, con le frecce ti muovi tra i comandi, con Esc esci dall'editor.
 

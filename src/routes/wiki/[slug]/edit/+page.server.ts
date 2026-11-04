@@ -1,7 +1,7 @@
 import { error, fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { allowedVisibilities, canEdit, canManage, isMaster, SHEET_VISIBILITIES } from '#lib/access.ts';
-import { deletePage, getPageBySlug, isSheet, lockedSheet, pageCover, pageMeta, updatePage } from '#lib/server/pages.ts';
+import { deletePage, getPageBySlug, isSheet, lockedSheet, pageCover, pageMeta, updatePage, viewContent } from '#lib/server/pages.ts';
 import { readPageForm } from '#lib/server/pageForm.ts';
 import { mapFormValues, readMapForm } from '#lib/server/mapForm.ts';
 import { getMapOfPage, listMaps, updateMap } from '#lib/server/maps.ts';
@@ -27,7 +27,8 @@ export const load: PageServerLoad = ({ params, locals, url }) => {
 		page: {
 			slug: page.slug,
 			title: page.title,
-			content: page.content,
+			// Senza i blocchi che chi modifica non vede: al salvataggio il server li rimette al loro posto.
+			content: viewContent(page.content, locals.user),
 			visibility: page.visibility,
 			playersCanEdit: page.playersCanEdit,
 			categoryId: page.categoryId,
@@ -51,10 +52,10 @@ export const load: PageServerLoad = ({ params, locals, url }) => {
 		categories: categoryTree(locals.user).flat.map(({ id, label }) => ({ id, label })),
 		visibilities: allowedVisibilities(locals.user, isSheet(page)),
 		canManage: canManage(page, locals.user),
-		// Una scheda giocatore resta una pagina della cartella PG, senza segreti: il giocatore deve poterla modificare.
+		// Una scheda giocatore resta una pagina della cartella PG, visibile ai giocatori.
 		sheet: isSheet(page),
 		canDelete: canManage(page, locals.user) && !isHomePage(page.id) && !lockedSheet(page),
-		canSecret: isMaster(locals.user) && !isSheet(page),
+		canSecret: isMaster(locals.user),
 		canTemplate: canCreateKind('template', locals.user) && !isSheet(page),
 		canHome: isMaster(locals.user) && page.kind === 'page' && !isSheet(page),
 		isHome: isHomePage(page.id),

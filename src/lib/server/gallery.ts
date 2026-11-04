@@ -3,9 +3,9 @@ import { getDb, schema } from './db/index.ts';
 import { visibleTo } from './visibility.ts';
 import { listMaps } from './maps.ts';
 import { collator, getResource, listResources, type Resource } from './resources.ts';
-import { stripSecrets, uploadedImages } from '../content/extract.ts';
-import { EMPTY_DOC, isDoc } from '../content/types.ts';
-import { isMaster, type Viewer } from '../access.ts';
+import { viewContent } from './pages.ts';
+import { uploadedImages } from '../content/extract.ts';
+import type { Viewer } from '../access.ts';
 
 const { pages, files } = schema;
 
@@ -45,7 +45,6 @@ export function galleryImages(u: Viewer | null): GalleryImage[] {
 		uses.set(id, e);
 	};
 
-	const secrets = isMaster(u);
 	const rows = getDb()
 		.select({ slug: pages.slug, title: pages.title, content: pages.content, fields: pages.fields, cover: pages.coverImageId })
 		.from(pages)
@@ -56,8 +55,7 @@ export function galleryImages(u: Viewer | null): GalleryImage[] {
 		const href = `/wiki/${p.slug}`;
 		if (p.cover) add(p.cover, { kind: 'cover', title: p.title, href });
 		for (const f of p.fields ?? []) if (f.image) add(f.image, { kind: 'cover', title: p.title, href }, f.label || f.title);
-		const doc = isDoc(p.content) ? p.content : EMPTY_DOC;
-		for (const img of uploadedImages(secrets ? doc : stripSecrets(doc))) add(img.id, { kind: 'content', title: p.title, href }, img.alt);
+		for (const img of uploadedImages(viewContent(p.content, u))) add(img.id, { kind: 'content', title: p.title, href }, img.alt);
 	}
 	for (const m of listMaps(u)) add(m.fileId, { kind: 'map', title: m.title, href: `/wiki/${m.slug}` });
 	for (const r of listResources(u)) if (r.kind === 'image') add(r.file.id, { kind: 'resource', title: r.title, href: `/resources/${r.id}` });

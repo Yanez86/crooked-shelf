@@ -23,7 +23,7 @@
 			},
 			{ "type": "heading", "attrs": { "level": 2 }, "content": [{ "type": "text", "text": "Voci di corridoio" }] },
 			{ "type": "paragraph" },
-			{ "type": "secret", "content": [{ "type": "paragraph", "content": [{ "type": "text", "text": "Cosa sa davvero l'oste." }] }] }
+			{ "type": "paragraph", "attrs": { "visibility": "master" }, "content": [{ "type": "text", "text": "Cosa sa davvero l'oste." }] }
 		]
 	}
 }

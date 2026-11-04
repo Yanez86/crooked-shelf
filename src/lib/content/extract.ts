@@ -1,4 +1,5 @@
 import type { DocNode, PageField } from './types.ts';
+import { blockVisibility } from './blocks.ts';
 import { slugify } from '../slug.ts';
 import { parseRuleKind, ruleTarget } from '../rules/index.ts';
 
@@ -37,9 +38,10 @@ export interface WikiLinkRef {
 export interface Extracted {
 	/** Testo visibile a tutti quelli che vedono la pagina. */
 	body: string;
-	/** Testo dentro i blocchi segreti del Master. */
+	/** Testo dei blocchi con una visibilità più stretta della pagina (i segreti del Master): lo trova solo il Master. */
 	secretBody: string;
 	links: WikiLinkRef[];
+	/** C'è almeno un blocco nascosto a qualcuno che vede la pagina. */
 	hasSecret: boolean;
 }
 
@@ -63,7 +65,7 @@ export function extract(doc: DocNode, fields: PageField[] = []): Extracted {
 	let hasSecret = false;
 
 	const walk = (n: DocNode, secret: boolean) => {
-		if (n.type === 'secret') {
+		if (blockVisibility(n)) {
 			hasSecret = true;
 			secret = true;
 		}
@@ -106,12 +108,6 @@ export function extract(doc: DocNode, fields: PageField[] = []): Extracted {
 		links: [...map].map(([target, secret]) => ({ target, secret })),
 		hasSecret
 	};
-}
-
-/** Toglie i blocchi segreti (contenuto inviato da chi non può scriverli). */
-export function stripSecrets(n: DocNode): DocNode {
-	if (!n.content) return n;
-	return { ...n, content: n.content.filter((c) => c.type !== 'secret').map(stripSecrets) };
 }
 
 /** Immagini caricate nella wiki (/files/<id>) usate in un documento, con la loro descrizione. */

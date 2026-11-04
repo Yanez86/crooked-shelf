@@ -1,13 +1,12 @@
 import { and, eq, sql } from 'drizzle-orm';
 import { getDb, schema } from './db/index.ts';
-import { createPage, getPageById, getPageBySlug, type PageRow } from './pages.ts';
+import { createPage, getPageById, getPageBySlug, viewContent, type PageRow } from './pages.ts';
 import { campaignId, currentCampaign, deleteCampaign, inCampaign, insertCampaign, ofCampaign, saveCampaign, type CampaignRow } from './campaigns.ts';
 import { createCategory, getCategoryBySlug, syncBranch } from './taxonomy.ts';
 import { setTimelineMode } from './timeline.ts';
 import { enabledPlugins, pluginTemplates } from './plugins.ts';
 import { visibleTo } from './visibility.ts';
 import { BUILTIN_TEMPLATES, builtinTemplate, SESSION_TEMPLATE, sheetTemplate, type TemplateData } from '../templates.ts';
-import { stripSecrets } from '../content/extract.ts';
 import { EMPTY_DOC, isDoc, type DocNode, type PageField } from '../content/types.ts';
 import { canView, isMaster, type Viewer } from '../access.ts';
 import { translate } from '../i18n/index.ts';
@@ -37,9 +36,8 @@ export function getTemplatePage(slug: string, u: Viewer | null): PageRow | undef
  * di sessione (con la data di oggi). I segreti restano solo per il Master.
  */
 export function templateCopy(tpl: PageRow, u: Viewer, today: string) {
-	const doc = isDoc(tpl.content) ? tpl.content : EMPTY_DOC;
 	return {
-		content: isMaster(u) ? doc : stripSecrets(doc),
+		content: viewContent(tpl.content, u),
 		fields: (tpl.fields ?? []).map((f) => ({ ...f })),
 		icon: tpl.icon,
 		session: tpl.session ? { number: null, realDate: today, world: null } : null,

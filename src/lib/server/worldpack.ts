@@ -2,7 +2,7 @@ import { strFromU8, strToU8, unzipSync, zipSync, type Zippable } from 'fflate';
 import { and, asc, eq, inArray, sql } from 'drizzle-orm';
 import { getDb, schema } from './db/index.ts';
 import { getFile, readFile, saveImage } from './files.ts';
-import { createPage, getPageBySlug, pageCover, pageMeta, uniquePageSlug, updatePage, type PageInput, type PageRow } from './pages.ts';
+import { createPage, getPageBySlug, pageCover, pageMeta, uniquePageSlug, updatePage, viewContent, type PageInput, type PageRow } from './pages.ts';
 import { cleanFields } from './pageForm.ts';
 import { categoryWithDescendants, createCategory, listCategories, categoryPath } from './taxonomy.ts';
 import { getCalendar, getSettings, customThemes } from './settings.ts';
@@ -13,7 +13,6 @@ import { importTemplate, newCampaign, setHomePage } from './templates.ts';
 import { pageIcon } from '../pageIcons.ts';
 import { cleanCover, type PageCover } from '../covers.ts';
 import { storeTheme } from './themesAdmin.ts';
-import { stripSecrets } from '../content/extract.ts';
 import { frontMatter, toMarkdown } from '../content/markdown.ts';
 import { EMPTY_DOC, isDoc, type DocNode, type PageField } from '../content/types.ts';
 import { canView, isMaster, type Viewer } from '../access.ts';
@@ -263,8 +262,8 @@ export function exportWorld(o: ExportOptions, u: Viewer): Uint8Array {
 	};
 
 	const packPages: PackPage[] = list.map((p) => {
-		const raw = isDoc(p.content) ? p.content : EMPTY_DOC;
-		const content = secrets ? raw : stripSecrets(raw);
+		// Senza segreti: il testo come lo vede un giocatore.
+		const content = viewContent(p.content, secrets ? u : { id: u.id, role: 'player' });
 		imageIds(content, fileIds);
 		for (const f of p.fields ?? []) if (f.image) fileIds.add(f.image);
 		const cover = pageCover(p);
@@ -652,7 +651,8 @@ export function exportMarkdown(u: Viewer): Uint8Array {
 	const cal = getCalendar();
 	const text = (t: string): DocNode => ({ type: 'paragraph', content: t ? [{ type: 'text', text: t }] : [] });
 	for (const p of all) {
-		const body = isDoc(p.content) ? p.content : EMPTY_DOC;
+		// Il testo come lo vede chi esporta: senza i blocchi che non vede, neanche le loro immagini tra i file.
+		const body = viewContent(p.content, u);
 		// La copertina, la mappa e le immagini della colonna a lato vanno in cima al testo.
 		const coverImage = pageCover(p)?.image;
 		const map = p.kind === 'map' ? getMapOfPage(p.id) : undefined;

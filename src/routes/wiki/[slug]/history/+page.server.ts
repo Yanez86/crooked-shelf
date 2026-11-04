@@ -1,7 +1,7 @@
 import { error, fail, redirect } from '@sveltejs/kit';
 import { diffLines } from 'diff';
 import type { Actions, PageServerLoad } from './$types';
-import { canEdit, canView, isMaster } from '#lib/access.ts';
+import { canEdit, canSeeBlock, canView } from '#lib/access.ts';
 import { getPageBySlug, getRevision, linkResolver, listRevisions, pageMeta, revisionText, updatePage } from '#lib/server/pages.ts';
 import { renderDoc } from '#lib/content/render.ts';
 import { EMPTY_DOC, isDoc } from '#lib/content/types.ts';
@@ -28,7 +28,7 @@ export const load: PageServerLoad = ({ params, locals, url }) => {
 		view = {
 			id: r.id,
 			title: r.title,
-			html: renderDoc(doc, { showSecrets: isMaster(locals.user), resolve: linkResolver(doc, locals.user, r.fields ?? []), labels: contentLabels(locals.locale), hasRule })
+			html: renderDoc(doc, { sees: (v) => canSeeBlock(v, locals.user), resolve: linkResolver(doc, locals.user, r.fields ?? []), labels: contentLabels(locals.locale), hasRule })
 		};
 	}
 

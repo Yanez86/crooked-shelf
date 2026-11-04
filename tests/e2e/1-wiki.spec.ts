@@ -478,6 +478,79 @@ test('editor: il cestino elimina il blocco, Annulla lo riporta', async () => {
 	await expect(editor.locator('> *')).toHaveCount(1);
 });
 
+test('editor: il più aggiunge testo o immagine dopo il blocco, l\'occhio lo oscura', async () => {
+	await admin.goto('/wiki/new?template=none');
+	await admin.getByLabel('Titolo', { exact: true }).fill('Torre del mago');
+	const editor = admin.locator('.editor-content');
+	await editor.click();
+	await admin.keyboard.type('Una torre di pietra nera.\nIn cima vive un gufo.');
+
+	// Il più apre il menu: testo o immagine, subito dopo il blocco.
+	await editor.getByText('Una torre di pietra nera.').hover();
+	const add = admin.locator('.block-add');
+	await add.click();
+	const menu = admin.locator('.block-menu');
+	await expect(menu.getByRole('button', { name: 'Testo' })).toBeVisible();
+	await expect(menu.getByRole('button', { name: 'Immagine' })).toBeVisible();
+	await axe(admin, 'menu del più sul blocco');
+	await shot(admin, '03b-editor-piu');
+	await menu.getByRole('button', { name: 'Testo' }).click();
+	await admin.keyboard.type('Nessuno ricorda chi la costruì.');
+	await expect(editor.locator('> p')).toHaveText(['Una torre di pietra nera.', 'Nessuno ricorda chi la costruì.', 'In cima vive un gufo.']);
+
+	// L'occhio oscura il blocco: lo vede solo il Master, col lucchetto e il nome sopra.
+	await editor.getByText('Nessuno ricorda').hover();
+	const hide = admin.locator('.block-hide');
+	await expect(hide).toHaveAttribute('title', 'Oscura il blocco: lo vede solo il Master');
+	await hide.click();
+	await expect(editor.locator('[data-visibility="master"]')).toHaveText('Nessuno ricorda chi la costruì.');
+	await expect(editor.locator('.hidden-label')).toHaveText('Segreto del Master');
+	// Dopo una modifica i pulsanti tornano col mouse; ora l'occhio mostra il blocco.
+	await editor.getByText('Nessuno ricorda').hover();
+	await expect(hide).toHaveAttribute('aria-pressed', 'true');
+	await expect(hide).toHaveAttribute('title', 'Mostra il blocco a chi vede la pagina');
+	// Il più dopo un blocco oscurato fa un blocco oscurato anche lui, come Invio.
+	await add.click();
+	await menu.getByRole('button', { name: 'Testo' }).click();
+	await admin.keyboard.type('Il mago è morto da cent\'anni.');
+	await expect(editor.locator('[data-visibility="master"]')).toHaveText(['Nessuno ricorda chi la costruì.', 'Il mago è morto da cent\'anni.']);
+	await expect(editor.locator('.hidden-label')).toHaveCount(1);
+	await admin.mouse.move(0, 0);
+	await axe(admin, 'editor con blocchi oscurati');
+	await shot(admin, '03c-editor-oscurati');
+
+	// Un'immagine dopo l'ultimo blocco.
+	await editor.getByText('In cima vive un gufo.').hover();
+	await add.click();
+	await menu.getByRole('button', { name: 'Immagine' }).click();
+	await admin.locator('input[type=file]').setInputFiles('tests/fixtures/city.png');
+	const alt = admin.getByRole('dialog', { name: /Descrivi l'immagine/ });
+	await alt.getByRole('textbox').fill('La torre al tramonto');
+	await alt.getByRole('button', { name: 'Salva' }).click();
+	await expect(editor.locator('p:has-text("In cima vive un gufo.") + img')).toHaveAttribute('alt', 'La torre al tramonto');
+
+	await admin.getByRole('button', { name: 'Crea la pagina' }).click();
+	await expect(admin.getByRole('heading', { level: 1, name: 'Torre del mago' })).toBeVisible();
+	const content = admin.locator('.content');
+	await expect(content.locator('.secret')).toHaveCount(1);
+	await expect(content.locator('.secret p:not(.secret-title)')).toHaveText(['Nessuno ricorda chi la costruì.', 'Il mago è morto da cent\'anni.']);
+	await expect(content.locator('.prose > p:not(:empty)')).toHaveText(['Una torre di pietra nera.', 'In cima vive un gufo.']);
+	await expect(content.locator('img')).toHaveAttribute('alt', 'La torre al tramonto');
+
+	// Si mostra di nuovo dallo stesso occhio (o dal lucchetto nella barra).
+	await admin.goto('/wiki/torre-del-mago/edit');
+	await editor.getByText('Il mago è morto').hover();
+	await hide.click();
+	await expect(editor.locator('[data-visibility="master"]')).toHaveText(['Nessuno ricorda chi la costruì.']);
+	await editor.getByText('Nessuno ricorda').click();
+	const lock = admin.getByRole('toolbar').getByRole('button', { name: 'Segreto del Master' });
+	await expect(lock).toHaveAttribute('aria-pressed', 'true');
+	await lock.click();
+	await expect(editor.locator('[data-visibility]')).toHaveCount(0);
+	await expect(editor.locator('.hidden-label')).toHaveCount(0);
+	await expect(lock).toHaveAttribute('aria-pressed', 'false');
+});
+
 test('modifica concorrente non sovrascrive', async ({ browser }) => {
 	const other = await login(browser, ADMIN);
 	await other.goto('/wiki/bartolo-pancia/edit');
@@ -527,6 +600,46 @@ test('invito di un giocatore', async ({ browser }) => {
 	await p2.goto(inviteLink);
 	await expect(p2.getByRole('alert')).toContainText('non è valido');
 	await ctx.close();
+});
+
+test('il giocatore modifica una pagina col segreto del Master, e il segreto resta al suo posto', async ({ browser }) => {
+	// Il Master: una pagina che i giocatori possono modificare, con un blocco oscurato in mezzo.
+	await admin.goto('/wiki/new?template=none');
+	await admin.getByLabel('Titolo', { exact: true }).fill('Bacheca della gilda');
+	const editor = admin.locator('.editor-content');
+	await editor.click();
+	await admin.keyboard.type('Cercasi scorta per la carovana.\nIl mandante è un vampiro.\nPaga: 50 monete.');
+	await editor.getByText('Il mandante').hover();
+	await admin.locator('.block-hide').click();
+	await admin.getByRole('button', { name: 'Opzioni pagina' }).click();
+	await admin.getByRole('checkbox', { name: 'Anche i giocatori possono modificarla' }).check();
+	await admin.getByRole('button', { name: 'Crea la pagina' }).click();
+	await expect(admin.locator('.content .secret')).toContainText('vampiro');
+
+	// Alice la modifica: il segreto non le arriva, nemmeno nell'editor.
+	const p = await login(browser, PLAYER);
+	await p.goto('/wiki/bacheca-della-gilda');
+	await expect(p.locator('.content')).not.toContainText('vampiro');
+	await p.getByRole('link', { name: 'Modifica: Bacheca della gilda' }).click();
+	const mine = p.locator('.editor-content');
+	await expect(mine.locator('> p')).toHaveText(['Cercasi scorta per la carovana.', 'Paga: 50 monete.']);
+	await expect(p.getByRole('button', { name: /Segreto del Master/ })).toHaveCount(0);
+	expect(await p.locator('input[name=content]').inputValue()).not.toContain('vampiro');
+	// Aggiunge un blocco dopo l'ultimo: lei ha il più, non l'occhio.
+	await mine.getByText('Paga: 50 monete.').hover();
+	await expect(p.locator('.block-add')).toBeVisible();
+	await expect(p.locator('.block-hide')).toHaveCount(0);
+	await p.locator('.block-add').click();
+	await p.locator('.block-menu').getByRole('button', { name: 'Testo' }).click();
+	await p.keyboard.type('Mi offro io. — Alice');
+	await p.getByRole('button', { name: 'Salva' }).click();
+	await expect(p.locator('.content')).toContainText('Mi offro io.');
+	await expect(p.locator('.content')).not.toContainText('vampiro');
+	await p.context().close();
+
+	// Il Master ritrova il suo segreto dov'era, e la riga di Alice in fondo.
+	await admin.goto('/wiki/bacheca-della-gilda');
+	await expect(admin.locator('.content .prose')).toContainText(/carovana\.\s*Segreto del Master\s*Il mandante è un vampiro\.\s*Paga: 50 monete\.\s*Mi offro io/);
 });
 
 test('il giocatore non vede i segreti', async ({ browser }) => {
@@ -696,6 +809,8 @@ test('la visibilità si cambia dalla barra a sinistra, anche per le pagine dentr
 
 	// Si fa pulizia: il cestino resta vuoto per chi viene dopo.
 	await tree.getByRole('button', { name: 'Sposta nel cestino: Torre Alta' }).click();
+	// L'albero si ridisegna: la cella esce dalla torre e torna alla radice.
+	await expect(tree.getByRole('link', { name: 'Torre Alta' })).toHaveCount(0);
 	await tree.getByRole('button', { name: 'Sposta nel cestino: Cella Segreta' }).click({ force: true });
 	await admin.goto('/trash');
 	for (const name of ['Torre Alta', 'Cella Segreta']) {

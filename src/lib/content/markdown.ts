@@ -1,10 +1,11 @@
 import type { DocNode, PageField } from './types.ts';
 import { INLINE_LINK } from './extract.ts';
+import { blockVisibility } from './blocks.ts';
 import { slugify } from '../slug.ts';
 import { parseRuleKind } from '../rules/index.ts';
 
 export interface MarkdownOptions {
-	/** Includere i blocchi segreti (come callout "secret"). */
+	/** Includere i blocchi nascosti (i segreti del Master, come callout "secret"). */
 	secrets: boolean;
 	/** Titolo della pagina collegata (per scrivere [[Titolo]]); null se la pagina non esiste. */
 	titleOf: (slug: string) => string | null;
@@ -45,25 +46,47 @@ function inline(nodes: DocNode[] | undefined, o: MarkdownOptions): string {
 		.join('');
 }
 
+/** Più blocchi, con una riga vuota tra uno e l'altro. */
+const joined = (parts: string[][]) => parts.flatMap((lines, i) => (i < parts.length - 1 ? [...lines, ''] : lines));
+
+const quoted = (lines: string[]) => lines.map((l) => (l ? `> ${l}` : '>'));
+
+/** I blocchi di primo livello: i segreti uno dopo l'altro vanno in un solo callout. */
+function topLevel(nodes: DocNode[], o: MarkdownOptions): string[] {
+	const parts: string[][] = [];
+	let secret: string[][] = [];
+	const flush = () => {
+		if (secret.length) parts.push(['> [!secret]', ...quoted(joined(secret))]);
+		secret = [];
+	};
+	for (const n of nodes) {
+		const v = blockVisibility(n);
+		if (v && !o.secrets) continue;
+		if (v !== 'master') {
+			flush();
+			parts.push(block(n, o));
+		} else secret.push(n.type === 'secret' ? joined((n.content ?? []).map((c) => block(c, o))) : block(n, o));
+	}
+	flush();
+	return joined(parts.filter((p) => p.length));
+}
+
 function block(n: DocNode, o: MarkdownOptions): string[] {
-	const kids = (n.content ?? []).flatMap((c, i, all) => {
-		const lines = block(c, o);
-		return i < all.length - 1 ? [...lines, ''] : lines;
-	});
+	if (n.type === 'doc') return topLevel(n.content ?? [], o);
+	// Anche più in basso nel documento, un nodo nascosto resta fuori.
+	if (blockVisibility(n) && !o.secrets) return [];
+	const kids = joined((n.content ?? []).map((c) => block(c, o)));
 	switch (n.type) {
-		case 'doc':
-			return kids;
 		case 'paragraph':
 			return [inline(n.content, o)];
 		case 'heading':
 			return ['#'.repeat(Math.min(6, Math.max(1, Number(n.attrs?.level) || 2))) + ' ' + inline(n.content, o)];
 		case 'blockquote':
-			return kids.map((l) => (l ? `> ${l}` : '>'));
+			return quoted(kids);
 		case 'callout':
 		case 'secret': {
-			if (n.type === 'secret' && !o.secrets) return [];
 			const kind = n.type === 'secret' ? 'secret' : String(n.attrs?.kind ?? 'note');
-			return [`> [!${kind}]`, ...kids.map((l) => (l ? `> ${l}` : '>'))];
+			return [`> [!${kind}]`, ...quoted(kids)];
 		}
 		case 'codeBlock':
 			return ['```', ...(n.content ?? []).map((c) => c.text ?? '').join('').split('\n'), '```'];

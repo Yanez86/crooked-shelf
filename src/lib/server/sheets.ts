@@ -13,8 +13,9 @@ import { slugify } from '../slug.ts';
  * Schede giocatore. Ogni campagna ha la cartella PG e dentro una scheda per ogni giocatore, legata al suo account
  * (`pages.sheet_of`): l'autore è lui, la modificano lui e il Master, la vedono tutti i giocatori. Nasce col template
  * scelto dal Master (di partenza «Scheda giocatore») quando il giocatore entra nella campagna.
- * Le regole che la proteggono stanno con le pagine (pages.ts, taxonomy.ts, tree.ts): niente segreti, solo Pubblica
- * o Giocatori, resta nella cartella PG, e non va nel cestino finché il giocatore è al tavolo.
+ * Le regole che la proteggono stanno con le pagine (pages.ts, taxonomy.ts, tree.ts): solo Pubblica o Giocatori, resta
+ * nella cartella PG, e non va nel cestino finché il giocatore è al tavolo. I segreti del Master ci stanno come altrove:
+ * il giocatore non li riceve e, quando salva, il server li rimette al loro posto (content/blocks.ts).
  */
 
 const { campaignMembers, pages, users } = schema;

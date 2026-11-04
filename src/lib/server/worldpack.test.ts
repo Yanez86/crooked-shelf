@@ -19,7 +19,8 @@ import { hasRule } from './rules/index.ts';
 import { preset } from '../calendar.ts';
 import { THEMES } from '../themes.ts';
 import { BUILTIN_TEMPLATES } from '../templates.ts';
-import { inlineLinks, stripSecrets } from '../content/extract.ts';
+import { inlineLinks } from '../content/extract.ts';
+import { visibleBlocks } from '../content/blocks.ts';
 import { ruleTarget, type RuleKind } from '../rules/index.ts';
 import type { DocNode } from '../content/types.ts';
 
@@ -225,7 +226,7 @@ describe('pacchetto mondo', () => {
 				const rule = /^@(\w+)\/(.+)$/.exec(l);
 				expect(rule ? hasRule(rule[1] as RuleKind, rule[2]) : !!getPageBySlug(l), `${title}: ${l}`).toBe(true);
 			}
-			if (page.visibility !== 'master') expect(JSON.stringify([stripSecrets(content), page.fields])).not.toMatch(spoiler);
+			if (page.visibility !== 'master') expect(JSON.stringify([visibleBlocks(content, (v) => v === 'public' || v === 'players'), page.fields])).not.toMatch(spoiler);
 		}
 	});
 

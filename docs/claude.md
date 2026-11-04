@@ -53,7 +53,7 @@ Solo il testo delle pagine, in tre modi:
 | Strumento | Cosa fa |
 |---|---|
 | `create_page` | crea una pagina; se non chiedi altro la vedi solo tu |
-| `append_to_page` | aggiunge testo in fondo, anche in un blocco segreto se sei Master |
+| `append_to_page` | aggiunge testo in fondo; se sei Master, anche in blocchi oscurati (segreti) |
 | `replace_text` | sostituisce un pezzo di testo che compare una volta sola |
 
 **Non può** eliminare pagine, cambiare titolo, visibilità, permessi o cartella di una pagina che c'è già, toccare template, mappe, cronologie e bacheche, caricare file, né arrivare a impostazioni, utenti, plugin, temi o backup: per queste cose non esiste nessuno strumento.

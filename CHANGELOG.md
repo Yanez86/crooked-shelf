@@ -3,6 +3,22 @@
 Le versioni seguono il [versionamento semantico](https://semver.org/lang/it/): MAGGIORE.MINORE.CORRETTIVA.
 Questo file è anche la pagina «Novità» della wiki (`/changelog`).
 
+## 0.14.0 — 2026-11-04
+
+### Aggiunte
+- Editor: passando col mouse su un blocco, accanto al cestino ci sono il **più**, che aggiunge subito dopo un blocco di testo o un'immagine, e, per il Master, l'**occhio**, che oscura il blocco o lo mostra di nuovo. Il blocco oscurato è un segreto del Master: nell'editor ha lo sfondo dei segreti e il lucchetto col nome sopra; nella pagina i blocchi oscurati di fila stanno in un solo riquadro. Da tastiera c'è il lucchetto nella barra.
+- I giocatori modificano anche le pagine in cui il Master ha oscurato qualcosa (le proprie e quelle modificabili dai giocatori): i blocchi oscurati non arrivano mai al giocatore, nemmeno nell'editor, e quando salva il server li rimette dov'erano, subito dopo il blocco che li precedeva.
+- Schede giocatore: il Master può oscurare blocchi anche nella scheda, pure quelli scritti dal giocatore, che continua a modificarla.
+
+### Modifiche
+- Il segreto del Master non è più un riquadro che contiene altri blocchi, ma la visibilità di un singolo blocco; ogni blocco ha anche un suo id. La migrazione converte i segreti che ci sono: un segreto dentro un altro riquadro o un elenco oscura tutto quel blocco. La pagina si vede come prima.
+- Un blocco nuovo nasce oscurato se lo si fa da un blocco oscurato (andando a capo, col più, inserendo un'immagine o una tabella), e un blocco oscurato copiato e incollato resta oscurato.
+- In una pagina con un segreto del Master, visibilità, permessi ed eliminazione restano al Master anche se l'ha scritta un giocatore.
+- Claude (`append_to_page` con `secret`) aggiunge blocchi oscurati, anche nelle schede; un giocatore che sostituisce del testo non lo cerca dentro i segreti.
+
+### Correzioni
+- Esportazione in Markdown: un Admin che nella campagna non è Master non riceve più tra i file le immagini che stanno dentro i segreti.
+
 ## 0.13.0 — 2026-11-04
 
 Versione dedicata alla sicurezza, dopo una revisione completa del codice. Niente cambia per chi gioca; per chi installa c'è un passaggio in più alla prima configurazione.
@@ -25,6 +41,7 @@ Versione dedicata alla sicurezza, dopo una revisione completa del codice. Niente
 
 ### Correzioni
 - Open redirect: `/login?next=/\sito.esterno` (barra rovesciata) portava fuori dalla wiki dopo l'accesso; lo stesso nei collegamenti delle pagine. Ora passano solo percorsi interni.
+
 ## 0.12.4 — 2026-11-04
 
 ### Aggiunte

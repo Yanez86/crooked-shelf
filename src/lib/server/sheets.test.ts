@@ -4,7 +4,7 @@ import { and, eq, sql } from 'drizzle-orm';
 import { getDb, getSqlite, migrate, schema, useMemoryDb } from './db/index.ts';
 import { MIGRATIONS } from './db/migrations.ts';
 import { addMember, FIRST_CAMPAIGN, getCampaign, inCampaign, removeMember, setMaster, type CampaignRow } from './campaigns.ts';
-import { createPage, deletePage, getPageById, getPageBySlug, listPages, listTrash, lockedSheet, setVisibility, trashFolder, updatePage, type PageRow } from './pages.ts';
+import { createPage, deletePage, getPageById, getPageBySlug, listPages, listTrash, lockedSheet, setVisibility, trashFolder, updatePage, viewContent, type PageRow } from './pages.ts';
 import { createCategory, deleteCategory, getCategory, moveTreeNode, pageTree } from './taxonomy.ts';
 import { resetSettingsCache } from './settings.ts';
 import { newCampaign, SHEET_TEMPLATE_ORIGIN } from './templates.ts';
@@ -124,14 +124,21 @@ describe('la scheda è protetta', () => {
 		expect(allowedVisibilities(dm, true)).toEqual(['public', 'players']);
 	});
 
-	it('niente segreti, niente Solo Master o Personale, resta una pagina della cartella PG', () => {
+	it('il segreto del Master sì, Solo Master o Personale no, resta una pagina della cartella PG', () => {
 		const other = here(() => createCategory('Luoghi', null));
 		here(() => updatePage(a, { ...base, title: 'Thalia', content: withSecret, visibility: 'master', categoryId: other.id, kind: 'template' }, dm, true));
 		let after = here(() => getPageById(a.id))!;
-		expect(after).toMatchObject({ title: 'Thalia', visibility: 'players', categoryId: c.pcFolderId, kind: 'page', hasSecret: false });
-		expect(JSON.stringify(after.content)).not.toContain('nascosto');
-		// Il giocatore può ancora modificarla.
+		expect(after).toMatchObject({ title: 'Thalia', visibility: 'players', categoryId: c.pcFolderId, kind: 'page', hasSecret: true });
+		expect(JSON.stringify(after.content)).toContain('nascosto');
+		// Il giocatore può ancora modificarla: il segreto non gli arriva e, quando salva, resta dov'era.
 		expect(canEdit(after, alice)).toBe(true);
+		const mine = here(() => viewContent(after.content, alice));
+		expect(JSON.stringify(mine)).not.toContain('nascosto');
+		here(() => updatePage(after, { ...base, title: 'Thalia', content: { ...mine, content: [...mine.content!, ...text('mio').content!] } }, alice, canManage(after, alice)));
+		after = here(() => getPageById(a.id))!;
+		expect(JSON.stringify(after.content)).toMatch(/pubblico.*nascosto.*mio/);
+		// Visibilità e cestino restano al Master, finché c'è il segreto.
+		expect(canManage(after, alice)).toBe(false);
 		here(() => updatePage(after, { ...base, title: 'Thalia', visibility: 'personal' }, alice, true));
 		expect(here(() => getPageById(a.id))!.visibility).toBe('players');
 		here(() => updatePage(after, { ...base, title: 'Thalia', visibility: 'public' }, alice, true));
