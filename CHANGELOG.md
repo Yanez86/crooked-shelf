@@ -3,6 +3,13 @@
 Le versioni seguono il [versionamento semantico](https://semver.org/lang/it/): MAGGIORE.MINORE.CORRETTIVA.
 Questo file è anche la pagina «Novità» della wiki (`/changelog`).
 
+## 0.20.0 — 2026-11-05
+
+### Modifiche
+- Neon ha la forma di Aria: barre laterali a tutta altezza e pagine senza riquadri.
+- Chiaro e Scuro si chiamano Vintage bianca e Vintage scura.
+- Tolti i temi Lago e Lago di notte: chi li usava passa ad Aria.
+
 ## 0.19.1 — 2026-11-05
 
 ### Correzioni

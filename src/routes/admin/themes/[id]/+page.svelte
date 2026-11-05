@@ -37,8 +37,8 @@
 		</div>
 		<fieldset>
 			<legend>{t('themes.scheme')}</legend>
-			<label class="choice"><input type="radio" name="scheme" value="light" bind:group={scheme} /><span>{t('themes.light')}</span></label>
-			<label class="choice"><input type="radio" name="scheme" value="dark" bind:group={scheme} /><span>{t('themes.dark')}</span></label>
+			<label class="choice"><input type="radio" name="scheme" value="light" bind:group={scheme} /><span>{t('themes.schemeLight')}</span></label>
+			<label class="choice"><input type="radio" name="scheme" value="dark" bind:group={scheme} /><span>{t('themes.schemeDark')}</span></label>
 		</fieldset>
 		<fieldset>
 			<legend>{t('themes.colors')}</legend>

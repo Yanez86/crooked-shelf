@@ -32,9 +32,9 @@ async function login(browser: Browser, u: { user: string; pass: string }) {
 
 test('accesso', async ({ browser }) => {
 	admin = await login(browser, ADMIN);
-	// Qualunque tema abbiano lasciato i test precedenti, torniamo al chiaro.
+	// Qualunque tema abbiano lasciato i test precedenti, torniamo a Vintage bianca.
 	await admin.goto('/preferences');
-	await admin.getByRole('radio', { name: 'Chiaro', exact: true }).check();
+	await admin.getByRole('radio', { name: 'Vintage bianca', exact: true }).check();
 	await admin.getByRole('button', { name: 'Salva' }).first().click();
 	await expect(admin.getByRole('status').first()).toContainText('Preferenze salvate');
 });

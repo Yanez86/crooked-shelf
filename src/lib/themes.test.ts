@@ -11,14 +11,16 @@ describe('temi', () => {
 			expect(contrastProblems(t)).toEqual([]);
 		});
 	}
-	// Aria mette le barre su surface2 e mescola alcuni colori in styles/aria.css (color-mix in srgb): anche quelli restano leggibili.
-	describe('Aria: barre e colori mescolati', () => {
+	// Il modello Aria (Aria, Aria di notte, Neon) mette le barre su surface2 e mescola alcuni colori in styles/aria.css e
+	// styles/neon.css (color-mix in srgb): anche quelli restano leggibili.
+	describe('modello Aria: barre e colori mescolati', () => {
 		const hex = (h: string) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
 		const mix = (a: string, p: number, b: string) =>
 			'#' + hex(a).map((x, i) => Math.round(x * p + hex(b)[i] * (1 - p)).toString(16).padStart(2, '0')).join('');
-		for (const id of ['aria', 'aria-dark']) {
+		for (const id of ['aria', 'aria-dark', 'neon']) {
 			const c = THEMES.find((t) => t.id === id)!.colors;
-			const hover = mix(c.text, 0.07, c.surface2);
+			// La riga sotto il puntatore (--aria-hover): nel Neon è tinta di viola.
+			const hover = id === 'neon' ? mix('#8b5cff', 0.16, c.surface2) : mix(c.text, 0.07, c.surface2);
 			const pairs: [string, string, string, number][] = [
 				['testo spento sulla barra', c.muted, c.surface2, 4.5],
 				['collegamento sulla barra', c.link, c.surface2, 4.5],
@@ -38,6 +40,19 @@ describe('temi', () => {
 				it(`${id}: ${what}`, () => expect(contrast(fg, bg)).toBeGreaterThanOrEqual(min));
 			}
 		}
+		// Nel Neon il testo del centro sta sul fondale (styles/neon.css): il punto più chiaro è dove l'alone viola, una linea
+		// della griglia, la banda che scende e una scanline si sommano. Le intensità sono quelle del CSS.
+		it('neon: ogni testo resta leggibile sul fondale, anche nel punto più chiaro', () => {
+			const c = THEMES.find((t) => t.id === 'neon')!.colors;
+			let worst = c.bg;
+			worst = mix('#8b5cff', 0.08, worst);
+			worst = mix('#ff3db8', 0.08, worst);
+			worst = mix('#3ee8ff', 0.04, worst);
+			worst = mix('#ffffff', 0.025, worst);
+			for (const k of ['text', 'muted', 'link', 'primary', 'missing', 'danger', 'success'] as const) {
+				expect(contrast(c[k], worst), k).toBeGreaterThanOrEqual(4.5);
+			}
+		});
 	});
 	it('lo sfondo finisce nel CSS solo per il suo tema', () => {
 		const css = themeCss([{ ...THEMES[1], id: 'custom-1', background: 'abcdefghij' }]);

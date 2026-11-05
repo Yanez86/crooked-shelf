@@ -442,8 +442,18 @@ export const MIGRATIONS: (string | ((db: Database.Database) => void) | { rebuild
 		secret INTEGER NOT NULL DEFAULT 0,
 		PRIMARY KEY (page_id, block_id)
 	);
-	`
+	`,
+	// Temi Lago e Lago di notte tolti: chi li usava passa ad Aria, chiara o scura come prima. Un profilo con le preferenze
+	// rovinate resta com'è (CASE: json_extract su un testo che non è JSON fermerebbe la migrazione).
+	themesRemovedMigration
 ];
+
+export const REMOVED_THEMES: Record<string, string> = { lake: 'aria', 'lake-dark': 'aria-dark' };
+
+export function themesRemovedMigration(db: Database.Database) {
+	const upd = db.prepare(`UPDATE users SET prefs = json_set(prefs, '$.theme', ?) WHERE CASE WHEN json_valid(prefs) THEN json_extract(prefs, '$.theme') END = ?`);
+	for (const [from, to] of Object.entries(REMOVED_THEMES)) upd.run(to, from);
+}
 
 /** Tabella file_uses, riempita da pagine (testo, colonna a lato, copertina, anche nel cestino e nelle versioni), mappe, risorse, temi e avatar. */
 function fileUsesMigration(db: Database.Database) {

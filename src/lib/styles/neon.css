@@ -1,11 +1,20 @@
-/* Tema Neon: tutto ciò che va oltre i colori. Vale solo con data-theme="neon".
-   Regole del gioco:
-   - gli effetti stanno dietro o intorno al testo, mai sopra: i contrasti misurati in themes.ts restano veri;
-   - gli angoli tagliati sono corner-shape: bevel, che smussa bordo, ombra e contorno del fuoco senza tagliare
-     il contenuto (i popup dentro un riquadro restano interi). Dove il browser non lo conosce, gli angoli restano vivi;
+/* Tema Neon: la forma di Aria (styles/aria.css: barre a tutta altezza, centro senza riquadri, tabelle senza bordi,
+   numeri degli elenchi in evidenza) con la notte di una città al neon. Vale solo con data-theme="neon" e si carica dopo
+   aria.css: a parità di peso vincono le regole di qui. Regole del gioco:
+   - gli effetti stanno dietro o intorno al testo, mai sopra. Il centro non ha riquadri, quindi il testo sta proprio sul
+     fondale: aloni, griglia, banda e scanline sono tenui, e themes.test.ts misura i contrasti nel punto più chiaro che
+     possono raggiungere insieme. Chi li rende più intensi deve aggiornare anche quel test;
+   - le barre sono piene (surface2), con un filo di luce sul bordo verso il centro;
+   - angoli vivi al posto di quelli arrotondati di Aria; riquadri e pulsanti pieni hanno due angoli tagliati
+     (corner-shape: bevel, che smussa bordo, ombra e contorno del fuoco senza tagliare il contenuto). Dove il browser non
+     lo conosce, gli angoli restano vivi;
    - movimento solo decorativo e breve: con «Riduci il movimento» (o l'impostazione del sistema) si ferma, come ovunque;
    - con i colori forzati del sistema (Contrasto elevato di Windows) restano solo testo e bordi. */
 
+/* Archivo largo per i titoli. Pesa quanto :root di app.css, così una scelta del profilo (Atkinson, OpenDyslexic) vince. */
+:root:where([data-theme='neon']) {
+	--font-head: 'Archivo Variable', 'Inter Variable', system-ui, sans-serif;
+}
 :root[data-theme='neon'] {
 	--neon-magenta: #ff3db8;
 	--neon-cyan: #3ee8ff;
@@ -15,16 +24,21 @@
 	/* Il taglio degli angoli dei riquadri e dei pulsanti pieni. */
 	--neon-cut: 0.85rem;
 	--neon-cut-sm: 0.5rem;
-	--font-head: 'Archivo Variable', 'Inter Variable', system-ui, sans-serif;
+	/* Angoli vivi: gli arrotondamenti di Aria passano tutti da queste variabili. */
+	--radius: 0;
+	--aria-radius-lg: 0;
+	--aria-soft: 0;
+	--aria-round: 0;
+	--aria-hover: color-mix(in srgb, var(--neon-violet) 16%, var(--c-surface2));
 	scrollbar-color: var(--c-control) var(--c-bg);
 	accent-color: var(--neon-magenta);
 }
 
-/* --- Il fondale: una città di notte, fuori fuoco --- */
-
-/* Gli strati del fondale sono fermi rispetto allo schermo e si muovono solo con transform: il browser li compone
-   senza ridisegnarli, né a ogni fotogramma né mentre la pagina scorre (un background-attachment: fixed o un
-   background-position animato costringerebbero a ridipingere tutto lo schermo, e sul telefono si sente). */
+/* --- Il fondale: una città di notte, fuori fuoco ---
+   Gli strati sono fermi rispetto allo schermo e si muovono solo con transform: il browser li compone senza ridisegnarli,
+   né a ogni fotogramma né mentre la pagina scorre (un background-attachment: fixed o un background-position animato
+   costringerebbero a ridipingere tutto lo schermo, e sul telefono si sente). Stanno sotto le barre, che sono piene.
+   Le intensità (aloni 8%, linee della griglia 8%, banda 4%, scanline 2,5%) sono quelle misurate in themes.test.ts. */
 :root[data-theme='neon'] body {
 	background: var(--c-bg);
 	caret-color: var(--neon-magenta);
@@ -38,9 +52,9 @@
 	pointer-events: none;
 	background:
 		repeating-linear-gradient(to bottom, rgb(255 255 255 / 0.025) 0 1px, transparent 1px 3px),
-		radial-gradient(60rem 40rem at 10% -10%, color-mix(in srgb, var(--neon-magenta) 16%, transparent), transparent 70%),
-		radial-gradient(50rem 35rem at 100% 0%, color-mix(in srgb, var(--neon-cyan) 12%, transparent), transparent 70%),
-		radial-gradient(70rem 30rem at 50% 115%, color-mix(in srgb, var(--neon-violet) 20%, transparent), transparent 70%);
+		radial-gradient(60rem 40rem at 10% -10%, color-mix(in srgb, var(--neon-magenta) 8%, transparent), transparent 70%),
+		radial-gradient(50rem 35rem at 100% 0%, color-mix(in srgb, var(--neon-cyan) 7%, transparent), transparent 70%),
+		radial-gradient(70rem 30rem at 50% 115%, color-mix(in srgb, var(--neon-violet) 8%, transparent), transparent 70%);
 }
 /* Griglia in prospettiva verso l'orizzonte, in fondo allo schermo. Scorre verso chi guarda di un quadretto alla volta:
    dopo un giro la griglia è identica, quindi il salto non si vede. */
@@ -54,8 +68,8 @@
 	z-index: -2;
 	pointer-events: none;
 	background:
-		repeating-linear-gradient(90deg, color-mix(in srgb, var(--neon-magenta) 34%, transparent) 0 1px, transparent 1px 4rem),
-		repeating-linear-gradient(0deg, color-mix(in srgb, var(--neon-cyan) 26%, transparent) 0 1px, transparent 1px 4rem);
+		repeating-linear-gradient(90deg, color-mix(in srgb, var(--neon-magenta) 8%, transparent) 0 1px, transparent 1px 4rem),
+		repeating-linear-gradient(0deg, color-mix(in srgb, var(--neon-cyan) 7%, transparent) 0 1px, transparent 1px 4rem);
 	transform-origin: 50% 100%;
 	-webkit-mask: linear-gradient(to top, #000 0%, transparent 85%);
 	mask: linear-gradient(to top, #000 0%, transparent 85%);
@@ -73,7 +87,7 @@
 	height: 30vh;
 	z-index: -1;
 	pointer-events: none;
-	background: linear-gradient(to bottom, transparent, color-mix(in srgb, var(--neon-cyan) 7%, transparent) 50%, transparent);
+	background: linear-gradient(to bottom, transparent, color-mix(in srgb, var(--neon-cyan) 4%, transparent) 50%, transparent);
 	transform: translateY(-30vh);
 	animation: neon-sweep 9s linear infinite;
 	will-change: transform;
@@ -94,7 +108,6 @@
 		transform: translateY(100vh);
 	}
 }
-
 /* Con meno movimento il fondale sta fermo: un'animazione infinita accorciata a 0,01 ms girerebbe comunque a vuoto. */
 @media (prefers-reduced-motion: reduce) {
 	:root[data-theme='neon'] body::before,
@@ -106,7 +119,6 @@
 :root[data-theme='neon'][data-motion='reduce']::after {
 	animation: none;
 }
-
 :root[data-theme='neon'] ::selection {
 	background: color-mix(in srgb, #ff3db8 45%, transparent);
 	color: #ffffff;
@@ -154,18 +166,15 @@
 :root[data-theme='neon'] a:hover {
 	text-shadow: var(--neon-glow-c);
 }
-
 :root[data-theme='neon'] :focus-visible {
 	outline-style: solid;
 	box-shadow: 0 0 0 calc(var(--focus-width) + 2px) color-mix(in srgb, var(--c-focus) 25%, transparent);
 }
 
-/* --- Intestazione: una barra di comando con il filo di luce sotto --- */
+/* --- Intestazione in alto (senza la barra a sinistra): una barra di comando con il filo di luce sotto --- */
 
 :root[data-theme='neon'] .site-header {
-	background: color-mix(in srgb, var(--c-surface) 82%, transparent);
-	-webkit-backdrop-filter: blur(10px) saturate(1.4);
-	backdrop-filter: blur(10px) saturate(1.4);
+	background: var(--c-surface2);
 	border-bottom: 2px solid transparent;
 	border-image: linear-gradient(90deg, var(--neon-magenta), var(--neon-violet) 50%, var(--neon-cyan)) 1;
 	box-shadow: 0 0.4rem 1.5rem -0.6rem color-mix(in srgb, var(--neon-magenta) 50%, transparent);
@@ -194,10 +203,53 @@
 	}
 }
 
-/* --- Riquadri: pannelli da terminale, con due angoli tagliati e due staffe di luce ---
+/* --- Le barre a tutta altezza (schermo grande, barra a sinistra aperta): piene, con un filo di luce verso il centro.
+   L'intestazione qui è trasparente e sta sopra l'albero: niente sfondo, sfocatura né ombra, che lo coprirebbero. --- */
+
+@media (min-width: 60.0625rem) {
+	:root[data-theme='neon']:has(.shell.with-tree)::before {
+		border-right: 1px solid transparent;
+		border-image: linear-gradient(to bottom, var(--neon-magenta), var(--neon-violet) 50%, var(--neon-cyan)) 1;
+		box-shadow: 0.25rem 0 1.5rem -0.75rem color-mix(in srgb, var(--neon-magenta) 70%, transparent);
+	}
+	:root[data-theme='neon']:has(.shell.with-tree) .site-header {
+		border: 0;
+		border-image: none;
+		box-shadow: none;
+		background: none;
+	}
+	:root[data-theme='neon']:has(.shell.with-tree) .brand {
+		font-stretch: 100%;
+		letter-spacing: 0.06em;
+	}
+	@container (min-width: 44rem) {
+		:root[data-theme='neon']:has(.shell.with-tree) .body.with-side:not(.side-hidden) > .side-col {
+			border-left: 1px solid transparent;
+			border-image: linear-gradient(to bottom, var(--neon-cyan), var(--neon-violet) 50%, var(--neon-magenta)) 1;
+			box-shadow: -0.25rem 0 1.5rem -0.75rem color-mix(in srgb, var(--neon-cyan) 60%, transparent);
+		}
+	}
+}
+
+/* --- Albero delle pagine: la pagina aperta ha la sua striscia di luce, le linguette un filo sotto ---
+   Niente bagliore attorno alle lettere magenta: sarebbe magenta su magenta, e si leggerebbe peggio. */
+
+:root[data-theme='neon'] .explorer a[aria-current='page'] {
+	box-shadow:
+		inset 2px 0 0 var(--neon-magenta),
+		-0.2rem 0 0.8rem -0.3rem color-mix(in srgb, var(--neon-magenta) 70%, transparent);
+}
+:root[data-theme='neon'] .explorer [role='tab'][aria-selected='true'] {
+	box-shadow: inset 0 -2px 0 var(--neon-magenta);
+}
+:root[data-theme='neon'] .explorer [role='tab'] {
+	font-family: var(--font-mono);
+	letter-spacing: 0.02em;
+}
+
+/* --- Riquadri (Amministrazione, moduli): pannelli da terminale, con due angoli tagliati e due staffe di luce ---
    Con :where() queste regole pesano quanto quelle di app.css: le battono perché vengono dopo, ma perdono contro
-   i componenti. Così, quando un componente toglie il riquadro (sul telefono la colonna centrale, i filtri e le righe
-   degli elenchi restano senza bordo né margine interno), il tema non lo rimette attorno al testo. */
+   i componenti e contro aria.css dove toglie il riquadro (il centro delle pagine, la scheda nella barra). */
 
 :where(:root[data-theme='neon']) .panel,
 :where(:root[data-theme='neon']) .card {
@@ -212,12 +264,12 @@
 		var(--c-surface);
 	box-shadow: inset 0 0 2.5rem -1rem color-mix(in srgb, var(--neon-violet) 45%, transparent);
 }
-/* La colonna centrale ha il bordo alto in luce piena: è il pannello principale. */
-:where(:root[data-theme='neon']) .column.panel {
-	border-top: 2px solid var(--neon-magenta);
-	box-shadow:
-		0 -0.4rem 1.2rem -0.8rem var(--neon-magenta),
-		inset 0 0 3rem -1.2rem color-mix(in srgb, var(--neon-magenta) 40%, transparent);
+/* L'albero e la scheda stanno già in una barra, e il centro non ha riquadri: niente alone da riquadro attorno a loro
+   (aria.css toglie fondo e bordo). */
+:root[data-theme='neon'] .explorer,
+:root[data-theme='neon'] .side-col > .panel,
+:root[data-theme='neon'] :is(.column, .content).panel {
+	box-shadow: none;
 }
 @supports (corner-shape: bevel) {
 	:where(:root[data-theme='neon']) .panel,
@@ -326,6 +378,9 @@
 :root[data-theme='neon'] table.data thead th {
 	border-bottom-color: var(--neon-magenta);
 }
+:root[data-theme='neon'] .prose th {
+	border-bottom-color: color-mix(in srgb, var(--neon-magenta) 60%, var(--c-border));
+}
 :root[data-theme='neon'] table.data tbody tr {
 	transition: background-color 0.1s ease-out;
 }
@@ -350,23 +405,31 @@
 
 /* --- Testo delle pagine --- */
 
+/* Il numero dell'elenco in un tassello con il bordo di luce, al posto del cerchio di Aria. */
+:root[data-theme='neon'] .prose ol > li::before {
+	border: 1px solid color-mix(in srgb, var(--neon-magenta) 70%, transparent);
+	box-shadow: 0 0 0.6rem -0.15rem color-mix(in srgb, var(--neon-magenta) 70%, transparent);
+	font-family: var(--font-mono);
+}
 :root[data-theme='neon'] .prose blockquote {
 	border-left: 2px solid var(--neon-violet);
-	background: linear-gradient(90deg, color-mix(in srgb, var(--neon-violet) 12%, transparent), transparent 70%);
+	background: linear-gradient(90deg, color-mix(in srgb, var(--neon-violet) 12%, var(--c-bg)), var(--c-bg) 70%);
 }
-:root[data-theme='neon'] .callout,
-:root[data-theme='neon'] .secret {
-	border-left-width: 3px;
+/* Riquadri e segreti: il filo colorato a sinistra, con il suo bagliore, sopra il fondo tinto di Aria. */
+:root[data-theme='neon'] .callout {
+	border-left: 3px solid var(--c-note-border);
 	box-shadow:
 		inset 0 0 0 1px var(--c-border),
 		-0.3rem 0 1rem -0.5rem var(--c-note-border);
 }
 :root[data-theme='neon'] .callout-tip {
+	border-left-color: var(--c-tip-border);
 	box-shadow:
 		inset 0 0 0 1px var(--c-border),
 		-0.3rem 0 1rem -0.5rem var(--c-tip-border);
 }
 :root[data-theme='neon'] .callout-warning {
+	border-left-color: var(--c-warning-border);
 	box-shadow:
 		inset 0 0 0 1px var(--c-border),
 		-0.3rem 0 1rem -0.5rem var(--c-warning-border);
@@ -380,6 +443,7 @@
 }
 /* Il segreto è un fascicolo riservato: righe diagonali appena accennate, il testo resta sul suo sfondo. */
 :root[data-theme='neon'] .secret {
+	border-left: 3px solid var(--c-secret-border);
 	background:
 		repeating-linear-gradient(-45deg, rgb(197 107 255 / 0.06) 0 0.6rem, transparent 0.6rem 1.2rem),
 		var(--c-secret-bg);
@@ -400,7 +464,6 @@
 		repeating-linear-gradient(to bottom, rgb(0 0 0 / 0.18) 0 1px, transparent 1px 3px),
 		linear-gradient(to top, color-mix(in srgb, var(--neon-magenta) 30%, transparent), transparent 45%);
 }
-
 :root[data-theme='neon'] .site-footer {
 	font-family: var(--font-mono);
 	letter-spacing: 0.04em;
@@ -412,34 +475,18 @@
 	:root[data-theme='neon'] body::before {
 		display: none;
 	}
-	:root[data-theme='neon'] .site-header {
-		border-top: 0;
-	}
 	:root[data-theme='neon'] .panel,
 	:root[data-theme='neon'] .card {
 		--cut: var(--neon-cut-sm);
 	}
 }
-
-/* --- Spazio stretto (la colonna centrale sotto i 44rem, di solito il telefono) ---
-   Qui i componenti tolgono i riquadri e il testo va da un bordo all'altro. Il tema toglie anche quello che li
-   farebbe ancora sembrare scatole: alone interno, angoli smussati, colore pieno sopra il fondale. */
-
+/* Nello spazio stretto (di solito il telefono) i riquadri dentro la pagina perdono alone e angoli tagliati, come in Aria
+   perdono il fondo: «Nuova pagina» accanto al titolo, col solo «+», è un tubo al neon invece di un blocco pieno. */
 @container (max-width: 44rem) {
-	:root[data-theme='neon'] .column.panel {
-		background: transparent;
-		box-shadow: none;
-		border-radius: 0;
-	}
 	:root[data-theme='neon'] .column :is(.card, .panel) {
 		box-shadow: none;
 		border-radius: 0;
 	}
-	/* La scheda della pagina diventa un elenco tra due fili: quello in alto in luce piena. */
-	:root[data-theme='neon'] .column .panel {
-		border-top-color: var(--neon-magenta);
-	}
-	/* «Nuova pagina» accanto al titolo, col solo «+»: un tubo al neon invece di un blocco pieno. */
 	:root[data-theme='neon'] .head .btn-primary {
 		width: 2.75rem;
 		height: 2.75rem;

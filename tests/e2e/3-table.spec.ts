@@ -600,7 +600,7 @@ test('tabelle di tiro: il Master ne crea una, si tira dalla pagina e col «/» n
 test('editor dei temi', async () => {
 	await admin.goto('/admin/themes');
 	await axe(admin, 'temi');
-	await admin.getByRole('link', { name: /^Copia e modifica ?: Chiaro$/ }).click();
+	await admin.getByRole('link', { name: /^Copia e modifica ?: Vintage bianca$/ }).click();
 	await admin.getByLabel('Nome', { exact: true }).fill('Tema Arcano');
 
 	// Un colore principale troppo chiaro rende illeggibile il testo dei pulsanti.
@@ -657,6 +657,6 @@ test('editor dei temi', async () => {
 
 	// Torna al tema chiaro per i test successivi.
 	await admin.goto('/preferences');
-	await admin.getByRole('radio', { name: 'Chiaro', exact: true }).check();
+	await admin.getByRole('radio', { name: 'Vintage bianca', exact: true }).check();
 	await admin.getByRole('button', { name: 'Salva' }).first().click();
 });

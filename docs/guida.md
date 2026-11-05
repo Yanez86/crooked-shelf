@@ -209,7 +209,7 @@ Chi non ha fatto l'accesso trova solo la lettura, salvata nel browser.
 
 Nel **Profilo** ognuno sceglie:
 
-- tema: automatico (quello di base: Aria, o Aria di notte se il sistema è scuro), chiaro, scuro, Lago, Lago di notte, Neon, Aria, Aria di notte (o quelli creati dall'Admin). Con Aria, sullo schermo grande, la barra a sinistra e la scheda della pagina vanno da cima a fondo e la pagina non ha riquadri;
+- tema: automatico (quello di base: Aria, o Aria di notte se il sistema è scuro), Aria, Aria di notte, Neon, Vintage bianca, Vintage scura (o quelli creati dall'Admin). Con Aria e Neon, sullo schermo grande, la barra a sinistra e la scheda della pagina vanno da cima a fondo e la pagina non ha riquadri; i due Vintage hanno la forma classica, con l'intestazione in alto e i riquadri;
 - dimensione del testo fino al 200%;
 - carattere Atkinson Hyperlegible o OpenDyslexic;
 - spaziatura ampia, animazioni ridotte, lingua;

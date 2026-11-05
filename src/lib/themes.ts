@@ -35,144 +35,6 @@ export interface Theme {
 }
 
 export const THEMES: Theme[] = [
-	{
-		id: 'light',
-		scheme: 'light',
-		colors: {
-			bg: '#fbfaf8',
-			surface: '#ffffff',
-			surface2: '#f0eee9',
-			text: '#1d1b18',
-			muted: '#5a5650',
-			border: '#d6d2ca',
-			control: '#77726a',
-			primary: '#7a2e1c',
-			onPrimary: '#ffffff',
-			link: '#7a2e1c',
-			missing: '#b00020',
-			focus: '#1a56db',
-			danger: '#a1101e',
-			success: '#1b6b33',
-			secretBg: '#f6eefc',
-			secretText: '#3d1859',
-			secretBorder: '#7b3fa7',
-			noteBorder: '#2f6db5',
-			tipBorder: '#2f7d47',
-			warningBorder: '#a35f00',
-			codeBg: '#f0eee9'
-		}
-	},
-	{
-		id: 'dark',
-		scheme: 'dark',
-		colors: {
-			bg: '#16171b',
-			surface: '#1f2026',
-			surface2: '#2a2c33',
-			text: '#ecebe8',
-			muted: '#b4b1aa',
-			border: '#3a3c44',
-			control: '#8d8a84',
-			primary: '#f0a080',
-			onPrimary: '#1a0d08',
-			link: '#f0a080',
-			missing: '#ff8a8a',
-			focus: '#ffd166',
-			danger: '#ff8a8a',
-			success: '#7fd99a',
-			secretBg: '#2b1f38',
-			secretText: '#ecdcff',
-			secretBorder: '#b98ae0',
-			noteBorder: '#6ea3e8',
-			tipBorder: '#6cc98a',
-			warningBorder: '#e8a84f',
-			codeBg: '#2a2c33'
-		}
-	},
-	// Lago: grigi freddi appena tinti di verde acqua, un solo accento petrolio, fuoco arancio che non si confonde con l'accento.
-	{
-		id: 'lake',
-		scheme: 'light',
-		colors: {
-			bg: '#f5f7f7',
-			surface: '#ffffff',
-			surface2: '#e9eef0',
-			text: '#132024',
-			muted: '#4b5b60',
-			border: '#d2dbde',
-			control: '#687a80',
-			primary: '#0b6a70',
-			onPrimary: '#ffffff',
-			link: '#0b6470',
-			missing: '#b3261e',
-			focus: '#c2410c',
-			danger: '#b3261e',
-			success: '#1d6b3a',
-			secretBg: '#f2edfb',
-			secretText: '#3a1f63',
-			secretBorder: '#7a4fb8',
-			noteBorder: '#2b6cb0',
-			tipBorder: '#2e7d4f',
-			warningBorder: '#9a5800',
-			codeBg: '#e9eef0'
-		}
-	},
-	{
-		id: 'lake-dark',
-		scheme: 'dark',
-		colors: {
-			bg: '#0e1315',
-			surface: '#151c1f',
-			surface2: '#1f292d',
-			text: '#e5eeef',
-			muted: '#a2b2b6',
-			border: '#2b373b',
-			control: '#7a8c91',
-			primary: '#5ccfc6',
-			onPrimary: '#03201e',
-			link: '#7ad6ce',
-			missing: '#ff8f86',
-			focus: '#ffb454',
-			danger: '#ff8f86',
-			success: '#7dd59f',
-			secretBg: '#241b35',
-			secretText: '#e9dcff',
-			secretBorder: '#b08ae8',
-			noteBorder: '#79aef0',
-			tipBorder: '#6ece96',
-			warningBorder: '#efb259',
-			codeBg: '#1f292d'
-		}
-	},
-	// Neon: notte viola quasi nera, accento magenta, collegamenti ciano, fuoco giallo acido che non somiglia a nessuno dei due.
-	// Bagliori, scanline e angoli tagliati sono in styles/neon.css: valgono solo per questo tema.
-	{
-		id: 'neon',
-		scheme: 'dark',
-		colors: {
-			bg: '#08060f',
-			surface: '#110c1d',
-			surface2: '#1c1430',
-			text: '#eef4ff',
-			muted: '#ab9fcc',
-			border: '#2f2350',
-			control: '#8d7cc0',
-			primary: '#ff3db8',
-			onPrimary: '#16000d',
-			link: '#3ee8ff',
-			missing: '#ff7a95',
-			focus: '#e8ff3a',
-			danger: '#ff6f8a',
-			success: '#4dffa6',
-			secretBg: '#200c33',
-			secretText: '#f3dcff',
-			secretBorder: '#c56bff',
-			noteBorder: '#36cfff',
-			tipBorder: '#4dffa6',
-			warningBorder: '#ffb12e',
-			codeBg: '#1c1430'
-		}
-	},
 	// Aria: grigi neutri e freddi, un solo accento indaco, fuoco arancio. Le barre ai lati sono surface2, il centro è bg.
 	// Barre a tutta altezza, centro senza riquadri, tabelle senza bordi ed elenchi numerati sono in styles/aria.css.
 	{
@@ -227,6 +89,91 @@ export const THEMES: Theme[] = [
 			tipBorder: '#6ece96',
 			warningBorder: '#efb259',
 			codeBg: '#23252c'
+		}
+	},
+	// Neon: notte viola quasi nera, accento magenta, collegamenti ciano, fuoco giallo acido che non somiglia a nessuno dei due.
+	// Ha la forma di Aria (styles/aria.css: barre a tutta altezza, centro senza riquadri); bagliori, griglia, scanline e
+	// angoli tagliati sono in styles/neon.css. Le barre sono surface2, il centro bg.
+	{
+		id: 'neon',
+		scheme: 'dark',
+		colors: {
+			bg: '#08060f',
+			surface: '#110c1d',
+			surface2: '#1c1430',
+			text: '#eef4ff',
+			muted: '#ab9fcc',
+			border: '#2f2350',
+			control: '#8d7cc0',
+			primary: '#ff3db8',
+			onPrimary: '#16000d',
+			link: '#3ee8ff',
+			missing: '#ff7a95',
+			focus: '#e8ff3a',
+			danger: '#ff6f8a',
+			success: '#4dffa6',
+			secretBg: '#200c33',
+			secretText: '#f3dcff',
+			secretBorder: '#c56bff',
+			noteBorder: '#36cfff',
+			tipBorder: '#4dffa6',
+			warningBorder: '#ffb12e',
+			codeBg: '#1c1430'
+		}
+	},
+	// Vintage bianca e Vintage scura: i primi temi, con la forma classica di app.css (intestazione in alto, riquadri, angoli vivi).
+	{
+		id: 'light',
+		scheme: 'light',
+		colors: {
+			bg: '#fbfaf8',
+			surface: '#ffffff',
+			surface2: '#f0eee9',
+			text: '#1d1b18',
+			muted: '#5a5650',
+			border: '#d6d2ca',
+			control: '#77726a',
+			primary: '#7a2e1c',
+			onPrimary: '#ffffff',
+			link: '#7a2e1c',
+			missing: '#b00020',
+			focus: '#1a56db',
+			danger: '#a1101e',
+			success: '#1b6b33',
+			secretBg: '#f6eefc',
+			secretText: '#3d1859',
+			secretBorder: '#7b3fa7',
+			noteBorder: '#2f6db5',
+			tipBorder: '#2f7d47',
+			warningBorder: '#a35f00',
+			codeBg: '#f0eee9'
+		}
+	},
+	{
+		id: 'dark',
+		scheme: 'dark',
+		colors: {
+			bg: '#16171b',
+			surface: '#1f2026',
+			surface2: '#2a2c33',
+			text: '#ecebe8',
+			muted: '#b4b1aa',
+			border: '#3a3c44',
+			control: '#8d8a84',
+			primary: '#f0a080',
+			onPrimary: '#1a0d08',
+			link: '#f0a080',
+			missing: '#ff8a8a',
+			focus: '#ffd166',
+			danger: '#ff8a8a',
+			success: '#7fd99a',
+			secretBg: '#2b1f38',
+			secretText: '#ecdcff',
+			secretBorder: '#b98ae0',
+			noteBorder: '#6ea3e8',
+			tipBorder: '#6cc98a',
+			warningBorder: '#e8a84f',
+			codeBg: '#2a2c33'
 		}
 	}
 ];

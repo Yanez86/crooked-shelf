@@ -688,7 +688,7 @@ test('il giocatore non vede i segreti', async ({ browser }) => {
 
 	// Preferenze di lettura.
 	await p.goto('/preferences');
-	await p.getByRole('radio', { name: 'Scuro', exact: true }).check();
+	await p.getByRole('radio', { name: 'Vintage scura', exact: true }).check();
 	await p.getByLabel('Dimensione del testo').selectOption('150');
 	await p.getByLabel('Carattere').selectOption('opendyslexic');
 	await p.getByRole('button', { name: 'Salva' }).first().click();
@@ -842,7 +842,7 @@ test('temi: contrasti e accessibilità', async () => {
 		await admin.getByRole('button', { name: 'Salva' }).first().click();
 		await expect(admin.getByRole('status').first()).toContainText('Preferenze salvate');
 	};
-	for (const theme of ['Chiaro', 'Scuro', 'Neon', 'Aria', 'Aria di notte']) {
+	for (const theme of ['Vintage bianca', 'Vintage scura', 'Neon', 'Aria', 'Aria di notte']) {
 		await choose(theme);
 		for (const url of ['/', '/wiki', '/wiki/locanda-del-grifone', '/tags']) {
 			await admin.goto(url);
@@ -851,46 +851,51 @@ test('temi: contrasti e accessibilità', async () => {
 		await admin.goto('/wiki/locanda-del-grifone');
 		await shot(admin, `08-tema-${theme.toLowerCase().replaceAll(' ', '-')}`);
 	}
-	// Aria: la barra a sinistra (intestazione e albero) e la scheda a destra vanno da cima a fondo, anche scorrendo.
-	await admin.goto('/');
-	const { width, height } = await admin.evaluate(() => ({ width: document.documentElement.clientWidth, height: window.innerHeight }));
-	const bar = (await admin.getByRole('banner').boundingBox())!;
-	const tree = (await admin.locator('#explorer').boundingBox())!;
-	const side = (await admin.locator('.side-col').boundingBox())!;
-	expect(bar).toMatchObject({ x: 0, y: 0, height });
-	expect(tree.x).toBe(0);
-	expect(tree.width).toBe(bar.width);
-	expect(side).toMatchObject({ y: 0, height });
-	expect(Math.round(side.x + side.width)).toBe(width);
-	// Il menu del profilo sta in fondo alla barra e si apre verso l'alto.
-	const profile = admin.getByRole('banner').locator('.user-menu summary');
-	expect((await profile.boundingBox())!.y).toBeGreaterThan(height / 2);
-	await profile.click();
-	const menu = (await admin.getByRole('banner').locator('.user-menu .panel').boundingBox())!;
-	expect(menu.y + menu.height).toBeLessThanOrEqual((await profile.boundingBox())!.y);
-	await expect(admin.getByRole('banner').getByRole('link', { name: 'Profilo' })).toBeVisible();
-	await profile.click();
-	await admin.mouse.wheel(0, 600);
-	await expect.poll(async () => (await admin.locator('.side-col').boundingBox())!.y).toBe(0);
-	await shot(admin, '08-tema-aria-home');
-	// Un'immagine nel testo sta al centro della colonna, come i paragrafi (non sul bordo sinistro dello spazio).
-	await admin.goto('/wiki/torre-del-mago');
-	const para = (await admin.locator('.content > .prose > p').first().boundingBox())!;
-	const img = (await admin.locator('.content > .prose > img').boundingBox())!;
-	expect(Math.abs(img.x + img.width / 2 - (para.x + para.width / 2))).toBeLessThan(1);
-	expect(img.width).toBeLessThanOrEqual(para.width);
-	expect(img.height).toBeLessThanOrEqual(800 * 0.85);
-	// Sul telefono niente sfora: un'immagine più larga dello schermo si stringe con lui (Safari rimpicciolirebbe la pagina).
-	await admin.setViewportSize({ width: 390, height: 844 });
-	for (const url of ['/', '/wiki/torre-del-mago']) {
-		await admin.goto(url);
-		const overflow = await admin.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
-		expect(overflow, url).toBe(0);
+	// Il modello Aria (Aria e Neon): la barra a sinistra (intestazione e albero) e la scheda a destra vanno da cima a fondo,
+	// anche scorrendo; le immagini stanno al centro del testo e sul telefono niente sfora.
+	for (const theme of ['Aria di notte', 'Neon']) {
+		await choose(theme);
+		const name = theme === 'Neon' ? 'neon' : 'aria';
+		await admin.goto('/');
+		const { width, height } = await admin.evaluate(() => ({ width: document.documentElement.clientWidth, height: window.innerHeight }));
+		const bar = (await admin.getByRole('banner').boundingBox())!;
+		const tree = (await admin.locator('#explorer').boundingBox())!;
+		const side = (await admin.locator('.side-col').boundingBox())!;
+		expect(bar).toMatchObject({ x: 0, y: 0, height });
+		expect(tree.x).toBe(0);
+		expect(tree.width).toBe(bar.width);
+		expect(side).toMatchObject({ y: 0, height });
+		expect(Math.round(side.x + side.width)).toBe(width);
+		// Il menu del profilo sta in fondo alla barra e si apre verso l'alto.
+		const profile = admin.getByRole('banner').locator('.user-menu summary');
+		expect((await profile.boundingBox())!.y).toBeGreaterThan(height / 2);
+		await profile.click();
+		const menu = (await admin.getByRole('banner').locator('.user-menu .panel').boundingBox())!;
+		expect(menu.y + menu.height).toBeLessThanOrEqual((await profile.boundingBox())!.y);
+		await expect(admin.getByRole('banner').getByRole('link', { name: 'Profilo' })).toBeVisible();
+		await profile.click();
+		await admin.mouse.wheel(0, 600);
+		await expect.poll(async () => (await admin.locator('.side-col').boundingBox())!.y).toBe(0);
+		await shot(admin, `08-tema-${name}-home`);
+		// Un'immagine nel testo sta al centro della colonna, come i paragrafi (non sul bordo sinistro dello spazio).
+		await admin.goto('/wiki/torre-del-mago');
+		const para = (await admin.locator('.content > .prose > p').first().boundingBox())!;
+		const img = (await admin.locator('.content > .prose > img').boundingBox())!;
+		expect(Math.abs(img.x + img.width / 2 - (para.x + para.width / 2))).toBeLessThan(1);
+		expect(img.width).toBeLessThanOrEqual(para.width);
+		expect(img.height).toBeLessThanOrEqual(800 * 0.85);
+		// Sul telefono niente sfora: un'immagine più larga dello schermo si stringe con lui (Safari rimpicciolirebbe la pagina).
+		await admin.setViewportSize({ width: 390, height: 844 });
+		for (const url of ['/', '/wiki/torre-del-mago']) {
+			await admin.goto(url);
+			const overflow = await admin.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+			expect(overflow, url).toBe(0);
+		}
+		await shot(admin, `08-tema-${name}-telefono`);
+		await admin.setViewportSize({ width: 1280, height: 800 });
 	}
-	await shot(admin, '08-tema-aria-telefono');
-	await admin.setViewportSize({ width: 1280, height: 800 });
-	// I test che seguono girano col tema chiaro, non col Neon che li rallenterebbe.
-	await choose('Chiaro');
+	// I test che seguono girano con Vintage bianca: la forma classica resta provata, e il Neon li rallenterebbe.
+	await choose('Vintage bianca');
 });
 
 test('la barra a sinistra si può tenere chiusa', async () => {
