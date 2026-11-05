@@ -1,0 +1,695 @@
+/* Tema Aria, chiaro e scuro: tutto ciò che va oltre i colori. Vale solo con data-theme="aria" o "aria-dark".
+   L'idea: un'applicazione, non un giornale. Regole del gioco:
+   - sullo schermo grande, con la barra a sinistra aperta, intestazione, albero, profilo e piè di pagina diventano una sola
+     barra a tutta altezza; la scheda della pagina diventa una barra a tutta altezza a destra; il centro non ha riquadri;
+   - senza la barra a sinistra (chiusa, in Amministrazione, sul telefono) l'intestazione resta in alto, come negli altri temi;
+   - il testo è più grande e ha più aria, le tabelle non hanno bordi, gli elenchi numerati hanno il numero in un cerchio;
+   - le barre hanno il colore surface2, il centro bg: le coppie di colori misurate in themes.ts restano vere, e i colori
+     mescolati qui (righe evidenziate, cerchi, riquadri) sono controllati in themes.test.ts;
+   - con :where() le regole generiche pesano quanto quelle di app.css e perdono contro i componenti, come nel Neon. */
+
+/* I titoli in Inter come il testo. Pesa quanto :root di app.css, così una scelta del profilo (Atkinson, OpenDyslexic) vince. */
+:root:where([data-theme='aria'], [data-theme='aria-dark']) {
+	--font-head: 'Inter Variable', system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans', sans-serif;
+}
+
+:root:is([data-theme='aria'], [data-theme='aria-dark']) {
+	--radius: 0.625rem;
+	--aria-radius-lg: 0.875rem;
+	/* Larghezze delle barre e del testo. */
+	--aria-bar: 16.5rem;
+	--side-col: 17.5rem;
+	--aria-measure: 46rem;
+	/* Margini del centro: crescono con lo spazio della pagina (main è il contenitore). */
+	--aria-pad: clamp(1.25rem, 5cqi, 3.5rem);
+	--aria-top: 2.5rem;
+	/* Le tre fasce della barra a sinistra: marchio e ricerca, albero, profilo e piè di pagina. */
+	--aria-head: 7.5rem;
+	--aria-foot: 3.75rem;
+	--aria-tail: 7.75rem;
+	/* Lo sfondo di una riga sotto il puntatore, nelle barre. */
+	--aria-hover: color-mix(in srgb, var(--c-text) 7%, var(--c-surface2));
+	/* Una scala più grande (rapporto ~1.2): il testo dell'interfaccia a 15px, quello delle pagine a 16px. */
+	--fs-sm: 0.8125rem;
+	--fs-base: 0.9375rem;
+	--fs-md: 1.125rem;
+	--fs-lg: 1.4375rem;
+	--fs-xl: 1.75rem;
+	--fs-2xl: 2.5rem;
+	--fs-field: 0.875rem;
+	--aria-prose: 1rem;
+	accent-color: var(--c-primary);
+}
+/* Telefono e dito: la stessa scala di app.css, che qui va ripetuta perché le variabili sopra pesano di più. */
+@media (max-width: 48rem), (pointer: coarse) {
+	:root:is([data-theme='aria'], [data-theme='aria-dark']) {
+		--fs-sm: 0.8125rem;
+		--fs-base: 1rem;
+		--fs-md: 1.125rem;
+		--fs-lg: 1.375rem;
+		--fs-xl: 1.625rem;
+		--fs-2xl: 1.875rem;
+		--fs-field: max(1rem, 16px);
+	}
+}
+
+/* --- Titoli e testo --- */
+
+:root:is([data-theme='aria'], [data-theme='aria-dark']) :is(h1, h2, h3, h4) {
+	font-weight: 650;
+	letter-spacing: -0.015em;
+}
+:root:is([data-theme='aria'], [data-theme='aria-dark']) h1 {
+	font-weight: 700;
+	letter-spacing: -0.025em;
+	line-height: 1.15;
+}
+:root:is([data-theme='aria'], [data-theme='aria-dark']) .prose {
+	font-size: var(--aria-prose);
+	line-height: max(1.7, var(--line));
+}
+:root:is([data-theme='aria'], [data-theme='aria-dark']) .prose > * + h2 {
+	margin-top: 2.2em;
+}
+
+/* --- Riquadri, pulsanti, campi, etichette: angoli morbidi e bordi sottili --- */
+
+:where(:root:is([data-theme='aria'], [data-theme='aria-dark'])) .panel,
+:where(:root:is([data-theme='aria'], [data-theme='aria-dark'])) .card {
+	border: 1px solid var(--c-border);
+	border-radius: var(--aria-radius-lg);
+	background: var(--c-surface);
+}
+:where(:root:is([data-theme='aria'], [data-theme='aria-dark'])) .btn {
+	border-width: 1px;
+}
+:where(:root:is([data-theme='aria'], [data-theme='aria-dark']))
+	:is(input[type='text'], input[type='password'], input[type='search'], input[type='number'], input[type='date'], input[type='time'], input[type='url'], select, textarea) {
+	border-width: 1px;
+}
+:where(:root:is([data-theme='aria'], [data-theme='aria-dark'])) input[type='file']::file-selector-button {
+	border-width: 1px;
+}
+:where(:root:is([data-theme='aria'], [data-theme='aria-dark'])) input[type='checkbox'] {
+	border-radius: 0.3rem;
+}
+:where(:root:is([data-theme='aria'], [data-theme='aria-dark'])) fieldset {
+	border-radius: var(--aria-radius-lg);
+}
+:where(:root:is([data-theme='aria'], [data-theme='aria-dark'])) .badge {
+	padding: 0.15rem 0.65rem;
+	border-color: transparent;
+	border-radius: 999px;
+	background: var(--c-surface2);
+	font-weight: 500;
+}
+:where(:root:is([data-theme='aria'], [data-theme='aria-dark'])) a.badge:hover {
+	background: var(--aria-hover);
+}
+:where(:root:is([data-theme='aria'], [data-theme='aria-dark'])) .tag-dot {
+	border-radius: 999px;
+}
+:where(:root:is([data-theme='aria'], [data-theme='aria-dark'])) :is(code, pre, mark) {
+	border-radius: 0.375rem;
+}
+:where(:root:is([data-theme='aria'], [data-theme='aria-dark'])) table.data thead th {
+	border-bottom: 1px solid var(--c-control);
+}
+:root:is([data-theme='aria'], [data-theme='aria-dark']) .logo-bg {
+	rx: 7px;
+}
+
+/* --- Tabelle delle pagine: senza bordi, una linea leggera tra le righe --- */
+
+:root:is([data-theme='aria'], [data-theme='aria-dark']) .prose table {
+	width: 100%;
+}
+:root:is([data-theme='aria'], [data-theme='aria-dark']) .prose :is(th, td) {
+	border: 0;
+	border-bottom: 1px solid var(--c-border);
+	padding: 0.7rem 0.875rem;
+}
+:root:is([data-theme='aria'], [data-theme='aria-dark']) .prose th {
+	background: none;
+	color: var(--c-muted);
+	font-size: var(--fs-sm);
+	font-weight: 600;
+}
+:root:is([data-theme='aria'], [data-theme='aria-dark']) .prose tr:last-child > td {
+	border-bottom: 0;
+}
+:root:is([data-theme='aria'], [data-theme='aria-dark']) .prose :is(th, td):first-child {
+	padding-left: 0;
+}
+:root:is([data-theme='aria'], [data-theme='aria-dark']) .prose :is(th, td):last-child {
+	padding-right: 0;
+}
+/* Nell'editor le celle restano visibili: senza bordi non si vedrebbe dove scrivere. */
+:root:is([data-theme='aria'], [data-theme='aria-dark']) .editor-content :is(th, td),
+:root:is([data-theme='aria'], [data-theme='aria-dark']) .editor-content tr:last-child > td {
+	border: 1px solid var(--c-border);
+	padding-inline: 0.875rem;
+}
+
+/* --- Elenchi: il numero in un cerchio del colore principale, il pallino colorato ---
+   Il segno del browser resta (trasparente) perché senza Safari non legge più l'elenco come tale. Il numero viene dal
+   contatore list-item, che rispetta anche un elenco che parte da un altro numero. */
+:root:is([data-theme='aria'], [data-theme='aria-dark']) .prose ol {
+	padding-left: 2.6rem;
+}
+:root:is([data-theme='aria'], [data-theme='aria-dark']) .prose ol > li {
+	position: relative;
+	margin: 0.55rem 0;
+}
+:root:is([data-theme='aria'], [data-theme='aria-dark']) .prose ol > li::marker {
+	color: transparent;
+}
+:root:is([data-theme='aria'], [data-theme='aria-dark']) .prose ol > li::before {
+	content: counter(list-item);
+	position: absolute;
+	top: 0;
+	left: -2.6rem;
+	display: grid;
+	place-items: center;
+	min-width: 1.75rem;
+	height: 1.75rem;
+	padding: 0 0.35rem;
+	border-radius: 999px;
+	background: color-mix(in srgb, var(--c-primary) 12%, var(--c-bg));
+	color: var(--c-primary);
+	font-size: 0.8125rem;
+	font-weight: 650;
+	line-height: 1;
+	font-variant-numeric: tabular-nums;
+}
+:root:is([data-theme='aria'], [data-theme='aria-dark']) .prose ul > li::marker {
+	color: var(--c-primary);
+}
+/* Ogni voce ha il suo paragrafo: senza margini sopra e sotto, così il testo sta in riga col numero. */
+:root:is([data-theme='aria'], [data-theme='aria-dark']) .prose :is(ol, ul) > li {
+	margin-block: 0.45rem;
+}
+:root:is([data-theme='aria'], [data-theme='aria-dark']) .prose :is(ol, ul) > li > p {
+	margin-block: 0;
+}
+:root:is([data-theme='aria'], [data-theme='aria-dark']) .prose :is(ol, ul) > li > * + * {
+	margin-top: 0.5em;
+}
+:root:is([data-theme='aria'], [data-theme='aria-dark']) .prose ol > li {
+	margin-block: 0.65rem;
+}
+
+/* --- Citazioni, riquadri e segreti: fondo tinto e angoli morbidi, niente filo a sinistra.
+   Il tipo del riquadro è scritto nel titoletto, quindi non è affidato al solo colore. --- */
+
+:root:is([data-theme='aria'], [data-theme='aria-dark']) .prose blockquote {
+	padding: 0.9rem 1.25rem;
+	border-left: 0;
+	border-radius: var(--aria-radius-lg);
+	background: var(--c-surface2);
+	color: var(--c-text);
+}
+:root:is([data-theme='aria'], [data-theme='aria-dark']) :is(.callout, .secret) {
+	padding: 0.85rem 1.15rem;
+	border-left: 0;
+	border-radius: var(--aria-radius-lg);
+	box-shadow: none;
+}
+:root:is([data-theme='aria'], [data-theme='aria-dark']) .callout {
+	background: color-mix(in srgb, var(--c-note-border) 10%, var(--c-surface));
+}
+:root:is([data-theme='aria'], [data-theme='aria-dark']) .callout-tip {
+	background: color-mix(in srgb, var(--c-tip-border) 10%, var(--c-surface));
+}
+:root:is([data-theme='aria'], [data-theme='aria-dark']) .callout-warning {
+	background: color-mix(in srgb, var(--c-warning-border) 12%, var(--c-surface));
+}
+:root:is([data-theme='aria'], [data-theme='aria-dark']) .secret {
+	background: var(--c-secret-bg);
+}
+:root:is([data-theme='aria'], [data-theme='aria-dark']) :is(.callout-title, .secret-title) {
+	margin: 0 0 0.35rem;
+	font-size: var(--fs-sm);
+	font-weight: 650;
+}
+:root:is([data-theme='aria'], [data-theme='aria-dark']) :is(.callout, .secret) > :is(.callout-title, .secret-title) + * {
+	margin-top: 0;
+}
+:root:is([data-theme='aria'], [data-theme='aria-dark']) :is(.callout, .secret) > :last-child {
+	margin-bottom: 0;
+}
+
+/* --- Testa della pagina: icona in una piastrella, titolo grande, copertina con gli angoli morbidi --- */
+
+:root:is([data-theme='aria'], [data-theme='aria-dark']) .page-head {
+	align-items: flex-start;
+	gap: 0.875rem;
+}
+:root:is([data-theme='aria'], [data-theme='aria-dark']) .page-head h1 {
+	margin: 0;
+}
+:root:is([data-theme='aria'], [data-theme='aria-dark']) .page-head .page-icon {
+	width: 1.2em;
+	height: 1.2em;
+	margin-top: -0.02em;
+	border-radius: 0.3em;
+	background: var(--c-surface2);
+}
+:root:is([data-theme='aria'], [data-theme='aria-dark']) .page-head .page-icon svg {
+	width: 62%;
+	height: 62%;
+}
+:root:is([data-theme='aria'], [data-theme='aria-dark']) .page-cover {
+	height: clamp(9rem, 22cqi, 15rem);
+	margin: 0 0 1.75rem;
+	border-radius: var(--aria-radius-lg);
+}
+@media (max-width: 48rem) {
+	:root:is([data-theme='aria'], [data-theme='aria-dark']) .page-cover {
+		border-radius: 0;
+	}
+}
+:root:is([data-theme='aria'], [data-theme='aria-dark']) .wiki-page .meta {
+	margin: 0.75rem 0;
+}
+
+/* Il testo delle pagine sta in una misura comoda, al centro dello spazio che resta; mappe e bacheche usano tutta la larghezza. */
+:root:is([data-theme='aria'], [data-theme='aria-dark']) .content > .head > :not(.page-cover),
+:root:is([data-theme='aria'], [data-theme='aria-dark']) .content > .prose > *,
+:root:is([data-theme='aria'], [data-theme='aria-dark']) .content > .foot > :not(.board) {
+	max-width: var(--aria-measure);
+	margin-inline: auto;
+}
+:root:is([data-theme='aria'], [data-theme='aria-dark']) .content > .prose {
+	max-width: none;
+}
+
+/* --- Il centro senza riquadri: niente scatola attorno alla pagina né attorno al testo --- */
+
+:root:is([data-theme='aria'], [data-theme='aria-dark']) .column.panel,
+:root:is([data-theme='aria'], [data-theme='aria-dark']) .content.panel {
+	padding: 0;
+	border: 0;
+	border-radius: 0;
+	background: none;
+}
+
+/* La scheda accanto al testo, quando non è una barra: un riquadro tinto, senza bordo. */
+:where(:root:is([data-theme='aria'], [data-theme='aria-dark'])) .side.panel,
+:where(:root:is([data-theme='aria'], [data-theme='aria-dark'])) .side-panel.panel {
+	border: 0;
+	background: var(--c-surface2);
+}
+:root:is([data-theme='aria'], [data-theme='aria-dark']) .side dt {
+	font-weight: 500;
+	font-size: var(--fs-sm);
+	color: var(--c-muted);
+}
+:root:is([data-theme='aria'], [data-theme='aria-dark']) .side figure img {
+	border: 0;
+	border-radius: var(--radius);
+}
+@container (min-width: 44rem) {
+	:root:is([data-theme='aria'], [data-theme='aria-dark']) .side dd {
+		margin-bottom: 1rem;
+	}
+}
+/* Nello spazio stretto la scheda è un elenco tra due linee sottili, al posto dei filetti del colore del tema. */
+@container (max-width: 44rem) {
+	:root:is([data-theme='aria'], [data-theme='aria-dark']) .side.panel {
+		border: solid var(--c-border);
+		border-width: 1px 0;
+		border-radius: 0;
+		background: none;
+	}
+}
+
+/* --- Intestazione in alto (senza la barra a sinistra) e piè di pagina --- */
+
+:root:is([data-theme='aria'], [data-theme='aria-dark']) .site-header {
+	border: 0;
+	background: var(--c-surface2);
+}
+:root:is([data-theme='aria'], [data-theme='aria-dark']) .site-footer {
+	background: var(--c-bg);
+}
+
+/* --- Albero delle pagine: righe morbide, la pagina aperta tinta del colore principale --- */
+
+:root:is([data-theme='aria'], [data-theme='aria-dark']) .explorer {
+	--row: 2.125rem;
+	--row-pad: 0.3rem;
+	--tool: 2rem;
+	border: 0;
+	border-radius: 0;
+	background: var(--c-surface2);
+}
+@media (max-width: 60rem) {
+	:root:is([data-theme='aria'], [data-theme='aria-dark']) .explorer {
+		--row: 2.75rem;
+		--row-pad: 0.4rem;
+		--tool: 2.75rem;
+		padding: 0.75rem;
+	}
+}
+:root:is([data-theme='aria'], [data-theme='aria-dark']) .explorer :is(summary, a:not(.tool)) {
+	align-items: center;
+	padding-inline: 0.6rem;
+	border-radius: 0.5rem;
+}
+:root:is([data-theme='aria'], [data-theme='aria-dark']) .explorer :is(summary, a:not(.tool)):hover,
+:root:is([data-theme='aria'], [data-theme='aria-dark']) .explorer .row:hover > a,
+:root:is([data-theme='aria'], [data-theme='aria-dark']) .explorer .tool:hover {
+	background: var(--aria-hover);
+}
+:root:is([data-theme='aria'], [data-theme='aria-dark']) .explorer a:hover span {
+	text-decoration: none;
+}
+:root:is([data-theme='aria'], [data-theme='aria-dark']) .explorer a[aria-current='page'] {
+	background: color-mix(in srgb, var(--c-primary) 12%, var(--c-surface2));
+	box-shadow: none;
+	color: var(--c-primary);
+	font-weight: 650;
+}
+:root:is([data-theme='aria'], [data-theme='aria-dark']) .explorer a[aria-current='page'] .ico {
+	color: var(--c-primary);
+}
+:root:is([data-theme='aria'], [data-theme='aria-dark']) .explorer .ico {
+	width: 1.05rem;
+	height: 1.05rem;
+	margin-top: 0;
+	stroke-width: 1.6;
+}
+:root:is([data-theme='aria'], [data-theme='aria-dark']) .explorer .level .level {
+	margin-left: 1.05rem;
+	padding-left: 0.3rem;
+	border-left: 1px solid var(--c-border);
+}
+/* Le linguette come un selettore: una fascia tinta, quella aperta in rilievo. */
+:root:is([data-theme='aria'], [data-theme='aria-dark']) .explorer-head {
+	margin-bottom: 0.5rem;
+	padding: 0;
+	border: 0;
+}
+:root:is([data-theme='aria'], [data-theme='aria-dark']) .explorer .tabs {
+	gap: 0.15rem;
+	padding: 0.2rem;
+	border-radius: 0.75rem;
+	background: var(--aria-hover);
+}
+:root:is([data-theme='aria'], [data-theme='aria-dark']) .explorer [role='tab'] {
+	justify-content: center;
+	margin: 0;
+	padding: 0.3rem 0.2rem;
+	border: 0;
+	border-radius: 0.55rem;
+	font-family: var(--font-body);
+}
+:root:is([data-theme='aria'], [data-theme='aria-dark']) .explorer [role='tab'] .icon {
+	width: 1.25rem;
+	height: 1.25rem;
+	stroke-width: 1.5;
+}
+:root:is([data-theme='aria'], [data-theme='aria-dark']) .explorer [role='tab'][aria-selected='true'] {
+	background: var(--c-surface);
+	box-shadow: 0 1px 2px rgb(0 0 0 / 0.1);
+}
+:root[data-theme='aria-dark'] .explorer [role='tab'][aria-selected='true'] {
+	background: color-mix(in srgb, var(--c-text) 15%, var(--c-surface2));
+}
+:root:is([data-theme='aria'], [data-theme='aria-dark']) .explorer.floating,
+:root:is([data-theme='aria'], [data-theme='aria-dark']) .explorer.open {
+	box-shadow: 0 0 2.5rem rgb(0 0 0 / 0.35);
+}
+
+/* --- Menu del profilo --- */
+
+:root:is([data-theme='aria'], [data-theme='aria-dark']) .user-menu summary {
+	border-color: transparent;
+	border-radius: var(--radius);
+}
+:root:is([data-theme='aria'], [data-theme='aria-dark']) .user-menu summary:hover,
+:root:is([data-theme='aria'], [data-theme='aria-dark']) .user-menu[open] summary {
+	border-color: transparent;
+	background: var(--aria-hover);
+}
+:root:is([data-theme='aria'], [data-theme='aria-dark']) .user-menu .panel {
+	border-radius: var(--aria-radius-lg);
+}
+
+/* --- Schermo grande con la barra a sinistra aperta: due barre a tutta altezza ---
+   Intestazione, albero e piè di pagina restano dove sono nella pagina (l'ordine di lettura non cambia): qui si fissano
+   alla stessa colonna. Lo sfondo della barra è un ::before del body, sotto tutto: l'intestazione è trasparente e lascia
+   passare i clic verso l'albero, che le sta sotto, così il menu del profilo si apre sopra l'albero. */
+
+@media (min-width: 60.0625rem) {
+	:root:is([data-theme='aria'], [data-theme='aria-dark']):has(.shell.with-tree) body::before {
+		content: '';
+		position: fixed;
+		inset: 0 auto 0 0;
+		z-index: 1;
+		width: var(--aria-bar);
+		background: var(--c-surface2);
+		pointer-events: none;
+	}
+	:root:is([data-theme='aria'], [data-theme='aria-dark']):has(.shell.with-tree) .site-header {
+		position: fixed;
+		inset: 0 auto 0 0;
+		z-index: 20;
+		width: var(--aria-bar);
+		margin: 0;
+		background: none;
+		pointer-events: none;
+	}
+	:root:is([data-theme='aria'], [data-theme='aria-dark']):has(.shell.with-tree) .header-inner {
+		flex-direction: column;
+		flex-wrap: nowrap;
+		align-items: stretch;
+		justify-content: flex-start;
+		gap: 0.75rem;
+		height: 100%;
+		max-width: none;
+		padding: 1rem 0.875rem var(--aria-foot);
+	}
+	:root:is([data-theme='aria'], [data-theme='aria-dark']):has(.shell.with-tree) .header-inner > * {
+		pointer-events: auto;
+	}
+	:root:is([data-theme='aria'], [data-theme='aria-dark']):has(.shell.with-tree) .brand {
+		flex: none;
+		min-height: 2.25rem;
+		margin: 0;
+		padding: 0 0.375rem;
+		font-size: 1rem;
+		font-weight: 650;
+		letter-spacing: -0.01em;
+	}
+	:root:is([data-theme='aria'], [data-theme='aria-dark']):has(.shell.with-tree) .brand span {
+		min-width: 0;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+	:root:is([data-theme='aria'], [data-theme='aria-dark']):has(.shell.with-tree) .brand .logo {
+		width: 1.875rem;
+		height: 1.875rem;
+	}
+	/* La ricerca: il campo su tutta la larghezza, il pulsante «Cerca» diventa la lente dentro il campo. */
+	:root:is([data-theme='aria'], [data-theme='aria-dark']):has(.shell.with-tree) .search {
+		position: relative;
+		flex: none;
+		max-width: none;
+		margin: 0;
+	}
+	:root:is([data-theme='aria'], [data-theme='aria-dark']):has(.shell.with-tree) .search input {
+		height: 2.5rem;
+		min-height: 2.5rem;
+		padding-left: 2.4rem;
+		background: var(--c-surface);
+	}
+	:root:is([data-theme='aria'], [data-theme='aria-dark']):has(.shell.with-tree) .search .btn {
+		position: absolute;
+		top: 0.25rem;
+		left: 0.25rem;
+		width: 2rem;
+		min-width: 2rem;
+		height: 2rem;
+		min-height: 2rem;
+		padding: 0;
+		border: 0;
+		background: none;
+		color: var(--c-muted);
+		font-size: 0;
+	}
+	:root:is([data-theme='aria'], [data-theme='aria-dark']):has(.shell.with-tree) .search .btn::before {
+		content: '';
+		width: 1.1rem;
+		height: 1.1rem;
+		background: currentColor;
+		-webkit-mask: var(--icon-search) center / contain no-repeat;
+		mask: var(--icon-search) center / contain no-repeat;
+		forced-color-adjust: none;
+	}
+	:root:is([data-theme='aria'], [data-theme='aria-dark']):has(.shell.with-tree) .search .btn:hover {
+		color: var(--c-text);
+	}
+	/* Il profilo in fondo alla barra; il suo menu si apre verso l'alto. */
+	:root:is([data-theme='aria'], [data-theme='aria-dark']):has(.shell.with-tree) .user-menu {
+		margin-top: auto;
+		padding-top: 0.75rem;
+		border-top: 1px solid var(--c-border);
+	}
+	:root:is([data-theme='aria'], [data-theme='aria-dark']):has(.shell.with-tree) .user-menu summary {
+		padding: 0.2rem 0.5rem 0.2rem 0.25rem;
+	}
+	:root:is([data-theme='aria'], [data-theme='aria-dark']):has(.shell.with-tree) .user-menu .who {
+		flex: 1;
+		min-width: 0;
+		max-width: none;
+	}
+	:root:is([data-theme='aria'], [data-theme='aria-dark']):has(.shell.with-tree) .user-menu .panel {
+		top: auto;
+		right: auto;
+		bottom: calc(100% + 0.35rem);
+		left: 0;
+		width: 100%;
+		min-width: 0;
+	}
+	/* L'albero nella fascia di mezzo; Appuntamenti e Cestino in fondo, se c'è posto. */
+	:root:is([data-theme='aria'], [data-theme='aria-dark']):has(.shell.with-tree) .explorer {
+		position: fixed;
+		top: var(--aria-head);
+		bottom: var(--aria-tail);
+		left: 0;
+		z-index: 19;
+		width: var(--aria-bar);
+		max-height: none;
+		margin: 0;
+		padding: 0 0.875rem 0.5rem;
+		background: none;
+		overflow-y: auto;
+		overscroll-behavior: contain;
+	}
+	:root:is([data-theme='aria'], [data-theme='aria-dark']):has(.shell.with-tree) .explorer > nav {
+		display: flex;
+		flex-direction: column;
+		min-height: 100%;
+	}
+	:root:is([data-theme='aria'], [data-theme='aria-dark']):has(.shell.with-tree) .explorer .bin:first-of-type {
+		margin-top: auto;
+		padding-top: 0.3rem;
+	}
+	:root:is([data-theme='aria'], [data-theme='aria-dark']):has(.shell.with-tree) .site-footer {
+		position: fixed;
+		bottom: 0;
+		left: 0;
+		z-index: 20;
+		width: var(--aria-bar);
+		padding: 0.5rem 1.375rem 0.875rem;
+		border: 0;
+		background: none;
+		font-size: 0.75rem;
+		line-height: 1.5;
+	}
+	:root:is([data-theme='aria'], [data-theme='aria-dark']):has(.shell.with-tree) .site-footer .container {
+		max-width: none;
+		padding: 0;
+	}
+	:root:is([data-theme='aria'], [data-theme='aria-dark']):has(.shell.with-tree) .site-footer p {
+		margin: 0;
+	}
+	:root:is([data-theme='aria'], [data-theme='aria-dark']):has(.shell.with-tree) .site-footer a {
+		white-space: nowrap;
+	}
+	/* Il centro: tutto lo spazio a destra della barra, senza riquadro. */
+	:root:is([data-theme='aria'], [data-theme='aria-dark']):has(.shell.with-tree) .shell.with-tree {
+		display: block;
+		width: auto;
+		max-width: none;
+		margin: 0 0 0 var(--aria-bar);
+		padding: 0;
+	}
+	:root:is([data-theme='aria'], [data-theme='aria-dark']):has(.shell.with-tree) .as-player {
+		margin-left: var(--aria-bar);
+	}
+	:root:is([data-theme='aria'], [data-theme='aria-dark']):has(.shell.with-tree) .column {
+		min-height: 100vh;
+		padding: var(--aria-top) var(--aria-pad) 4rem;
+	}
+	/* La copertina va da una barra all'altra e tocca il bordo alto, anche se sopra il titolo c'è il percorso. */
+	:root:is([data-theme='aria'], [data-theme='aria-dark']):has(.shell.with-tree) .content > .head {
+		display: flex;
+		flex-direction: column;
+	}
+	/* In una colonna flessibile i margini automatici stringerebbero le righe attorno al testo: restano larghe quanto la misura. */
+	:root:is([data-theme='aria'], [data-theme='aria-dark']):has(.shell.with-tree) .content > .head > :not(.page-cover) {
+		width: 100%;
+	}
+	:root:is([data-theme='aria'], [data-theme='aria-dark']):has(.shell.with-tree) .content > .head > .page-cover {
+		order: -1;
+		height: clamp(10rem, 22cqi, 15rem);
+		margin: calc(-1 * var(--aria-top)) calc(-1 * var(--aria-pad)) 2rem;
+		border-radius: 0;
+	}
+
+	/* La scheda a destra, quando c'è spazio per stare accanto al testo: una barra a tutta altezza, ferma mentre la
+	   pagina scorre. Sta nella griglia della pagina, quindi il testo si stringe da solo. */
+	@container (min-width: 44rem) {
+		:root:is([data-theme='aria'], [data-theme='aria-dark']):has(.shell.with-tree) .column:has(.body.with-side:not(.side-hidden) > .side-col) {
+			padding: 0;
+		}
+		:root:is([data-theme='aria'], [data-theme='aria-dark']):has(.shell.with-tree) .body.with-side:not(.side-hidden):has(> .side-col) {
+			column-gap: 0;
+			margin: 0;
+		}
+		:root:is([data-theme='aria'], [data-theme='aria-dark']):has(.shell.with-tree) .body.with-side:not(.side-hidden) > .content {
+			padding: var(--aria-top) var(--aria-pad) 4rem;
+		}
+		:root:is([data-theme='aria'], [data-theme='aria-dark']):has(.shell.with-tree) .body.with-side:not(.side-hidden) > .side-col {
+			position: sticky;
+			top: 0;
+			align-self: start;
+			gap: 1.25rem;
+			height: 100vh;
+			padding: 1rem 1.25rem 1.5rem;
+			background: var(--c-surface2);
+			overflow-y: auto;
+			overscroll-behavior: contain;
+		}
+		:root:is([data-theme='aria'], [data-theme='aria-dark']):has(.shell.with-tree) .side-col > :is(.side.panel, .side-panel.panel) {
+			position: static;
+			max-height: none;
+			padding: 0;
+			border: 0;
+			border-radius: 0;
+			background: none;
+			overflow: visible;
+		}
+		:root:is([data-theme='aria'], [data-theme='aria-dark']):has(.shell.with-tree) .side-col .side-hide {
+			top: 0.75rem;
+			left: 0.75rem;
+		}
+		/* Sotto la freccia per nasconderla, come negli altri temi. */
+		:root:is([data-theme='aria'], [data-theme='aria-dark']):has(.shell.with-tree) .side-col > .side-hide + :is(*, .side.panel, .side-panel.panel) {
+			padding-top: 2.25rem;
+		}
+		:root:is([data-theme='aria'], [data-theme='aria-dark']):has(.shell.with-tree) .side-col .side-hide:hover {
+			background: var(--aria-hover);
+		}
+	}
+}
+
+/* --- Colori forzati: le barre e i riquadri si riconoscono dai bordi del sistema --- */
+@media (forced-colors: active) {
+	:root:is([data-theme='aria'], [data-theme='aria-dark']) :is(.callout, .secret, .badge, .prose blockquote) {
+		border: 2px solid CanvasText;
+	}
+	:root:is([data-theme='aria'], [data-theme='aria-dark']) .explorer a[aria-current='page'] {
+		outline: 2px solid CanvasText;
+	}
+	:root:is([data-theme='aria'], [data-theme='aria-dark']):has(.shell.with-tree) .site-header {
+		border-right: 1px solid CanvasText;
+	}
+	:root:is([data-theme='aria'], [data-theme='aria-dark']):has(.shell.with-tree) .side-col {
+		border-left: 1px solid CanvasText;
+	}
+}

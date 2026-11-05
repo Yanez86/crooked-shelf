@@ -3,6 +3,11 @@
 Le versioni seguono il [versionamento semantico](https://semver.org/lang/it/): MAGGIORE.MINORE.CORRETTIVA.
 Questo file è anche la pagina «Novità» della wiki (`/changelog`).
 
+## 0.18.0 — 2026-11-05
+
+### Aggiunte
+- Temi Aria e Aria di notte, con barre laterali a tutta altezza e pagine senza riquadri.
+
 ## 0.17.0 — 2026-11-05
 
 ### Aggiunte

@@ -179,6 +179,8 @@
 		"lake": "Lago",
 		"lake-dark": "Lago di notte",
 		"neon": "Neon",
+		"aria": "Aria",
+		"aria-dark": "Aria di notte",
 		"intro": "I temi preinstallati non si modificano, ma puoi copiarli e cambiare i colori. Un tema si salva solo se tutti i testi restano leggibili (WCAG AA).",
 		"builtin": "Temi preinstallati",
 		"custom": "Temi creati da te",

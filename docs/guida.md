@@ -209,7 +209,7 @@ Chi non ha fatto l'accesso trova solo la lettura, salvata nel browser.
 
 Nel **Profilo** ognuno sceglie:
 
-- tema: chiaro, scuro o automatico, come il sistema; Lago, Lago di notte, Neon (o quelli creati dall'Admin);
+- tema: chiaro, scuro o automatico, come il sistema; Lago, Lago di notte, Neon, Aria, Aria di notte (o quelli creati dall'Admin). Con Aria, sullo schermo grande, la barra a sinistra e la scheda della pagina vanno da cima a fondo e la pagina non ha riquadri;
 - dimensione del testo fino al 200%;
 - carattere Atkinson Hyperlegible o OpenDyslexic;
 - spaziatura ampia, animazioni ridotte, lingua;

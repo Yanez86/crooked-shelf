@@ -7,6 +7,7 @@
 	import '@fontsource/opendyslexic/700.css';
 	import '#lib/styles/app.css';
 	import '#lib/styles/neon.css';
+	import '#lib/styles/aria.css';
 	import { page } from '$app/state';
 	import { tick, untrack } from 'svelte';
 	import { registerLocale, setI18n, translate } from '#lib/i18n/index.ts';

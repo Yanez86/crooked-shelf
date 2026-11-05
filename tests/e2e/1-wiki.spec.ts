@@ -833,7 +833,7 @@ test('visitatori: spenti di default', async ({ browser }) => {
 });
 
 test('temi: contrasti e accessibilità', async () => {
-	// Dodici controlli axe; con il Neon il browser ridisegna di continuo griglia e scanline e tutto va tre volte più piano.
+	// Venti controlli axe; con il Neon il browser ridisegna di continuo griglia e scanline e tutto va tre volte più piano.
 	test.slow();
 	const choose = async (theme: string) => {
 		await admin.goto('/preferences');
@@ -841,15 +841,37 @@ test('temi: contrasti e accessibilità', async () => {
 		await admin.getByRole('button', { name: 'Salva' }).first().click();
 		await expect(admin.getByRole('status').first()).toContainText('Preferenze salvate');
 	};
-	for (const theme of ['Chiaro', 'Scuro', 'Neon']) {
+	for (const theme of ['Chiaro', 'Scuro', 'Neon', 'Aria', 'Aria di notte']) {
 		await choose(theme);
 		for (const url of ['/', '/wiki', '/wiki/locanda-del-grifone', '/tags']) {
 			await admin.goto(url);
 			await axe(admin, `${theme} ${url}`);
 		}
 		await admin.goto('/wiki/locanda-del-grifone');
-		await shot(admin, `08-tema-${theme.toLowerCase().replace(' ', '-')}`);
+		await shot(admin, `08-tema-${theme.toLowerCase().replaceAll(' ', '-')}`);
 	}
+	// Aria: la barra a sinistra (intestazione e albero) e la scheda a destra vanno da cima a fondo, anche scorrendo.
+	await admin.goto('/');
+	const { width, height } = await admin.evaluate(() => ({ width: document.documentElement.clientWidth, height: window.innerHeight }));
+	const bar = (await admin.getByRole('banner').boundingBox())!;
+	const tree = (await admin.locator('#explorer').boundingBox())!;
+	const side = (await admin.locator('.side-col').boundingBox())!;
+	expect(bar).toMatchObject({ x: 0, y: 0, height });
+	expect(tree.x).toBe(0);
+	expect(tree.width).toBe(bar.width);
+	expect(side).toMatchObject({ y: 0, height });
+	expect(Math.round(side.x + side.width)).toBe(width);
+	// Il menu del profilo sta in fondo alla barra e si apre verso l'alto.
+	const profile = admin.getByRole('banner').locator('.user-menu summary');
+	expect((await profile.boundingBox())!.y).toBeGreaterThan(height / 2);
+	await profile.click();
+	const menu = (await admin.getByRole('banner').locator('.user-menu .panel').boundingBox())!;
+	expect(menu.y + menu.height).toBeLessThanOrEqual((await profile.boundingBox())!.y);
+	await expect(admin.getByRole('banner').getByRole('link', { name: 'Profilo' })).toBeVisible();
+	await profile.click();
+	await admin.mouse.wheel(0, 600);
+	await expect.poll(async () => (await admin.locator('.side-col').boundingBox())!.y).toBe(0);
+	await shot(admin, '08-tema-aria-home');
 	// I test che seguono girano col tema chiaro, non col Neon che li rallenterebbe.
 	await choose('Chiaro');
 });

@@ -172,6 +172,62 @@ export const THEMES: Theme[] = [
 			warningBorder: '#ffb12e',
 			codeBg: '#1c1430'
 		}
+	},
+	// Aria: grigi neutri e freddi, un solo accento indaco, fuoco arancio. Le barre ai lati sono surface2, il centro è bg.
+	// Barre a tutta altezza, centro senza riquadri, tabelle senza bordi ed elenchi numerati sono in styles/aria.css.
+	{
+		id: 'aria',
+		scheme: 'light',
+		colors: {
+			bg: '#ffffff',
+			surface: '#ffffff',
+			surface2: '#f3f4f7',
+			text: '#16181d',
+			muted: '#555b69',
+			border: '#e0e3e9',
+			control: '#767c8c',
+			primary: '#3b4fd8',
+			onPrimary: '#ffffff',
+			link: '#3447cc',
+			missing: '#b3261e',
+			focus: '#c2410c',
+			danger: '#b3261e',
+			success: '#1b6b3f',
+			secretBg: '#f6effb',
+			secretText: '#3d1a5c',
+			secretBorder: '#8a4fbf',
+			noteBorder: '#3a73c4',
+			tipBorder: '#2e7d50',
+			warningBorder: '#a35f00',
+			codeBg: '#f1f2f5'
+		}
+	},
+	{
+		id: 'aria-dark',
+		scheme: 'dark',
+		colors: {
+			bg: '#121317',
+			surface: '#1c1d23',
+			surface2: '#18191e',
+			text: '#eceef2',
+			muted: '#a3a9b6',
+			border: '#2c2f37',
+			control: '#80879a',
+			primary: '#9aa6ff',
+			onPrimary: '#10153f',
+			link: '#a5b0ff',
+			missing: '#ff8f86',
+			focus: '#ffb454',
+			danger: '#ff8f86',
+			success: '#7dd59f',
+			secretBg: '#251b31',
+			secretText: '#ecdcff',
+			secretBorder: '#b98ae0',
+			noteBorder: '#79aef0',
+			tipBorder: '#6ece96',
+			warningBorder: '#efb259',
+			codeBg: '#23252c'
+		}
 	}
 ];
 

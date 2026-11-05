@@ -179,6 +179,8 @@
 		"lake": "Lake",
 		"lake-dark": "Lake at night",
 		"neon": "Neon",
+		"aria": "Aria",
+		"aria-dark": "Aria at night",
 		"intro": "Built-in themes can't be changed, but you can copy them and change the colors. A theme is saved only if all text stays readable (WCAG AA).",
 		"builtin": "Built-in themes",
 		"custom": "Your themes",

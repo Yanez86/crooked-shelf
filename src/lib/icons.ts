@@ -96,7 +96,7 @@ export function iconSvg(name: string, stroke = '#000'): string {
 }
 
 /** Icone usate nei CSS (::before, ::after): una variabile --icon-<nome> per ciascuna. */
-const CSS_ICONS = ['lock', 'chevronDown', 'chevronUp', 'chevronRight', 'book', 'dice'];
+const CSS_ICONS = ['lock', 'chevronDown', 'chevronUp', 'chevronRight', 'book', 'dice', 'search'];
 
 export function iconCss(): string {
 	const vars = CSS_ICONS.map((n) => `--icon-${n.replace(/[A-Z]/g, (c) => '-' + c.toLowerCase())}:url("data:image/svg+xml,${encodeURIComponent(iconSvg(n))}")`);
