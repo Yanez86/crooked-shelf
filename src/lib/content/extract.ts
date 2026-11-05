@@ -92,8 +92,9 @@ export function extract(doc: DocNode, fields: PageField[] = []): Extracted {
 		for (const c of n.content ?? []) walk(c, secret);
 		if (BLOCK.has(n.type)) out.push('\n');
 	};
+	// Delle immagini solo la didascalia: il titoletto («Ritratto») è un'etichetta, e finirebbe nell'anteprima dei collegamenti.
 	for (const f of fields) {
-		pub.push(f.image !== undefined ? `${f.title ?? ''}\n${f.label}\n` : `${f.label}: ${fieldPlain(f.value)}\n`);
+		pub.push(f.image !== undefined ? `${f.label}\n` : `${f.label}: ${fieldPlain(f.value)}\n`);
 		for (const target of inlineLinks(f.value)) links.push({ target, secret: false });
 	}
 	walk(doc, false);

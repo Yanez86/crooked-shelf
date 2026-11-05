@@ -331,7 +331,8 @@ test('colonna a lato: si aggiunge modificando la pagina, con riquadri di testo e
 	await expect(preview.locator('img')).toBeVisible();
 	const pi = (await preview.locator('img').boundingBox())!;
 	expect(pi.x + pi.width).toBeLessThanOrEqual((await preview.locator('.title').boundingBox())!.x);
-	await expect(preview.locator('.excerpt')).toContainText('Origine: Valle del Elminster uno due');
+	// Il titoletto dell'immagine («Ritratto») non c'è: si parte dalla didascalia.
+	await expect(preview.locator('.excerpt')).toHaveText(/^Il mago nella sua torre Origine: Valle del Elminster uno due /);
 	await shot(admin, '11e3-anteprima-con-immagine');
 });
 

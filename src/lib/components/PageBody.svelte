@@ -347,10 +347,5 @@
 		.side dt:not(:first-child) + dd {
 			border-top: 1px solid var(--c-border);
 		}
-		.side dt {
-			font-size: var(--fs-sm);
-			line-height: 1.85;
-			color: var(--c-muted);
-		}
 	}
 </style>

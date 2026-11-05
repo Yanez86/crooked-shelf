@@ -133,9 +133,9 @@ describe('campi e immagini', () => {
 		expect(ex.body).toContain('Residenza: la locanda');
 		expect(ex.links).toEqual([{ target: 'locanda-del-grifone', secret: false }]);
 	});
-	it('titoletto e didascalia delle immagini entrano in ricerca', () => {
+	it("delle immagini entra in ricerca la didascalia, non il titoletto", () => {
 		const ex = extract({ type: 'doc', content: [] }, [{ label: 'Il mago nella sua torre', value: '', image: 'abc', title: 'Ritratto' }]);
-		expect(ex.body).toContain('Ritratto');
+		expect(ex.body).not.toContain('Ritratto');
 		expect(ex.body).toContain('Il mago nella sua torre');
 		expect(ex.body).not.toContain(':');
 	});
