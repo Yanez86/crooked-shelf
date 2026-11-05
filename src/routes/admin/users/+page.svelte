@@ -71,8 +71,11 @@
 						</label>
 					</td>
 					<td class="col-end">
-						<button class="btn btn-small" type="submit" form="user-{u.id}"><Icon name="save" />{t('common.save')}<span class="visually-hidden">: {u.username}</span></button>
-						<form method="post" action="?/reset" class="inline"><input type="hidden" name="id" value={u.id} /><button class="btn btn-small" type="submit" disabled={u.disabled}>{t('admin.resetPassword')}<span class="visually-hidden">: {u.username}</span></button></form>
+						<!-- I due pulsanti in fila, alla stessa altezza: uno ha l'icona, l'altro sta nel suo modulo. -->
+						<div class="row-actions">
+							<button class="btn btn-small" type="submit" form="user-{u.id}"><Icon name="save" />{t('common.save')}<span class="visually-hidden">: {u.username}</span></button>
+							<form method="post" action="?/reset"><input type="hidden" name="id" value={u.id} /><button class="btn btn-small" type="submit" disabled={u.disabled}>{t('admin.resetPassword')}<span class="visually-hidden">: {u.username}</span></button></form>
+						</div>
 					</td>
 				</tr>
 			{/each}
@@ -91,9 +94,15 @@
 </dl>
 
 <style>
-	.inline {
-		display: inline;
-		margin-inline-start: 0.25rem;
+	.row-actions {
+		display: flex;
+		flex-wrap: nowrap;
+		align-items: center;
+		justify-content: flex-end;
+		gap: 0.25rem;
+	}
+	.row-actions form {
+		display: contents;
 	}
 	.scroll {
 		overflow-x: auto;

@@ -1012,6 +1012,12 @@ test('utenti: la tabella scorre dentro il suo riquadro, anche sul telefono', asy
 	await admin.goto('/admin/users');
 	await axe(admin, 'utenti');
 	expect(await admin.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBe(0);
+	// Salva e Reimposta password stanno in fila, alla stessa altezza, in ogni riga.
+	for (const row of await admin.locator('table.data tbody tr').all()) {
+		const [save, reset] = await row.locator('td.col-end button').evaluateAll((bs) => bs.map((b) => b.getBoundingClientRect()));
+		expect(Math.abs(save.top - reset.top)).toBeLessThan(1);
+		expect(Math.abs(save.height - reset.height)).toBeLessThan(1);
+	}
 	await admin.setViewportSize({ width: 1280, height: 720 });
 });
 
