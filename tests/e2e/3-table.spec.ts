@@ -363,8 +363,17 @@ test('appuntamenti: il Master fissa i giovedì, i giocatori rispondono, sotto il
 	await expect(dates).toHaveCount(5);
 	await expect(admin.getByRole('table', { name: 'gennaio 2030' }).getByRole('link', { name: /20:00 Serata al Grifone/ })).toHaveCount(5);
 	await expect(dates.first()).toContainText('In forse');
-	await expect(dates.first().getByRole('link', { name: 'https://discord.gg/grifone' })).toBeVisible();
+	// Del link per il remoto si vede l'icona di Discord; l'indirizzo è nel suggerimento.
+	const discord = dates.first().getByRole('link', { name: 'Gioca da remoto su Discord' });
+	await expect(discord).toHaveAttribute('href', 'https://discord.gg/grifone');
+	await expect(discord).toHaveAttribute('title', 'https://discord.gg/grifone');
+	await expect(dates.first()).not.toContainText('https://discord.gg/grifone');
 	await expect(dates.first()).toContainText(/Master\s*\S.* · Da remoto/);
+	// La matita sta in alto a destra della scheda.
+	const box = (await dates.first().boundingBox())!;
+	const edit = (await dates.first().getByRole('link', { name: /^Modifica la serie/ }).boundingBox())!;
+	expect(edit.y - box.y).toBeLessThan(24);
+	expect(box.x + box.width - (edit.x + edit.width)).toBeLessThan(24);
 	await axe(admin, 'appuntamenti');
 	await shot(admin, '23c-appuntamenti');
 
@@ -377,6 +386,11 @@ test('appuntamenti: il Master fissa i giovedì, i giocatori rispondono, sotto il
 	await expect(tenth.getByRole('button', { name: 'Ci sono, da remoto' })).toHaveAttribute('aria-pressed', 'true');
 	await expect(tenth).toContainText('Confermata');
 	await expect(tenth).toContainText(/Vengono da remoto\s*Alice/);
+	// Chi c'è sta in una riga di facce: il nome al passaggio del mouse, e toccando la riga l'elenco coi nomi.
+	await expect(tenth.locator('.faces-row .face.remote')).toHaveAttribute('data-tip', /^Alice.* · da remoto$/);
+	await expect(tenth.locator('.presence dl')).toBeHidden();
+	await tenth.locator('.presence summary').click();
+	await expect(tenth.locator('.presence dl')).toBeVisible();
 	await axe(p, 'appuntamenti: giocatore');
 	// Nel calendario la sua figura (col bordo del remoto) accanto a quella del Master; cliccando, il popup con le specifiche.
 	const cell = p.getByRole('table', { name: 'gennaio 2030' }).getByRole('link', { name: /20:00 Serata al Grifone/ }).nth(1);
@@ -434,7 +448,7 @@ test('appuntamenti: il Master fissa i giovedì, i giocatori rispondono, sotto il
 	await a.context().close();
 });
 
-test('Stars & Wishes: chi c\'era risponde entrando nella campagna, una volta sola; il Master legge', async ({ browser }) => {
+test('Stars & Wishes: chi c\'era risponde dopo la sessione, una volta sola; il Master legge', async ({ browser }) => {
 	// Una sessione ieri, già finita, e Alice c'era. La prossima è a gennaio 2030 (il test prima).
 	const d = new Date(Date.now() - 86_400_000);
 	const yesterday = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -451,7 +465,9 @@ test('Stars & Wishes: chi c\'era risponde entrando nella campagna, una volta sol
 	const crypt = (pg: Page) => pg.locator('article.occurrence').filter({ has: pg.locator(`time[datetime="${yesterday}T18:00"]`) });
 	await crypt(p).getByRole('button', { name: 'Ci sono, in presenza' }).click();
 	await expect(crypt(p).getByRole('button', { name: 'Ci sono, in presenza' })).toHaveAttribute('aria-pressed', 'true');
-	await p.context().close();
+	// Finché è spento non chiede niente.
+	await p.goto('/');
+	await expect(p.getByRole('dialog', { name: 'Stars & Wishes' })).toHaveCount(0);
 
 	// Spento finché il Master non lo accende.
 	await admin.goto('/campaign?tab=schedule');
@@ -460,8 +476,9 @@ test('Stars & Wishes: chi c\'era risponde entrando nella campagna, una volta sol
 	await rules.getByRole('button', { name: 'Salva' }).click();
 	await expect(rules.getByRole('status')).toContainText('Modifiche salvate');
 
-	// Entrando nella campagna, il popup. «Più tardi» lo rimanda al prossimo ingresso, non alla pagina dopo.
-	p = await login(browser, PLAYER);
+	// Alla prima pagina aperta dopo, il popup: anche per chi la wiki l'aveva già aperta prima, con lo stesso browser.
+	// «Più tardi» lo rimanda di qualche ora, non alla pagina dopo.
+	await p.goto('/');
 	let sw = p.getByRole('dialog', { name: 'Stars & Wishes' });
 	await expect(sw).toBeVisible();
 	await expect(sw).toContainText('«La cripta»');
@@ -474,7 +491,7 @@ test('Stars & Wishes: chi c\'era risponde entrando nella campagna, una volta sol
 	await expect(sw).toHaveCount(0);
 	await p.context().close();
 
-	// Si rientra e si risponde: almeno una delle due, e poi non si cambia più.
+	// Da un altro browser (o qualche ora dopo) lo richiede: si risponde ad almeno una delle due, e poi non si cambia più.
 	p = await login(browser, PLAYER);
 	sw = p.getByRole('dialog', { name: 'Stars & Wishes' });
 	await sw.getByRole('button', { name: 'Invia' }).click();

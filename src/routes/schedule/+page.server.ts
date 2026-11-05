@@ -2,6 +2,7 @@ import { error, fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { isMaster } from '#lib/access.ts';
 import { isMember, masterOf } from '#lib/server/campaigns.ts';
+import { sheetsByPlayer } from '#lib/server/sheets.ts';
 import { str } from '#lib/server/forms.ts';
 import { monthSchedule, monthStarWishes, saveStarWish, setAnswer, skipDate } from '#lib/server/schedule.ts';
 import { ANSWERS, DATE_RE, localDate, MONTH_RE, shiftMonth, type Answer } from '#lib/schedule.ts';
@@ -27,6 +28,8 @@ export const load: PageServerLoad = ({ locals, url }) => {
 		rule: { min: campaign.minPlayers, hours: campaign.quorumHours },
 		canManage: isMaster(me),
 		canAnswer: isMember(campaign.id, me.id),
+		// Il personaggio di ogni giocatore: il titolo della sua scheda, se non è più il suo nome (le schede le vede tutto il tavolo).
+		characters: Object.fromEntries([...sheetsByPlayer()].map(([id, p]) => [id, p.title])) as Record<number, string>,
 		// Stars & Wishes: le risposte dei giocatori sono per il Master, e spariscono con la funzione spenta.
 		starWishes: isMaster(me) && campaign.starWishes ? monthStarWishes(month) : {}
 	};
@@ -42,7 +45,7 @@ export const actions: Actions = {
 		if (!ANSWERS.includes(answer) || !DATE_RE.test(date) || !setAnswer(Number(f.get('id')), date, me.id, answer)) return fail(400, { error: 'errors.generic' });
 		return { ok: 'schedule.answered' };
 	},
-	// Stars & Wishes, dal popup che compare entrando nella campagna (vedi +layout.server.ts): la sessione la sceglie il server.
+	// Stars & Wishes, dal popup che compare dopo la sessione (vedi +layout.server.ts): la sessione la sceglie il server.
 	starWish: async ({ request, locals }) => {
 		const { me } = table(locals);
 		const f = await request.formData();

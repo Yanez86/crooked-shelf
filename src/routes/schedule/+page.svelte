@@ -22,6 +22,19 @@
 	const STATUS_ICONS = { confirmed: 'check', pending: 'clock', cancelled: 'close' };
 	const CHOICES: Answer[] = ['in_person', 'remote', 'no'];
 	const mine = (o: (typeof data.items)[number]) => CHOICES.find((a) => o.answers[a].some((p) => p.id === page.data.user?.id));
+	// Il nome di un giocatore col suo personaggio (il titolo della sua scheda, se l'ha cambiato).
+	function who(p: { id: number; displayName: string }) {
+		const character = data.characters[p.id];
+		return character && character !== p.displayName ? `${p.displayName} (${character})` : p.displayName;
+	}
+	// Il servizio del link per il remoto, per l'icona e per chi usa un lettore di schermo.
+	function linkService(link: string) {
+		try {
+			return /(^|\.)(discord\.gg|discord\.com|discordapp\.com)$/.test(new URL(link).hostname) ? 'Discord' : null;
+		} catch {
+			return null;
+		}
+	}
 	// L'esito va accanto alla data a cui si è risposto, non in cima alla pagina.
 	let sent = $state('');
 	// Il popup di una data, aperto dal calendario. Si segue la data, non la riga: dopo una risposta i dati si ricaricano.
@@ -36,45 +49,109 @@
 
 <svelte:head><title>{t('schedule.title')}</title></svelte:head>
 
+<!-- Una persona nella riga di chi c'è: la faccia, e il nome (col personaggio) al passaggio del mouse. -->
+{#snippet face(p: { displayName: string; icon: string | null; avatar: string | null }, kind: string, tip: string)}
+	<span class="face {kind}" data-tip={tip}>
+		<UserIcon icon={p.icon} avatar={p.avatar} size="1.75rem" />
+		{#if kind === 'no'}<span class="mark"><Icon name="close" /></span>{:else if kind === 'remote'}<span class="badge-icon"><Icon name="globe" /></span>{/if}
+	</span>
+{/snippet}
+
 <!-- Le specifiche di una data: nella scheda sotto il calendario e nel popup. `id` tiene distinti i due titoli. -->
 {#snippet details(o: (typeof data.items)[number], id: string)}
 	{@const answer = mine(o)}
-	<h3 id="{id}-title">{o.title}</h3>
+	{@const people = [...CHOICES, 'waiting'].flatMap((k) => o.answers[k as Answer | 'waiting'].map((p) => ({ p, k })))}
+	<div class="occ-head">
+		<h3 id="{id}-title">{o.title}</h3>
+		<!-- Sempre in alto a destra: modifica la data (o tutta la serie). -->
+		{#if data.canManage}
+			{@const label = t(o.repeat === 'none' ? 'schedule.edit' : 'schedule.editSeries')}
+			<a class="btn btn-small btn-ghost edit" href="/schedule/{o.id}" title={label} aria-label="{label}: {o.title}"><Icon name="edit" /></a>
+		{/if}
+	</div>
 	<p class="when">
 		<time datetime="{o.date}T{o.starts}">{fmt(o.date, { weekday: 'long', day: 'numeric', month: 'long' })}, {o.starts}–{o.ends}</time>
 		{#if o.repeat !== 'none'}<span class="muted"> · {t('schedule.repeat.' + o.repeat)}</span>{/if}
+		{#if o.status}
+			<span class="status {o.status}"><Icon name={STATUS_ICONS[o.status]} />{t('schedule.status.' + o.status)}</span>
+		{/if}
 	</p>
-	{#if o.status}
-		<p class="status {o.status}"><Icon name={STATUS_ICONS[o.status]} />{t('schedule.status.' + o.status)}</p>
-	{/if}
-	<dl class="facts">
-		{#if o.inPerson}
-			<dt>{t('schedule.inPerson')}</dt>
-			<dd>{o.place || '—'}</dd>
-		{/if}
-		{#if o.remote}
-			<dt>{t('schedule.remote')}</dt>
-			<dd>{#if o.link}<a href={o.link} target="_blank" rel="noopener noreferrer">{o.link}</a>{:else}—{/if}</dd>
-		{/if}
-		{#if data.master}
-			<dt>{t('campaign.master')}</dt>
-			<dd>
-				<span class="people master-row"><UserIcon icon={data.master.icon} avatar={data.master.avatar} size="1.5rem" />{data.master.name} · {t(o.masterMode === 'in_person' ? 'schedule.inPerson' : 'schedule.remote')}</span>
-			</dd>
-		{/if}
-		{#each [...CHOICES, 'waiting'] as k (k)}
-			{#if o.answers[k as Answer | 'waiting'].length}
-				<dt>{t('schedule.answers.' + k)}</dt>
-				<dd>
-					<ul class="list-plain people">
-						{#each o.answers[k as Answer | 'waiting'] as p (p.id)}
-							<li><UserIcon icon={p.icon} avatar={p.avatar} size="1.5rem" />{p.displayName}</li>
-						{/each}
-					</ul>
-				</dd>
+	{#if o.inPerson || o.remote}
+		<p class="where">
+			{#if o.inPerson}
+				<span class="place"><Icon name="marker" /><span class="visually-hidden">{t('schedule.inPerson')}: </span>{o.place || t('schedule.inPerson')}</span>
 			{/if}
-		{/each}
-	</dl>
+			{#if o.remote}
+				<!-- Del link per il remoto si vede solo l'icona (quella di Discord, se è Discord); l'indirizzo è nel suggerimento. -->
+				{#if o.link}
+					{@const service = linkService(o.link)}
+					<a class="remote-link" href={o.link} target="_blank" rel="noopener noreferrer" title={o.link}>
+						<Icon name={service === 'Discord' ? 'discord' : 'link'} /><span class="visually-hidden">{service ? t('schedule.remoteOn', { service }) : t('schedule.remote')}</span>
+					</a>
+				{:else}
+					<span class="place"><Icon name="globe" />{t('schedule.remote')}</span>
+				{/if}
+			{/if}
+		</p>
+	{/if}
+	<!-- Chi c'è e, sulla stessa riga, le risposte (giocatore) o «Annulla questa data» (Master). -->
+	<div class="occ-foot">
+		<!-- Tutte le facce su una riga, il Master per primo. Toccando la riga (o da tastiera) si aprono i nomi. -->
+		<details class="presence">
+			<summary>
+				<span class="faces-row" aria-hidden="true">
+					{#if data.master}
+						{@render face({ displayName: data.master.name, icon: data.master.icon, avatar: data.master.avatar }, 'master', `${data.master.name} · ${t('campaign.master')}, ${t(o.masterMode === 'in_person' ? 'schedule.inPerson' : 'schedule.remote').toLowerCase()}`)}
+					{/if}
+					{#each people as { p, k } (p.id)}
+						{@render face(p, k, `${who(p)} · ${t('schedule.presence.' + k)}`)}
+					{/each}
+				</span>
+				<span class="count">{t('schedule.going', { n: o.answers.in_person.length + o.answers.remote.length, total: people.length })}</span>
+				<span class="visually-hidden">{t('schedule.showNames')}</span>
+			</summary>
+			<dl class="facts">
+				{#if data.master}
+					<dt>{t('campaign.master')}</dt>
+					<dd>{data.master.name} · {t(o.masterMode === 'in_person' ? 'schedule.inPerson' : 'schedule.remote')}</dd>
+				{/if}
+				{#each [...CHOICES, 'waiting'] as k (k)}
+					{#if o.answers[k as Answer | 'waiting'].length}
+						<dt>{t('schedule.answers.' + k)}</dt>
+						<dd>{o.answers[k as Answer | 'waiting'].map(who).join(', ')}</dd>
+					{/if}
+				{/each}
+			</dl>
+		</details>
+		{#if data.canAnswer}
+			<form
+				method="post"
+				action="?m={data.month}&/answer"
+				class="row-buttons"
+				use:enhance={() => async ({ update }) => {
+					sent = anchor(o);
+					await update({ reset: false });
+				}}
+			>
+				<input type="hidden" name="id" value={o.id} />
+				<input type="hidden" name="date" value={o.date} />
+				{#each CHOICES.filter((a) => (a !== 'in_person' || o.inPerson) && (a !== 'remote' || o.remote)) as a (a)}
+					<button class="btn btn-small" class:btn-primary={answer === a} type="submit" name="answer" value={a} aria-pressed={answer === a}>{t('schedule.answer.' + a)}</button>
+				{/each}
+			</form>
+		{/if}
+		{#if data.canManage && o.repeat !== 'none'}
+			<form method="post" action="?m={data.month}&/skip" class="row-buttons">
+				<input type="hidden" name="id" value={o.id} />
+				<input type="hidden" name="date" value={o.date} />
+				<button class="btn btn-small btn-danger" type="submit">{t('schedule.skip')}<span class="visually-hidden">: {o.title}, {fmt(o.date, { day: 'numeric', month: 'long' })}</span></button>
+			</form>
+		{/if}
+	</div>
+	{#if data.canAnswer && sent === anchor(o)}
+		<FormError error={form?.error} />
+		<FormOk message={form?.ok} />
+	{/if}
 	{#if data.starWishes[`${o.id}/${o.date}`]}
 		<h4>{t('schedule.starWishes.title')}</h4>
 		<ul class="list-plain wishes">
@@ -90,39 +167,6 @@
 				</li>
 			{/each}
 		</ul>
-	{/if}
-	{#if data.canAnswer}
-		<form
-			method="post"
-			action="?m={data.month}&/answer"
-			class="actions"
-			use:enhance={() => async ({ update }) => {
-				sent = anchor(o);
-				await update({ reset: false });
-			}}
-		>
-			<input type="hidden" name="id" value={o.id} />
-			<input type="hidden" name="date" value={o.date} />
-			{#each CHOICES.filter((a) => (a !== 'in_person' || o.inPerson) && (a !== 'remote' || o.remote)) as a (a)}
-				<button class="btn" class:btn-primary={answer === a} type="submit" name="answer" value={a} aria-pressed={answer === a}>{t('schedule.answer.' + a)}</button>
-			{/each}
-		</form>
-		{#if sent === anchor(o)}
-			<FormError error={form?.error} />
-			<FormOk message={form?.ok} />
-		{/if}
-	{/if}
-	{#if data.canManage}
-		<div class="actions">
-			<a class="btn btn-small" href="/schedule/{o.id}"><Icon name="edit" />{t(o.repeat === 'none' ? 'schedule.edit' : 'schedule.editSeries')}<span class="visually-hidden">: {o.title}</span></a>
-			{#if o.repeat !== 'none'}
-				<form method="post" action="?m={data.month}&/skip">
-					<input type="hidden" name="id" value={o.id} />
-					<input type="hidden" name="date" value={o.date} />
-					<button class="btn btn-small btn-danger" type="submit">{t('schedule.skip')}<span class="visually-hidden">: {o.title}, {fmt(o.date, { day: 'numeric', month: 'long' })}</span></button>
-				</form>
-			{/if}
-		</div>
 	{/if}
 {/snippet}
 
@@ -326,9 +370,9 @@
 	.occurrence-dialog::backdrop {
 		background: rgb(0 0 0 / 0.6);
 	}
-	.occurrence-dialog h3 {
-		margin-top: 0;
-		padding-right: 2.75rem;
+	/* Nel popup la X sta in alto a destra: la matita le resta accanto. */
+	.occurrence-dialog .occ-head {
+		padding-right: 2.5rem;
 	}
 	.close {
 		position: absolute;
@@ -337,14 +381,33 @@
 		padding: 0;
 	}
 	.occurrence {
-		margin-bottom: 1rem;
+		margin-bottom: 0.75rem;
+		padding: 0.75rem 1rem;
 		scroll-margin-top: 5rem;
+	}
+	/* Titolo a sinistra, matita sempre in alto a destra. */
+	.occ-head {
+		display: flex;
+		align-items: flex-start;
+		gap: 0.5rem;
+	}
+	.occ-head h3 {
+		flex: 1;
+		margin: 0;
+	}
+	.edit {
+		flex: none;
+		margin: -0.25rem -0.35rem 0 0;
 	}
 	.occurrence:target {
 		outline: 2px solid var(--c-focus);
 	}
 	.when {
-		margin: 0.25rem 0;
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.25rem 0.5rem;
+		margin: 0.2rem 0;
 	}
 	.when::first-letter {
 		text-transform: uppercase;
@@ -353,10 +416,124 @@
 		display: inline-flex;
 		align-items: center;
 		gap: 0.3rem;
-		padding: 0.1rem 0.5rem;
+		padding: 0 0.45rem;
 		border: 2px solid currentColor;
 		border-radius: var(--radius);
+		font-size: var(--fs-sm);
 		font-weight: 600;
+	}
+	/* Dove si gioca: il posto, e del link per il remoto solo l'icona. */
+	.where {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.25rem 1rem;
+		margin: 0.2rem 0;
+	}
+	.place {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.3rem;
+	}
+	.remote-link {
+		display: inline-grid;
+		place-items: center;
+		width: 2rem;
+		height: 2rem;
+		border: 1px solid var(--c-border);
+		border-radius: var(--radius);
+		color: var(--c-primary);
+	}
+	.remote-link:hover {
+		border-color: var(--c-primary);
+	}
+	.remote-link :global(.icon) {
+		width: 1.35rem;
+		height: 1.35rem;
+	}
+	/* Chi c'è a sinistra, i pulsanti a destra; sul telefono vanno a capo. */
+	.occ-foot {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: flex-start;
+		justify-content: space-between;
+		gap: 0.4rem 1rem;
+		margin-top: 0.4rem;
+	}
+	.row-buttons {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.4rem;
+	}
+	/* Chi c'è: le facce su una riga; toccandola si aprono i nomi. */
+	.presence {
+		flex: 1 1 14rem;
+		min-width: 0;
+	}
+	.presence summary {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.35rem 0.6rem;
+		min-height: 2.25rem;
+		list-style: none;
+		cursor: pointer;
+	}
+	.presence summary::-webkit-details-marker {
+		display: none;
+	}
+	.faces-row {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.25rem;
+	}
+	.count {
+		font-size: var(--fs-sm);
+		color: var(--c-muted);
+	}
+	.presence .facts {
+		margin: 0.4rem 0 0;
+		font-size: var(--fs-sm);
+	}
+	/* Non ha ancora risposto: la faccia sbiadita, col bordo tratteggiato. */
+	.waiting :global(.user-icon) {
+		opacity: 0.5;
+		border-style: dashed;
+	}
+	/* Da remoto: un piccolo globo sull'angolo, oltre al bordo blu. */
+	.badge-icon {
+		position: absolute;
+		right: -0.3rem;
+		bottom: -0.3rem;
+		display: grid;
+		place-items: center;
+		width: 0.95rem;
+		height: 0.95rem;
+		border-radius: 50%;
+		background: var(--c-surface);
+		color: var(--c-note-border);
+	}
+	.badge-icon :global(.icon) {
+		width: 0.8rem;
+		height: 0.8rem;
+	}
+	/* Il nome (col personaggio) al passaggio del mouse. */
+	.face[data-tip]:hover::after {
+		content: attr(data-tip);
+		position: absolute;
+		z-index: 5;
+		bottom: calc(100% + 0.3rem);
+		left: 0;
+		width: max-content;
+		max-width: 16rem;
+		padding: 0.15rem 0.45rem;
+		border-radius: var(--radius);
+		background: var(--c-text);
+		color: var(--c-surface);
+		font-size: var(--fs-sm);
+		font-weight: 500;
+		line-height: 1.4;
+		pointer-events: none;
 	}
 	.status.confirmed {
 		color: var(--c-success);
@@ -376,17 +553,6 @@
 		margin: 0;
 		overflow-wrap: anywhere;
 	}
-	.people {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 0.25rem 0.75rem;
-	}
-	.people li,
-	.master-row {
-		display: inline-flex;
-		align-items: center;
-		gap: 0.35rem;
-	}
 	.wishes li + li {
 		margin-top: 0.75rem;
 	}
@@ -394,9 +560,7 @@
 	.wishes dd {
 		white-space: pre-line;
 	}
-	.actions form {
-		display: contents;
-	}
+
 	/* Sul telefono nelle caselle sta solo l'ora: il resto è nelle schede sotto. */
 	@media (max-width: 40rem) {
 		td {

@@ -19,24 +19,27 @@
 <FormOk message={form?.ok ?? (page.url.searchParams.has('deleted') ? 'admin.campaignDeleted' : null)} />
 
 {#each data.campaigns as c (c.id)}
-	<form method="post" action="?/update" class="card inline-form">
-		<input type="hidden" name="id" value={c.id} />
-		<div class="field">
-			<label for="name-{c.id}">{t('campaign.name')}</label>
-			<input id="name-{c.id}" name="name" type="text" required maxlength="80" value={c.name} />
-		</div>
-		<div class="field">
-			<label for="master-{c.id}">{t('campaign.master')}</label>
-			<select id="master-{c.id}" name="masterId" required>
-				{#if c.masterId === null}<option value="" selected>—</option>{/if}
-				<!-- Ci si nomina Master solo di una campagna nuova: in quelle che esistono già ci sono i segreti di un altro. -->
-				{#each data.masters.filter((m) => m.id !== data.me || m.id === c.masterId) as m (m.id)}<option value={m.id} selected={m.id === c.masterId}>{m.displayName} (@{m.username})</option>{/each}
-			</select>
-		</div>
-		<p class="field muted">{t('admin.campaignPlayers', { n: c.players })}</p>
-		<div class="field"><button class="btn" type="submit"><Icon name="save" />{t('common.save')}<span class="visually-hidden"> {c.name}</span></button></div>
-	</form>
-	<DeleteCampaign id={c.id} name={c.name} />
+	<!-- Una riga per campagna: nome, Master, giocatori, Salva e, accanto, Elimina (fuori dal modulo di Salva, col suo popup). -->
+	<div class="card inline-form">
+		<form method="post" action="?/update" class="row-form">
+			<input type="hidden" name="id" value={c.id} />
+			<div class="field">
+				<label for="name-{c.id}">{t('campaign.name')}</label>
+				<input id="name-{c.id}" name="name" type="text" required maxlength="80" value={c.name} />
+			</div>
+			<div class="field">
+				<label for="master-{c.id}">{t('campaign.master')}</label>
+				<select id="master-{c.id}" name="masterId" required>
+					{#if c.masterId === null}<option value="" selected>—</option>{/if}
+					<!-- Ci si nomina Master solo di una campagna nuova: in quelle che esistono già ci sono i segreti di un altro. -->
+					{#each data.masters.filter((m) => m.id !== data.me || m.id === c.masterId) as m (m.id)}<option value={m.id} selected={m.id === c.masterId}>{m.displayName} (@{m.username})</option>{/each}
+				</select>
+			</div>
+			<p class="field muted">{t('admin.campaignPlayers', { n: c.players })}</p>
+			<div class="field"><button class="btn" type="submit"><Icon name="save" />{t('common.save')}<span class="visually-hidden"> {c.name}</span></button></div>
+		</form>
+		<div class="field"><DeleteCampaign id={c.id} name={c.name} /></div>
+	</div>
 {:else}
 	<p class="muted">{t('admin.noCampaigns')}</p>
 {/each}
@@ -65,5 +68,9 @@
 	}
 	.inline-form .field {
 		margin-bottom: 0;
+	}
+	/* I campi del modulo stanno nella riga del riquadro, accanto a Elimina. */
+	.row-form {
+		display: contents;
 	}
 </style>

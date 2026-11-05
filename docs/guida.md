@@ -21,7 +21,7 @@ Una installazione può contenere più campagne. Ognuna è una wiki a sé: pagine
 - **La pagina Campagna**: il Master la apre dal menu del profilo. Ha quattro schede: **Generale** (nome, opzioni, eliminazione), **Giocatori** (inviti, rimozione, template delle schede), **Appuntamenti** (link per il remoto, regola del minimo, Stars & Wishes; solo con gli appuntamenti accesi) e **Claude** (token e connettori).
 - **Invitare i giocatori**: in Campagna › Giocatori il Master crea un link di invito. Chi non ha un account lo crea; chi lo ha già accede ed entra nella campagna col suo.
 - **Cambiare campagna**: chi ne ha più di una le trova in cima al menu del profilo. La scelta resta sul dispositivo. Un collegamento a una pagina si apre nella campagna in cui ti trovi.
-- **Eliminarne una**: il Master elimina la sua dalla pagina Campagna, l'Admin qualsiasi da Amministrazione › Campagne, anche l'ultima; per conferma si riscrive il nome. Spariscono per tutti pagine, mappe, cronologie, bacheche, risorse e immagini, e torna solo ripristinando un backup. Chi resta senza campagne può ancora accedere: aspetta un invito o ne crea una sua.
+- **Eliminarne una**: il Master elimina la sua dalla pagina Campagna, l'Admin qualsiasi da Amministrazione › Campagne (il pulsante rosso accanto a Salva), anche l'ultima. Il pulsante «Elimina la campagna» apre un popup che dice cosa sparisce e chiede di riscrivere il nome per conferma; Annulla, Esc o la X lo chiudono senza toccare niente. Spariscono per tutti pagine, mappe, cronologie, bacheche, risorse e immagini, e torna solo ripristinando un backup. Chi resta senza campagne può ancora accedere: aspetta un invito o ne crea una sua.
 - Si è Master solo nella propria campagna: nelle altre si è giocatori, se si è stati invitati. Vale anche per l'Admin: entra solo nelle campagne che tiene o in cui è invitato, e vede i segreti solo nelle sue. Le altre le gestisce da Amministrazione › Campagne senza entrarci, e non può nominarsi Master di una campagna che esiste già: lo fa un altro Admin. Di una campagna nuova invece può essere lui il Master.
 - Esportazione e pacchetti mondo riguardano la campagna in cui ti trovi; il backup riguarda tutta l'installazione.
 
@@ -48,8 +48,9 @@ Gli appuntamenti sono un'**opzione della campagna**: il Master li accende e li s
 
 - **Il Master fissa un appuntamento** con «Nuovo appuntamento»: titolo, data, inizio e fine (una fine prima dell'inizio vuol dire dopo mezzanotte, es. 20:00–00:00). Sceglie se si gioca **in presenza** (e dove), **da remoto** o in tutti e due i modi.
 - **Si ripete** ogni settimana, ogni 2 settimane od ogni mese, fino a una data o senza fine. «Ogni mese» è lo stesso giorno della settimana nella stessa posizione: dal primo giovedì, il primo giovedì di ogni mese. Una sola data si toglie con **Annulla questa data**; «Modifica la serie» cambia tutte le date.
-- **I giocatori rispondono** per ogni data: in presenza, da remoto (solo nei modi che l'appuntamento ammette) o «Non ci sono». Si può cambiare idea. Sotto ogni data c'è chi viene, come, chi no e chi non ha ancora risposto.
-- **Il link per il remoto** (Discord o altro) il Master lo mette in **Campagna › Appuntamenti** e vale per tutti; un appuntamento può averne uno suo.
+- **I giocatori rispondono** per ogni data: in presenza, da remoto (solo nei modi che l'appuntamento ammette) o «Non ci sono». Si può cambiare idea.
+- **Le date del mese**, sotto il calendario, sono schede compatte: titolo e, in alto a destra, la matita del Master per modificarle; quando, con lo stato; il posto e l'icona del link per il remoto. **Chi c'è** sta su una riga di facce, il Master per primo: il globo sull'angolo vuol dire da remoto, la croce «non viene», la faccia sbiadita «non ha ancora risposto». Il nome, col personaggio (il titolo della sua scheda), compare passandoci sopra col mouse; toccando la riga (o con Invio) si apre l'elenco con tutti i nomi.
+- **Il link per il remoto** (Discord o altro) il Master lo mette in **Campagna › Appuntamenti** e vale per tutti; un appuntamento può averne uno suo. Nelle date se ne vede solo l'icona, quella di Discord se è un link di Discord: l'indirizzo compare passandoci sopra.
 - **La regola del minimo**, sempre in Campagna › Appuntamenti: sotto un certo numero di giocatori confermati la sessione **salta**. Finché mancano più ore di quelle scelte (di base 24) è **in forse**, poi salta; con abbastanza giocatori è **confermata**. Il Master non conta. Con 0 non c'è regola.
 - Date e orari sono quelli del tavolo, senza fusi orari: l'ora in cui una sessione «salta» è quella del server (`TZ`, vedi l'installazione).
 
@@ -58,7 +59,7 @@ Gli appuntamenti sono un'**opzione della campagna**: il Master li accende e li s
 Dopo una sessione, due domande a chi c'era: **che cosa ti è piaciuto di questa sessione?** e **che cosa ti piacerebbe esplorare nella prossima?** Si accende in **Campagna › Appuntamenti** ed è spento finché il Master non lo accende.
 
 - Le domande arrivano a chi aveva risposto «Ci sono» (in presenza o da remoto), quando la sessione è finita. Le sessioni annullate o saltate per la regola del minimo non contano.
-- Il giocatore le trova in un popup **entrando nella campagna**: aprendo la wiki o passando da un'altra campagna. «Più tardi» le rimanda al prossimo ingresso; rispondere non è obbligatorio.
+- Il giocatore le trova in un popup **alla prima pagina che apre dopo la sessione**, anche se la wiki era già aperta. «Più tardi» (o la X) le rimanda di qualche ora: tornano alla prima pagina che apre dopo. Rispondere non è obbligatorio. Il Master non le riceve: le risposte sono per lui.
 - La risposta si invia **una volta sola** e non si cambia più.
 - Le domande si chiudono da sole **il giorno della sessione dopo**. Se non ce n'è una in calendario, restano aperte.
 - Le risposte le legge **solo il Master**, negli Appuntamenti, sotto la data della sessione. Spegnendo Stars & Wishes spariscono dalla vista ma restano salvate.

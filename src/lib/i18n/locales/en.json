@@ -1328,6 +1328,7 @@
 		"removed": "Player removed from the campaign.",
 		"inviteIntro": "Each link works once. People without an account create one; people who have one join with it.",
 		"delete": "Delete campaign",
+		"deleteTitle": "Delete «{name}»?",
 		"deleteWarning": "The campaign's pages, maps, timelines, boards, resources and images disappear forever, for everyone. This can't be undone.",
 		"deleteConfirm": "To confirm, type “{name}”",
 		"deleteSubmit": "Delete forever",
@@ -1372,6 +1373,15 @@
 		"deleteOne": "The appointment disappears from the calendar, along with the players' answers.",
 		"deleteSeries": "The whole series disappears, along with the players' answers. To remove a single date use “Cancel this date” in the calendar.",
 		"dates": "Dates this month",
+		"presence": {
+			"in_person": "in person",
+			"remote": "remote",
+			"no": "not coming",
+			"waiting": "hasn't answered yet"
+		},
+		"going": "{n} of {total} coming",
+		"showNames": "Show the names",
+		"remoteOn": "Play remotely on {service}",
 		"empty": "No appointments this month.",
 		"inPerson": "In person",
 		"remote": "Remote",
@@ -1405,7 +1415,7 @@
 		"starWishes": {
 			"title": "Stars & Wishes",
 			"toggle": "Stars & Wishes: after each session, two questions for those who came",
-			"toggleHint": "Players who answered “I'm in” see them when they enter the campaign, until the day of the next session. Answering is optional; only you read them, here in Schedule.",
+			"toggleHint": "Players who answered “I'm in” see them in a popup on the first page they open after the session, until the day of the next session. Answering is optional; only you read them, here in Schedule.",
 			"intro": "How did “{title}” on {date} go? Answer if you like: only the Game Master reads the answers.",
 			"star": "What did you enjoy about this session?",
 			"wish": "What would you like to explore in the next session?",

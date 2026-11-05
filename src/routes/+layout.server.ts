@@ -10,8 +10,11 @@ import { THEMES, themeCss } from '#lib/themes.ts';
 import { faviconHref } from '#lib/logo.ts';
 import { SIDE_COOKIE, TREE_COOKIE } from '#lib/prefs.ts';
 
-// La campagna in cui si è entrati in questa sessione del browser: per Stars & Wishes, che chiede all'ingresso.
-const ENTERED_COOKIE = 'cs_entered';
+// Stars & Wishes: la sessione su cui il popup ha già chiesto, una per campagna, e per quanto non richiede.
+// Prima si chiedeva «entrando», cioè con un cookie senza scadenza: sul telefono (e col browser che riapre le schede)
+// non scade mai, e chi aveva aperto la wiki prima della sessione non vedeva più il popup.
+const starWishCookie = (campaign: number) => `cs_sw_${campaign}`;
+const STAR_WISH_PAUSE = 3 * 60 * 60;
 
 export const load: LayoutServerLoad = ({ locals, cookies, request, url, depends, untrack }) => {
 	depends('app:layout');
@@ -20,16 +23,26 @@ export const load: LayoutServerLoad = ({ locals, cookies, request, url, depends,
 	const extra = extraThemes();
 	// Barra a sinistra (pagine, tag, risorse e sezioni): niente titoli a chi non può ancora leggere la wiki (es. nella pagina di accesso).
 	const tree = !!u || s.allowVisitors;
-	// Si entra aprendo la wiki o passando da un'altra campagna. Il cookie non ha scadenza: chiuso il browser, si rientra.
-	const entered = !!u && !!locals.campaign && cookies.get(ENTERED_COOKIE) !== String(locals.campaign.id);
-	if (entered)
-		cookies.set(ENTERED_COOKIE, String(locals.campaign!.id), { path: '/', httpOnly: true, sameSite: 'lax', secure: untrack(() => url.protocol) === 'https:' });
+	const framed = request.headers.get('sec-fetch-dest') === 'iframe';
+	// Stars & Wishes: alla prima pagina aperta dopo la sessione (non dentro un popup), e di nuovo qualche ora dopo
+	// finché non si risponde. Nella vista giocatore il Master guarda soltanto: niente domande.
+	const open = u && locals.campaign?.schedule && !locals.asPlayer && !framed ? openStarWish(u.id) : null;
+	const asked = open ? `${open.id}/${open.date}` : null;
+	const starWish = open && cookies.get(starWishCookie(locals.campaign!.id)) !== asked ? open : null;
+	if (starWish)
+		cookies.set(starWishCookie(locals.campaign!.id), asked!, {
+			path: '/',
+			httpOnly: true,
+			sameSite: 'lax',
+			secure: untrack(() => url.protocol) === 'https:',
+			maxAge: STAR_WISH_PAUSE
+		});
 	return {
 		user: u ? { id: u.id, username: u.username, displayName: u.displayName, role: u.role, admin: !!u.admin, icon: u.icon, avatar: u.avatar, asPlayer: locals.asPlayer } : null,
 		prefs: locals.prefs,
 		treeHidden: cookies.get(TREE_COOKIE) === '1',
 		sideHidden: cookies.get(SIDE_COOKIE) === '1',
-		framed: request.headers.get('sec-fetch-dest') === 'iframe',
+		framed,
 		locale: locals.locale,
 		siteName: s.siteName,
 		asPlayer: locals.asPlayer,
@@ -46,7 +59,6 @@ export const load: LayoutServerLoad = ({ locals, cookies, request, url, depends,
 		// Il Master vede anche i tag senza pagine: da lì ne cambia nome e colore.
 		treeTags: tree ? listTags(u, isMaster(u)).map(({ id, name, slug, color, count }) => ({ id, name, slug, color, count })) : null,
 		resources: tree ? resourceEntries(u).map(({ id, title, kind }) => ({ id, title, kind })) : null,
-		// Nella vista giocatore il Master guarda soltanto: niente domande.
-		starWish: entered && !locals.asPlayer && locals.campaign!.schedule ? openStarWish(u!.id) : null
+		starWish
 	};
 };

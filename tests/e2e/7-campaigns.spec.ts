@@ -161,11 +161,14 @@ test("l'Admin invitato da un altro Master è un giocatore: non vede i segreti", 
 	await expect(admin.locator('.user-menu .role')).toHaveText('Master');
 });
 
-/** Apre «Elimina la campagna» di `name`, scrive `typed` e conferma. */
+/** Il pulsante rosso «Elimina la campagna» di `name` apre il popup: si scrive `typed` e si conferma. */
 async function deleteCampaign(page: Page, name: string, typed = name) {
-	await page.locator('summary', { hasText: name }).click();
-	await page.getByLabel(`Per confermare scrivi «${name}»`).fill(typed);
-	await page.getByRole('button', { name: new RegExp(`Elimina per sempre ${name}`) }).click();
+	await page.getByRole('button', { name: `Elimina la campagna ${name}`, exact: true }).click();
+	const dlg = page.getByRole('dialog', { name: `Eliminare «${name}»?` });
+	await expect(dlg).toContainText('Non si può annullare');
+	await expect(dlg.getByLabel(`Per confermare scrivi «${name}»`)).toBeFocused();
+	await dlg.getByLabel(`Per confermare scrivi «${name}»`).fill(typed);
+	await dlg.getByRole('button', { name: `Elimina per sempre ${name}`, exact: true }).click();
 }
 
 test('un giocatore non può eliminare la campagna', async () => {
@@ -179,6 +182,13 @@ test('un giocatore non può eliminare la campagna', async () => {
 
 test('il Master elimina la sua campagna, ma solo col nome giusto', async () => {
 	await dm.goto('/campaign');
+	// Il popup si apre dal pulsante rosso e si chiude con Annulla senza toccare niente.
+	await dm.getByRole('button', { name: 'Elimina la campagna Avalon', exact: true }).click();
+	const dlg = dm.getByRole('dialog', { name: 'Eliminare «Avalon»?' });
+	await expect(dlg).toBeVisible();
+	await axe(dm, 'elimina la campagna');
+	await dlg.getByRole('button', { name: 'Annulla' }).click();
+	await expect(dlg).toBeHidden();
 	await deleteCampaign(dm, 'Avalon', 'Camelot');
 	await expect(dm.getByRole('alert')).toContainText('non è stata eliminata');
 	await expect(dm.locator('.brand')).toContainText('Avalon');

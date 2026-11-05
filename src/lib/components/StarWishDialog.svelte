@@ -6,8 +6,8 @@
 	import FormError from './FormError.svelte';
 
 	/**
-	 * Stars & Wishes: le due domande sull'ultima sessione, entrando nella campagna (vedi +layout.server.ts).
-	 * «Più tardi», Esc o la X le rimandano al prossimo ingresso. La sessione la sceglie il server anche all'invio.
+	 * Stars & Wishes: le due domande sull'ultima sessione, alla prima pagina aperta dopo la sessione (vedi +layout.server.ts).
+	 * «Più tardi», Esc o la X le rimandano di qualche ora. La sessione la sceglie il server anche all'invio.
 	 */
 	let { session }: { session: { title: string; date: string } } = $props();
 	const t = getT();

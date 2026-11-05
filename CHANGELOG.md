@@ -3,6 +3,15 @@
 Le versioni seguono il [versionamento semantico](https://semver.org/lang/it/): MAGGIORE.MINORE.CORRETTIVA.
 Questo file è anche la pagina «Novità» della wiki (`/changelog`).
 
+## 0.22.0 — 2026-11-05
+
+### Modifiche
+- «Elimina la campagna» è un pulsante rosso accanto a Salva, con la conferma in un popup.
+- Appuntamenti: le date del mese più compatte, con chi c'è su una riga e il link per il remoto come icona.
+
+### Correzioni
+- Risolto un problema relativo al popup di Stars & Wishes.
+
 ## 0.21.1 — 2026-11-05
 
 ### Correzioni

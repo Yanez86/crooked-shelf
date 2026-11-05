@@ -1328,6 +1328,7 @@
 		"removed": "Giocatore rimosso dalla campagna.",
 		"inviteIntro": "Ogni link vale una volta. Chi non ha un account lo crea; chi lo ha già entra nella campagna col suo.",
 		"delete": "Elimina la campagna",
+		"deleteTitle": "Eliminare «{name}»?",
 		"deleteWarning": "Spariscono per sempre, per tutti, pagine, mappe, cronologie, bacheche, risorse e immagini della campagna. Non si può annullare.",
 		"deleteConfirm": "Per confermare scrivi «{name}»",
 		"deleteSubmit": "Elimina per sempre",
@@ -1372,6 +1373,15 @@
 		"deleteOne": "L'appuntamento sparisce dal calendario, con le risposte dei giocatori.",
 		"deleteSeries": "Sparisce tutta la serie, con le risposte dei giocatori. Per togliere una sola data usa «Annulla questa data» nel calendario.",
 		"dates": "Le date del mese",
+		"presence": {
+			"in_person": "in presenza",
+			"remote": "da remoto",
+			"no": "non viene",
+			"waiting": "non ha ancora risposto"
+		},
+		"going": "{n} su {total} ci sono",
+		"showNames": "Mostra i nomi",
+		"remoteOn": "Gioca da remoto su {service}",
 		"empty": "Nessun appuntamento in questo mese.",
 		"inPerson": "In presenza",
 		"remote": "Da remoto",
@@ -1405,7 +1415,7 @@
 		"starWishes": {
 			"title": "Stars & Wishes",
 			"toggle": "Stars & Wishes: dopo ogni sessione, due domande a chi è venuto",
-			"toggleHint": "Chi aveva risposto «Ci sono» le trova entrando nella campagna, fino al giorno della sessione dopo. Rispondere non è obbligatorio; le risposte le leggi solo tu, qui negli Appuntamenti.",
+			"toggleHint": "Chi aveva risposto «Ci sono» le trova in un popup alla prima pagina che apre dopo la sessione, fino al giorno della sessione dopo. Rispondere non è obbligatorio; le risposte le leggi solo tu, qui negli Appuntamenti.",
 			"intro": "Com'è andata «{title}» di {date}? Rispondi se ti va: le risposte le legge solo il Master.",
 			"star": "Che cosa ti è piaciuto di questa sessione?",
 			"wish": "Che cosa ti piacerebbe esplorare nella prossima sessione?",
