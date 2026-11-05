@@ -1,6 +1,6 @@
 {
 	"name": "crooked-shelf",
-	"version": "0.20.0",
+	"version": "0.20.1",
 	"description": "Self-hosted wiki for tabletop RPG campaigns",
 	"license": "AGPL-3.0-only",
 	"private": true,
