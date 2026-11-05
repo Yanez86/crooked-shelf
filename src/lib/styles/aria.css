@@ -486,8 +486,43 @@
 	border-color: transparent;
 	background: var(--aria-hover);
 }
-:root:is([data-theme='aria'], [data-theme='aria-dark'], [data-theme='auto'], [data-theme='neon']) .user-menu .panel {
+/* I menu che si aprono sopra le barre (profilo, «chi può vedere» nell'albero): di giorno bianchi su grigio; di notte un
+   fondo più chiaro della barra, un bordo che si vede e un'ombra marcata, se no sparirebbero sul fondo quasi uguale.
+   I colori mescolati sono misurati in themes.test.ts. Il Neon ha i suoi in neon.css. */
+:root:is([data-theme='aria'], [data-theme='aria-dark'], [data-theme='auto'], [data-theme='neon']) {
+	--aria-pop: var(--c-surface);
+	--aria-pop-hover: var(--c-surface2);
+	--aria-pop-border: var(--c-border);
+	--aria-pop-shadow: 0 0.75rem 2rem -0.5rem rgb(0 0 0 / 0.22);
+}
+:root[data-theme='aria-dark'] {
+	--aria-pop: color-mix(in srgb, var(--c-text) 9%, var(--c-surface));
+	--aria-pop-hover: color-mix(in srgb, var(--c-text) 14%, var(--c-surface));
+	--aria-pop-border: color-mix(in srgb, var(--c-text) 20%, var(--c-surface));
+	--aria-pop-shadow: 0 1rem 2.5rem -0.5rem rgb(0 0 0 / 0.65);
+}
+@media (prefers-color-scheme: dark) {
+	:root[data-theme='auto'] {
+		--aria-pop: color-mix(in srgb, var(--c-text) 9%, var(--c-surface));
+		--aria-pop-hover: color-mix(in srgb, var(--c-text) 14%, var(--c-surface));
+		--aria-pop-border: color-mix(in srgb, var(--c-text) 20%, var(--c-surface));
+		--aria-pop-shadow: 0 1rem 2.5rem -0.5rem rgb(0 0 0 / 0.65);
+	}
+}
+:root:is([data-theme='aria'], [data-theme='aria-dark'], [data-theme='auto'], [data-theme='neon']) .user-menu .panel,
+:root:is([data-theme='aria'], [data-theme='aria-dark'], [data-theme='auto'], [data-theme='neon']) #tree-vis-menu {
+	border: 1px solid var(--aria-pop-border);
 	border-radius: var(--aria-radius-lg);
+	background: var(--aria-pop);
+	box-shadow: var(--aria-pop-shadow);
+}
+:root:is([data-theme='aria'], [data-theme='aria-dark'], [data-theme='auto'], [data-theme='neon']) .user-menu .panel .head,
+:root:is([data-theme='aria'], [data-theme='aria-dark'], [data-theme='auto'], [data-theme='neon']) .user-menu .panel .campaigns {
+	border-color: var(--aria-pop-border);
+}
+:root:is([data-theme='aria'], [data-theme='aria-dark'], [data-theme='auto'], [data-theme='neon']) .user-menu .panel :is(a, button):hover,
+:root:is([data-theme='aria'], [data-theme='aria-dark'], [data-theme='auto'], [data-theme='neon']) #tree-vis-menu button:is(:hover, :focus-visible) {
+	background: var(--aria-pop-hover);
 }
 
 /* --- Schermo grande con la barra a sinistra aperta: due barre a tutta altezza ---

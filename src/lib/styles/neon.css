@@ -303,6 +303,17 @@
 	}
 }
 
+/* I menu sopra le barre (profilo, «chi può vedere»): il fondo della notte, più scuro della barra, con il bordo e il
+   bagliore magenta. I colori mescolati sono misurati in themes.test.ts. */
+:root[data-theme='neon'] {
+	--aria-pop: var(--c-bg);
+	--aria-pop-hover: color-mix(in srgb, var(--neon-violet) 20%, var(--c-bg));
+	--aria-pop-border: color-mix(in srgb, var(--neon-magenta) 55%, var(--c-border));
+	--aria-pop-shadow:
+		0 1rem 2.5rem -0.5rem rgb(0 0 0 / 0.7),
+		0 0 1.25rem -0.4rem color-mix(in srgb, var(--neon-magenta) 60%, transparent);
+}
+
 /* --- Pulsanti --- */
 
 :root[data-theme='neon'] .btn {

@@ -40,6 +40,22 @@ describe('temi', () => {
 				it(`${id}: ${what}`, () => expect(contrast(fg, bg)).toBeGreaterThanOrEqual(min));
 			}
 		}
+		// I menu sopra le barre (profilo, «chi può vedere»): fondo, riga sotto il puntatore e bordo (--aria-pop* in aria.css e neon.css).
+		const pops: [string, string, string, string][] = [
+			['aria', THEMES[0].colors.surface, THEMES[0].colors.surface2, THEMES[0].colors.border],
+			['aria-dark', mix(THEMES[1].colors.text, 0.09, THEMES[1].colors.surface), mix(THEMES[1].colors.text, 0.14, THEMES[1].colors.surface), mix(THEMES[1].colors.text, 0.2, THEMES[1].colors.surface)],
+			['neon', THEMES[2].colors.bg, mix('#8b5cff', 0.2, THEMES[2].colors.bg), mix('#ff3db8', 0.55, THEMES[2].colors.border)]
+		];
+		for (const [id, pop, hover] of pops) {
+			it(`${id}: testi leggibili nei menu, anche sulla riga sotto il puntatore`, () => {
+				const c = THEMES.find((t) => t.id === id)!.colors;
+				for (const bg of [pop, hover]) {
+					expect(contrast(c.text, bg)).toBeGreaterThanOrEqual(4.5);
+					expect(contrast(c.muted, bg)).toBeGreaterThanOrEqual(4.5);
+				}
+			});
+		}
+		it('i temi delle prove sono nell\'ordine atteso', () => expect(THEMES.slice(0, 3).map((t) => t.id)).toEqual(['aria', 'aria-dark', 'neon']));
 		// Nel Neon il testo del centro sta sul fondale (styles/neon.css): il punto più chiaro è dove l'alone viola, una linea
 		// della griglia, la banda che scende e una scanline si sommano. Le intensità sono quelle del CSS.
 		it('neon: ogni testo resta leggibile sul fondale, anche nel punto più chiaro', () => {

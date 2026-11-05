@@ -3,6 +3,11 @@
 Le versioni seguono il [versionamento semantico](https://semver.org/lang/it/): MAGGIORE.MINORE.CORRETTIVA.
 Questo file è anche la pagina «Novità» della wiki (`/changelog`).
 
+## 0.20.4 — 2026-11-05
+
+### Correzioni
+- Risolto un problema relativo alla visibilità dei menu nelle barre con Aria di notte e Neon.
+
 ## 0.20.3 — 2026-11-05
 
 ### Correzioni
