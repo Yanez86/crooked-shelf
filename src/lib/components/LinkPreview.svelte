@@ -92,6 +92,7 @@
 		id="link-preview"
 		class="link-preview"
 		class:above={pos.above}
+		class:with-image={data.image}
 		role="tooltip"
 		style="top:{pos.top}px;left:{pos.left}px;--w:{WIDTH}px"
 	>
@@ -124,14 +125,20 @@
 		transform: translateY(-100%);
 		animation-name: pop-above;
 	}
+	/* L'immagine della pagina (la prima della colonna a lato: ritratti, oggetti) a sinistra, il testo accanto. */
+	.with-image {
+		display: flex;
+	}
 	img {
-		display: block;
-		width: 100%;
-		height: 8.5rem;
+		flex: none;
+		width: 6.5rem;
+		min-height: 7.5rem;
 		object-fit: cover;
-		border-bottom: 1px solid var(--c-border);
+		object-position: top;
+		border-right: 1px solid var(--c-border);
 	}
 	.body {
+		min-width: 0;
 		padding: 0.7rem 0.9rem 0.8rem;
 	}
 	.title {

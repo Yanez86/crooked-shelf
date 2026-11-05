@@ -686,7 +686,7 @@
 		"hide": "Nascondi la colonna a destra",
 		"show": "Mostra la colonna a destra",
 		"title": "Scheda",
-		"hint": "Informazioni brevi mostrate in un riquadro a lato, es. «Ruolo: Locandiere». Nei valori puoi scrivere [[Pagina]].",
+		"hint": "Nei testi puoi scrivere **grassetto**, *corsivo*, __sottolineato__, elenchi con «- » o «1. » e collegamenti come [[Pagina]].",
 		"label": "Nome del campo {n}",
 		"value": "Valore del campo {n}",
 		"add": "Aggiungi un riquadro",
@@ -714,7 +714,11 @@
 		"drag": "Trascina per spostare il riquadro",
 		"box": "Riquadro {n}",
 		"imageTitle": "Titoletto dell'immagine {n}",
-		"titlePlaceholder": "Titoletto (facoltativo)"
+		"titlePlaceholder": "Titoletto (facoltativo)",
+		"crop": "Ritaglia",
+		"cropTitle": "Ritaglia l'immagine",
+		"cropArea": "Parte da tenere",
+		"cropHint": "Trascina il riquadro per spostarlo, l'angolo per cambiarne la misura, o disegnane uno nuovo. Da tastiera: frecce per spostarlo, Maiusc + frecce per la misura."
 	},
 	"cover": {
 		"title": "Copertina",

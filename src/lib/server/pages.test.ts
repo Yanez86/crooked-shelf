@@ -66,6 +66,16 @@ describe('pagine', () => {
 		expect(html).toContain('href="/wiki/bartolo" data-title="Bartolo" data-excerpt="Il locandiere">Bartolo</a>');
 	});
 
+	it('i riquadri di testo della colonna a lato in Markdown semplice', () => {
+		const fields = [{ label: 'Note', value: '**forte**, *scaltro*, __zoppo__\n- [[Bartolo]]\n- <b>no</b>\n\n1. primo' }];
+		const row = createPage({ ...base, title: 'Scheda', content: doc(p('x')), fields }, master);
+		expect(renderPage(row, alice, labels).fields[0].html).toBe(
+			'<p><strong>forte</strong>, <em>scaltro</em>, <u>zoppo</u></p>' +
+				'<ul><li><p><a class="wikilink missing" href="/wiki/new?title=Bartolo&amp;slug=bartolo" title="M">Bartolo<span class="visually-hidden"> (M)</span></a></p></li><li><p>&lt;b&gt;no&lt;/b&gt;</p></li></ul>' +
+				'<ol><li><p>primo</p></li></ol>'
+		);
+	});
+
 	it('ordina per data di creazione, a prescindere dalle modifiche', () => {
 		const db = getDb();
 		for (const [i, title] of ['Vecchia', 'Nuova'].entries()) {

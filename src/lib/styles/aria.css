@@ -325,7 +325,8 @@
 	border: 0;
 	background: var(--c-surface2);
 }
-:root:is([data-theme='aria'], [data-theme='aria-dark'], [data-theme='auto'], [data-theme='neon']) .side dt {
+/* I titoli dei riquadri, di testo e d'immagine, tutti uguali. */
+:root:is([data-theme='aria'], [data-theme='aria-dark'], [data-theme='auto'], [data-theme='neon']) .side :is(dt, .fig-title) {
 	font-weight: 500;
 	font-size: var(--fs-sm);
 	color: var(--c-muted);

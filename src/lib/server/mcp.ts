@@ -75,7 +75,7 @@ const WRITE_TOOLS = [
 	},
 	{
 		name: 'set_sidebar',
-		description: 'Riscrive le righe di testo della colonna a lato di una pagina (etichetta e valore, es. Razza: Elfo), al posto di quelle che ci sono. Le immagini della colonna restano, in cima. Per toglierle tutte, fields vuoto.',
+		description: 'Riscrive le righe di testo della colonna a lato di una pagina (etichetta e valore, es. Razza: Elfo; nel valore Markdown semplice: **grassetto**, *corsivo*, __sottolineato__, elenchi con - o 1.), al posto di quelle che ci sono. Le immagini della colonna restano, in cima. Per toglierle tutte, fields vuoto.',
 		inputSchema: {
 			type: 'object',
 			properties: {

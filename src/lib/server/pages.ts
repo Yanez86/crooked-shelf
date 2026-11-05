@@ -3,7 +3,8 @@ import { getDb, getSqlite, schema } from './db/index.ts';
 import { slugify } from '../slug.ts';
 import { extract, uploadedImages } from '../content/extract.ts';
 import { mergeBlocks, visibleBlocks } from '../content/blocks.ts';
-import { renderDoc, renderInline, type LinkTarget, type RenderOptions } from '../content/render.ts';
+import { renderDoc, type LinkTarget, type RenderOptions } from '../content/render.ts';
+import { fromMarkdown } from '../content/markdown.ts';
 import { EMPTY_DOC, isDoc, type DocNode, type PageField, type SessionInfo } from '../content/types.ts';
 import { authorKey, canSeeBlock, canView, isMaster, SHEET_VISIBILITIES, type Viewer } from '../access.ts';
 import type { Visibility } from '../roles.ts';
@@ -308,11 +309,13 @@ export function renderPage(page: PageRow, u: Viewer | null, labels: RenderOption
 	const doc = isDoc(page.content) ? page.content : EMPTY_DOC;
 	const fields = page.fields ?? [];
 	const resolve = linkResolver(doc, u, fields);
+	const opt: RenderOptions = { sees: (v) => canSeeBlock(v, u), resolve, labels, hasRule };
 	return {
-		html: renderDoc(doc, { sees: (v) => canSeeBlock(v, u), resolve, labels, hasRule, pageId: page.id }),
+		html: renderDoc(doc, { ...opt, pageId: page.id }),
+		// I riquadri di testo accettano un Markdown semplice: grassetto, corsivo, __sottolineato__, elenchi.
 		// I riquadri immagine il cui file non c'è più (es. risorsa eliminata) non si mostrano.
 		fields: fields.flatMap((f): { label: string; html: string; title?: string; image?: { url: string; width: number; height: number } }[] => {
-			if (f.image === undefined) return [{ label: f.label, html: renderInline(f.value, { resolve, labels, hasRule }) }];
+			if (f.image === undefined) return [{ label: f.label, html: renderDoc({ type: 'doc', content: fromMarkdown(f.value) }, opt) }];
 			const file = getFile(f.image);
 			return file ? [{ label: f.label, html: '', title: f.title, image: { url: `/files/${file.id}`, width: file.width, height: file.height } }] : [];
 		})

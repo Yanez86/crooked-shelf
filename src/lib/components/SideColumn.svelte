@@ -4,6 +4,7 @@
 	import { getT } from '../i18n/index.ts';
 	import type { PageField } from '../content/types.ts';
 	import Icon from './Icon.svelte';
+	import ImageCrop from './ImageCrop.svelte';
 
 	/**
 	 * La colonna a lato in modifica. Di base non c'è: il «+» la aggiunge. Dentro, riquadri modificati sul posto:
@@ -27,6 +28,8 @@
 	let rows = $state<Box[]>(untrack(() => fields.map((f) => ({ ...f, key: next++ }))));
 	let open = $state(untrack(() => fixed || fields.length > 0));
 	let announce = $state('');
+	// Il riquadro immagine che si sta ritagliando.
+	let cropping = $state<{ row: Box; i: number } | null>(null);
 	// Un riquadro immagine ancora senza immagine non si salva.
 	const json = $derived(
 		JSON.stringify(
@@ -267,7 +270,15 @@
 				{@render head(row, i)}
 				{#if !isImage(row)}
 					<label class="visually-hidden" for="field-value-{i}">{t('fields.value', { n: i + 1 })}</label>
-					<input id="field-value-{i}" class="box-value" type="text" maxlength="500" placeholder={t('fields.valuePlaceholder')} bind:value={row.value} />
+					<textarea
+						id="field-value-{i}"
+						class="box-value"
+						rows={row.value.split('\n').length}
+						maxlength="500"
+						placeholder={t('fields.valuePlaceholder')}
+						aria-describedby="side-hint"
+						bind:value={row.value}
+					></textarea>
 				{:else}
 					{#if row.image}
 						<div class="frame">
@@ -276,6 +287,9 @@
 							<div class="on-image">
 								<button id="field-pick-{i}" class="on-tool" type="button" title={t('fields.changeImage')} disabled={row.busy} onclick={() => document.getElementById(`field-file-${i}`)?.click()}>
 									<Icon name="edit" /><span class="visually-hidden">{t('fields.changeImage')}: {boxName(row, i)}</span>
+								</button>
+								<button id="field-crop-{i}" class="on-tool" type="button" title={t('fields.crop')} disabled={row.busy} onclick={() => (cropping = { row, i })}>
+									<Icon name="crop" /><span class="visually-hidden">{t('fields.crop')}: {boxName(row, i)}</span>
 								</button>
 								{@render removeButton(row, i, 'on-tool')}
 							</div>
@@ -309,11 +323,24 @@
 			<button id="side-add-text" class="add" type="button" onclick={addText}><Icon name="plus" />{t('fields.text')}</button>
 			<button class="add" type="button" onclick={addImage}><Icon name="plus" />{t('fields.imageBox')}</button>
 		</div>
+		{#if rows.some((r) => !isImage(r))}<p id="side-hint" class="hint">{t('fields.hint')}</p>{/if}
 		{#if !fixed && !rows.length}
 			<button class="btn btn-small btn-ghost close" type="button" onclick={closeColumn}>{t('fields.removeColumn')}</button>
 		{/if}
 		<p class="visually-hidden" aria-live="polite">{announce}</p>
 	</section>
+	{#if cropping}
+		<ImageCrop
+			src="/files/{cropping.row.image}"
+			ondone={async (file) => {
+				const { row, i } = cropping!;
+				cropping = null;
+				// Mentre carica il pulsante è spento: il fuoco ci torna dopo.
+				if (file) await upload(row, file);
+				focus(`field-crop-${i}`);
+			}}
+		/>
+	{/if}
 {:else}
 	<button id="side-open" class="open" type="button" title={t('fields.addColumn')} onclick={openColumn}>
 		<Icon name="plus" /><span class="visually-hidden">{t('fields.addColumn')}</span>
@@ -414,14 +441,19 @@
 		color: var(--c-primary);
 	}
 	/* Gli input sembrano testo: si scrive dove si legge. */
-	.box input[type='text'] {
+	.box :is(input[type='text'], textarea) {
 		border: 0;
 		background: none;
 		padding: 0.1rem 0;
 		min-height: 0;
 		width: 100%;
 	}
-	.box input:focus {
+	/* Cresce col testo; le righe contate in `rows` valgono dove field-sizing non c'è. */
+	.box textarea {
+		resize: none;
+		field-sizing: content;
+	}
+	.box :is(input, textarea):focus {
 		outline: none;
 	}
 	.box-label {
@@ -583,6 +615,9 @@
 	}
 	.close {
 		align-self: flex-start;
+	}
+	.side > .hint {
+		margin: 0;
 	}
 	/* Col dito comandi e maniglia crescono; restano nella riga del titolo, sopra l'immagine. */
 	@media (max-width: 48rem), (pointer: coarse) {

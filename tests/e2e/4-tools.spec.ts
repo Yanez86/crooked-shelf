@@ -215,7 +215,7 @@ test('esportazione in Markdown', async () => {
 	expect(strFromU8(zip[loc])).toContain('[[Bartolo Pancia]]');
 	expect(strFromU8(zip[loc])).toContain('> [!secret]');
 	// Le immagini della colonna a lato vanno in cima, con il file accanto.
-	const cover = /!\[Il mago nella sua torre\]\((_files\/[\w-]+\.png)\)/.exec(strFromU8(zip['Elminster.md']));
+	const cover = /!\[Il mago nella sua torre\]\((_files\/[\w-]+\.(?:png|webp))\)/.exec(strFromU8(zip['Elminster.md']));
 	expect(cover).not.toBeNull();
 	expect(Object.keys(zip)).toContain(cover![1]);
 	expect(Object.keys(zip)).toContain('Indice.md');

@@ -686,7 +686,7 @@
 		"hide": "Hide the right column",
 		"show": "Show the right column",
 		"title": "Infobox",
-		"hint": "Short facts shown in a side box, e.g. “Role: Innkeeper”. Values can contain [[Page]].",
+		"hint": "Text boxes accept **bold**, *italic*, __underline__, lists with “- ” or “1. ” and links like [[Page]].",
 		"label": "Field name {n}",
 		"value": "Field value {n}",
 		"add": "Add a box",
@@ -714,7 +714,11 @@
 		"drag": "Drag to move the box",
 		"box": "Box {n}",
 		"imageTitle": "Heading of image {n}",
-		"titlePlaceholder": "Heading (optional)"
+		"titlePlaceholder": "Heading (optional)",
+		"crop": "Crop",
+		"cropTitle": "Crop the image",
+		"cropArea": "Area to keep",
+		"cropHint": "Drag the box to move it, its corner to resize it, or draw a new one. With the keyboard: arrows move it, Shift + arrows resize it."
 	},
 	"cover": {
 		"title": "Cover",

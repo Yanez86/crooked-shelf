@@ -304,6 +304,19 @@
 	.side dd:last-child {
 		margin-bottom: 0;
 	}
+	/* Il testo in Markdown: paragrafi ed elenchi stretti, senza i margini del testo della pagina. */
+	.side dd > :global(*) {
+		margin: 0;
+	}
+	.side dd > :global(* + *) {
+		margin-top: 0.4rem;
+	}
+	.side dd :global(:is(ul, ol)) {
+		padding-left: 1.25rem;
+	}
+	.side dd :global(li > p) {
+		margin: 0;
+	}
 	/* Nello spazio stretto la scheda è come quella di un mostro nel manuale: nome e valore sulla stessa riga, tra due filetti del colore del tema. */
 	@container (max-width: 44rem) {
 		.body {

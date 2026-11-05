@@ -42,7 +42,7 @@ describe('colonna a lato', () => {
 		expect(pg.imageId).toBe('coverxxxxxxxx');
 		// Il riquadro con il file che non c'è più non si mostra.
 		expect(renderPage(pg, alice, labels).fields).toEqual([
-			{ label: 'Razza', html: 'Elfo' },
+			{ label: 'Razza', html: '<p>Elfo</p>' },
 			{ label: 'Il mago', html: '', image: { url: '/files/coverxxxxxxxx', width: 40, height: 30 } },
 			{ label: '', html: '', image: { url: '/files/inlinexxxxxxxx', width: 40, height: 30 } }
 		]);

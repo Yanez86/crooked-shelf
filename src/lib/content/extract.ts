@@ -30,6 +30,12 @@ export function inlinePlain(text: string): string {
 	});
 }
 
+/** Il testo di un riquadro della colonna a lato senza il suo Markdown: niente **, __, * né segni degli elenchi. */
+const fieldPlain = (text: string) =>
+	inlinePlain(text)
+		.replace(/^\s*(?:[-*]|\d+\.)\s+/gm, '')
+		.replace(/\*\*|__|\*/g, '');
+
 export interface WikiLinkRef {
 	target: string;
 	secret: boolean;
@@ -87,7 +93,7 @@ export function extract(doc: DocNode, fields: PageField[] = []): Extracted {
 		if (BLOCK.has(n.type)) out.push('\n');
 	};
 	for (const f of fields) {
-		pub.push(f.image !== undefined ? `${f.title ?? ''}\n${f.label}\n` : `${f.label}: ${inlinePlain(f.value)}\n`);
+		pub.push(f.image !== undefined ? `${f.title ?? ''}\n${f.label}\n` : `${f.label}: ${fieldPlain(f.value)}\n`);
 		for (const target of inlineLinks(f.value)) links.push({ target, secret: false });
 	}
 	walk(doc, false);

@@ -298,9 +298,41 @@ test('colonna a lato: si aggiunge modificando la pagina, con riquadri di testo e
 	// Senza mouse la matita apre la scelta del file.
 	await box.getByLabel("File dell'immagine 1").setInputFiles('tests/fixtures/city.png');
 	await expect(box.getByRole('status')).toContainText('Immagine caricata');
+
+	// Il ritaglio: da tastiera il riquadro si stringe e si sposta; l'immagine ritagliata si carica al posto dell'altra.
+	const frameImg = box.locator('.frame img');
+	const uncropped = (await frameImg.getAttribute('src'))!;
+	const fullWidth = await frameImg.evaluate((i: HTMLImageElement) => i.naturalWidth);
+	await box.getByRole('button', { name: 'Ritaglia: Immagine 1' }).click();
+	const crop = admin.getByRole('dialog', { name: "Ritaglia l'immagine" });
+	const keep = crop.getByRole('button', { name: 'Parte da tenere' });
+	await keep.focus();
+	for (const key of ['Shift+ArrowLeft', 'Shift+ArrowLeft', 'ArrowRight']) await admin.keyboard.press(key);
+	await axe(admin, 'ritaglio');
+	await shot(admin, '11e2-ritaglio');
+	await crop.getByRole('button', { name: 'Ritaglia', exact: true }).click();
+	await expect(crop).toBeHidden();
+	await expect(box.getByRole('button', { name: 'Ritaglia: Immagine 1' })).toBeFocused();
+	await expect(frameImg).not.toHaveAttribute('src', uncropped);
+	expect(await frameImg.evaluate((i: HTMLImageElement) => i.naturalWidth)).toBeLessThan(fullWidth * 0.8);
+
+	// Nei riquadri di testo un Markdown semplice, su più righe.
+	await side.getByLabel('Valore del campo 2').fill('**Valle** del [[Elminster]]\n- uno\n- __due__');
 	await admin.getByRole('button', { name: 'Salva' }).click();
 	await expect(img).toBeVisible();
 	await expect(img).not.toHaveAttribute('src', first);
+	await expect(column.locator('strong')).toHaveText('Valle');
+	await expect(column.locator('ul > li')).toHaveText(['uno', 'due']);
+	await expect(column.locator('li u')).toHaveText('due');
+
+	// L'anteprima del collegamento ha la prima immagine della colonna, a sinistra del testo.
+	await column.getByRole('link', { name: 'Elminster' }).hover();
+	const preview = admin.locator('#link-preview');
+	await expect(preview.locator('img')).toBeVisible();
+	const pi = (await preview.locator('img').boundingBox())!;
+	expect(pi.x + pi.width).toBeLessThanOrEqual((await preview.locator('.title').boundingBox())!.x);
+	await expect(preview.locator('.excerpt')).toContainText('Origine: Valle del Elminster uno due');
+	await shot(admin, '11e3-anteprima-con-immagine');
 });
 
 test('opzioni della pagina: chi la vede e le altre caselle dietro un pulsante, col link alle versioni', async () => {

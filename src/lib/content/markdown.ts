@@ -125,8 +125,8 @@ export function toMarkdown(doc: DocNode, o: MarkdownOptions): string {
 		.trim();
 }
 
-// Oltre a INLINE_LINK (gruppi 1-5): **grassetto** (6), *corsivo* (7), [testo](https://…) (8-9). Lunghezze limitate: il testo arriva da fuori.
-const INLINE = new RegExp(`${INLINE_LINK.source}|\\*\\*(.{1,2000}?)\\*\\*|\\*(.{1,2000}?)\\*|\\[([^\\]\\n]{1,200})\\]\\((https?://[^\\s)]{1,2000})\\)`, 'g');
+// Oltre a INLINE_LINK (gruppi 1-5): **grassetto** (6), *corsivo* (7), [testo](https://…) (8-9), __sottolineato__ (10). Lunghezze limitate: il testo arriva da fuori.
+const INLINE = new RegExp(`${INLINE_LINK.source}|\\*\\*(.{1,2000}?)\\*\\*|\\*(.{1,2000}?)\\*|\\[([^\\]\\n]{1,200})\\]\\((https?://[^\\s)]{1,2000})\\)|__(.{1,2000}?)__`, 'g');
 
 function inlineNodes(s: string, marks: NonNullable<DocNode['marks']> = []): DocNode[] {
 	const out: DocNode[] = [];
@@ -143,6 +143,7 @@ function inlineNodes(s: string, marks: NonNullable<DocNode['marks']> = []): DocN
 		else if (m[3]) text(m[0]);
 		else if (m[6]) out.push(...inlineNodes(m[6], [...marks, { type: 'bold' }]));
 		else if (m[7]) out.push(...inlineNodes(m[7], [...marks, { type: 'italic' }]));
+		else if (m[10]) out.push(...inlineNodes(m[10], [...marks, { type: 'underline' }]));
 		else out.push(...inlineNodes(m[8], [...marks, { type: 'link', attrs: { href: m[9] } }]));
 	}
 	text(s.slice(last));
