@@ -873,6 +873,13 @@ test('temi: contrasti e accessibilità', async () => {
 	await admin.mouse.wheel(0, 600);
 	await expect.poll(async () => (await admin.locator('.side-col').boundingBox())!.y).toBe(0);
 	await shot(admin, '08-tema-aria-home');
+	// Un'immagine nel testo sta al centro della colonna, come i paragrafi (non sul bordo sinistro dello spazio).
+	await admin.goto('/wiki/torre-del-mago');
+	const para = (await admin.locator('.content > .prose > p').first().boundingBox())!;
+	const img = (await admin.locator('.content > .prose > img').boundingBox())!;
+	expect(Math.abs(img.x + img.width / 2 - (para.x + para.width / 2))).toBeLessThan(1);
+	expect(img.width).toBeLessThanOrEqual(para.width);
+	expect(img.height).toBeLessThanOrEqual(800 * 0.85);
 	// Sul telefono niente sfora: un'immagine più larga dello schermo si stringe con lui (Safari rimpicciolirebbe la pagina).
 	await admin.setViewportSize({ width: 390, height: 844 });
 	for (const url of ['/', '/wiki/torre-del-mago']) {

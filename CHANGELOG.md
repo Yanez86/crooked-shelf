@@ -3,6 +3,11 @@
 Le versioni seguono il [versionamento semantico](https://semver.org/lang/it/): MAGGIORE.MINORE.CORRETTIVA.
 Questo file è anche la pagina «Novità» della wiki (`/changelog`).
 
+## 0.19.1 — 2026-11-05
+
+### Correzioni
+- Risolto un problema relativo alla posizione delle immagini nelle pagine con i temi Aria.
+
 ## 0.19.0 — 2026-11-05
 
 ### Modifiche

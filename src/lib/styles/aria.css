@@ -285,6 +285,17 @@
 :root:is([data-theme='aria'], [data-theme='aria-dark'], [data-theme='auto']) .content > .prose {
 	max-width: none;
 }
+/* L'immagine del testo è un elemento in linea: i margini automatici non la centrerebbero e resterebbe sul bordo sinistro
+   dello spazio, lontana dal testo. Come blocco sta al centro della colonna, larga al massimo quanto lei; un'immagine
+   verticale non è mai più alta della finestra (si rimpicciolisce in proporzione e resta al centro). */
+:root:is([data-theme='aria'], [data-theme='aria-dark'], [data-theme='auto']) .content > .prose > img {
+	display: block;
+	width: auto;
+	height: auto;
+	max-height: 85vh;
+	margin-block: 1.5rem;
+	border-radius: var(--aria-radius-lg);
+}
 
 /* --- Il centro senza riquadri: niente scatola attorno alla pagina né attorno al testo --- */
 
