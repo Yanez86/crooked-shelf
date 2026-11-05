@@ -222,4 +222,12 @@
 		margin: 0.5rem 0 0;
 		padding: 0 0.4rem;
 	}
+	/* Discreto come i collegamenti in fondo alla wiki: colore attenuato, niente sottolineatura. */
+	.all a {
+		color: var(--c-muted);
+		text-decoration: none;
+	}
+	.all a:hover {
+		color: var(--c-text);
+	}
 </style>

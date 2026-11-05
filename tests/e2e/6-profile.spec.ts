@@ -164,6 +164,14 @@ test('profilo e amministrazione si aprono sopra la wiki, che resta sotto', async
 
 	// Le sezioni si cambiano dentro il popup, anche dopo un modulo che ricarica la pagina. Si chiude con la X o cliccando fuori.
 	const panel = await open('Amministrazione');
+	// Le sezioni sono una barra a sinistra, alta quanto il popup, e la pagina sta alla sua destra.
+	const sections = frame.getByRole('navigation', { name: 'Amministrazione' });
+	await expect(frame.getByLabel('Nome del sito')).toBeVisible();
+	const bar = (await sections.boundingBox())!;
+	const view = (await panel.locator('iframe').boundingBox())!;
+	expect(Math.abs(bar.x - view.x)).toBeLessThanOrEqual(1);
+	expect(Math.abs(bar.height - view.height)).toBeLessThanOrEqual(1);
+	expect(bar.x + bar.width).toBeLessThanOrEqual((await frame.getByLabel('Nome del sito').boundingBox())!.x);
 	await frame.getByRole('link', { name: 'Utenti' }).click();
 	await expect(frame.getByRole('table', { name: 'Utenti' })).toContainText('@alice');
 	await frame.getByRole('link', { name: 'Impostazioni' }).click();

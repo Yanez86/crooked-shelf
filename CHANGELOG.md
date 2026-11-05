@@ -3,6 +3,13 @@
 Le versioni seguono il [versionamento semantico](https://semver.org/lang/it/): MAGGIORE.MINORE.CORRETTIVA.
 Questo file è anche la pagina «Novità» della wiki (`/changelog`).
 
+## 0.20.5 — 2026-11-05
+
+### Modifiche
+- Profilo, Campagna e Amministrazione nel popup: le sezioni stanno in una barra a sinistra.
+- Collegamenti in fondo alla wiki e «Tutte le pagine» più discreti, senza sottolineatura.
+- Pagina Info: il sito ufficiale non è più segnato «in costruzione».
+
 ## 0.20.4 — 2026-11-05
 
 ### Correzioni

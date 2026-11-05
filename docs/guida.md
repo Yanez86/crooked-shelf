@@ -195,7 +195,7 @@ Le bacheche sono pagine: **Nuova pagina › Nuova bacheca**, con le colonne di p
 
 In alto a destra c'è il tuo profilo: la tua icona, il tuo nome e il tuo grado nella campagna (Master o Giocatore). Cliccandoci si apre il menu con le tue campagne (se ne hai più d'una), **Profilo**, **Campagna** (per il Master), **Amministrazione** (solo per l'Admin) ed **Esci**; sul telefono in alto resta solo l'icona, e nome e grado si leggono nel menu.
 
-**Profilo** e **Amministrazione** si aprono in un popup sopra la wiki: lo chiudi con Esc, con la X o cliccando fuori, e sotto ritrovi la pagina che stavi leggendo. Con Ctrl+clic si aprono come pagine, in un'altra scheda. Sul telefono si aprono direttamente come pagine.
+**Profilo** e **Amministrazione** si aprono in un popup sopra la wiki, con le sezioni in una barra a sinistra: lo chiudi con Esc, con la X o cliccando fuori, e sotto ritrovi la pagina che stavi leggendo. Con Ctrl+clic si aprono come pagine, in un'altra scheda. Sul telefono si aprono direttamente come pagine.
 
 Il **Profilo** ha tre schede:
 

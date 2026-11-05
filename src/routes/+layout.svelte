@@ -486,4 +486,12 @@ ${iconCss()}</style>`}
 		font-size: var(--fs-sm);
 		padding: 1rem 0;
 	}
+	/* Versione, Info, codice e licenza: discreti, del colore del piè di pagina e senza sottolineatura. */
+	.site-footer a {
+		color: inherit;
+		text-decoration: none;
+	}
+	.site-footer a:hover {
+		color: var(--c-text);
+	}
 </style>

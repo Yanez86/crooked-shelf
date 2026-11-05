@@ -45,6 +45,54 @@
 		border-bottom-color: var(--c-primary);
 		font-weight: 700;
 	}
+	/* Nel popup (Profilo, Campagna, Amministrazione) le linguette sono una barra a sinistra, alta quanto la finestra:
+	   resta ferma mentre la pagina scorre. La pagina si sposta a destra per farle posto. */
+	@media (min-width: 48.0625rem) {
+		:global(.shell.framed) {
+			--tabs-bar: 13rem;
+		}
+		:global(.shell.framed:has(.subnav)) {
+			padding-left: calc(var(--tabs-bar) + var(--space));
+		}
+		:global(.shell.framed) .subnav {
+			position: fixed;
+			inset: 0 auto 0 0;
+			z-index: 5;
+			width: var(--tabs-bar);
+			overflow-y: auto;
+			padding: 1rem 0.75rem;
+			background: var(--c-surface2);
+			border-right: 1px solid var(--c-border);
+		}
+		:global(.shell.framed) .subnav ul {
+			flex-direction: column;
+			flex-wrap: nowrap;
+			gap: 0.125rem;
+			margin: 0;
+			border: 0;
+		}
+		:global(.shell.framed) .subnav a {
+			display: flex;
+			min-height: 2.5rem;
+			padding: 0.4rem 0.75rem;
+			border: 0;
+			border-radius: var(--radius);
+			line-height: 1.3;
+		}
+		:global(.shell.framed) .subnav a:hover {
+			background: color-mix(in srgb, var(--c-text) 7%, var(--c-surface2));
+		}
+		/* Quella aperta: in grassetto, col fondo tinto e il filo a sinistra (non solo il colore). */
+		:global(.shell.framed) .subnav a[aria-current='page'] {
+			background: color-mix(in srgb, var(--c-primary) 12%, var(--c-surface2));
+			box-shadow: inset 3px 0 0 var(--c-primary);
+		}
+	}
+	@media (min-width: 48.0625rem) and (forced-colors: active) {
+		:global(.shell.framed) .subnav a[aria-current='page'] {
+			outline: 2px solid CanvasText;
+		}
+	}
 	/* Sul telefono una riga sola, da un bordo all'altro dello schermo. */
 	@media (max-width: 48rem) {
 		.subnav {

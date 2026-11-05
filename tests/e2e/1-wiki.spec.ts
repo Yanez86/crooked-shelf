@@ -994,14 +994,21 @@ test('amministrazione: versione installata e controllo su GitHub', async () => {
 
 test('pagina Info: che cos\'è Crooked Shelf e i collegamenti', async () => {
 	await admin.goto('/wiki');
-	await admin.getByRole('contentinfo').getByRole('link', { name: 'Info', exact: true }).click();
+	// I collegamenti in fondo sono discreti: senza sottolineatura e del colore del piè di pagina.
+	const footer = admin.getByRole('contentinfo');
+	const footerColor = await footer.evaluate((el) => getComputedStyle(el).color);
+	for (const link of await footer.getByRole('link').all()) {
+		await expect(link).toHaveCSS('text-decoration-line', 'none');
+		await expect(link).toHaveCSS('color', footerColor);
+	}
+	await footer.getByRole('link', { name: 'Info', exact: true }).click();
 	await expect(admin).toHaveURL(/\/info$/);
 	await expect(admin.getByRole('heading', { level: 1, name: 'Info' })).toBeVisible();
 	await expect(admin.getByText('open source, libero e gratuito')).toBeVisible();
 	const links = admin.getByRole('navigation', { name: 'Collegamenti' });
 	await expect(links.getByRole('link', { name: 'GitHub' })).toHaveAttribute('href', 'https://github.com/yanez86/crooked-shelf');
 	await expect(links.getByRole('link', { name: 'happysquid.ink' })).toHaveAttribute('href', 'https://happysquid.ink');
-	await expect(links.getByRole('link', { name: /crookedshelf\.quest \(in costruzione\)/ })).toHaveAttribute('href', 'https://crookedshelf.quest');
+	await expect(links.getByRole('link', { name: 'crookedshelf.quest', exact: true })).toHaveAttribute('href', 'https://crookedshelf.quest');
 	await shot(admin, 'info');
 	await axe(admin, 'info');
 });

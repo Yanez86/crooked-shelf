@@ -24,9 +24,7 @@
 <nav class="links" aria-label={t('info.links')}>
 	<a class="btn" href={REPO} rel="noopener noreferrer"><Icon name="github" /> GitHub</a>
 	<a class="btn" href="https://happysquid.ink" rel="noopener noreferrer"><Icon name="squid" /> happysquid.ink</a>
-	<a class="btn" href="https://crookedshelf.quest" rel="noopener noreferrer">
-		<Icon name="globe" /> crookedshelf.quest <span class="soon">{t('info.soon')}</span>
-	</a>
+	<a class="btn" href="https://crookedshelf.quest" rel="noopener noreferrer"><Icon name="globe" /> crookedshelf.quest</a>
 </nav>
 
 <style>
@@ -44,10 +42,5 @@
 		flex-wrap: wrap;
 		gap: 0.75rem;
 		margin-top: 1.25rem;
-	}
-	.soon {
-		font-size: var(--fs-sm);
-		font-weight: 400;
-		color: var(--c-muted);
 	}
 </style>
