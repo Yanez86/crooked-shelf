@@ -445,7 +445,9 @@ export const MIGRATIONS: (string | ((db: Database.Database) => void) | { rebuild
 	`,
 	// Temi Lago e Lago di notte tolti: chi li usava passa ad Aria, chiara o scura come prima. Un profilo con le preferenze
 	// rovinate resta com'è (CASE: json_extract su un testo che non è JSON fermerebbe la migrazione).
-	themesRemovedMigration
+	themesRemovedMigration,
+	// Ogni account crea le sue campagne, fino a un tetto che l'Admin cambia persona per persona.
+	`ALTER TABLE users ADD COLUMN campaign_limit INTEGER NOT NULL DEFAULT 3;`
 ];
 
 export const REMOVED_THEMES: Record<string, string> = { lake: 'aria', 'lake-dark': 'aria-dark' };

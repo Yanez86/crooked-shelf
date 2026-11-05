@@ -302,6 +302,12 @@
 	margin-block: 1.5rem;
 	border-radius: var(--aria-radius-lg);
 }
+/* Con la larghezza scelta nell'editor: una parte della colonna del testo, che qui è la misura e non tutto lo spazio.
+   Vale la larghezza scelta anche per un'immagine verticale: niente tetto in altezza, che la schiaccerebbe. */
+:root:is([data-theme='aria'], [data-theme='aria-dark'], [data-theme='auto'], [data-theme='neon']) .content > .prose > img[data-size] {
+	width: calc(min(100%, var(--aria-measure)) * var(--img-scale));
+	max-height: none;
+}
 
 /* --- Il centro senza riquadri: niente scatola attorno alla pagina né attorno al testo --- */
 

@@ -17,7 +17,9 @@ export const users = sqliteTable('users', {
 	icon: text('icon'),
 	/** Immagine caricata dall'utente: se c'è, prende il posto dell'icona. Il tipo esplicito rompe il giro users → files → users. */
 	avatar: text('avatar').references((): AnySQLiteColumn => files.id, { onDelete: 'set null' }),
-	createdAt: integer('created_at').notNull()
+	createdAt: integer('created_at').notNull(),
+	/** Quante campagne può tenere al massimo creandole da sé (vedi campaigns.ts); lo cambia l'Admin. */
+	campaignLimit: integer('campaign_limit').notNull().default(3)
 });
 
 /** Una campagna: la sua wiki (pagine, cartelle, tag, risorse) sta tutta dietro `campaignId`, le righe legate a una pagina dietro la pagina. */

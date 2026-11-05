@@ -62,6 +62,32 @@ export const masterCandidates = () =>
 		.orderBy(asc(users.displayName))
 		.all();
 
+/** Il tetto di partenza di ogni account, e il più alto che l'Admin può dare. */
+export const DEFAULT_CAMPAIGN_LIMIT = 3;
+export const MAX_CAMPAIGN_LIMIT = 100;
+
+/**
+ * Le campagne che un account tiene (ne è il Master, comprese quelle che gli ha dato l'Admin) e quante ne può tenere.
+ * Il tetto vale per quelle che crea da sé: l'Admin, da Amministrazione › Campagne, ne dà anche oltre.
+ */
+export function campaignAllowance(userId: number) {
+	const db = getDb();
+	const held = db.select({ n: sql<number>`count(*)` }).from(campaigns).where(eq(campaigns.masterId, userId)).get()?.n ?? 0;
+	const limit = db.select({ limit: users.campaignLimit }).from(users).where(eq(users.id, userId)).get()?.limit ?? 0;
+	return { held, limit, canCreate: held < limit };
+}
+
+/** Quante campagne tiene ogni account (per Amministrazione › Utenti). */
+export function campaignsHeld(): Map<number, number> {
+	const rows = getDb()
+		.select({ id: campaigns.masterId, n: sql<number>`count(*)` })
+		.from(campaigns)
+		.where(sql`${campaigns.masterId} IS NOT NULL`)
+		.groupBy(campaigns.masterId)
+		.all();
+	return new Map(rows.map((r) => [r.id!, r.n]));
+}
+
 export function insertCampaign(name: string, masterId: number): CampaignRow {
 	return getDb().insert(campaigns).values({ name, masterId, createdAt: Date.now() }).returning().get();
 }

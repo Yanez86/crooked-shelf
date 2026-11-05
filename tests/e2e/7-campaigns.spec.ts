@@ -255,6 +255,46 @@ test("l'Admin le elimina tutte e riparte da una nuova", async () => {
 	await expect(admin.getByRole('status')).toContainText('Campagna creata');
 	await admin.goto('/');
 	await expect(admin.locator('.brand')).toContainText('Da capo');
+});
+
+test('ognuno crea le sue campagne, fino al suo limite, che l\'Admin cambia a una persona sola', async () => {
+	// Alice è una giocatrice rimasta senza campagne: ne crea una sua, e lì è il Master.
+	await alice.goto('/campaign');
+	await alice.getByRole('main').getByRole('link', { name: 'Nuova campagna' }).click();
+	await alice.waitForURL('**/campaign/new');
+	await expect(alice.getByText('Campagne che tieni: 0 su 3.')).toBeVisible();
+	await axe(alice, 'nuova campagna');
+	for (const name of ['Il regno di Alice', 'La seconda di Alice', 'La terza di Alice']) {
+		await alice.goto('/campaign/new');
+		await alice.getByLabel('Nome della campagna').fill(name);
+		await alice.getByRole('button', { name: 'Crea la campagna' }).click();
+		await alice.waitForURL((u) => u.pathname === '/');
+		await expect(alice.locator('.brand')).toContainText(name);
+	}
+	await alice.locator('.user-menu summary').click();
+	await expect(alice.locator('.user-menu .role')).toHaveText('Master');
+	await expect(alice.locator('.user-menu .campaigns').getByRole('button')).toHaveCount(3);
+
+	// Al limite il modulo non c'è più, e il server dice di no anche a chi lo manda lo stesso.
+	await alice.locator('.user-menu').getByRole('link', { name: 'Nuova campagna' }).click();
+	await expect(alice.getByText('Campagne che tieni: 3 su 3.')).toBeVisible();
+	await expect(alice.getByLabel('Nome della campagna')).toHaveCount(0);
+	const res = await alice.request.post('/campaign/new', { form: { name: 'Quarta' }, headers: { origin: new URL(alice.url()).origin } });
+	expect(res.status()).toBe(403);
+
+	// L'Admin alza il limite solo ad Alice: gli altri restano a 3.
+	await admin.goto('/admin/users');
+	const limit = admin.getByLabel('Campagne che alice può creare (ora ne tiene 3)');
+	await expect(limit).toHaveValue('3');
+	await axe(admin, 'utenti col limite delle campagne');
+	await limit.fill('4');
+	await admin.getByRole('button', { name: /Salva.*alice/ }).click();
+	await expect(admin.getByRole('status').filter({ hasText: 'Modifiche salvate' })).toBeVisible();
+	await expect(admin.getByLabel(/Campagne che alice può creare/)).toHaveValue('4');
+	await expect(admin.getByLabel(/Campagne che merlino può creare/)).toHaveValue('3');
+	await alice.reload();
+	await expect(alice.getByText('Campagne che tieni: 3 su 4.')).toBeVisible();
+	await expect(alice.getByLabel('Nome della campagna')).toBeVisible();
 	await dm.context().close();
 	await alice.context().close();
 	await admin.context().close();

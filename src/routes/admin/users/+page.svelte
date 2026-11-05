@@ -16,7 +16,7 @@
 
 <h2>{t('admin.users')}</h2>
 <p>{t('admin.usersIntro')} <a href="/admin/invites">{t('admin.invites')}</a></p>
-<FormError error={form && 'error' in form ? form.error : null} />
+<FormError error={form && 'error' in form ? form.error : null} params={form && 'params' in form ? (form.params as Record<string, number>) : undefined} />
 <FormOk message={form && 'ok' in form ? form.ok : null} />
 {#if form && 'resetLink' in form}
 	<div class="card stack" role="status">
@@ -35,6 +35,7 @@
 			<tr>
 				<th scope="col">{t('admin.user')}</th>
 				<th scope="col">{t('admin.role')}</th>
+				<th scope="col">{t('admin.campaignLimit')}</th>
 				<th scope="col" class="col-center">{t('admin.disabled')}</th>
 				<th scope="col" class="col-end"><span class="visually-hidden">{t('common.actions')}</span></th>
 			</tr>
@@ -55,6 +56,14 @@
 							{#each data.roles as r (r)}<option value={r} selected={u.role === r}>{t('roles.' + r)}</option>{/each}
 						</select>
 					</td>
+					<td>
+						<!-- Quante ne tiene, e fino a quante ne può creare da sé. -->
+						<span class="limit">
+							<span aria-hidden="true">{u.held} /</span>
+							<label class="visually-hidden" for="limit-{u.id}">{t('admin.campaignLimitFor', { user: u.username, held: u.held })}</label>
+							<input id="limit-{u.id}" name="campaignLimit" form="user-{u.id}" type="number" inputmode="numeric" min="0" max={data.maxCampaigns} required value={u.campaignLimit} />
+						</span>
+					</td>
 					<td class="col-center">
 						<label class="choice">
 							<input type="checkbox" name="disabled" form="user-{u.id}" checked={u.disabled} />
@@ -70,6 +79,8 @@
 		</tbody>
 	</table>
 </div>
+
+<p class="hint">{t('admin.campaignLimitHint')}</p>
 
 <h3>{t('admin.rolesTitle')}</h3>
 <dl class="card roles">
@@ -94,6 +105,15 @@
 	}
 	.col-center .choice {
 		justify-content: center;
+	}
+	.limit {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.4rem;
+		white-space: nowrap;
+	}
+	.limit input {
+		width: 4.5rem;
 	}
 	.roles {
 		display: grid;

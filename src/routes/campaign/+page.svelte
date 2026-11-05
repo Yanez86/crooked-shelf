@@ -38,6 +38,7 @@
 	<h1>{t('campaign.title')}</h1>
 	{#if !data.campaign || !data.claude}
 		<p>{t('campaign.none')}</p>
+		<p><a class="btn btn-primary" href="/campaign/new"><Icon name="plus" />{t('campaign.newTitle')}</a></p>
 	{:else}
 		<Tabs
 			label={t('campaign.tabsLabel')}

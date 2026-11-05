@@ -8,7 +8,7 @@ import { Plugin, PluginKey, type EditorState } from '@tiptap/pm/state';
 import { Decoration, DecorationSet } from '@tiptap/pm/view';
 import type { Node as PmNode } from '@tiptap/pm/model';
 import { slugify } from '../slug.ts';
-import { safeHref, safeImageSrc } from '../content/render.ts';
+import { imageSize, imageSizeAttrs, safeHref, safeImageSrc } from '../content/render.ts';
 import { CALLOUT_KINDS } from '../content/types.ts';
 import { BLOCK_TYPES, idsToRenew, newBlockId } from '../content/blocks.ts';
 import { parseRuleKind } from '../rules/index.ts';
@@ -109,7 +109,7 @@ export function selectedBlocks(state: EditorState): TopBlock[] {
  * uno nuovo. La visibilità sì (`data-visibility`): un segreto copiato e incollato resta un segreto.
  * Un blocco nuovo nasce nascosto se il cursore era in un blocco nascosto (scrivendo, inserendo un'immagine o una tabella,
  * incollando), come prima dentro il riquadro del segreto; e un pezzo nascosto dentro un blocco nasconde il blocco intero.
- * Il blocco nascosto ha in cima il nome «Segreto del Master» (per i lettori di schermo, e per le immagini, che non hanno ::before).
+ * Sopra i blocchi nascosti di fila c'è il segno del segreto: il lucchetto, e il nome «Segreto del Master» per i lettori di schermo.
  */
 const Blocks = Extension.create<{ canSecret: boolean; labels: EditorLabels }>({
 	name: 'blocks',
@@ -190,11 +190,16 @@ const Blocks = Extension.create<{ canSecret: boolean; labels: EditorLabels }>({
 			}
 		});
 		if (!canSecret) return [keep];
+		// Il segno sopra i blocchi segreti di fila: per gli occhi un lucchetto sull'angolo del riquadro, che non occupa
+		// spazio (Editor.svelte); il nome lo leggono solo i lettori di schermo.
 		const label = () => {
 			const el = document.createElement('div');
 			el.className = 'hidden-label';
 			el.contentEditable = 'false';
-			el.textContent = labels.secret;
+			const name = document.createElement('span');
+			name.className = 'visually-hidden';
+			name.textContent = labels.secret;
+			el.append(name);
 			return el;
 		};
 		const marks = new Plugin({
@@ -712,7 +717,21 @@ export function buildExtensions(opts: {
 		}),
 		Image.configure({ inline: false, allowBase64: false }).extend({
 			// Solo immagini caricate nella wiki o in https.
-			parseHTML: () => [{ tag: 'img[src]', getAttrs: (el) => (safeImageSrc((el as HTMLElement).getAttribute('src')) ? null : false) }]
+			parseHTML: () => [{ tag: 'img[src]', getAttrs: (el) => (safeImageSrc((el as HTMLElement).getAttribute('src')) ? null : false) }],
+			addAttributes() {
+				return {
+					...this.parent?.(),
+					// Larghezza in percentuale della colonna del testo (vedi imageSize); copiando l'immagine resta.
+					size: {
+						default: null,
+						parseHTML: (el) => imageSize(el.getAttribute('data-size')),
+						renderHTML: (a) => {
+							const size = imageSize(a.size);
+							return size ? imageSizeAttrs(size) : {};
+						}
+					}
+				};
+			}
 		}),
 		Table.configure({ resizable: false }).extend({
 			addAttributes() {

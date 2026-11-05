@@ -20,10 +20,10 @@ const OPEN = ['/login', '/setup', '/invite/', '/reset/', '/mcp', '/oauth/registe
 // uguale, tranne che per /oauth/token: lì scrivono i server di Claude, che non mandano Origin.
 const FORM_TYPES = ['', 'application/x-www-form-urlencoded', 'multipart/form-data', 'text/plain', 'application/x-sveltekit-formdata'];
 const WRITES = ['POST', 'PUT', 'PATCH', 'DELETE'];
-// Quello che resta a chi ha un account ma non è in nessuna campagna.
-const WITHOUT_CAMPAIGN = ['/campaign', '/profile', '/logout'];
-// Nella vista giocatore si guarda soltanto: si scrive solo per tornare alla propria vista o cambiare campagna, nel proprio profilo e per uscire.
-const AS_PLAYER_WRITES = ['/campaign', '/profile', '/logout'];
+// Quello che resta a chi ha un account ma non è in nessuna campagna: anche crearne una sua.
+const WITHOUT_CAMPAIGN = ['/campaign', '/campaign/new', '/profile', '/logout'];
+// Nella vista giocatore si guarda soltanto: si scrive solo per tornare alla propria vista, cambiare campagna o crearne una, nel proprio profilo e per uscire.
+const AS_PLAYER_WRITES = ['/campaign', '/campaign/new', '/profile', '/logout'];
 const READS = ['GET', 'HEAD', 'OPTIONS'];
 const MINUTE = 60_000;
 // Limiti per IP sulle scritture che costano o che qualcuno potrebbe tentare a raffica. Chi li supera riceve 429.
@@ -35,6 +35,8 @@ const LIMITS: { test: (path: string, search: string) => boolean; name: string; m
 	{ test: (p, s) => p === '/profile' && s.startsWith('?/password'), name: 'password', max: 10, window: 10 * MINUTE },
 	{ test: (p) => p === '/oauth/token', name: 'oauth', max: 30, window: 10 * MINUTE },
 	{ test: (p) => p === '/api/files', name: 'upload', max: 60, window: 10 * MINUTE },
+	// Una campagna nuova nasce con le sue pagine di partenza.
+	{ test: (p) => p === '/campaign/new', name: 'campaign', max: 20, window: 10 * MINUTE },
 	{ test: (p) => p.startsWith('/mcp'), name: 'mcp', max: 300, window: MINUTE },
 	// Password dei backup (ogni prova costa 128 MB di memoria) e backup fatti a mano.
 	{ test: (p) => p === '/admin/backup', name: 'backup', max: 30, window: 10 * MINUTE }

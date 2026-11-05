@@ -39,6 +39,19 @@ export function safeImageSrc(src: unknown): string | null {
 	return null;
 }
 
+/**
+ * Larghezza di un'immagine nel testo, in percentuale della colonna: un intero da 10 a 100. Null = la sua, fin dove ci sta.
+ * Il file resta com'è: cambia solo come si vede.
+ */
+export function imageSize(v: unknown): number | null {
+	const n = typeof v === 'string' && /^\d+$/.test(v) ? Number(v) : v;
+	return typeof n === 'number' && Number.isInteger(n) && n >= 10 && n <= 100 ? n : null;
+}
+/** Le larghezze proposte nell'editor (si può anche trascinare l'angolo dell'immagine). */
+export const IMAGE_SIZES = [25, 50, 75, 100] as const;
+/** Gli attributi HTML della larghezza: il CSS la misura sulla colonna del testo (app.css, aria.css). */
+export const imageSizeAttrs = (size: number) => ({ 'data-size': String(size), style: `--img-scale:${size / 100}` });
+
 /** Solo indirizzi sicuri: http(s), mailto e percorsi interni (una barra sola: `//` e `/\\` portano a un altro sito). */
 export function safeHref(href: unknown): string | null {
 	if (typeof href !== 'string') return null;
@@ -148,7 +161,9 @@ export function renderDoc(doc: DocNode, opt: RenderOptions): string {
 				if (!src) return '';
 				const alt = esc(String(n.attrs?.alt ?? ''));
 				const title = n.attrs?.title ? ` title="${esc(String(n.attrs.title))}"` : '';
-				return `<img src="${esc(src)}" alt="${alt}"${title} loading="lazy">`;
+				const size = imageSize(n.attrs?.size);
+				const sized = size ? Object.entries(imageSizeAttrs(size)).map(([k, v]) => ` ${k}="${esc(v)}"`).join('') : '';
+				return `<img src="${esc(src)}" alt="${alt}"${title}${sized} loading="lazy">`;
 			}
 			case 'table': {
 				const html = `<div class="table-wrap" tabindex="0"><table><tbody>${kids(n)}</tbody></table></div>`;

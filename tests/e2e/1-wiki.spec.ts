@@ -240,7 +240,7 @@ test('albero delle cartelle e delle pagine', async () => {
 	// Niente barra orizzontale e niente sezioni: il menu del profilo ha solo Profilo, Campagna, Amministrazione, la vista giocatore ed Esci.
 	await expect(admin.getByRole('navigation', { name: 'Navigazione principale' })).toHaveCount(0);
 	await admin.locator('.user-menu summary').click();
-	await expect(admin.locator('.user-menu .panel').getByRole('link')).toHaveText(['Profilo', 'Campagna', 'Amministrazione']);
+	await expect(admin.locator('.user-menu .panel').getByRole('link')).toHaveText(['Profilo', 'Campagna', 'Nuova campagna', 'Amministrazione']);
 	await expect(admin.locator('.user-menu .panel').getByRole('button', { name: /Esci/ })).toBeVisible();
 	await admin.locator('.user-menu summary').click();
 	// Il Cestino è sempre l'ultima voce della barra, anche sulla linguetta Risorse.
@@ -499,13 +499,17 @@ test('editor: il più aggiunge testo o immagine dopo il blocco, l\'occhio lo osc
 	await admin.keyboard.type('Nessuno ricorda chi la costruì.');
 	await expect(editor.locator('> p')).toHaveText(['Una torre di pietra nera.', 'Nessuno ricorda chi la costruì.', 'In cima vive un gufo.']);
 
-	// L'occhio oscura il blocco: lo vede solo il Master, col lucchetto e il nome sopra.
+	// L'occhio oscura il blocco: lo vede solo il Master. Sull'angolo c'è il lucchetto, che non occupa spazio
+	// (il nome lo leggono i lettori di schermo): il blocco resta dov'era.
 	await editor.getByText('Nessuno ricorda').hover();
 	const hide = admin.locator('.block-hide');
 	await expect(hide).toHaveAttribute('title', 'Oscura il blocco: lo vede solo il Master');
+	const before = (await editor.getByText('Nessuno ricorda').boundingBox())!.y;
 	await hide.click();
 	await expect(editor.locator('[data-visibility="master"]')).toHaveText('Nessuno ricorda chi la costruì.');
 	await expect(editor.locator('.hidden-label')).toHaveText('Segreto del Master');
+	await expect(editor.locator('.hidden-label')).toHaveCSS('height', '0px');
+	expect(Math.abs((await editor.getByText('Nessuno ricorda').boundingBox())!.y - before)).toBeLessThan(30);
 	// Dopo una modifica i pulsanti tornano col mouse; ora l'occhio mostra il blocco.
 	await editor.getByText('Nessuno ricorda').hover();
 	await expect(hide).toHaveAttribute('aria-pressed', 'true');
@@ -530,6 +534,32 @@ test('editor: il più aggiunge testo o immagine dopo il blocco, l\'occhio lo osc
 	await alt.getByRole('button', { name: 'Salva' }).click();
 	await expect(editor.locator('p:has-text("In cima vive un gufo.") + img')).toHaveAttribute('alt', 'La torre al tramonto');
 
+	// La dimensione dell'immagine (il file resta com'è): dal menu sul blocco…
+	const img = editor.locator('img');
+	await editor.getByText('In cima vive un gufo.').hover();
+	await img.hover();
+	await admin.locator('.block-size').click();
+	await axe(admin, "menu della dimensione dell'immagine");
+	await admin.locator('.block-menu').getByRole('button', { name: 'Piccola (25%)' }).click();
+	await expect(img).toHaveAttribute('data-size', '25');
+	// …da tastiera con la tendina nella barra, che compare con l'immagine selezionata…
+	const size = admin.getByRole('toolbar').getByLabel("Dimensione dell'immagine");
+	await expect(size).toHaveValue('25');
+	await size.selectOption({ label: 'Media (50%)' });
+	await expect(img).toHaveAttribute('data-size', '50');
+	// …o trascinando la maniglia sull'angolo: a passi del 5%.
+	await admin.mouse.move(0, 0);
+	await img.hover();
+	const handle = (await admin.locator('.image-handle').boundingBox())!;
+	await admin.mouse.move(handle.x + handle.width / 2, handle.y + handle.height / 2);
+	await admin.mouse.down();
+	await admin.mouse.move(handle.x - 120, handle.y, { steps: 6 });
+	await admin.mouse.up();
+	const dragged = Number(await img.getAttribute('data-size'));
+	expect(dragged).toBeLessThan(50);
+	expect(dragged % 5).toBe(0);
+	await size.selectOption({ label: 'Media (50%)' });
+
 	await admin.getByRole('button', { name: 'Crea la pagina' }).click();
 	await expect(admin.getByRole('heading', { level: 1, name: 'Torre del mago' })).toBeVisible();
 	const content = admin.locator('.content');
@@ -537,6 +567,7 @@ test('editor: il più aggiunge testo o immagine dopo il blocco, l\'occhio lo osc
 	await expect(content.locator('.secret p:not(.secret-title)')).toHaveText(['Nessuno ricorda chi la costruì.', 'Il mago è morto da cent\'anni.']);
 	await expect(content.locator('.prose > p:not(:empty)')).toHaveText(['Una torre di pietra nera.', 'In cima vive un gufo.']);
 	await expect(content.locator('img')).toHaveAttribute('alt', 'La torre al tramonto');
+	await expect(content.locator('img')).toHaveAttribute('data-size', '50');
 
 	// Si mostra di nuovo dallo stesso occhio (o dal lucchetto nella barra).
 	await admin.goto('/wiki/torre-del-mago/edit');

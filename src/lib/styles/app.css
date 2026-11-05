@@ -630,6 +630,10 @@ table.data .col-end {
 	max-width: 100%;
 	height: auto;
 }
+/* Larghezza scelta nell'editor: una parte della colonna del testo (--img-scale, da 0.1 a 1). */
+.prose img[data-size] {
+	width: calc(100% * var(--img-scale));
+}
 .prose blockquote {
 	margin: 1rem 0;
 	padding: 0.25rem 1rem;

@@ -125,7 +125,7 @@ describe('renderDoc', () => {
 	});
 });
 
-import { renderInline, safeImageSrc } from './render.ts';
+import { imageSize, renderInline, safeImageSrc } from './render.ts';
 
 describe('campi e immagini', () => {
 	it('i campi con collegamenti entrano in ricerca e backlink', () => {
@@ -153,6 +153,14 @@ describe('campi e immagini', () => {
 			{ sees: player, resolve, labels }
 		);
 		expect(html).toBe('<img src="/files/x1" alt="Mappa &quot;vecchia&quot;" loading="lazy">');
+	});
+	it('la larghezza di un\'immagine è una parte della colonna, da 10 a 100', () => {
+		const img = (size: unknown) => renderDoc({ type: 'doc', content: [{ type: 'image', attrs: { src: '/files/x1', alt: '', size } }] }, { sees: player, resolve, labels });
+		expect(img(50)).toBe('<img src="/files/x1" alt="" data-size="50" style="--img-scale:0.5" loading="lazy">');
+		// Quello che non è una larghezza non arriva nella pagina: l'immagine resta della sua misura.
+		for (const bad of [5, 101, 33.3, '50%', '"><script>', null]) expect(img(bad)).toBe('<img src="/files/x1" alt="" loading="lazy">');
+		expect(imageSize('75')).toBe(75);
+		expect(imageSize(10)).toBe(10);
 	});
 });
 

@@ -6,7 +6,7 @@ import { eq } from 'drizzle-orm';
 import { getDb, getSqlite, migrate, useMemoryDb, schema } from './db/index.ts';
 import { MIGRATIONS } from './db/migrations.ts';
 import { campaignsMigration } from './db/campaigns.ts';
-import { campaignsFor, canAppoint, currentCampaign, deleteCampaign, FIRST_CAMPAIGN, getCampaign, inCampaign, membersOf, ofCampaign, roleIn, saveCampaign, setMaster, addMember, type CampaignRow } from './campaigns.ts';
+import { campaignAllowance, campaignsFor, campaignsHeld, canAppoint, DEFAULT_CAMPAIGN_LIMIT, currentCampaign, deleteCampaign, FIRST_CAMPAIGN, getCampaign, inCampaign, membersOf, ofCampaign, roleIn, saveCampaign, setMaster, addMember, type CampaignRow } from './campaigns.ts';
 import { createInvite, activeInvites, joinInvite, redeemInvite } from './auth.ts';
 import { createPage, getPageById, getPageBySlug, listPages, listTrash, deletePage, renderPage, resolverFor, backlinks, updatePage } from './pages.ts';
 import { filePath, getFile, saveImage } from './files.ts';
@@ -210,6 +210,27 @@ describe('campagne e persone', () => {
 		const again = createInvite('player', dm.id, 7, b.id);
 		expect(joinInvite(again, alice.id)).toBe(b.id);
 		expect(campaignsFor(alice, false).map((c) => c.id)).toEqual([b.id]);
+	});
+
+	it('ognuno tiene le sue campagne fino al suo limite, che parte da 3', () => {
+		// Alice è un giocatore: le sue campagne le crea lo stesso, e ne è il Master.
+		expect(campaignAllowance(alice.id)).toEqual({ held: 0, limit: DEFAULT_CAMPAIGN_LIMIT, canCreate: true });
+		const mine = newCampaign('Di Alice', { id: alice.id, role: 'master' }, 'it');
+		expect(roleIn(mine, alice)).toBe('master');
+		newCampaign('Seconda', { id: alice.id, role: 'master' }, 'it');
+		newCampaign('Terza', { id: alice.id, role: 'master' }, 'it');
+		expect(campaignAllowance(alice.id)).toEqual({ held: 3, limit: 3, canCreate: false });
+		// Il limite è di ognuno: l'Admin lo alza o lo abbassa a una persona sola.
+		getDb().update(schema.users).set({ campaignLimit: 5 }).where(eq(schema.users.id, alice.id)).run();
+		expect(campaignAllowance(alice.id).canCreate).toBe(true);
+		expect(campaignAllowance(dm.id)).toEqual({ held: 1, limit: 3, canCreate: true });
+		getDb().update(schema.users).set({ campaignLimit: 0 }).where(eq(schema.users.id, dm.id)).run();
+		expect(campaignAllowance(dm.id).canCreate).toBe(false);
+		// Contano le campagne che si tengono, anche quelle avute dall'Admin; eliminandone una si libera il posto.
+		expect(campaignsHeld().get(alice.id)).toBe(3);
+		deleteCampaign(mine.id);
+		expect(campaignAllowance(alice.id).held).toBe(2);
+		expect(campaignsHeld().get(admin.id)).toBeUndefined();
 	});
 
 	it('fuori da una richiesta vale la prima campagna', () => {

@@ -4,22 +4,24 @@
 
 | Ruolo | Cosa può fare |
 |---|---|
-| **Admin** | Gestisce il sito: crea le campagne e ne sceglie il Master, impostazioni, utenti, inviti, temi, plugin, backup, pacchetti mondo. Nelle campagne non ha poteri in più: è Master in quelle che tiene e giocatore in quelle in cui è invitato |
+| **Admin** | Gestisce il sito: crea campagne per chiunque e ne sceglie il Master, impostazioni, utenti (anche quante campagne può creare ognuno), inviti, temi, plugin, backup, pacchetti mondo. Nelle campagne non ha poteri in più: è Master in quelle che tiene e giocatore in quelle in cui è invitato |
 | **Master** | Nella sua campagna: crea e modifica tutte le pagine, scrive e vede i segreti, gestisce categorie, tag, mappe, risorse, calendario, cronologia del mondo e giocatori |
 | **Giocatore** | Legge, crea pagine, modifica le sue e quelle aperte ai giocatori, ha la sua scheda giocatore, aggiunge eventi alla cronologia della campagna, usa le bacheche |
 | **Visitatore** | Solo le pagine pubbliche, e solo se l'Admin ha acceso l'accesso dei visitatori |
 
 Le persone entrano con un **invito**: il Master lo crea in Campagna › Giocatori, l'Admin in Amministrazione › Inviti. Ogni link funziona una volta sola.
 
+Chiunque abbia un account, anche un giocatore, può **creare le sue campagne** e farne il Master (vedi sotto).
+
 ## Campagne
 
 Una installazione può contenere più campagne. Ognuna è una wiki a sé: pagine, cartelle, tag, mappe, cronologie, bacheche, risorse, home e calendario non si vedono dalle altre, e la stessa pagina può avere lo stesso indirizzo in due campagne.
 
-- **Crearne una**: Amministrazione › Campagne › «Nuova campagna», con il nome e il Master. Ogni campagna ha un solo Master; lo stesso account può tenerne più d'una. Parte con la home, i template, le due cronologie e la cartella PG.
+- **Crearne una**: dal menu del profilo, **Nuova campagna**: si sceglie il nome e se ne è il Master, qualunque ruolo si abbia nelle altre. Ognuno ne tiene fino a **3** (contano anche quelle avute dall'Admin): la pagina dice quante ne hai e il tuo limite, che l'Admin cambia persona per persona in Amministrazione › Utenti. L'Admin ne crea anche per gli altri da Amministrazione › Campagne › «Nuova campagna», con il nome e il Master, anche oltre il limite. Ogni campagna ha un solo Master; lo stesso account può tenerne più d'una. Parte con la home, i template, le due cronologie e la cartella PG.
 - **La pagina Campagna**: il Master la apre dal menu del profilo. Ha quattro schede: **Generale** (nome, opzioni, eliminazione), **Giocatori** (inviti, rimozione, template delle schede), **Appuntamenti** (link per il remoto, regola del minimo, Stars & Wishes; solo con gli appuntamenti accesi) e **Claude** (token e connettori).
 - **Invitare i giocatori**: in Campagna › Giocatori il Master crea un link di invito. Chi non ha un account lo crea; chi lo ha già accede ed entra nella campagna col suo.
 - **Cambiare campagna**: chi ne ha più di una le trova in cima al menu del profilo. La scelta resta sul dispositivo. Un collegamento a una pagina si apre nella campagna in cui ti trovi.
-- **Eliminarne una**: il Master elimina la sua dalla pagina Campagna, l'Admin qualsiasi da Amministrazione › Campagne, anche l'ultima; per conferma si riscrive il nome. Spariscono per tutti pagine, mappe, cronologie, bacheche, risorse e immagini, e torna solo ripristinando un backup. Chi resta senza campagne può ancora accedere e aspetta un invito.
+- **Eliminarne una**: il Master elimina la sua dalla pagina Campagna, l'Admin qualsiasi da Amministrazione › Campagne, anche l'ultima; per conferma si riscrive il nome. Spariscono per tutti pagine, mappe, cronologie, bacheche, risorse e immagini, e torna solo ripristinando un backup. Chi resta senza campagne può ancora accedere: aspetta un invito o ne crea una sua.
 - Si è Master solo nella propria campagna: nelle altre si è giocatori, se si è stati invitati. Vale anche per l'Admin: entra solo nelle campagne che tiene o in cui è invitato, e vede i segreti solo nelle sue. Le altre le gestisce da Amministrazione › Campagne senza entrarci, e non può nominarsi Master di una campagna che esiste già: lo fa un altro Admin. Di una campagna nuova invece può essere lui il Master.
 - Esportazione e pacchetti mondo riguardano la campagna in cui ti trovi; il backup riguarda tutta l'installazione.
 
@@ -120,13 +122,16 @@ Ogni cosa della wiki è una **pagina**, nell'albero a sinistra, con un indirizzo
 
 Con i pulsanti della barra inserisci immagini (con la descrizione per chi non vede), tabelle e riquadri «Nota», «Consiglio», «Attenzione».
 
+**Dimensione delle immagini**: su un'immagine nel testo, tra i pulsanti in alto a destra, ci sono le due frecce: la fanno **piccola** (un quarto della colonna del testo), **media** (metà), **grande** (tre quarti), larga quanto la colonna, oppure **originale** (della sua misura, fin dove ci sta). Oppure trascina la maniglia sull'angolo in basso a destra, col mouse o col dito: la misura cambia a passi del 5%. Da tastiera, con l'immagine selezionata, c'è la tendina «Dimensione dell'immagine» nella barra. Il file resta com'è: cambia solo come si vede, nella pagina e nell'editor.
+
 La pagina è fatta di **blocchi**: un paragrafo, un titolo, un'immagine, una tabella, un riquadro. Passando col mouse su un blocco compaiono in alto a destra:
 
 - il **più**, che aggiunge subito dopo un blocco di **testo** o un'**immagine**;
+- sulle immagini, le **due frecce**, che ne cambiano la dimensione (vedi sopra);
 - l'**occhio**, solo per il Master, che **oscura** il blocco: diventa un **segreto del Master**, che i giocatori non vedono e non trovano neanche cercando. Lo stesso occhio lo mostra di nuovo;
 - il **cestino**, che elimina il blocco per intero.
 
-Nell'editor il blocco oscurato ha lo sfondo dei segreti, e sopra il primo di quelli di fila il lucchetto con «Segreto del Master»; nella pagina i blocchi oscurati di fila stanno in un solo riquadro. Da tastiera c'è il lucchetto nella barra, che oscura (o mostra) i blocchi in cui stai scrivendo o che hai selezionato, e il cestino nella barra, che elimina il blocco in cui stai scrivendo. Un blocco nuovo nasce oscurato se lo fai da un blocco oscurato: andando a capo, col più, inserendo un'immagine o una tabella. Copiando e incollando un blocco oscurato, la copia è oscurata anche lei. Il primo pulsante della barra annulla l'ultima azione (come Ctrl+Z).
+Nell'editor il blocco oscurato ha lo sfondo dei segreti e il bordo viola a sinistra, e i blocchi oscurati di fila sembrano un riquadro solo; sull'angolo in alto a sinistra del primo c'è un lucchetto in un cerchio, che non sposta il testo (i lettori di schermo leggono «Segreto del Master»). Nella pagina i blocchi oscurati di fila stanno in un solo riquadro, col titoletto «Segreto del Master». Da tastiera c'è l'occhio nella barra, che oscura (o mostra) i blocchi in cui stai scrivendo o che hai selezionato, e il cestino nella barra, che elimina il blocco in cui stai scrivendo. Un blocco nuovo nasce oscurato se lo fai da un blocco oscurato: andando a capo, col più, inserendo un'immagine o una tabella. Copiando e incollando un blocco oscurato, la copia è oscurata anche lei. Il primo pulsante della barra annulla l'ultima azione (come Ctrl+Z).
 
 **Pagine con un segreto**: chi può modificare la pagina la modifica anche se il Master ci ha oscurato qualcosa. Un giocatore non riceve i blocchi oscurati, nemmeno nell'editor; quando salva, ognuno torna subito dopo il blocco che lo precedeva (se l'ha eliminato, dopo il primo blocco prima di quello che c'è ancora). Il giocatore non può oscurare blocchi, e ripristinando una versione vecchia non ne tira fuori i segreti. Visibilità, permessi ed eliminazione di una pagina con un segreto restano al Master, anche se la pagina l'ha scritta il giocatore.
 
@@ -193,7 +198,7 @@ Le bacheche sono pagine: **Nuova pagina › Nuova bacheca**, con le colonne di p
 
 ## Profilo
 
-In alto a destra c'è il tuo profilo: la tua icona, il tuo nome e il tuo grado nella campagna (Master o Giocatore). Cliccandoci si apre il menu con le tue campagne (se ne hai più d'una), **Profilo**, **Campagna** (per il Master), **Amministrazione** (solo per l'Admin) ed **Esci**; sul telefono in alto resta solo l'icona, e nome e grado si leggono nel menu.
+In alto a destra c'è il tuo profilo: la tua icona, il tuo nome e il tuo grado nella campagna (Master o Giocatore). Cliccandoci si apre il menu con le tue campagne (se ne hai più d'una), **Profilo**, **Campagna** (per il Master), **Nuova campagna**, **Amministrazione** (solo per l'Admin) ed **Esci**; sul telefono in alto resta solo l'icona, e nome e grado si leggono nel menu.
 
 **Profilo** e **Amministrazione** si aprono in un popup sopra la wiki, con le sezioni in una barra a sinistra: lo chiudi con Esc, con la X o cliccando fuori, e sotto ritrovi la pagina che stavi leggendo. Con Ctrl+clic si aprono come pagine, in un'altra scheda. Sul telefono si aprono direttamente come pagine.
 
@@ -220,8 +225,8 @@ Tutta la wiki si usa da tastiera e con i lettori di schermo; i colori rispettano
 ## Amministrazione
 
 - **Impostazioni**: nome del sito, lingua predefinita e visitatori. Sotto c'è la **versione** installata, confrontata con l'ultima su GitHub: «Aggiornata» o «Non aggiornata», con il link alle novità e a come aggiornare.
-- **Campagne**: crearle, sceglierne il Master, eliminarle.
-- **Utenti**: ruoli, disattivazione e, per chi ha dimenticato la password, un link di reimpostazione (vale due giorni, una volta sola).
+- **Campagne**: crearle per chiunque (anche oltre il suo limite), sceglierne il Master, eliminarle.
+- **Utenti**: ruoli, quante campagne può creare ognuno (accanto, quante ne tiene), disattivazione e, per chi ha dimenticato la password, un link di reimpostazione (vale due giorni, una volta sola).
 - **Inviti**: link per entrare nel sito, uno per persona.
 - **Temi**: copia un tema e cambia i colori; si salva solo se il testo resta leggibile. Un tema può avere un'immagine di sfondo, che sta dietro i riquadri e si vede solo sugli schermi larghi. Esporta e importa come file (solo i colori: lo sfondo viaggia col pacchetto mondo).
 - **Plugin**: accendi e spegni i plugin installati; cliccandone uno si apre una finestra con scopo, istruzioni, autore e contenuto (per crearne uno, vedi [plugin.md](plugin.md)).

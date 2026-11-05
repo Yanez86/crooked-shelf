@@ -3,6 +3,19 @@
 Le versioni seguono il [versionamento semantico](https://semver.org/lang/it/): MAGGIORE.MINORE.CORRETTIVA.
 Questo file è anche la pagina «Novità» della wiki (`/changelog`).
 
+## 0.21.0 — 2026-11-05
+
+### Aggiunte
+- Ognuno può creare le sue campagne, fino a un limite che l'Admin cambia persona per persona.
+- Dimensione delle immagini nel testo.
+
+### Modifiche
+- Segreti del Master nell'editor segnati da un lucchetto, senza titoletto.
+- Nella barra dell'editor l'occhio oscura e mostra i blocchi.
+
+### Correzioni
+- Risolto un problema relativo agli elenchi nei segreti del Master nell'editor.
+
 ## 0.20.5 — 2026-11-05
 
 ### Modifiche

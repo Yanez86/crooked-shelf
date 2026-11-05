@@ -17,6 +17,7 @@ export type AuditAction =
 	| 'user_updated'
 	| 'invite_created'
 	| 'invite_revoked'
+	| 'campaign_created'
 	| 'campaign_master'
 	| 'campaign_deleted'
 	| 'token_created'

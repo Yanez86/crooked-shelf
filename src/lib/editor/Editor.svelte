@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onDestroy, onMount, untrack } from 'svelte';
 	import { Editor } from '@tiptap/core';
+	import { NodeSelection } from '@tiptap/pm/state';
 	import {
 		blockAt,
 		buildExtensions,
@@ -16,6 +17,7 @@
 		type RuleItem
 	} from './extensions.ts';
 	import { dieLabel, newRollTable, problemMessage, readRollTable } from '../content/rollTables.ts';
+	import { IMAGE_SIZES, imageSize } from '../content/render.ts';
 	import { RULE_KINDS } from '../rules/index.ts';
 	import { getT } from '../i18n/index.ts';
 	import type { DocNode } from '../content/types.ts';
@@ -234,27 +236,111 @@
 		status = t('editor.uploaded');
 	}
 
+	// L'immagine selezionata e la sua larghezza (null = la sua), per la tendina della barra.
+	const imageHere = $derived.by(() => {
+		void tick;
+		const sel = editor?.state.selection;
+		return sel instanceof NodeSelection && sel.node.type.name === 'image' ? { pos: sel.from, size: imageSize(sel.node.attrs.size) } : null;
+	});
+
+	/** Le larghezze da scegliere; quella di adesso, se è stata trascinata a un'altra misura, c'è anche lei. */
+	function sizeChoices(current: number | null) {
+		const list: { value: number | null; label: string }[] = [
+			{ value: null, label: t('editor.sizes.natural') },
+			...IMAGE_SIZES.map((n) => ({ value: n, label: t('editor.sizes.' + n) }))
+		];
+		if (current !== null && !IMAGE_SIZES.includes(current as never)) list.push({ value: current, label: t('editor.sizes.custom', { n: current }) });
+		return list;
+	}
+
+	/** La larghezza dell'immagine in `pos`, in percentuale della colonna del testo: cambia come si vede, non il file. */
+	function sizeImage(pos: number, size: number | null) {
+		sizing = false;
+		chain()
+			.command(({ tr }) => {
+				tr.setNodeAttribute(pos, 'size', size);
+				return true;
+			})
+			.setNodeSelection(pos)
+			.run();
+	}
+
 	async function editAlt() {
 		const cur = editor!.getAttributes('image').alt ?? '';
 		const alt = await ask(t('editor.altPrompt'), cur);
 		if (alt !== null) chain().updateAttributes('image', { alt: alt.trim() }).run();
 	}
 
-	// Il blocco sotto il mouse, con il punto dov'è il suo angolo in alto a destra.
-	let hovered = $state.raw<{ el: HTMLElement; top: number; left: number } | null>(null);
+	// Il blocco sotto il mouse, con il punto dov'è il suo angolo in alto a destra (e il bordo di sotto, per le immagini).
+	let hovered = $state.raw<{ el: HTMLElement; top: number; left: number; bottom: number } | null>(null);
 	// Il menu del «+» sul blocco: aggiunge un blocco di testo o un'immagine dopo di lui.
 	let adding = $state(false);
+	// Il menu della dimensione, sulle immagini.
+	let sizing = $state(false);
+	// Mentre si trascina l'angolo di un'immagine: la larghezza che avrà.
+	let resizing = $state<number | null>(null);
+
+	function place(el: HTMLElement) {
+		const box = el.getBoundingClientRect();
+		const area = host.getBoundingClientRect();
+		return { el, top: box.top - area.top, left: box.right - area.left, bottom: box.bottom - area.top };
+	}
 
 	function trackBlock(e: MouseEvent) {
-		// Il nome sopra i blocchi oscurati non è un blocco.
+		if (resizing !== null) return;
+		// Il segno sopra i blocchi oscurati non è un blocco.
 		const blocks = [...(editor?.view.dom.children ?? [])].filter((b) => !b.classList.contains('hidden-label')) as HTMLElement[];
 		const el = blocks.find((b) => b.contains(e.target as Node));
 		// Tra un blocco e l'altro, o sui pulsanti, resta quello di prima.
 		if (!el || el === hovered?.el) return;
-		const box = el.getBoundingClientRect();
-		const area = (e.currentTarget as HTMLElement).getBoundingClientRect();
-		hovered = { el, top: box.top - area.top, left: box.right - area.left };
+		hovered = place(el);
 		adding = false;
+		sizing = false;
+	}
+
+	// L'immagine sotto il mouse: il pulsante della dimensione e la maniglia sull'angolo.
+	const hoveredImage = $derived(hovered?.el instanceof HTMLImageElement ? hovered.el : null);
+	const hoveredSize = $derived.by(() => {
+		void tick;
+		return editor && hoveredImage ? imageSize(blockAt(editor.state.doc, hoveredPos())?.node.attrs.size) : null;
+	});
+
+	/**
+	 * Trascinando la maniglia (col mouse o col dito) l'immagine si allarga o si stringe, a passi del 5% della colonna;
+	 * lasciandola, la misura resta nella pagina. Da tastiera c'è la tendina nella barra.
+	 */
+	function startResize(e: PointerEvent) {
+		const img = hoveredImage;
+		if (!img || !editor || e.button > 0) return;
+		e.preventDefault();
+		const handle = e.currentTarget as HTMLElement;
+		handle.setPointerCapture(e.pointerId);
+		const pos = hoveredPos();
+		const parent = img.parentElement!;
+		const pad = getComputedStyle(parent);
+		const column = parent.clientWidth - parseFloat(pad.paddingLeft) - parseFloat(pad.paddingRight);
+		const startX = e.clientX;
+		const startW = img.getBoundingClientRect().width;
+		resizing = Math.round((startW / column) * 100);
+		const move = (m: PointerEvent) => {
+			const pct = Math.min(100, Math.max(10, Math.round(((startW + m.clientX - startX) / column) * 20) * 5));
+			resizing = pct;
+			img.style.width = `${pct}%`;
+			hovered = place(img);
+		};
+		const done = (m: PointerEvent) => {
+			handle.removeEventListener('pointermove', move);
+			handle.removeEventListener('pointerup', done);
+			handle.removeEventListener('pointercancel', done);
+			const pct = resizing;
+			resizing = null;
+			img.style.width = '';
+			// Un clic sulla maniglia, senza spostarla, non cambia niente.
+			if (m.type === 'pointerup' && pct !== null && m.clientX !== startX) sizeImage(pos, pct);
+		};
+		handle.addEventListener('pointermove', move);
+		handle.addEventListener('pointerup', done);
+		handle.addEventListener('pointercancel', done);
 	}
 
 	/** Dove comincia il blocco sotto il mouse (vedi blockAt). */
@@ -372,8 +458,16 @@
 		{/if}
 		{@render btn('rule', t('editor.rule'), () => chain().setHorizontalRule().run())}
 		{@render btn('image', t('editor.image'), () => fileInput.click())}
-		{#if active('image')}
+		{#if imageHere}
 			<button type="button" title={t('editor.altEdit')} onclick={editAlt}>Alt</button>
+			<select
+				aria-label={t('editor.imageSize')}
+				title={t('editor.imageSize')}
+				value={imageHere.size === null ? '' : String(imageHere.size)}
+				onchange={(e) => sizeImage(imageHere.pos, imageSize(e.currentTarget.value))}
+			>
+				{#each sizeChoices(imageHere.size) as c (c.value)}<option value={c.value === null ? '' : String(c.value)}>{c.label}</option>{/each}
+			</select>
 		{/if}
 		<!-- Il blocco dove si sta scrivendo: per chi non ha il mouse, che non vede il pulsante sul blocco. -->
 		{@render btn('trash', t('editor.deleteBlock'), () => deleteBlock(editor!.state.selection.from))}
@@ -454,8 +548,10 @@
 		bind:this={host}
 		onmousemove={trackBlock}
 		onmouseleave={() => {
+			if (resizing !== null) return;
 			hovered = null;
 			adding = false;
+			sizing = false;
 		}}
 	>
 		{#if hovered}
@@ -468,10 +564,29 @@
 					tabindex="-1"
 					aria-expanded={adding}
 					onmousedown={(e) => e.preventDefault()}
-					onclick={() => (adding = !adding)}
+					onclick={() => {
+						adding = !adding;
+						sizing = false;
+					}}
 				>
 					<Icon name="plus" /><span class="visually-hidden">{t('editor.addBlock')}</span>
 				</button>
+				{#if hoveredImage}
+					<button
+						type="button"
+						class="block-size"
+						title={t('editor.imageSize')}
+						tabindex="-1"
+						aria-expanded={sizing}
+						onmousedown={(e) => e.preventDefault()}
+						onclick={() => {
+							sizing = !sizing;
+							adding = false;
+						}}
+					>
+						<Icon name="resize" /><span class="visually-hidden">{t('editor.imageSize')}</span>
+					</button>
+				{/if}
 				{#if canSecret}
 					{@const label = hoveredHidden ? t('editor.showBlock') : t('editor.hideBlock')}
 					<button
@@ -502,7 +617,27 @@
 						<button type="button" tabindex="-1" onmousedown={(e) => e.preventDefault()} onclick={addImage}><Icon name="image" />{t('editor.image')}</button>
 					</div>
 				{/if}
+				{#if sizing}
+					<div class="block-menu" role="group" aria-label={t('editor.imageSize')}>
+						{#each sizeChoices(hoveredSize) as c (c.value)}
+							<button type="button" tabindex="-1" aria-pressed={c.value === hoveredSize} onmousedown={(e) => e.preventDefault()} onclick={() => sizeImage(hoveredPos(), c.value)}>{c.label}</button>
+						{/each}
+					</div>
+				{/if}
 			</div>
+			{#if hoveredImage}
+				<!-- La maniglia sull'angolo in basso a destra dell'immagine: si trascina col mouse o col dito. -->
+				<span
+					class="image-handle"
+					style:top="{hovered.bottom}px"
+					style:left="{hovered.left}px"
+					title={t('editor.imageDrag')}
+					onpointerdown={startResize}
+				></span>
+				{#if resizing !== null}
+					<span class="image-size-tip" style:top="{hovered.bottom}px" style:left="{hovered.left}px" aria-hidden="true">{resizing}%</span>
+				{/if}
+			{/if}
 		{/if}
 	</div>
 	<input type="hidden" {name} value={json} />
@@ -682,6 +817,54 @@
 		background: var(--c-primary);
 		color: var(--c-on-primary);
 	}
+	/* La dimensione che ha adesso: segnata anche dal segno di spunta, non solo dal colore. */
+	.block-menu button[aria-pressed='true'] {
+		font-weight: 700;
+	}
+	.block-menu button[aria-pressed='true']::after {
+		content: '';
+		width: 1em;
+		height: 1em;
+		margin-left: auto;
+		background: currentColor;
+		-webkit-mask: var(--icon-check) center / contain no-repeat;
+		mask: var(--icon-check) center / contain no-repeat;
+	}
+	/* La maniglia sull'angolo in basso a destra dell'immagine: un quadratino che si prende anche col dito. */
+	.image-handle {
+		position: absolute;
+		z-index: 1;
+		width: 1.5rem;
+		height: 1.5rem;
+		transform: translate(-60%, -60%);
+		border: 2px solid var(--c-surface);
+		border-radius: var(--radius);
+		background: var(--c-primary);
+		box-shadow: 0 1px 4px rgb(0 0 0 / 0.3);
+		cursor: nwse-resize;
+		touch-action: none;
+	}
+	.image-handle::before {
+		content: '';
+		position: absolute;
+		inset: 0.2rem;
+		background: var(--c-on-primary);
+		-webkit-mask: var(--icon-resize) center / contain no-repeat;
+		mask: var(--icon-resize) center / contain no-repeat;
+		forced-color-adjust: none;
+	}
+	.image-size-tip {
+		position: absolute;
+		z-index: 1;
+		transform: translate(-100%, calc(-100% - 1.1rem));
+		padding: 0.1rem 0.45rem;
+		border-radius: var(--radius);
+		background: var(--c-text);
+		color: var(--c-surface);
+		font-size: var(--fs-sm);
+		font-variant-numeric: tabular-nums;
+		pointer-events: none;
+	}
 	.area :global(.editor-content) {
 		min-height: 18rem;
 		padding: 1rem 1.25rem;
@@ -701,8 +884,8 @@
 	}
 	/*
 	 * Blocchi oscurati: un riquadro viola col bordo a sinistra; i blocchi segreti di fila sembrano uno solo.
-	 * Il nome col lucchetto (non solo il colore) sta dentro il riquadro, in cima al primo: il segno è alto zero
-	 * e la sua scritta scende nello spazio lasciato libero dal blocco che segue.
+	 * Il segno (non solo il colore) è un lucchetto sull'angolo in alto a sinistra del primo: sta sopra il riquadro
+	 * senza occupare spazio, così non sposta il testo e non entra nei contorni dei blocchi.
 	 */
 	.area :global(.editor-content > [data-visibility]) {
 		margin-top: 0;
@@ -712,8 +895,12 @@
 		color: var(--c-secret-text);
 		border-left: 6px solid var(--c-secret-border);
 	}
-	.area :global(.editor-content > .hidden-label + [data-visibility]) {
-		padding-top: 2.25rem;
+	/* Gli elenchi tengono il loro rientro, in più del margine del riquadro: numeri e pallini restano dentro. */
+	.area :global(.editor-content > ul[data-visibility]) {
+		padding-left: calc(1rem + 1.5rem);
+	}
+	.area :global(.editor-content > ol[data-visibility]) {
+		padding-left: calc(1rem + 2.6rem);
 	}
 	.area :global(.editor-content > [data-visibility] + :not([data-visibility])) {
 		margin-top: 1.25rem;
@@ -735,23 +922,14 @@
 	.inline .area :global(.editor-content.ProseMirror-focused > [data-visibility].has-focus) {
 		outline-color: var(--c-secret-border);
 	}
+	/* Il segno è alto zero e sta proprio sul bordo di sopra del riquadro: il lucchetto, in un cerchio, ne copre l'angolo. */
 	.area :global(.hidden-label) {
 		position: relative;
 		z-index: 1;
-		display: flex;
-		align-items: flex-start;
-		gap: 0.35em;
 		height: 0;
 		margin: 1.25rem 0 0;
-		padding: 0 1rem 0 calc(1rem + 6px);
-		color: var(--c-secret-text);
-		font-size: var(--fs-sm);
-		font-weight: 700;
-		line-height: 1.5;
 		user-select: none;
 		pointer-events: none;
-		/* La scritta scende di quanto il riquadro ha di margine interno. */
-		top: 0.5rem;
 	}
 	.inline .area :global(.editor-content > .hidden-label) {
 		outline: none;
@@ -760,13 +938,27 @@
 	.area :global(.editor-content > .hidden-label:first-child) {
 		margin-top: 0;
 	}
-	.area :global(.hidden-label::before) {
+	.area :global(.hidden-label::before),
+	.area :global(.hidden-label::after) {
 		content: '';
-		width: 1.1em;
-		height: 1.1em;
-		margin-top: 0.2em;
-		flex: none;
-		background: currentColor;
+		position: absolute;
+		box-sizing: border-box;
+		/* Al centro del bordo viola, sull'angolo. */
+		left: 3px;
+		top: 0;
+		transform: translate(-50%, -50%);
+	}
+	.area :global(.hidden-label::before) {
+		width: 1.75rem;
+		height: 1.75rem;
+		border: 2px solid var(--c-secret-border);
+		border-radius: 50%;
+		background: var(--c-secret-bg);
+	}
+	.area :global(.hidden-label::after) {
+		width: 0.95rem;
+		height: 0.95rem;
+		background: var(--c-secret-text);
 		-webkit-mask: var(--icon-lock) center / contain no-repeat;
 		mask: var(--icon-lock) center / contain no-repeat;
 		forced-color-adjust: none;
@@ -775,6 +967,12 @@
 		.area :global(.editor-content > [data-visibility]) {
 			border-left: 6px solid CanvasText;
 		}
+		.area :global(.hidden-label::before) {
+			border-color: CanvasText;
+		}
+		.area :global(.hidden-label::after) {
+			background: CanvasText;
+		}
 	}
 	.area :global(.wikilink) {
 		cursor: text;
@@ -782,6 +980,10 @@
 	.area :global(img) {
 		max-width: 100%;
 		height: auto;
+	}
+	/* Larghezza scelta: una parte della colonna del testo, come nella pagina. */
+	.area :global(img[data-size]) {
+		width: calc(100% * var(--img-scale));
 	}
 	.area :global(.ProseMirror-selectednode) {
 		outline: 2px solid var(--c-focus);

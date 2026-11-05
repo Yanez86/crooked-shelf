@@ -91,6 +91,10 @@
 					</form>
 				</li>
 			{/if}
+			{#if user}
+				<!-- Pagina intera, non il popup: dopo averla creata si entra nella campagna nuova. -->
+				<li><a href="/campaign/new" aria-current={current('/campaign/new')}>{t('campaign.newTitle')}</a></li>
+			{/if}
 			{#if user?.admin}
 				<li><a href="/admin" aria-current={current('/admin')} onclick={(e) => openPanel(e, '/admin', t('nav.admin'))}>{t('nav.admin')}</a></li>
 			{/if}

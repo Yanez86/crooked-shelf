@@ -8,6 +8,8 @@ export const UI_ICONS: Record<string, string> = {
 	// Azioni
 	plus: 'M12 5v14M5 12h14',
 	minus: 'M5 12h14',
+	// Due frecce sulla diagonale: cambia la dimensione (di un'immagine).
+	resize: 'M14 4h6v6M20 4l-7 7M10 20H4v-6M4 20l7-7',
 	close: 'M6 6l12 12M18 6 6 18',
 	check: 'M5 12.5l4.5 4.5L19 7.5',
 	edit: 'M4 20h4L19 9l-4-4L4 16zM13.5 6.5l4 4',
@@ -96,7 +98,7 @@ export function iconSvg(name: string, stroke = '#000'): string {
 }
 
 /** Icone usate nei CSS (::before, ::after): una variabile --icon-<nome> per ciascuna. */
-const CSS_ICONS = ['lock', 'chevronDown', 'chevronUp', 'chevronRight', 'book', 'dice', 'search'];
+const CSS_ICONS = ['lock', 'chevronDown', 'chevronUp', 'chevronRight', 'book', 'dice', 'search', 'check', 'resize'];
 
 export function iconCss(): string {
 	const vars = CSS_ICONS.map((n) => `--icon-${n.replace(/[A-Z]/g, (c) => '-' + c.toLowerCase())}:url("data:image/svg+xml,${encodeURIComponent(iconSvg(n))}")`);

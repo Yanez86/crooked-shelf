@@ -36,11 +36,13 @@ function read(f: FormData) {
 }
 
 export const actions: Actions = {
+	// Anche oltre il limite di chi la terrà: quello vale per le campagne che si creano da sé (/campaign/new).
 	create: async ({ request, locals }) => {
-		requireAdmin(locals.user);
+		const u = requireAdmin(locals.user);
 		const r = read(await request.formData());
 		if ('error' in r) return fail(400, { error: r.error });
 		newCampaign(r.name, { id: r.masterId, role: 'master' }, getSettings().defaultLocale);
+		audit('campaign_created', { userId: u.id, ip: locals.ip }, `${r.name}: ${r.masterId}`);
 		return { ok: 'admin.campaignCreated' };
 	},
 	update: async ({ request, locals }) => {
