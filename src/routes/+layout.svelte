@@ -113,6 +113,7 @@
 	onclickcapture={openLinked}
 	onpointerdowncapture={() => pointer(true)}
 	onkeydowncapture={(e) => e.key === 'Tab' && pointer(false)}
+	onkeydown={(e) => framed && e.key === 'Escape' && window.frameElement?.closest('dialog')?.close()}
 />
 
 <svelte:head>

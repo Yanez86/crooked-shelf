@@ -24,11 +24,10 @@
 		goto(pathname + search + hash);
 	}
 
-	// Il fuoco sta dentro l'iframe: Esc e i salvataggi vanno ascoltati lì.
+	// Il fuoco sta dentro l'iframe: i salvataggi vanno ascoltati lì. Esc lo ascolta la pagina stessa (+layout.svelte),
+	// appena è pronta: l'evento load dell'iframe arriva solo quando ha caricato tutto, e un Esc premuto prima andava perso.
 	function listen(e: Event) {
-		const win = (e.currentTarget as HTMLIFrameElement).contentWindow;
-		win?.addEventListener('keydown', (k: KeyboardEvent) => k.key === 'Escape' && dlg?.close());
-		win?.addEventListener('submit', () => (saved = true));
+		(e.currentTarget as HTMLIFrameElement).contentWindow?.addEventListener('submit', () => (saved = true));
 	}
 </script>
 

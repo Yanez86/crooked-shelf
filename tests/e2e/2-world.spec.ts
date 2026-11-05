@@ -13,6 +13,8 @@ const PLAYER = { user: 'alice', pass: 'elfa-dei-boschi-99' };
 let admin: Page;
 
 async function axe(page: Page, label: string) {
+	// Prima che finiscano le animazioni (es. le caselle della colonna a lato che si spostano) gli elementi si sovrappongono per un momento.
+	await page.waitForFunction(() => document.getAnimations().every((a) => a.playState !== 'running'));
 	const r = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze();
 	const found = r.violations.map((v) => `${label}: ${v.id} (${v.impact}) ${v.nodes.map((n) => n.target.join(' ')).slice(0, 3).join(' | ')}`);
 	expect(found, found.join('\n')).toEqual([]);

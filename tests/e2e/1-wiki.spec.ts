@@ -678,6 +678,8 @@ test('il giocatore modifica una pagina col segreto del Master, e il segreto rest
 	await expect(p.locator('.block-hide')).toHaveCount(0);
 	await p.locator('.block-add').click();
 	await p.locator('.block-menu').getByRole('button', { name: 'Testo' }).click();
+	// TipTap dà il fuoco all'editor al frame dopo: prima i tasti andrebbero persi.
+	await expect(mine).toBeFocused();
 	await p.keyboard.type('Mi offro io. — Alice');
 	await p.getByRole('button', { name: 'Salva' }).click();
 	await expect(p.locator('.content')).toContainText('Mi offro io.');
