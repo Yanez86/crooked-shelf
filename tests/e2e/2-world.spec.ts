@@ -65,13 +65,13 @@ test('template PNG con scheda, segreto e immagine', async () => {
 
 	await expect(admin.getByRole('heading', { level: 1 })).toHaveText('Nuova pagina: PNG');
 	await admin.getByLabel('Titolo', { exact: true }).fill('Elminster');
-	await expect(admin.getByLabel('Nome del campo 3')).toHaveValue('Allineamento');
-	await admin.getByLabel('Valore del campo 3').fill('Caotico buono');
-	await admin.getByLabel('Valore del campo 4').fill('[[Locanda del Grifone]]');
+	await expect(admin.getByLabel('Nome del campo 3')).toHaveValue('Luogo');
+	await admin.getByLabel('Valore del campo 2').fill('Saggio errante');
+	await admin.getByLabel('Valore del campo 3').fill('[[Locanda del Grifone]]');
 	await admin.getByRole('region', { name: 'Colonna a lato' }).getByRole('button', { name: 'Testo', exact: true }).click();
-	await expect(admin.getByLabel('Nome del campo 6')).toBeFocused();
-	await admin.getByLabel('Nome del campo 6').fill('Età');
-	await admin.getByLabel('Valore del campo 6').fill('Più di mille anni');
+	await expect(admin.getByLabel('Nome del campo 5')).toBeFocused();
+	await admin.getByLabel('Nome del campo 5').fill('Età');
+	await admin.getByLabel('Valore del campo 5').fill('Più di mille anni');
 
 	const editor = admin.locator('.editor-content');
 	await expect(editor.getByRole('heading', { name: 'Aspetto' })).toBeVisible();
@@ -93,7 +93,7 @@ test('template PNG con scheda, segreto e immagine', async () => {
 	await admin.getByRole('button', { name: 'Crea la pagina' }).click();
 	await expect(admin.getByRole('heading', { level: 1, name: 'Elminster' })).toBeVisible();
 	const box = admin.getByRole('complementary', { name: 'Scheda' });
-	await expect(box).toContainText('Caotico buono');
+	await expect(box).toContainText('Saggio errante');
 	await expect(box.getByRole('link', { name: 'Locanda del Grifone' })).toBeVisible();
 	await expect(box).toContainText('Più di mille anni');
 	await expect(admin.locator('.content img')).toHaveAttribute('alt', 'Ritratto di un vecchio mago con la barba');
@@ -110,7 +110,7 @@ test('template PNG con scheda, segreto e immagine', async () => {
 	await admin.goto('/wiki/locanda-del-grifone');
 	await expect(admin.getByRole('region', { name: 'Pagine che collegano qui' })).toContainText('Elminster');
 	// E la ricerca trova i campi.
-	await admin.goto('/search?q=caotico');
+	await admin.goto('/search?q=errante');
 	await expect(admin.locator('main').getByRole('link', { name: 'Elminster' })).toBeVisible();
 });
 
@@ -209,11 +209,11 @@ test('colonna a lato: si aggiunge modificando la pagina, con riquadri di testo e
 	// Elminster ha già la scheda del template: la colonna è aperta. Si aggiunge un'immagine.
 	await admin.goto('/wiki/elminster/edit');
 	await side.getByRole('button', { name: 'Immagine', exact: true }).click();
-	let box = side.getByRole('group', { name: 'Immagine 7' });
+	let box = side.getByRole('group', { name: 'Immagine 6' });
 	await expect(box.getByRole('button', { name: "Scegli un'immagine" })).toBeFocused();
 
 	// Un file che non è un'immagine viene rifiutato.
-	await box.getByLabel("File dell'immagine 7").setInputFiles({ name: 'x.svg', mimeType: 'image/svg+xml', buffer: Buffer.from('<svg/>') });
+	await box.getByLabel("File dell'immagine 6").setInputFiles({ name: 'x.svg', mimeType: 'image/svg+xml', buffer: Buffer.from('<svg/>') });
 	await expect(box.getByRole('status')).toContainText('Formato non supportato');
 
 	// Un file trascinato dal computer sul riquadro.
@@ -227,12 +227,12 @@ test('colonna a lato: si aggiunge modificando la pagina, con riquadri di testo e
 	await box.dispatchEvent('drop', { dataTransfer });
 	await expect(box.getByRole('status')).toContainText('Immagine caricata');
 	await expect(box.locator('img')).toBeVisible();
-	await box.getByLabel("Didascalia dell'immagine 7").fill('Il mago nella sua torre');
-	await box.getByLabel("Titoletto dell'immagine 7").fill('Ritratto');
+	await box.getByLabel("Didascalia dell'immagine 6").fill('Il mago nella sua torre');
+	await box.getByLabel("Titoletto dell'immagine 6").fill('Ritratto');
 
 	// In cima con la freccia, da tastiera: il fuoco resta sulla freccia.
-	await box.getByRole('button', { name: 'Sposta su: Immagine 7' }).focus();
-	for (let i = 0; i < 6; i++) await admin.keyboard.press('Enter');
+	await box.getByRole('button', { name: 'Sposta su: Immagine 6' }).focus();
+	for (let i = 0; i < 5; i++) await admin.keyboard.press('Enter');
 	box = side.getByRole('group', { name: 'Immagine 1' });
 	await expect(box.getByRole('button', { name: 'Sposta giù: Immagine 1' })).toBeFocused();
 	await expect(box.getByRole('button', { name: 'Sposta su: Immagine 1' })).toBeDisabled();
@@ -254,7 +254,7 @@ test('colonna a lato: si aggiunge modificando la pagina, con riquadri di testo e
 	const heading = column.locator('figure').getByText('Ritratto', { exact: true });
 	expect((await heading.boundingBox())!.y).toBeLessThan((await img.boundingBox())!.y);
 	await expect(column.locator(':scope > *').first()).toHaveJSProperty('tagName', 'FIGURE');
-	await expect(column).toContainText('Caotico buono');
+	await expect(column).toContainText('Saggio errante');
 	await expect(column.getByRole('button')).toHaveCount(0);
 	const first = (await img.getAttribute('src'))!;
 	expect((await admin.request.get(first)).headers()['content-type']).toBe('image/png');

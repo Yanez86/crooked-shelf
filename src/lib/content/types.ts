@@ -17,7 +17,7 @@ export function isDoc(v: unknown): v is DocNode {
 }
 
 /**
- * Riquadro della colonna a lato di una pagina. Di testo: titolo e valore (es. "Allineamento: Caotico buono"),
+ * Riquadro della colonna a lato di una pagina. Di testo: titolo e valore (es. "Ruolo: Locandiere"),
  * il valore accetta [[collegamenti]]. Immagine: `image` è l'id del file, `title` il titoletto sopra l'immagine (facoltativo),
  * `label` la didascalia, `value` resta vuoto.
  */

@@ -1,4 +1,4 @@
-// Importa i testi SRD 5.2 (D&D 2024) dal progetto 5e-database e scrive un file compatto per la wiki.
+// Importa i testi SRD 5.2 dal progetto 5e-database e scrive un file compatto per la wiki.
 //
 //   git clone --depth 1 https://github.com/5e-bits/5e-database.git /tmp/5e-database
 //   node tools/import-srd.mjs /tmp/5e-database

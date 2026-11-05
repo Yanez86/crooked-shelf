@@ -60,7 +60,7 @@ const PAGES = [
 		icon: 'scroll',
 		tags: ['Avventura'],
 		fields: [
-			['Sistema', 'D&D 5.5 (2024)'],
+			['Regole', 'SRD 5.2'],
 			['Personaggi', 'Tre, di 2° livello'],
 			['Durata', 'Una o due sessioni'],
 			['Luogo', '[[Acquaferma]]']

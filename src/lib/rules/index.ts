@@ -1,7 +1,7 @@
 import { slugify } from '../slug.ts';
 
 /**
- * Sistema di regole. Per ora uno solo: D&D 5.5 (2024). È scritto come modulo,
+ * Sistema di regole. Per ora uno solo, con i testi dell'SRD 5.2. È scritto come modulo,
  * così in futuro altri sistemi (Pathfinder, OSR…) potranno aggiungersi come plugin.
  */
 export const RULE_KINDS = ['spell', 'monster', 'condition', 'item', 'feat', 'species', 'class', 'background', 'rule'] as const;

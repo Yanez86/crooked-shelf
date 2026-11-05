@@ -26,15 +26,15 @@ const p = (text?: string): DocNode => (text ? { type: 'paragraph', content: [{ t
 /** Un paragrafo oscurato: lo vede solo il Master (vedi content/blocks.ts). */
 const secret = (text: string): DocNode => ({ type: 'paragraph', attrs: { visibility: 'master' }, content: [{ type: 'text', text }] });
 
-// Sezioni e campi di ogni template (chiavi di traduzione in templates.*).
+// Sezioni e campi di ogni template (chiavi di traduzione in templates.*): validi per ogni sistema di gioco.
 const SPEC: Record<BuiltinTemplate, { fields: string[]; sections: string[]; icon: string; secret?: boolean; session?: boolean }> = {
-	npc: { fields: ['race', 'role', 'alignment', 'location', 'faction'], sections: ['appearance', 'personality', 'relations'], icon: 'person', secret: true },
-	pc: { fields: ['player', 'race', 'class', 'background', 'alignment'], sections: ['appearance', 'story', 'goals'], icon: 'shield' },
+	npc: { fields: ['origin', 'role', 'location', 'faction'], sections: ['appearance', 'personality', 'relations'], icon: 'person', secret: true },
+	pc: { fields: ['player', 'origin', 'role'], sections: ['appearance', 'story', 'goals'], icon: 'shield' },
 	place: { fields: ['type', 'region', 'population', 'ruler'], sections: ['description', 'places', 'people'], icon: 'castle', secret: true },
 	faction: { fields: ['leader', 'seat', 'goals', 'allies', 'enemies'], sections: ['description', 'members', 'history'], icon: 'crown', secret: true },
-	item: { fields: ['type', 'rarity', 'attunement', 'owner'], sections: ['description', 'properties', 'history'], icon: 'gem' },
-	deity: { fields: ['domains', 'alignment', 'symbol', 'worshippers'], sections: ['description', 'dogma', 'clergy'], icon: 'temple' },
-	monster: { fields: ['type', 'cr', 'habitat'], sections: ['description', 'tactics', 'lore'], icon: 'claws' },
+	item: { fields: ['type', 'value', 'owner'], sections: ['description', 'properties', 'history'], icon: 'gem' },
+	deity: { fields: ['domains', 'symbol', 'worshippers'], sections: ['description', 'dogma', 'clergy'], icon: 'temple' },
+	monster: { fields: ['type', 'danger', 'habitat'], sections: ['description', 'tactics', 'lore'], icon: 'claws' },
 	session: { fields: ['present', 'location'], sections: ['summary', 'events', 'loot', 'next'], icon: 'scroll', session: true },
 	houserule: { fields: ['replaces'], sections: ['rule', 'why'], icon: 'book' }
 };

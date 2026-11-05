@@ -163,7 +163,10 @@ describe('template', () => {
 	it('preinstallati nella lingua della wiki', () => {
 		const npc = builtinTemplate('npc', 'it');
 		expect(npc.name).toBe('PNG');
-		expect(npc.fields).toContain('Allineamento');
+		expect(npc.fields).toEqual(['Origine', 'Ruolo', 'Luogo', 'Fazione']);
+		// Campi validi per ogni sistema di gioco, niente di un regolamento in particolare.
+		expect(builtinTemplate('pc', 'it').fields).toEqual(['Giocatore', 'Origine', 'Ruolo']);
+		expect(builtinTemplate('pc', 'en').fields).toEqual(['Player', 'Origin', 'Role']);
 		expect(extract(npc.content).hasSecret).toBe(true);
 		expect(builtinTemplate('session', 'en').session).toBe(true);
 	});
@@ -223,7 +226,7 @@ describe('template', () => {
 		const npc = getTemplatePage('png', alice)!;
 		const forAlice = templateCopy(npc, alice, '2026-10-30');
 		expect(forAlice).toMatchObject({ icon: 'person', template: 'png', session: null });
-		expect(forAlice.fields.map((f) => f.label)).toContain('Allineamento');
+		expect(forAlice.fields.map((f) => f.label)).toContain('Origine');
 		expect(extract(forAlice.content).hasSecret).toBe(false);
 		expect(extract(templateCopy(npc, master, '2026-10-30').content).hasSecret).toBe(true);
 		expect(templateCopy(getTemplatePage('resoconto-di-sessione', alice)!, alice, '2026-10-30').session).toEqual({ number: null, realDate: '2026-10-30', world: null });

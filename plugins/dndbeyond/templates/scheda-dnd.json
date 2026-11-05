@@ -1,6 +1,6 @@
 {
 	"name": "Scheda D&D",
-	"description": "La scheda di un personaggio di D&D 5.5, col link alla sua scheda su D&D Beyond.",
+	"description": "La scheda di un personaggio di D&D, col link alla sua scheda su D&D Beyond.",
 	"fields": [
 		"Specie",
 		"Classe",

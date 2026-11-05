@@ -1,6 +1,6 @@
 # Crooked Shelf — Documento di progetto
 
-Wiki self-hosted per creare, curare e registrare campagne di giochi di ruolo da tavolo (pensata per D&D 5.5, aperta ad altri sistemi).
+Wiki self-hosted per creare, curare e registrare campagne di giochi di ruolo da tavolo, con ogni sistema di gioco.
 
 > Stato: **in uso**, versione 0.17.0. Le novità di ogni versione sono in [CHANGELOG.md](../CHANGELOG.md).
 
@@ -109,7 +109,7 @@ Tutto ciò che si scrive è una pagina, nell'albero a sinistra e all'indirizzo `
 
 ### Template
 - Alla creazione della wiki diventano pagine «template» della cartella **Template**: PNG, Personaggio giocante, Luogo, Fazione, Oggetto, Divinità, Mostro, Resoconto di sessione, Regola della casa. Da lì sono pagine come le altre: si modificano, si eliminano, se ne aggiungono.
-- Una pagina nuova è bianca o la fotocopia di un template: blocchi, colonna a lato (es. "Allineamento", "Luogo di residenza" collegato a una pagina) e icona. Cambiare il template non cambia le copie già fatte.
+- Una pagina nuova è bianca o la fotocopia di un template: blocchi, colonna a lato (es. "Ruolo", "Luogo di residenza" collegato a una pagina) e icona. Cambiare il template non cambia le copie già fatte.
 
 ## 5. Categorie e tag
 
@@ -128,7 +128,7 @@ Tutto ciò che si scrive è una pagina, nell'albero a sinistra e all'indirizzo `
 
 ## 7. Riferimenti alle regole
 
-- Il sistema di regole è un **modulo** (`ruleset`); il primo è **D&D 5.5 (2024)**.
+- Il sistema di regole è un **modulo** (`ruleset`); il primo porta i testi dell'**SRD 5.2**, gli altri possono arrivare dai plugin.
 - Sintassi nel testo: `@incantesimo[Palla di fuoco]`, `@mostro[Goblin]`, `@condizione[Prono]`, `@oggetto[...]`, `@regola[...]`.
 - Il riferimento diventa un link alla scheda della regola; con il plugin incluso **D&D Beyond** (spento di base), un link alla ricerca del sito.
 - Se il contenuto è nell'**SRD 5.2** (licenza CC-BY-4.0), al passaggio del mouse compare il testo con l'attribuzione richiesta.
@@ -212,7 +212,7 @@ In importazione: anteprima, poi si sceglie dove metterlo.
 Predisposte fin dall'inizio, anche se il caricamento di plugin esterni arriva nella fase 4.
 - Punti di estensione: **tipi di blocco**, **template**, **moduli di regole**, **temi**, **pannelli laterali**, **azioni di esportazione**, **lingue**.
 - Ogni plugin dichiara nome, versione, permessi richiesti e punti di estensione in un `plugin.json`.
-- Le funzioni interne (es. il modulo D&D 5.5) usano la stessa interfaccia dei plugin, così l'API è sempre collaudata.
+- Le funzioni interne (es. il modulo delle regole) usano la stessa interfaccia dei plugin, così l'API è sempre collaudata.
 - Plugin attivabili/disattivabili dall'Admin.
 
 ## 15. Self-hosting e alternative
