@@ -2,14 +2,14 @@
 
 **English** · [Italiano](#italiano)
 
-A self-hosted wiki for tabletop RPG campaigns, usable with any system. Version 0.20.5.
+A self-hosted wiki for tabletop RPG campaigns, usable with any system.
 
 ## How it works
 
 You install it once on a computer (PC, Raspberry Pi or VPS) and everyone uses it from the browser, phone included.
 
 - **Roles**: the Admin runs the site, the Master runs a campaign, Players write and read. Access by invitation only.
-- **Campaigns**: one installation, many campaigns. Each one has its own Master, players and pages.
+- **Campaigns**: one installation, many campaigns. Each one has its own Master, players and pages. Everyone can create their own, up to a limit set by the Admin, and manages them all from the Campaigns panel.
 - **Pages**: block editor with Markdown, `[[Page]]` links, cover, icon, tags and search. Start blank or from a **template**.
 - **Master's secrets**: the Master hides single blocks with the eye icon. Players never receive them, not even in search, versions or exports, and can still edit the page.
 - **Page types**: page, template, map (pins and layers), timeline (fantasy calendars), board (cards in columns).
@@ -18,7 +18,7 @@ You install it once on a computer (PC, Raspberry Pi or VPS) and everyone uses it
 - **Rules**: `@spell[Fireball]` shows the SRD 5.2 text; the D&D Beyond plugin links to the site.
 - **Resources and gallery**: images, audio and files of the campaign in one place.
 - **History**: every save is a version; deleted pages go to the trash.
-- **Accessibility**: WCAG 2.2 AA, keyboard only, text up to 200%, dyslexia fonts, light, dark and custom themes.
+- **Accessibility**: WCAG 2.2 AA, keyboard only, text up to 200%, dyslexia fonts, Aria, Neon and Vintage themes (light and dark) plus custom ones.
 - **Languages**: Italian and English; more via a file or a plugin.
 - **Plugins**: data only (themes, templates, calendars, languages, rules, links), never code.
 - **Claude**: the Master can connect Claude to a campaign to search, read and, if allowed, write pages.
@@ -58,14 +58,14 @@ SRD 5.2 texts: Wizards of the Coast, CC-BY-4.0; data from the 5e-database projec
 
 [English](#crooked-shelf) · **Italiano**
 
-Una wiki self-hosted per campagne di giochi di ruolo da tavolo, usabile con ogni sistema. Versione 0.20.5.
+Una wiki self-hosted per campagne di giochi di ruolo da tavolo, usabile con ogni sistema.
 
 ## Come funziona
 
 La installi una volta su un computer (PC, Raspberry Pi o VPS) e tutti la usano dal browser, anche dal telefono.
 
 - **Ruoli**: l'Admin gestisce il sito, il Master una campagna, i Giocatori leggono e scrivono. Si entra solo su invito.
-- **Campagne**: una installazione, più campagne. Ognuna ha il suo Master, i suoi giocatori e le sue pagine.
+- **Campagne**: una installazione, più campagne. Ognuna ha il suo Master, i suoi giocatori e le sue pagine. Ognuno può crearne di sue, fino al limite scelto dall'Admin, e le gestisce tutte dal pannello Campagne.
 - **Pagine**: editor a blocchi con Markdown, collegamenti `[[Pagina]]`, copertina, icona, tag e ricerca. Si parte da una pagina bianca o da un **template**.
 - **Segreti del Master**: il Master oscura un singolo blocco con l'occhio. Ai giocatori non arriva mai, neanche nella ricerca, nelle versioni o nelle esportazioni, e possono comunque modificare la pagina.
 - **Tipi di pagina**: pagina, template, mappa (pin e livelli), cronologia (calendari fantasy), bacheca (schede in colonne).
@@ -74,7 +74,7 @@ La installi una volta su un computer (PC, Raspberry Pi o VPS) e tutti la usano d
 - **Regole**: `@incantesimo[Fireball]` mostra il testo SRD 5.2; il plugin D&D Beyond porta al sito.
 - **Risorse e galleria**: immagini, audio e file della campagna in un posto solo.
 - **Storia**: ogni salvataggio è una versione; le pagine eliminate vanno nel cestino.
-- **Accessibilità**: WCAG 2.2 AA, tutto da tastiera, testo fino al 200%, caratteri per la dislessia, temi chiaro, scuro e personalizzati.
+- **Accessibilità**: WCAG 2.2 AA, tutto da tastiera, testo fino al 200%, caratteri per la dislessia, temi Aria, Neon e Vintage (chiari e scuri) e personalizzati.
 - **Lingue**: italiano e inglese; altre con un file o un plugin.
 - **Plugin**: solo dati (temi, template, calendari, lingue, regole, link), mai codice.
 - **Claude**: il Master può collegare Claude a una campagna per cercare, leggere e, se lo permette, scrivere pagine.
