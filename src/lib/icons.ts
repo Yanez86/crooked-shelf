@@ -74,6 +74,8 @@ export const UI_ICONS: Record<string, string> = {
 	note: 'M3.75 3.75h16.5v16.5H3.75zM12 11v5.5M12 7.75v.01',
 	tip: 'M9.5 16.5h5M10 20h4M12 3.5a5.5 5.5 0 0 0-3.25 9.94c.47.35.75.9.75 1.48v1.58h5v-1.58c0-.58.28-1.13.75-1.48A5.5 5.5 0 0 0 12 3.5z',
 	table: 'M3.75 4.75h16.5v14.5H3.75zM3.75 9.5h16.5M3.75 14.5h16.5M9.5 4.75v14.5M14.5 4.75v14.5',
+	// Un d20: l'esagono, la faccia davanti e gli spigoli verso gli angoli.
+	dice: 'M12 2.75 20 7.4v9.2l-8 4.65-8-4.65V7.4zM12 7.25l4.75 8.25h-9.5zM12 2.75v4.5M4 7.4l8-.15M20 7.4l-8-.15M7.25 15.5 4 16.6M16.75 15.5 20 16.6M7.25 15.5 12 21.25M16.75 15.5 12 21.25',
 	rule: 'M3 12h18',
 	undo: 'M9 14 4 9l5-5M4 9h10.5a5.5 5.5 0 0 1 0 11H11',
 	redo: 'M15 14l5-5-5-5M20 9H9.5a5.5 5.5 0 0 0 0 11H13',
@@ -94,7 +96,7 @@ export function iconSvg(name: string, stroke = '#000'): string {
 }
 
 /** Icone usate nei CSS (::before, ::after): una variabile --icon-<nome> per ciascuna. */
-const CSS_ICONS = ['lock', 'chevronDown', 'chevronUp', 'chevronRight', 'book'];
+const CSS_ICONS = ['lock', 'chevronDown', 'chevronUp', 'chevronRight', 'book', 'dice'];
 
 export function iconCss(): string {
 	const vars = CSS_ICONS.map((n) => `--icon-${n.replace(/[A-Z]/g, (c) => '-' + c.toLowerCase())}:url("data:image/svg+xml,${encodeURIComponent(iconSvg(n))}")`);

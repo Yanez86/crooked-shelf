@@ -422,6 +422,38 @@
 		"tipsIntro": "Scrivi così e l'editor trasforma il testo mentre scrivi:",
 		"tipSample": "testo"
 	},
+	"rollTables": {
+		"suggestions": "Tabelle di tiro",
+		"hint": "Tira su una tabella di tiro: scrivi / e il nome, es. /bottega",
+		"insert": "Nuova tabella di tiro",
+		"newName": "Nome della tabella",
+		"toggle": "Tabella di tiro",
+		"toggleHint": "Tabella di tiro: nella prima riga il dado (es. d10) e il nome, nelle altre i numeri e il risultato",
+		"ready": "Pronta da tirare: «{name}», {die}, {n} righe. Nelle pagine si tira con / e il nome.",
+		"roll": "Tira",
+		"rollOn": "Tira su «{name}»",
+		"value": "{value} ({die}):",
+		"emptyResult": "riga vuota",
+		"rolled": "{name}: è uscito {value} ({die}).",
+		"emptyRow": "{name}: è uscito {value}, ma la riga è vuota.",
+		"cant": "Non si può tirare su «{name}».",
+		"gone": "Questa tabella di tiro non c'è più, o non la puoi vedere.",
+		"reroll": "Ritira: un altro risultato dalla stessa tabella",
+		"rerollShort": "Ritira",
+		"unlink": "Fissa il risultato: diventa testo normale e non si ritira più",
+		"unlinkShort": "Fissa",
+		"tools": "Tiro",
+		"problem": {
+			"columns": "Servono almeno due colonne: i numeri del dado e il risultato.",
+			"name": "Scrivi il nome della tabella nella seconda cella della prima riga.",
+			"rows": "Aggiungi almeno una riga sotto l'intestazione.",
+			"die": "Nella prima cella scrivi il dado: d4, d6, d8, d10, d12, d20, d100, d66, oppure più dadi come 2d6.",
+			"range": "Riga {row}: nella prima cella servono i numeri del dado, es. 3 oppure 4-6.",
+			"outside": "Riga {row}: i numeri escono da quelli del dado.",
+			"gap": "Nessuna riga ha il numero {value}.",
+			"overlap": "Più righe hanno il numero {value}."
+		}
+	},
 	"categories": {
 		"empty": "Ancora nessuna categoria.",
 		"pages": "{n} pagine",

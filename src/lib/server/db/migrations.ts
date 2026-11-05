@@ -432,6 +432,16 @@ export const MIGRATIONS: (string | ((db: Database.Database) => void) | { rebuild
 	`
 	ALTER TABLE campaigns ADD COLUMN schedule INTEGER NOT NULL DEFAULT 0;
 	UPDATE campaigns SET schedule = 1 WHERE EXISTS (SELECT 1 FROM users);
+	`,
+	// Tabelle di tiro: l'indice per trovarle col «/». Prima non c'erano, quindi non c'è niente da riempire.
+	`
+	CREATE TABLE roll_tables (
+		page_id INTEGER NOT NULL REFERENCES pages(id) ON DELETE CASCADE,
+		block_id TEXT NOT NULL,
+		name TEXT NOT NULL,
+		secret INTEGER NOT NULL DEFAULT 0,
+		PRIMARY KEY (page_id, block_id)
+	);
 	`
 ];
 

@@ -1,6 +1,7 @@
 import { CALLOUT_KINDS, type DocNode } from './types.ts';
 import { INLINE_LINK } from './extract.ts';
-import { blockVisibility } from './blocks.ts';
+import { blockId, blockVisibility } from './blocks.ts';
+import { isRollTable, tableName } from './rollTables.ts';
 import type { Visibility } from '../roles.ts';
 import { slugify } from '../slug.ts';
 import { parseRuleKind, ruleKey, ruleLinks, type RuleKind } from '../rules/index.ts';
@@ -19,10 +20,12 @@ export interface RenderOptions {
 	/** Chi legge vede i blocchi con questa visibilità? (quelli nascosti non entrano nell'HTML) */
 	sees: (v: Visibility) => boolean;
 	resolve: (slug: string) => LinkTarget | undefined;
-	/** Testi dell'interfaccia (già tradotti). `preview` contiene {name}. */
-	labels: { secret: string; note: string; tip: string; warning: string; missing: string; preview?: string; external?: string };
+	/** Testi dell'interfaccia (già tradotti). `preview` e `rollOn` contengono {name}. */
+	labels: { secret: string; note: string; tip: string; warning: string; missing: string; preview?: string; external?: string; roll?: string; rollOn?: string };
 	/** C'è un'anteprima del testo della regola (SRD)? */
 	hasRule?: (kind: RuleKind, key: string) => boolean;
+	/** La pagina che si disegna: le sue tabelle di tiro hanno il pulsante «Tira» (non nelle versioni vecchie). */
+	pageId?: number;
 }
 
 export const esc = (s: string) =>
@@ -147,8 +150,10 @@ export function renderDoc(doc: DocNode, opt: RenderOptions): string {
 				const title = n.attrs?.title ? ` title="${esc(String(n.attrs.title))}"` : '';
 				return `<img src="${esc(src)}" alt="${alt}"${title} loading="lazy">`;
 			}
-			case 'table':
-				return `<div class="table-wrap" tabindex="0"><table><tbody>${kids(n)}</tbody></table></div>`;
+			case 'table': {
+				const html = `<div class="table-wrap" tabindex="0"><table><tbody>${kids(n)}</tbody></table></div>`;
+				return isRollTable(n) ? rollTableHtml(n, html) : html;
+			}
 			case 'tableRow':
 				return `<tr>${kids(n)}</tr>`;
 			case 'tableHeader':
@@ -178,6 +183,21 @@ export function renderDoc(doc: DocNode, opt: RenderOptions): string {
 			default:
 				return '';
 		}
+	}
+
+	/** Tabella di tiro: sotto, il pulsante per tirare e il posto del risultato (lo riempie RollTables.svelte). */
+	function rollTableHtml(n: DocNode, table: string): string {
+		const id = blockId(n);
+		const { roll, rollOn } = opt.labels;
+		if (!id || opt.pageId === undefined || !roll) return table;
+		const name = tableName(n);
+		const label = name && rollOn ? ` aria-label="${esc(rollOn.replace('{name}', name))}"` : '';
+		return (
+			`<div class="roll-table">${table}<p class="roll-tools">` +
+			`<button type="button" class="btn btn-small roll-button" data-roll-page="${opt.pageId}" data-roll-block="${id}"${label}>` +
+			`<svg class="icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="${iconPath('dice')}"/></svg>${esc(roll)}</button>` +
+			`<output class="roll-out" aria-live="polite"></output></p></div>`
+		);
 	}
 	return node(doc);
 }

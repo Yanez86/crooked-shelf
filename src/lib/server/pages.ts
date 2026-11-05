@@ -15,6 +15,7 @@ import { ensureTags, pageTree, syncBranch, tagsForPages } from './taxonomy.ts';
 import { syncSessionEvent } from './timeline.ts';
 import { hasRule } from './rules/index.ts';
 import { addFileUses, clearFileUses, getFile } from './files.ts';
+import { clearRollTables, writeRollTables } from './rollTables.ts';
 import type { PageCover } from '../covers.ts';
 import { childrenOf, locate, type TreeNode } from '../tree.ts';
 
@@ -127,6 +128,7 @@ function writeIndex(id: number, title: string, doc: DocNode, fields: PageField[]
 		ex.body,
 		ex.secretBody
 	);
+	writeRollTables(id, doc);
 	return ex;
 }
 
@@ -256,6 +258,7 @@ export function deletePage(id: number, at = Date.now()) {
 	getDb().transaction(() => {
 		getDb().update(pages).set({ deletedAt: at }).where(eq(pages.id, id)).run();
 		getDb().delete(pageLinks).where(eq(pageLinks.fromPageId, id)).run();
+		clearRollTables(id);
 		getSqlite().prepare('DELETE FROM pages_fts WHERE rowid = ?').run(id);
 		syncSessionEvent({ id, title: '', visibility: 'personal', authorId: null }, null);
 	});
@@ -306,7 +309,7 @@ export function renderPage(page: PageRow, u: Viewer | null, labels: RenderOption
 	const fields = page.fields ?? [];
 	const resolve = linkResolver(doc, u, fields);
 	return {
-		html: renderDoc(doc, { sees: (v) => canSeeBlock(v, u), resolve, labels, hasRule }),
+		html: renderDoc(doc, { sees: (v) => canSeeBlock(v, u), resolve, labels, hasRule, pageId: page.id }),
 		// I riquadri immagine il cui file non c'è più (es. risorsa eliminata) non si mostrano.
 		fields: fields.flatMap((f): { label: string; html: string; title?: string; image?: { url: string; width: number; height: number } }[] => {
 			if (f.image === undefined) return [{ label: f.label, html: renderInline(f.value, { resolve, labels, hasRule }) }];

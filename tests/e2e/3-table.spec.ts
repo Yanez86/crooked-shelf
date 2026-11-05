@@ -510,6 +510,93 @@ test('Stars & Wishes: chi c\'era risponde entrando nella campagna, una volta sol
 	await expect(crypt(admin)).not.toContainText('Il drago nella cripta');
 });
 
+test('tabelle di tiro: il Master ne crea una, si tira dalla pagina e col «/» nell\'editor', async ({ browser }) => {
+	const SHOPS = ['Rigattiere di chiodi', 'Ciabattino', 'Cerusico', 'Candelaio', 'Fabbro', 'Merciaio'];
+	const anyShop = new RegExp(SHOPS.join('|'));
+
+	await admin.goto('/wiki/new?template=none');
+	await admin.getByLabel('Titolo', { exact: true }).fill('Botteghe di Porto Grigio');
+	const editor = admin.locator('.editor-content');
+	await editor.click();
+	await admin.keyboard.type('Le botteghe dei vicoli.');
+	await admin.getByRole('button', { name: 'Nuova tabella di tiro' }).click();
+	const table = editor.locator('table[data-roll-table]');
+	const cell = (row: number, col: number) => table.locator('tr').nth(row).locator('th, td').nth(col);
+	// Pronta: il dado e una riga per faccia, manca solo il nome.
+	await expect(cell(0, 0)).toHaveText('d6');
+	await cell(0, 1).click({ clickCount: 3 });
+	await admin.keyboard.type('Bottega povera');
+	const status = admin.locator('.roll-status');
+	await expect(status).toHaveText('Pronta da tirare: «Bottega povera», d6, 6 righe. Nelle pagine si tira con / e il nome.');
+	await expect(admin.getByRole('button', { name: 'Tabella di tiro', exact: true })).toHaveAttribute('aria-pressed', 'true');
+	for (const [i, shop] of SHOPS.entries()) {
+		await cell(i + 1, 1).click();
+		await admin.keyboard.type(shop);
+	}
+	// Un numero sbagliato si vede subito.
+	await cell(6, 0).click({ clickCount: 3 });
+	await admin.keyboard.type('7');
+	await expect(status).toHaveText('Riga 6: i numeri escono da quelli del dado.');
+	await cell(6, 0).click({ clickCount: 3 });
+	await admin.keyboard.type('5');
+	await expect(status).toHaveText('Più righe hanno il numero 5.');
+	await cell(6, 0).click({ clickCount: 3 });
+	await admin.keyboard.type('6');
+	await expect(status).toContainText('Pronta da tirare');
+	await axe(admin, 'editor con tabella di tiro');
+	await admin.getByRole('button', { name: 'Crea la pagina' }).click();
+	await expect(admin.getByRole('heading', { level: 1, name: 'Botteghe di Porto Grigio' })).toBeVisible();
+	const shopsUrl = admin.url();
+
+	// Nella pagina: «Tira», e il risultato accanto.
+	const content = admin.locator('.content');
+	const out = content.locator('output.roll-out');
+	await content.getByRole('button', { name: 'Tira su «Bottega povera»' }).click();
+	await expect(out).toHaveText(/^[1-6] \(d6\): /);
+	await expect(out).toContainText(anyShop);
+	await axe(admin, 'tabella di tiro');
+	await shot(admin, '24-tabella-di-tiro');
+
+	// In un'altra pagina: «/» e il nome, Invio, e il risultato è nel testo.
+	await admin.goto('/wiki/new?template=none');
+	await admin.getByLabel('Titolo', { exact: true }).fill('Giro al porto');
+	await editor.click();
+	await admin.keyboard.type('Entrate da un ');
+	await admin.keyboard.type('/bottegap');
+	await expect(admin.getByRole('option', { name: /^Bottega povera/ })).toBeVisible();
+	await admin.keyboard.press('Enter');
+	const rolled = editor.locator('.roll-result');
+	await expect(rolled).toHaveText(anyShop);
+	await expect(admin.locator('.upload-status')).toHaveText(/^Bottega povera: è uscito [1-6] \(d6\)\.$/);
+	// Il cursore è subito dopo il risultato: si ritira dalla barra, e quello che si scrive dopo è testo normale.
+	await admin.getByRole('button', { name: 'Ritira' }).click();
+	await expect(rolled).toHaveCount(1);
+	await expect(rolled).toHaveText(anyShop);
+	await admin.keyboard.type(' a comprare');
+	await expect(rolled).not.toContainText('comprare');
+	await expect(editor).toContainText(/Entrate da un .+ a comprare/);
+	// Un «/» qualunque non apre niente: nessuna tabella si chiama così.
+	await admin.keyboard.type(' e/o /niente');
+	await expect(admin.locator('.suggest-popup:visible')).toHaveCount(0);
+	await axe(admin, 'editor con un tiro');
+	// Fissato, è testo normale.
+	await rolled.click();
+	await admin.getByRole('button', { name: 'Fissa' }).click();
+	await expect(rolled).toHaveCount(0);
+	await admin.getByRole('button', { name: 'Crea la pagina' }).click();
+	await expect(content).toContainText(/Entrate da un .+ a comprare e\/o \/niente/);
+
+	// Il giocatore tira dalla pagina, ma non crea tabelle di tiro.
+	const p = await login(browser, PLAYER);
+	await p.goto(shopsUrl);
+	await p.getByRole('button', { name: 'Tira su «Bottega povera»' }).click();
+	await expect(p.locator('output.roll-out')).toContainText(anyShop);
+	await p.goto('/wiki/new?template=none');
+	await expect(p.getByRole('button', { name: 'Tabella', exact: true })).toBeVisible();
+	await expect(p.getByRole('button', { name: 'Nuova tabella di tiro' })).toHaveCount(0);
+	await p.context().close();
+});
+
 test('editor dei temi', async () => {
 	await admin.goto('/admin/themes');
 	await axe(admin, 'temi');

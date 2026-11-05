@@ -1,7 +1,21 @@
 <script lang="ts">
 	import { onDestroy, onMount, untrack } from 'svelte';
 	import { Editor } from '@tiptap/core';
-	import { blockAt, buildExtensions, selectedBlocks, type SuggestItem, type RuleItem } from './extensions.ts';
+	import {
+		blockAt,
+		buildExtensions,
+		reroll,
+		rollAt,
+		selectedBlocks,
+		tableAt,
+		unlinkRoll,
+		type RollAnswer,
+		type RollChoice,
+		type RollDeps,
+		type SuggestItem,
+		type RuleItem
+	} from './extensions.ts';
+	import { dieLabel, newRollTable, problemMessage, readRollTable } from '../content/rollTables.ts';
 	import { RULE_KINDS } from '../rules/index.ts';
 	import { getT } from '../i18n/index.ts';
 	import type { DocNode } from '../content/types.ts';
@@ -46,6 +60,26 @@
 		return r.ok ? r.json() : [];
 	}
 
+	async function searchRollTables(q: string, signal: AbortSignal): Promise<RollChoice[]> {
+		const r = await fetch(`/api/roll-tables?q=${encodeURIComponent(q)}`, { signal });
+		return r.ok ? r.json() : [];
+	}
+
+	// Tabelle di tiro: il server tira (vedi server/rollTables.ts), il messaggio sotto la barra dice cos'è uscito.
+	const rollDeps: RollDeps = {
+		async roll(page, block): Promise<RollAnswer> {
+			const r = await fetch(`/api/roll-tables/${page}/${block}`, { method: 'POST' }).catch(() => null);
+			if (!r || (!r.ok && r.status !== 422)) return null;
+			const data = await r.json().catch(() => null);
+			return data ? { ...data, ok: r.ok } : null;
+		},
+		notify(a) {
+			if (!a) status = t('rollTables.gone');
+			else if (!a.ok) status = t('rollTables.cant', { name: a.name }) + ' ' + t(...problemMessage(a.problem));
+			else status = t(a.content.length ? 'rollTables.rolled' : 'rollTables.emptyRow', { name: a.name, value: a.value, die: a.die });
+		}
+	};
+
 	onMount(() => {
 		editor = new Editor({
 			element: host,
@@ -54,6 +88,8 @@
 				canSecret,
 				suggest,
 				searchRules,
+				searchRollTables,
+				rollDeps,
 				labels: {
 					note: t('editor.note'),
 					tip: t('editor.tip'),
@@ -63,7 +99,8 @@
 					createLink: t('editor.createLink'),
 					noResults: t('editor.noResults'),
 					rules: t('rules.suggestions'),
-					kinds: Object.fromEntries(RULE_KINDS.map((k) => [k, t('rules.kinds.' + k)]))
+					kinds: Object.fromEntries(RULE_KINDS.map((k) => [k, t('rules.kinds.' + k)])),
+					rollTables: t('rollTables.suggestions')
 				}
 			}),
 			editorProps: {
@@ -109,6 +146,28 @@
 		return !!editor && selectedBlocks(editor.state).some((b) => b.node.attrs.visibility);
 	});
 
+	// Il cursore è su un tiro: si può ritirare o fissare.
+	const rollHere = $derived.by(() => {
+		void tick;
+		return !!editor && !!rollAt(editor.state);
+	});
+
+	// La tabella dove sta il cursore, e se è di tiro com'è messa (pronta da tirare, o cosa manca).
+	const tableHere = $derived.by(() => {
+		void tick;
+		const node = editor ? tableAt(editor.state) : null;
+		if (!node) return null;
+		const roll = node.attrs.roll === true;
+		if (!roll) return { roll, status: '' };
+		const r = readRollTable(node.toJSON());
+		if (r.ok) return { roll, status: t('rollTables.ready', { name: r.table.name, die: dieLabel(r.table.die), n: r.table.rows.length }) };
+		return { roll, status: t(...problemMessage(r.problem)) };
+	});
+
+	function insertRollTable() {
+		chain().insertContent(newRollTable(t('rollTables.newName'))).run();
+	}
+
 	const blockType = $derived.by(() => {
 		void tick;
 		if (!editor) return 'paragraph';
@@ -152,7 +211,8 @@
 			['```', t('editor.codeBlock')],
 			['---', t('editor.rule')],
 			['[[', t('editor.wikiLinkHint')],
-			['@', t('editor.ruleHint')]
+			['@', t('editor.ruleHint')],
+			['/', t('rollTables.hint')]
 		];
 	});
 
@@ -304,6 +364,9 @@
 		{/if}
 		<span class="sep" aria-hidden="true"></span>
 		{@render btn('table', t('editor.table'), () => chain().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run(), undefined, active('table'))}
+		{#if canSecret}
+			{@render btn('dice', t('rollTables.insert'), insertRollTable, undefined, active('table'))}
+		{/if}
 		{@render btn('rule', t('editor.rule'), () => chain().setHorizontalRule().run())}
 		{@render btn('image', t('editor.image'), () => fileInput.click())}
 		{#if active('image')}
@@ -337,7 +400,24 @@
 			<button type="button" onclick={() => chain().deleteRow().run()}><Icon name="minus" />{t('editor.delRow')}</button>
 			<button type="button" onclick={() => chain().deleteColumn().run()}><Icon name="minus" />{t('editor.delCol')}</button>
 			<button type="button" onclick={() => chain().toggleHeaderRow().run()}>{t('editor.headerRow')}</button>
+			{#if canSecret && tableHere}
+				<button type="button" aria-pressed={tableHere.roll} title={t('rollTables.toggleHint')} onclick={() => chain().updateAttributes('table', { roll: !tableHere.roll }).run()}>
+					<Icon name="dice" />{t('rollTables.toggle')}
+				</button>
+			{/if}
 			<button type="button" class="danger" onclick={() => chain().deleteTable().run()}>{t('editor.delTable')}</button>
+		</div>
+		{#if tableHere?.roll}
+			<p class="roll-status">{tableHere.status}</p>
+		{/if}
+	{/if}
+
+	{#if rollHere}
+		<!-- Il cursore è su un tiro: un altro risultato dalla stessa tabella, o testo normale per sempre. -->
+		<!-- svelte-ignore a11y_no_noninteractive_element_interactions (mousedown solo per non togliere il focus all'editor; i comandi sono i pulsanti) -->
+		<div class="toolbar table-tools" role="group" aria-label={t('rollTables.tools')} onmousedown={keepFocus}>
+			<button type="button" title={t('rollTables.reroll')} onclick={() => reroll(editor!, rollDeps)}><Icon name="dice" />{t('rollTables.rerollShort')}</button>
+			<button type="button" title={t('rollTables.unlink')} onclick={() => unlinkRoll(editor!)}><Icon name="check" />{t('rollTables.unlinkShort')}</button>
 		</div>
 	{/if}
 
@@ -719,6 +799,37 @@
 	}
 	.area :global(.ruleref) {
 		border-bottom: 2px dotted currentColor;
+	}
+	/* Un tiro su una tabella: nell'editor si riconosce (dado e sottolineatura), nella pagina è testo normale. */
+	.area :global(.roll-result) {
+		border-bottom: 2px dashed currentColor;
+	}
+	.area :global(.roll-result::before) {
+		content: '';
+		display: inline-block;
+		width: 1em;
+		height: 1em;
+		margin-right: 0.2em;
+		vertical-align: -0.15em;
+		background: currentColor;
+		-webkit-mask: var(--icon-dice) center / contain no-repeat;
+		mask: var(--icon-dice) center / contain no-repeat;
+		forced-color-adjust: none;
+	}
+	.area :global(table[data-roll-table] tr:first-child > *:first-child) {
+		width: 4.5rem;
+	}
+	/* Sotto gli strumenti della tabella di tiro: pronta da tirare, o che cosa manca. */
+	.roll-status {
+		margin: 0;
+		padding: 0.3rem 0.75rem;
+		font-size: var(--fs-sm);
+		border-bottom: 1px solid var(--c-border);
+	}
+	.inline .roll-status {
+		margin: -0.5rem 0 1rem;
+		padding: 0;
+		border: 0;
 	}
 	.area :global(.ruleref::before) {
 		content: '';

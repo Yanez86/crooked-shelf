@@ -740,6 +740,25 @@ table.data .col-end {
 	}
 }
 
+/* --- Tabelle di tiro --- */
+
+.prose .roll-table .table-wrap {
+	margin-bottom: 0.5rem;
+}
+.prose .roll-tools {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.5rem 0.75rem;
+	margin: 0 0 1rem;
+}
+.prose .roll-button[aria-disabled='true'] {
+	cursor: progress;
+}
+.prose .roll-value {
+	font-weight: 700;
+}
+
 /* --- Riferimenti alle regole --- */
 
 .ruleref {

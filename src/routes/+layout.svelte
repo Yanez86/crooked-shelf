@@ -12,6 +12,7 @@
 	import { registerLocale, setI18n, translate } from '#lib/i18n/index.ts';
 	import { TREE_COOKIE, onPhone } from '#lib/prefs.ts';
 	import RulePopover from '#lib/components/RulePopover.svelte';
+	import RollTables from '#lib/components/RollTables.svelte';
 	import LinkPreview from '#lib/components/LinkPreview.svelte';
 	import PanelDialog from '#lib/components/PanelDialog.svelte';
 	import StarWishDialog from '#lib/components/StarWishDialog.svelte';
@@ -212,6 +213,7 @@ ${iconCss()}</style>`}
 </div>
 
 <RulePopover />
+<RollTables />
 <LinkPreview />
 {#if linked}<PanelDialog {...linked} expandable onclose={() => (linked = null)} />{/if}
 {#if data.starWish && !framed}<StarWishDialog session={data.starWish} />{/if}

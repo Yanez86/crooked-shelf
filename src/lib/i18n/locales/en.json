@@ -422,6 +422,38 @@
 		"tipsIntro": "Type this and the editor converts it as you write:",
 		"tipSample": "text"
 	},
+	"rollTables": {
+		"suggestions": "Roll tables",
+		"hint": "Roll on a roll table: type / and its name, e.g. /tavern",
+		"insert": "New roll table",
+		"newName": "Table name",
+		"toggle": "Roll table",
+		"toggleHint": "Roll table: the die (e.g. d10) and the name in the first row, the numbers and the result in the others",
+		"ready": "Ready to roll: “{name}”, {die}, {n} rows. In pages, roll with / and the name.",
+		"roll": "Roll",
+		"rollOn": "Roll on “{name}”",
+		"value": "{value} ({die}):",
+		"emptyResult": "empty row",
+		"rolled": "{name}: rolled {value} ({die}).",
+		"emptyRow": "{name}: rolled {value}, but the row is empty.",
+		"cant": "Can't roll on “{name}”.",
+		"gone": "This roll table no longer exists, or you can't see it.",
+		"reroll": "Reroll: another result from the same table",
+		"rerollShort": "Reroll",
+		"unlink": "Keep this result: it becomes plain text and can no longer be rerolled",
+		"unlinkShort": "Keep",
+		"tools": "Roll",
+		"problem": {
+			"columns": "A roll table needs at least two columns: the die numbers and the result.",
+			"name": "Write the table name in the second cell of the first row.",
+			"rows": "Add at least one row under the header.",
+			"die": "Write the die in the first cell: d4, d6, d8, d10, d12, d20, d100, d66, or several dice like 2d6.",
+			"range": "Row {row}: the first cell needs the die numbers, e.g. 3 or 4-6.",
+			"outside": "Row {row}: the numbers are outside the die.",
+			"gap": "No row has the number {value}.",
+			"overlap": "Several rows have the number {value}."
+		}
+	},
 	"categories": {
 		"empty": "No categories yet.",
 		"pages": "{n} pages",

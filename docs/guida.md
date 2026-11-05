@@ -116,6 +116,7 @@ Ogni cosa della wiki è una **pagina**, nell'albero a sinistra, con un indirizzo
 | `[[Titolo|testo]]` | collegamento con un testo diverso |
 | `@` e il nome | suggerimenti di regole (incantesimi, mostri…) |
 | `@incantesimo[Fireball|Palla di fuoco]` | regola con il testo che vuoi |
+| `/` e il nome | tiro su una tabella di tiro (vedi sotto) |
 
 Con i pulsanti della barra inserisci immagini (con la descrizione per chi non vede), tabelle e riquadri «Nota», «Consiglio», «Attenzione».
 
@@ -134,6 +135,18 @@ Da tastiera: con Tab entri nella barra, con le frecce ti muovi tra i comandi, co
 Un collegamento a una pagina che non esiste è **rosso tratteggiato**: cliccandolo la crei.
 
 Un collegamento a una pagina che esiste la apre in un popup, con tutto il suo contenuto e la pagina di partenza che resta sotto. In alto a destra ci sono i tasti per portarla sulla schermata principale e per chiudere il popup. Con Ctrl (Cmd sul Mac) si apre invece in una nuova scheda. Sul telefono niente popup: si apre la pagina, e il tasto Indietro riporta a quella di prima.
+
+### Tabelle di tiro
+
+Una tabella di tiro è una tabella della pagina da cui esce un risultato a caso, come nei manuali: «Bottega povera», un d6, una bottega per riga.
+
+- **Crearla** (il Master): il dado nella barra dell'editor, «Nuova tabella di tiro», aggiunge una tabella pronta. Nella prima riga ci sono il dado (d6) e il nome, da scrivere; sotto, una riga per faccia. Nella prima colonna vanno i numeri del dado (`3`, `4-6`, `01–05`), nelle altre il risultato, anche con grassetti, `[[collegamenti]]` e `@regole`. Righe e colonne si aggiungono come in ogni tabella. Una tabella che c'è già diventa di tiro col pulsante «Tabella di tiro» tra gli strumenti della tabella.
+- **I dadi**: d4, d6, d8, d10, d12, d20, d100 (o d%), d66 e più dadi sommati, come 2d6. Nel d10 lo `0` vale 10, nel d100 lo `00` vale 100. Senza nessun numero nella prima colonna, ogni riga ha la stessa probabilità.
+- **Se qualcosa non va**: sotto gli strumenti della tabella c'è scritto se è pronta da tirare o che cosa manca, per esempio un numero che non è in nessuna riga, o che è in due.
+- **Tirare nella pagina**: sotto la tabella c'è «Tira». Il risultato compare accanto, e la pagina non cambia: ogni clic è un tiro nuovo. Va bene al tavolo, per improvvisare.
+- **Tirare mentre scrivi**: in qualsiasi pagina scrivi `/` e il nome della tabella (`/bottega`, va bene anche `/bottega-povera`), scegli la tabella e premi Invio: il risultato entra nel testo. Finché il cursore è sul risultato, sotto la barra compaiono **Ritira**, che mette un altro risultato della stessa tabella, e **Fissa**, che lo rende testo normale. Nella pagina il risultato è testo come un altro, e cambiare la tabella non cambia le pagine già scritte.
+- **Chi le usa**: le crea il Master; tirano tutti quelli che vedono la pagina. Una tabella oscurata (segreto del Master) la trova e la tira solo il Master. La tabella deve stare nella pagina, non dentro un riquadro.
+- Le tabelle di tiro sono parte del testo della pagina: hanno le versioni, si trovano cercando, finiscono nell'esportazione in Markdown e nel pacchetto mondo.
 
 ## Mappe
 

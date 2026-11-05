@@ -1,4 +1,4 @@
-import { Extension, InputRule, Node, mergeAttributes, type Editor } from '@tiptap/core';
+import { Extension, InputRule, Mark, Node, getMarkRange, mergeAttributes, type Editor } from '@tiptap/core';
 import StarterKit from '@tiptap/starter-kit';
 import { Focus } from '@tiptap/extensions';
 import { Table, TableCell, TableHeader, TableRow } from '@tiptap/extension-table';
@@ -12,6 +12,8 @@ import { safeHref, safeImageSrc } from '../content/render.ts';
 import { CALLOUT_KINDS } from '../content/types.ts';
 import { BLOCK_TYPES, idsToRenew, newBlockId } from '../content/blocks.ts';
 import { parseRuleKind } from '../rules/index.ts';
+import type { DocNode } from '../content/types.ts';
+import type { RollProblem } from '../content/rollTables.ts';
 
 export interface EditorLabels {
 	note: string;
@@ -24,6 +26,8 @@ export interface EditorLabels {
 	rules: string;
 	/** Nome di ogni tipo di regola nella lingua dell'interfaccia. */
 	kinds: Record<string, string>;
+	/** L'elenco delle tabelle di tiro del «/». */
+	rollTables: string;
 }
 
 declare module '@tiptap/core' {
@@ -414,13 +418,155 @@ const RuleRef = Node.create<{ labels: EditorLabels; search: (q: string, signal: 
 	}
 });
 
+/** Una tabella di tiro da scegliere col «/» (vedi server/rollTables.ts). */
+export interface RollChoice {
+	page: number;
+	block: string;
+	name: string;
+	pageTitle: string;
+}
+
+/** Da quale tabella viene un tiro; `roll` distingue due tiri di fila sulla stessa tabella. */
+export interface RollSource {
+	page: number;
+	block: string;
+	roll?: string;
+}
+
+/** La risposta del server a un tiro; null = la tabella non c'è più, o chi scrive non la vede. */
+export type RollAnswer =
+	| { ok: true; name: string; value: number; die: string; content: DocNode[] }
+	| { ok: false; name: string; problem: RollProblem }
+	| null;
+
+export interface RollDeps {
+	roll: (page: number, block: string) => Promise<RollAnswer>;
+	/** Dice com'è andata (nel messaggio sotto la barra). */
+	notify: (answer: RollAnswer) => void;
+}
+
+/**
+ * Il risultato di un tiro su una tabella (vedi content/rollTables.ts): testo come un altro, che ricorda la tabella da
+ * cui viene, così nell'editor si può ritirare. Nella pagina è solo testo: chi legge non sa da dove viene.
+ */
+const RollResult = Mark.create({
+	name: 'rollResult',
+	inclusive: false,
+	addAttributes: () => ({
+		roll: { default: null, rendered: false, parseHTML: (el) => el.getAttribute('data-roll') },
+		page: { default: null, rendered: false, parseHTML: (el) => Number(el.getAttribute('data-roll-page')) || null },
+		block: { default: null, rendered: false, parseHTML: (el) => el.getAttribute('data-roll-block') }
+	}),
+	parseHTML: () => [{ tag: 'span[data-roll]' }],
+	renderHTML: ({ mark }) => [
+		'span',
+		{ class: 'roll-result', 'data-roll': mark.attrs.roll, 'data-roll-page': mark.attrs.page, 'data-roll-block': mark.attrs.block },
+		0
+	]
+});
+
+/** Il tiro dove sta il cursore (anche subito dopo): dove comincia, dove finisce e da quale tabella viene. */
+export function rollAt(state: EditorState): { from: number; to: number; src: RollSource } | null {
+	const type = state.schema.marks.rollResult;
+	const range = type && getMarkRange(state.selection.$from, type);
+	if (!range) return null;
+	const mark = state.doc.nodeAt(range.from)?.marks.find((m) => m.type === type);
+	if (!mark?.attrs.page || !mark.attrs.block) return null;
+	return { ...range, src: { page: mark.attrs.page, block: mark.attrs.block, roll: mark.attrs.roll ?? undefined } };
+}
+
+/** Dove sta adesso il tiro `roll` (il testo può essere cambiato mentre si aspettava il server). */
+function findRoll(state: EditorState, roll: string): { from: number; to: number } | null {
+	const type = state.schema.marks.rollResult;
+	let found: { from: number; to: number } | null = null;
+	state.doc.descendants((node, pos) => {
+		if (found) return false;
+		const mark = node.marks.find((m) => m.type === type && m.attrs.roll === roll);
+		if (mark) found = getMarkRange(state.doc.resolve(pos), type, mark.attrs) ?? null;
+	});
+	return found;
+}
+
+/**
+ * Tira e mette il risultato al posto di `range`: col «/» dov'era il comando, col 🎲 al posto del tiro di prima.
+ * Il cursore resta subito dopo il risultato: «Ritira» è già nella barra, e quello che si scrive dopo è testo normale.
+ */
+async function rollInto(editor: Editor, range: { from: number; to: number }, src: RollSource, deps: RollDeps) {
+	const before = editor.state.doc;
+	const answer = await deps.roll(src.page, src.block);
+	if (editor.isDestroyed) return;
+	deps.notify(answer);
+	if (!answer?.ok || !answer.content.length) return;
+	let at = range;
+	if (editor.state.doc !== before) {
+		const here = editor.state.selection.from;
+		at = (src.roll && findRoll(editor.state, src.roll)) || { from: here, to: here };
+	}
+	const mark = { type: 'rollResult', attrs: { roll: src.roll ?? newBlockId(), page: src.page, block: src.block } };
+	const nodes = answer.content.map((n) => ({ ...n, marks: [...(n.marks ?? []).filter((m) => m.type !== 'rollResult'), mark] }));
+	editor.chain().focus().insertContentAt(at, nodes).run();
+}
+
+/** Ritira il tiro dove sta il cursore. */
+export function reroll(editor: Editor, deps: RollDeps) {
+	const r = rollAt(editor.state);
+	if (r) void rollInto(editor, r, r.src, deps);
+}
+
+/** Il tiro dove sta il cursore diventa testo normale: non si ritira più. */
+export function unlinkRoll(editor: Editor) {
+	const r = rollAt(editor.state);
+	const type = editor.schema.marks.rollResult;
+	if (!r || !type) return;
+	editor
+		.chain()
+		.focus()
+		.command(({ tr }) => {
+			tr.removeMark(r.from, r.to, type);
+			return true;
+		})
+		.run();
+}
+
+const rollKeyPlugin = new PluginKey('rollSuggestion');
+
+/** «/» e il nome di una tabella di tiro: tira e scrive il risultato. Senza tabelle che corrispondono non compare niente. */
+const RollCommand = Extension.create<{ labels: EditorLabels; search: (q: string, signal: AbortSignal) => Promise<RollChoice[]>; deps: RollDeps }>({
+	name: 'rollCommand',
+	addOptions: () => ({ labels: {} as EditorLabels, search: async () => [], deps: { roll: async () => null, notify: () => {} } }),
+	addProseMirrorPlugins() {
+		const { labels, search, deps } = this.options;
+		return [
+			Suggestion<RollChoice, RollChoice>({
+				editor: this.editor,
+				pluginKey: rollKeyPlugin,
+				char: '/',
+				debounce: 120,
+				// Nel codice «/» resta una barra.
+				allow: ({ state, range }) => !state.doc.resolve(range.from).parent.type.spec.code,
+				items: async ({ query, signal }) => search(query, signal).catch(() => []),
+				command: ({ editor, range, props }) => {
+					editor.chain().focus().deleteRange(range).run();
+					const at = editor.state.selection.from;
+					void rollInto(editor, { from: at, to: at }, { page: props.page, block: props.block }, deps);
+				},
+				render: () => suggestionPopup<RollChoice>(labels.rollTables, labels.noResults, (i) => ({ text: i.name, detail: i.pageTitle }), true)
+			})
+		];
+	}
+});
+
 let popupSeq = 0;
 
-/** Elenco dei suggerimenti accessibile (listbox con aria-activedescendant), per pagine e regole. */
+/**
+ * Elenco dei suggerimenti accessibile (listbox con aria-activedescendant), per pagine, regole e tabelle di tiro.
+ * `hideEmpty`: senza niente da suggerire l'elenco non si vede e i tasti vanno all'editor (il «/» è anche una barra).
+ */
 function suggestionPopup<I>(
 	listLabel: string,
 	emptyText: string,
-	show: (item: I) => { text: string; detail?: string; className?: string }
+	show: (item: I) => { text: string; detail?: string; className?: string },
+	hideEmpty = false
 ) {
 	let el: HTMLDivElement;
 	let unmount: (() => void) | undefined;
@@ -430,9 +576,27 @@ function suggestionPopup<I>(
 
 	const host = () => props.editor.view.dom as HTMLElement;
 
+	const hidden = () => hideEmpty && !props.items.length;
+
+	/**
+	 * Senza elenco l'editor torna una casella di testo qualunque. Niente aria-expanded="false": su una casella di testo
+	 * non è ammesso (axe lo segnala), e chiuso è come non averlo.
+	 */
+	function idle() {
+		const dom = host();
+		dom.removeAttribute('aria-controls');
+		dom.removeAttribute('aria-activedescendant');
+		dom.removeAttribute('aria-expanded');
+	}
+
 	function draw() {
 		const items = props.items;
 		el.replaceChildren();
+		el.hidden = hidden();
+		if (el.hidden) {
+			idle();
+			return;
+		}
 		const list = document.createElement('ul');
 		list.id = id;
 		list.setAttribute('role', 'listbox');
@@ -472,10 +636,7 @@ function suggestionPopup<I>(
 	}
 
 	function close() {
-		const dom = host();
-		dom.removeAttribute('aria-controls');
-		dom.removeAttribute('aria-activedescendant');
-		dom.setAttribute('aria-expanded', 'false');
+		idle();
 		unmount?.();
 		unmount = undefined;
 	}
@@ -496,6 +657,7 @@ function suggestionPopup<I>(
 		},
 		onKeyDown({ event }: SuggestionKeyDownProps) {
 			const n = props.items.length;
+			if (hidden()) return false;
 			if (event.key === 'Escape') {
 				close();
 				return true;
@@ -532,6 +694,8 @@ export function buildExtensions(opts: {
 	canSecret: boolean;
 	suggest: (q: string, signal: AbortSignal) => Promise<SuggestItem[]>;
 	searchRules: (q: string, signal: AbortSignal) => Promise<RuleItem[]>;
+	searchRollTables: (q: string, signal: AbortSignal) => Promise<RollChoice[]>;
+	rollDeps: RollDeps;
 }) {
 	return [
 		StarterKit.configure({
@@ -547,7 +711,19 @@ export function buildExtensions(opts: {
 			// Solo immagini caricate nella wiki o in https.
 			parseHTML: () => [{ tag: 'img[src]', getAttrs: (el) => (safeImageSrc((el as HTMLElement).getAttribute('src')) ? null : false) }]
 		}),
-		Table.configure({ resizable: false }),
+		Table.configure({ resizable: false }).extend({
+			addAttributes() {
+				return {
+					...this.parent?.(),
+					// Tabella di tiro (vedi content/rollTables.ts). C'è per tutti, anche per chi non la può creare: salvando resta.
+					roll: {
+						default: false,
+						parseHTML: (el) => el.hasAttribute('data-roll-table'),
+						renderHTML: (a) => (a.roll ? { 'data-roll-table': '' } : {})
+					}
+				};
+			}
+		}),
 		TableRow,
 		TableHeader,
 		TableCell,
@@ -555,6 +731,8 @@ export function buildExtensions(opts: {
 		Blocks.configure({ canSecret: opts.canSecret, labels: opts.labels }),
 		WikiLink.configure({ labels: opts.labels, suggest: opts.suggest }),
 		RuleRef.configure({ labels: opts.labels, search: opts.searchRules }),
+		RollResult,
+		RollCommand.configure({ labels: opts.labels, search: opts.searchRollTables, deps: opts.rollDeps }),
 		// Il blocco in cui si sta scrivendo: nella modifica sul posto è evidenziato.
 		Focus.configure({ mode: 'shallowest' }),
 		EscapeLeaves
@@ -562,3 +740,10 @@ export function buildExtensions(opts: {
 }
 
 export type { Editor, SuggestItem };
+
+/** La tabella dove sta il cursore, se c'è. */
+export function tableAt(state: EditorState): PmNode | null {
+	const $from = state.selection.$from;
+	for (let d = $from.depth; d > 0; d--) if ($from.node(d).type.name === 'table') return $from.node(d);
+	return null;
+}

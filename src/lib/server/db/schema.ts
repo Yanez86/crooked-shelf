@@ -240,6 +240,21 @@ export const pageLinks = sqliteTable(
 	(t) => [index('page_links_target').on(t.targetSlug)]
 );
 
+/** Le tabelle di tiro delle pagine (vedi content/rollTables.ts), per trovarle col «/» nell'editor. Come i collegamenti, si rifanno a ogni salvataggio. */
+export const rollTables = sqliteTable(
+	'roll_tables',
+	{
+		pageId: integer('page_id')
+			.notNull()
+			.references(() => pages.id, { onDelete: 'cascade' }),
+		blockId: text('block_id').notNull(),
+		name: text('name').notNull(),
+		/** In un blocco oscurato: la trova e la tira solo il Master. */
+		secret: integer('secret', { mode: 'boolean' }).notNull().default(false)
+	},
+	(t) => [primaryKey({ columns: [t.pageId, t.blockId] })]
+);
+
 export const files = sqliteTable('files', {
 	id: text('id').primaryKey(),
 	sha256: text('sha256').notNull(),

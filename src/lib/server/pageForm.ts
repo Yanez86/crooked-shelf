@@ -157,5 +157,7 @@ export const contentLabels = (locale: string) => ({
 	warning: translate(locale, 'editor.warning'),
 	missing: translate(locale, 'page.missing'),
 	preview: translate(locale, 'rules.preview'),
-	external: translate(locale, 'rules.external')
+	external: translate(locale, 'rules.external'),
+	roll: translate(locale, 'rollTables.roll'),
+	rollOn: translate(locale, 'rollTables.rollOn')
 });
