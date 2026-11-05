@@ -544,12 +544,17 @@ test('editor: il più aggiunge testo o immagine dopo il blocco, l\'occhio lo osc
 	await hide.click();
 	await expect(editor.locator('[data-visibility="master"]')).toHaveText(['Nessuno ricorda chi la costruì.']);
 	await editor.getByText('Nessuno ricorda').click();
+	// Nella barra l'occhio aperto dice che il blocco è segreto (cliccandolo si mostra), quello barrato il contrario.
 	const lock = admin.getByRole('toolbar').getByRole('button', { name: 'Segreto del Master' });
 	await expect(lock).toHaveAttribute('aria-pressed', 'true');
+	await expect(lock).toHaveAttribute('title', 'Mostra il blocco a chi vede la pagina');
+	const secretBg = await editor.locator('[data-visibility="master"]').evaluate((el) => getComputedStyle(el).backgroundColor);
 	await lock.click();
 	await expect(editor.locator('[data-visibility]')).toHaveCount(0);
 	await expect(editor.locator('.hidden-label')).toHaveCount(0);
 	await expect(lock).toHaveAttribute('aria-pressed', 'false');
+	await expect(lock).toHaveAttribute('title', 'Oscura il blocco: lo vede solo il Master');
+	await expect(editor.getByText('Nessuno ricorda')).not.toHaveCSS('background-color', secretBg);
 
 	// Anche una tabella si oscura: il riquadro che la contiene prende i colori del segreto, come gli altri blocchi.
 	await editor.getByText('In cima vive un gufo.').click();
@@ -557,7 +562,6 @@ test('editor: il più aggiunge testo o immagine dopo il blocco, l\'occhio lo osc
 	await lock.click();
 	const hiddenTable = editor.locator('> .tableWrapper');
 	await expect(hiddenTable).toHaveAttribute('data-visibility', 'master');
-	const secretBg = await editor.locator('.hidden-label').evaluate((el) => getComputedStyle(el).backgroundColor);
 	await expect(hiddenTable).toHaveCSS('background-color', secretBg);
 	await lock.click();
 	await expect(hiddenTable).not.toHaveAttribute('data-visibility');

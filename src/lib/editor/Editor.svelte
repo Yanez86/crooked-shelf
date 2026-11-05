@@ -360,7 +360,10 @@
 		{@render btn('tip', t('editor.tip'), () => chain().toggleWrap('callout', { kind: 'tip' }).run(), active('callout', { kind: 'tip' }))}
 		{@render btn('warning', t('editor.warning'), () => chain().toggleWrap('callout', { kind: 'warning' }).run(), active('callout', { kind: 'warning' }))}
 		{#if canSecret}
-			{@render btn('lock', t('editor.secret'), () => chain().toggleHidden().run(), hiddenHere)}
+			<!-- L'occhio dice com'è il blocco: barrato si vede da tutti (e si oscura), aperto è un segreto (e si mostra). -->
+			<button type="button" aria-pressed={hiddenHere} title={hiddenHere ? t('editor.showBlock') : t('editor.hideBlock')} onclick={() => chain().toggleHidden().run()}>
+				<Icon name={hiddenHere ? 'eye' : 'eyeOff'} /><span class="visually-hidden">{t('editor.secret')}</span>
+			</button>
 		{/if}
 		<span class="sep" aria-hidden="true"></span>
 		{@render btn('table', t('editor.table'), () => chain().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run(), undefined, active('table'))}
@@ -697,18 +700,20 @@
 		margin: 0.25rem 0;
 	}
 	/*
-	 * Blocchi oscurati: i colori del segreto nella pagina, il bordo a sinistra e, sopra il primo di quelli di fila,
-	 * il lucchetto col nome (non solo il colore). Uno dopo l'altro sembrano un riquadro solo.
+	 * Blocchi oscurati: un riquadro viola col bordo a sinistra; i blocchi segreti di fila sembrano uno solo.
+	 * Il nome col lucchetto (non solo il colore) sta dentro il riquadro, in cima al primo: il segno è alto zero
+	 * e la sua scritta scende nello spazio lasciato libero dal blocco che segue.
 	 */
-	.area :global(.editor-content > [data-visibility]),
-	.inline .area :global(.editor-content > [data-visibility]:hover),
-	.inline .area :global(.editor-content.ProseMirror-focused > [data-visibility].has-focus) {
+	.area :global(.editor-content > [data-visibility]) {
 		margin-top: 0;
 		margin-bottom: 0;
 		padding: 0.5rem 1rem;
 		background: var(--c-secret-bg);
 		color: var(--c-secret-text);
 		border-left: 6px solid var(--c-secret-border);
+	}
+	.area :global(.editor-content > .hidden-label + [data-visibility]) {
+		padding-top: 2.25rem;
 	}
 	.area :global(.editor-content > [data-visibility] + :not([data-visibility])) {
 		margin-top: 1.25rem;
@@ -718,17 +723,39 @@
 		outline: 2px dashed var(--c-secret-border);
 		outline-offset: -2px;
 	}
-	.area :global(.hidden-label) {
-		display: flex;
-		align-items: center;
-		gap: 0.35em;
-		margin: 1.25rem 0 0;
-		padding: 0.5rem 1rem 0;
+	/* Sul posto: il contorno segue il riquadro, senza angoli tondi che lo spezzano, e nel colore del segreto. */
+	.inline .area :global(.editor-content > [data-visibility]) {
+		border-radius: 0;
+		outline-offset: 0;
+	}
+	.inline .area :global(.editor-content > [data-visibility]:hover),
+	.inline .area :global(.editor-content.ProseMirror-focused > [data-visibility].has-focus) {
 		background: var(--c-secret-bg);
+	}
+	.inline .area :global(.editor-content.ProseMirror-focused > [data-visibility].has-focus) {
+		outline-color: var(--c-secret-border);
+	}
+	.area :global(.hidden-label) {
+		position: relative;
+		z-index: 1;
+		display: flex;
+		align-items: flex-start;
+		gap: 0.35em;
+		height: 0;
+		margin: 1.25rem 0 0;
+		padding: 0 1rem 0 calc(1rem + 6px);
 		color: var(--c-secret-text);
-		border-left: 6px solid var(--c-secret-border);
+		font-size: var(--fs-sm);
 		font-weight: 700;
+		line-height: 1.5;
 		user-select: none;
+		pointer-events: none;
+		/* La scritta scende di quanto il riquadro ha di margine interno. */
+		top: 0.5rem;
+	}
+	.inline .area :global(.editor-content > .hidden-label) {
+		outline: none;
+		background: none;
 	}
 	.area :global(.editor-content > .hidden-label:first-child) {
 		margin-top: 0;
@@ -737,6 +764,7 @@
 		content: '';
 		width: 1.1em;
 		height: 1.1em;
+		margin-top: 0.2em;
 		flex: none;
 		background: currentColor;
 		-webkit-mask: var(--icon-lock) center / contain no-repeat;
@@ -744,8 +772,7 @@
 		forced-color-adjust: none;
 	}
 	@media (forced-colors: active) {
-		.area :global(.editor-content > [data-visibility]),
-		.area :global(.hidden-label) {
+		.area :global(.editor-content > [data-visibility]) {
 			border-left: 6px solid CanvasText;
 		}
 	}
