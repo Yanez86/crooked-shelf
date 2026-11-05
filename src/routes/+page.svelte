@@ -110,24 +110,25 @@
 	</section>
 {/snippet}
 
-<div class="home">
-	<PageBody title={data.home?.page.title ?? ''} html={data.home?.html ?? ''} fields={data.home?.fields ?? []} session={data.home?.session ?? null} locale={page.data.locale} {head} more={data.empty && !data.table ? undefined : lists} />
-
-	{#if data.empty}
-		<section class="card empty">
-			<h2>{t('home.emptyTitle')}</h2>
-			<p>{t('home.emptyText')}</p>
-			{#if canWrite(user)}<a class="btn btn-primary" href="/wiki/new"><Icon name="plus" />{t('home.firstPage')}</a>{/if}
-		</section>
-		{#if data.world.length}
-			<h2>{t('home.world')}</h2>
-			<ul class="cats">
-				{#each data.world as w (w.slug)}
-					<li><a href="/wiki/{w.slug}">{w.title}</a> <span class="muted">({t('kinds.' + w.kind)})</span></li>
-				{/each}
-			</ul>
-		{/if}
+<!-- Wiki vuota: l'invito a cominciare sta sotto il testo, nello stesso spazio (con la colonna a lato, Aria toglie i margini fuori da lì). -->
+{#snippet empty()}
+	<section class="card empty">
+		<h2>{t('home.emptyTitle')}</h2>
+		<p>{t('home.emptyText')}</p>
+		{#if canWrite(user)}<a class="btn btn-primary" href="/wiki/new"><Icon name="plus" />{t('home.firstPage')}</a>{/if}
+	</section>
+	{#if data.world.length}
+		<h2>{t('home.world')}</h2>
+		<ul class="cats">
+			{#each data.world as w (w.slug)}
+				<li><a href="/wiki/{w.slug}">{w.title}</a> <span class="muted">({t('kinds.' + w.kind)})</span></li>
+			{/each}
+		</ul>
 	{/if}
+{/snippet}
+
+<div class="home">
+	<PageBody title={data.home?.page.title ?? ''} html={data.home?.html ?? ''} fields={data.home?.fields ?? []} session={data.home?.session ?? null} locale={page.data.locale} {head} more={data.empty && !data.table ? undefined : lists} foot={data.empty ? empty : undefined} />
 </div>
 
 <style>
