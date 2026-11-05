@@ -44,19 +44,23 @@ Il testo delle pagine arriva a Claude, quindi ad Anthropic, come ogni contenuto 
 
 ## Cosa legge
 
-Le pagine, con la colonna a lato e l'elenco di chi le cita. Non legge ancora i pin delle mappe, gli eventi delle cronologie e le schede delle bacheche.
+Le pagine, con la colonna a lato e l'elenco di chi le cita, e l'albero della barra a sinistra (`wiki_tree`). Non legge ancora i pin delle mappe, gli eventi delle cronologie e le schede delle bacheche.
 
 ## Cosa scrive
 
-Solo il testo delle pagine, in tre modi:
+Il testo delle pagine, la colonna a lato, i tag e l'ordine della barra a sinistra:
 
 | Strumento | Cosa fa |
 |---|---|
 | `create_page` | crea una pagina; se non chiedi altro la vedi solo tu |
 | `append_to_page` | aggiunge testo in fondo; se sei Master, anche in blocchi oscurati (segreti) |
 | `replace_text` | sostituisce un pezzo di testo che compare una volta sola |
+| `set_sidebar` | riscrive le righe di testo della colonna a lato; le immagini restano |
+| `set_tags` | sostituisce i tag di una pagina |
+| `create_folder` | crea una cartella (solo il Master) |
+| `move` | sposta pagine, cartelle e divisori nell'albero, come trascinandoli (solo il Master) |
 
-**Non può** eliminare pagine, cambiare titolo, visibilità, permessi o cartella di una pagina che c'è già, toccare template, mappe, cronologie e bacheche, caricare file, né arrivare a impostazioni, utenti, plugin, temi o backup: per queste cose non esiste nessuno strumento.
+**Non può** eliminare pagine o cartelle, cambiare titolo, visibilità o permessi, toccare template, mappe, cronologie e bacheche, caricare file, né arrivare a impostazioni, utenti, plugin, temi o backup: per queste cose non esiste nessuno strumento. Spostare una pagina in un'altra cartella non cambia chi la vede.
 
 Il testo passa da un convertitore che riconosce un elenco chiuso di elementi (titoli, grassetto, corsivo, elenchi, citazioni, collegamenti): HTML e codice restano testo e non vengono mai eseguiti. Valgono le regole del sito: un giocatore modifica solo le pagine che può modificare nel sito.
 
@@ -68,6 +72,6 @@ Claude Code chiede conferma prima di ogni scrittura, mostrando il testo: convien
 
 ## Per chi sviluppa
 
-`src/routes/mcp/[[id=id]]/+server.ts` parla MCP su HTTP, un messaggio a richiesta e senza sessione; gli strumenti sono in `src/lib/server/mcp.ts` e passano dalle stesse funzioni del sito. Chi aggiunge uno strumento di scrittura deve restare sul testo delle pagine: Claude non manda mai JSON dell'editor, solo Markdown che passa da `fromMarkdown`. Il plugin è in `claude-plugin/`. Per provarlo senza installarlo: `claude --plugin-dir claude-plugin`.
+`src/routes/mcp/[[id=id]]/+server.ts` parla MCP su HTTP, un messaggio a richiesta e senza sessione; gli strumenti sono in `src/lib/server/mcp.ts` e passano dalle stesse funzioni del sito. Chi aggiunge uno strumento di scrittura non deve toccare visibilità e permessi né eliminare: Claude non manda mai JSON dell'editor, solo Markdown che passa da `fromMarkdown`, e testo semplice per colonna a lato e tag. Il plugin è in `claude-plugin/`. Per provarlo senza installarlo: `claude --plugin-dir claude-plugin`.
 
 Il connettore è OAuth 2.1 con PKCE: `/.well-known/oauth-protected-resource/mcp/<id>` e `/.well-known/oauth-authorization-server` per la scoperta, `/oauth/register`, il consenso in `/oauth/authorize` e `/oauth/token`, che dà un token di `api_tokens` col sito di ritorno in `client`. La campagna viene dall'indirizzo `/mcp/<id>` (il parametro `resource`), e `/mcp/<id>` accetta solo token di quella campagna. La registrazione è aperta a chiunque, quindi non salva niente e dà a tutti lo stesso client: a proteggere è la pagina di consenso, che mostra il sito a cui va il token (`src/lib/server/oauth.ts`); per un sito che non è di Claude (`claude.ai`, `claude.com`, `anthropic.com` o il computer locale) chiede una conferma in più. I token non hanno refresh, come quelli del plugin, ma smettono di valere dopo 90 giorni senza uso. `/oauth/token` lo chiamano i server di Claude senza `Origin`: per questo il controllo dei form da altri siti è in `hooks.server.ts` e non in SvelteKit.

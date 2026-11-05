@@ -108,13 +108,13 @@ describe('scrittura', () => {
 	const names = (w: boolean) => (handleMcp({ id: 1, method: 'tools/list' }, dm, 'Ombre', 'it', w) as { result: { tools: { name: string }[] } }).result.tools.map((t) => t.name);
 
 	it('con un token di sola lettura gli strumenti non esistono', () => {
-		expect(names(false)).toEqual(['search', 'read_page', 'list_pages']);
+		expect(names(false)).toEqual(['search', 'read_page', 'list_pages', 'wiki_tree']);
 		expect(handleMcp({ id: 1, method: 'tools/call', params: { name: 'create_page', arguments: { title: 'X', text: 'y' } } }, dm, 'Ombre', 'it')).toMatchObject({ error: { code: -32602 } });
 		expect(getPageBySlug('x')).toBeUndefined();
 	});
 
-	it('si scrive solo testo: nessuno strumento per eliminare, amministrare o cambiare visibilità', () => {
-		expect(names(true)).toEqual(['search', 'read_page', 'list_pages', 'create_page', 'append_to_page', 'replace_text']);
+	it('nessuno strumento per eliminare, amministrare o cambiare visibilità', () => {
+		expect(names(true)).toEqual(['search', 'read_page', 'list_pages', 'wiki_tree', 'create_page', 'append_to_page', 'replace_text', 'set_sidebar', 'set_tags', 'create_folder', 'move']);
 		for (const name of ['delete_page', 'set_visibility', 'update_settings', 'install_plugin'])
 			expect(handleMcp({ id: 1, method: 'tools/call', params: { name } }, dm, 'Ombre', 'it', true)).toMatchObject({ error: { code: -32602 } });
 	});
@@ -221,6 +221,36 @@ describe('scrittura', () => {
 		const [first] = (getPageBySlug('locanda')!.content as DocNode).content!;
 		expect(first).toMatchObject({ type: 'paragraph', content: [] });
 		expect(first.content).toEqual([]);
+	});
+
+	it('colonna a lato: solo righe di testo, le immagini restano', () => {
+		getDb().update(schema.pages).set({ fields: [{ label: 'Insegna', value: '', image: 'img1' }, { label: 'Oste', value: 'Bob' }] }).where(eq(schema.pages.slug, 'locanda')).run();
+		write(dm, 'set_sidebar', { slug: 'locanda', fields: [{ label: 'Oste', value: 'Gerda' }, { label: 'Finta', value: '', image: 'img2' }] });
+		expect(getPageBySlug('locanda')!.fields).toEqual([{ label: 'Insegna', value: '', image: 'img1' }, { label: 'Oste', value: 'Gerda' }]);
+		expect(call(dm, 'read_page', { slug: 'locanda' }).text).toContain('Tesoro');
+		expect(write(alice, 'set_sidebar', { slug: 'locanda', fields: [] }).text).toBe('Non puoi modificare questa pagina.');
+	});
+
+	it('i tag si sostituiscono, il resto resta', () => {
+		write(dm, 'set_tags', { slug: 'locanda', tags: ['Città', 'città', 'Taverna'] });
+		const page = getPageBySlug('locanda')!;
+		expect(pageMeta(page).tags.map((t) => t.name)).toEqual(['Città', 'Taverna']);
+		expect(page).toMatchObject({ visibility: 'players', hasSecret: true });
+	});
+
+	it("il Master crea cartelle e sposta le voci dell'albero; il giocatore no", () => {
+		const tree = () => JSON.parse(call(dm, 'wiki_tree').text);
+		const { key: places } = JSON.parse(write(dm, 'create_folder', { name: 'Luoghi' }).text);
+		const { key: inns } = JSON.parse(write(dm, 'create_folder', { name: 'Locande', parent: places }).text);
+		const inn = `page-${getPageBySlug('locanda')!.id}`;
+		expect(write(dm, 'move', { key: inn, parent: inns }).isError).toBe(false);
+		expect(getPageBySlug('locanda')!.categoryId).toBe(Number(inns.split('-')[1]));
+		expect(tree()).toContainEqual({ key: places, folder: 'Luoghi', items: [{ key: inns, folder: 'Locande', items: [{ key: inn, slug: 'locanda', title: 'Locanda', kind: 'page' }] }] });
+		expect(write(dm, 'move', { key: places, parent: inns }).isError).toBe(true);
+		expect(write(alice, 'move', { key: inn }).text).toContain('Solo il Master');
+		expect(write(alice, 'create_folder', { name: 'X' }).isError).toBe(true);
+		// Il giocatore vede l'albero, ma non le pagine del Master.
+		expect(call(alice, 'wiki_tree').text).not.toContain('piano-malvagio');
 	});
 
 	it('testo vuoto o troppo lungo: non si salva niente', () => {

@@ -1,13 +1,14 @@
 import { allowedVisibilities, canEdit, canView, isMaster, type Viewer } from '../access.ts';
 import { fromMarkdown } from '../content/markdown.ts';
-import type { DocNode } from '../content/types.ts';
+import type { DocNode, PageField } from '../content/types.ts';
 import type { Visibility } from '../roles.ts';
 import { slugify } from '../slug.ts';
 import { backlinks, createPage, getPageBySlug, listPages, pageMeta, TITLE_MAX, updatePage, viewContent, type PageRow } from './pages.ts';
-import { CONTENT_MAX } from './pageForm.ts';
+import { cleanFields, CONTENT_MAX } from './pageForm.ts';
 import { pageView } from './pageView.ts';
 import { searchPages } from './search.ts';
-import { categoryTree, parseTagNames } from './taxonomy.ts';
+import { categoryTree, createCategory, moveTreeNode, pageTree, parseTagNames } from './taxonomy.ts';
+import { childrenOf, locate, nodeKey, type TreeNode } from '../tree.ts';
 
 const PAGE_SIZE = 100;
 const TEXT_MAX = 100_000;
@@ -31,10 +32,18 @@ const TOOLS = [
 		description: `Elenca le pagine della campagna, dalla modificata più di recente, ${PAGE_SIZE} alla volta.`,
 		inputSchema: { type: 'object', properties: { offset: { type: 'integer', minimum: 0 } } },
 		annotations: { readOnlyHint: true }
+	},
+	{
+		name: 'wiki_tree',
+		description: "L'albero nella barra a sinistra, nell'ordine in cui si vede: cartelle, pagine (anche dentro altre pagine) e divisori, ognuno con la sua chiave (key) per move e create_folder.",
+		inputSchema: { type: 'object', properties: {} },
+		annotations: { readOnlyHint: true }
 	}
 ];
 
-// Solo testo delle pagine, e niente che elimini: tutto il resto della wiki (impostazioni, utenti, plugin, temi, file) qui non c'è.
+const KEY = { type: 'string', description: 'Chiave di una voce di wiki_tree, es. folder-3 o page-12' };
+
+// Testo, colonna a lato e tag delle pagine, e l'albero; niente che elimini o cambi chi vede cosa: tutto il resto della wiki (impostazioni, utenti, plugin, temi, file) qui non c'è.
 const WRITE_TOOLS = [
 	{
 		name: 'create_page',
@@ -63,6 +72,37 @@ const WRITE_TOOLS = [
 		description: 'Sostituisce un pezzo di testo in una pagina. `find` deve comparire una volta sola e stare tutto in uno stesso stile; `replace` è testo semplice. Struttura, collegamenti e segreti restano come sono.',
 		inputSchema: { type: 'object', properties: { slug: { type: 'string' }, find: { type: 'string' }, replace: { type: 'string' } }, required: ['slug', 'find', 'replace'] },
 		annotations: { readOnlyHint: false, destructiveHint: true }
+	},
+	{
+		name: 'set_sidebar',
+		description: 'Riscrive le righe di testo della colonna a lato di una pagina (etichetta e valore, es. Razza: Elfo), al posto di quelle che ci sono. Le immagini della colonna restano, in cima. Per toglierle tutte, fields vuoto.',
+		inputSchema: {
+			type: 'object',
+			properties: {
+				slug: { type: 'string' },
+				fields: { type: 'array', items: { type: 'object', properties: { label: { type: 'string' }, value: { type: 'string' } }, required: ['label', 'value'] } }
+			},
+			required: ['slug', 'fields']
+		},
+		annotations: { readOnlyHint: false, destructiveHint: true }
+	},
+	{
+		name: 'set_tags',
+		description: 'Sostituisce i tag di una pagina con questi (i tag nuovi nascono da soli).',
+		inputSchema: { type: 'object', properties: { slug: { type: 'string' }, tags: { type: 'array', items: { type: 'string' } } }, required: ['slug', 'tags'] },
+		annotations: { readOnlyHint: false, destructiveHint: true }
+	},
+	{
+		name: 'create_folder',
+		description: 'Crea una cartella nella barra a sinistra, in fondo a parent (una cartella o una pagina; senza, nella radice). Solo il Master.',
+		inputSchema: { type: 'object', properties: { name: { type: 'string' }, description: { type: 'string' }, parent: KEY }, required: ['name'] },
+		annotations: { readOnlyHint: false, destructiveHint: false }
+	},
+	{
+		name: 'move',
+		description: "Sposta una voce dell'albero (pagina, cartella o divisorio) dentro parent (senza, nella radice), prima di before (senza, in fondo). Una pagina dentro una cartella ne prende la cartella; visibilità e testo non cambiano. Solo il Master.",
+		inputSchema: { type: 'object', properties: { key: KEY, parent: KEY, before: KEY }, required: ['key'] },
+		annotations: { readOnlyHint: false, destructiveHint: false }
 	}
 ];
 
@@ -92,15 +132,60 @@ function blocks(text: unknown): DocNode[] {
 	return out;
 }
 
+const tagList = (raw: unknown) => (Array.isArray(raw) ? parseTagNames(raw.map(String).join(',')).slice(0, 20) : []);
+
 /**
- * Cambia solo il testo: titolo, visibilità, permessi, cartella e colonna a lato restano quelli che sono. La versione di prima resta nella cronologia.
- * `content` parte da viewContent, come nell'editor: i blocchi che chi scrive non vede li rimette updatePage.
+ * Cambia solo testo, colonna a lato o tag: titolo, visibilità, permessi e cartella restano quelli che sono. La versione di prima resta nella cronologia.
+ * Il testo parte da viewContent, come nell'editor: i blocchi che chi scrive non vede li rimette updatePage.
  */
-function saveContent(page: PageRow, content: DocNode, u: Viewer) {
+function save(page: PageRow, u: Viewer, change: { content?: DocNode; fields?: PageField[]; tags?: string[] }) {
+	const content = change.content ?? viewContent(page.content, u);
 	if (JSON.stringify(content).length > CONTENT_MAX) throw new ToolError('La pagina diventerebbe troppo lunga.');
 	const { title, visibility, playersCanEdit, categoryId, session } = page;
-	updatePage(page, { title, content, visibility, playersCanEdit, categoryId, session, fields: page.fields ?? [], tags: pageMeta(page).tags.map((t) => t.name) }, u, false);
+	const fields = change.fields ?? page.fields ?? [];
+	const tags = change.tags ?? pageMeta(page).tags.map((t) => t.name);
+	updatePage(page, { title, content, visibility, playersCanEdit, categoryId, session, fields, tags }, u, false);
 	return { slug: page.slug, title, visibility };
+}
+
+/** Claude non carica file: scrive solo righe di testo, e le immagini che ci sono restano. */
+function sidebar(args: Record<string, unknown>, u: Viewer) {
+	const page = editable(args.slug, u);
+	const images = (page.fields ?? []).filter((f) => f.image);
+	return save(page, u, { fields: [...images, ...cleanFields(args.fields, () => null)].slice(0, 30) });
+}
+
+/** L'albero senza i dati per il disegno: chiave, nome e figli. */
+const treeNode = (n: TreeNode): unknown =>
+	n.type === 'divider'
+		? { key: nodeKey(n), divider: true }
+		: { key: nodeKey(n), ...(n.type === 'folder' ? { folder: n.name } : { slug: n.slug, title: n.title, kind: n.kind }), ...(childrenOf(n).length && { items: childrenOf(n).map(treeNode) }) };
+
+const keyArg = (v: unknown) => (typeof v === 'string' && v ? v : null);
+
+/** Le stesse regole della barra a sinistra: l'albero lo riordina solo il Master. */
+function organize(u: Viewer) {
+	if (!isMaster(u)) throw new ToolError("Solo il Master organizza l'albero.");
+}
+
+function folder(args: Record<string, unknown>, u: Viewer) {
+	organize(u);
+	const name = String(args.name ?? '').trim().slice(0, 80);
+	if (!name) throw new ToolError('Serve un nome.');
+	const parent = keyArg(args.parent);
+	if (parent && !locate(pageTree(u).items, parent)) throw new ToolError('parent non è nell\'albero.');
+	const c = createCategory(name, null, String(args.description ?? '').trim().slice(0, 500));
+	const key = nodeKey({ type: 'folder', id: c.id });
+	if (parent && !moveTreeNode(u, key, { parent, before: null })) throw new ToolError(`Cartella creata nella radice (${key}): lì dentro non può stare.`);
+	return { key, folder: c.name };
+}
+
+function move(args: Record<string, unknown>, u: Viewer) {
+	organize(u);
+	const key = keyArg(args.key);
+	if (!key || !moveTreeNode(u, key, { parent: keyArg(args.parent), before: keyArg(args.before) }))
+		throw new ToolError('Spostamento non possibile: controlla le chiavi con wiki_tree. La pagina iniziale non si sposta, una cartella non va dentro sé stessa e le schede giocatore restano nella cartella PG.');
+	return { ok: true };
 }
 
 function create(args: Record<string, unknown>, u: Viewer) {
@@ -114,7 +199,7 @@ function create(args: Record<string, unknown>, u: Viewer) {
 	const folders = categoryTree(u).flat;
 	const folder = folders.find((c) => c.label === args.folder || c.name === args.folder);
 	if (args.folder && !folder) throw new ToolError(`Cartella inesistente. Ci sono: ${folders.map((c) => c.label).join(', ') || 'nessuna'}.`);
-	const tags = Array.isArray(args.tags) ? parseTagNames(args.tags.map(String).join(',')).slice(0, 20) : [];
+	const tags = tagList(args.tags);
 	const page = createPage({ title, content, visibility, playersCanEdit: false, categoryId: folder?.id ?? null, tags, fields: [], session: null }, u);
 	return { slug: page.slug, title: page.title, visibility: page.visibility };
 }
@@ -125,7 +210,7 @@ function append(args: Record<string, unknown>, u: Viewer) {
 	if (args.secret && !isMaster(u)) throw new ToolError('Solo il Master scrive segreti.');
 	const doc = viewContent(page.content, u);
 	const more = args.secret ? added.map((b) => ({ ...b, attrs: { ...b.attrs, visibility: 'master' } })) : added;
-	return saveContent(page, { ...doc, content: [...(doc.content ?? []), ...more] }, u);
+	return save(page, u, { content: { ...doc, content: [...(doc.content ?? []), ...more] } });
 }
 
 function replace(args: Record<string, unknown>, u: Viewer) {
@@ -145,7 +230,7 @@ function replace(args: Record<string, unknown>, u: Viewer) {
 	// Solo nel testo che chi scrive vede: dentro un segreto non si cerca e non si cambia.
 	const doc = walk(viewContent(page.content, u));
 	if (hits !== 1) throw new ToolError(hits ? `Il testo compare ${hits} volte: indicane un pezzo più lungo.` : 'Testo non trovato: deve stare tutto in uno stesso stile.');
-	return saveContent(page, doc, u);
+	return save(page, u, { content: doc });
 }
 
 /** Ogni strumento passa dalle funzioni del sito con chi chiede: segreti e visibilità restano quelli che vedrebbe nel browser. */
@@ -162,10 +247,20 @@ function callTool(name: string, args: Record<string, unknown>, u: Viewer, locale
 			const { total, rows } = listPages(u, { noTemplates: true, limit: PAGE_SIZE, offset: Math.max(0, Math.trunc(Number(args.offset)) || 0) });
 			return { total, pages: rows.map((r) => ({ slug: r.slug, title: r.title, kind: r.kind, category: r.category, tags: r.tags.map((t) => t.name), updatedAt: new Date(r.updatedAt).toISOString() })) };
 		}
+		case 'wiki_tree':
+			return pageTree(u).items.map(treeNode);
 		case 'create_page':
 			return create(args, u);
 		case 'append_to_page':
 			return append(args, u);
+		case 'set_sidebar':
+			return sidebar(args, u);
+		case 'set_tags':
+			return save(editable(args.slug, u), u, { tags: tagList(args.tags) });
+		case 'create_folder':
+			return folder(args, u);
+		case 'move':
+			return move(args, u);
 		default:
 			return replace(args, u);
 	}
