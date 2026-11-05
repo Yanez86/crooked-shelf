@@ -114,7 +114,7 @@ describe('scrittura', () => {
 	});
 
 	it('nessuno strumento per eliminare, amministrare o cambiare visibilità', () => {
-		expect(names(true)).toEqual(['search', 'read_page', 'list_pages', 'wiki_tree', 'create_page', 'append_to_page', 'replace_text', 'set_sidebar', 'set_tags', 'create_folder', 'move']);
+		expect(names(true)).toEqual(['search', 'read_page', 'list_pages', 'wiki_tree', 'create_page', 'append_to_page', 'replace_text', 'set_sidebar', 'set_tags', 'create_folder', 'move', 'rename']);
 		for (const name of ['delete_page', 'set_visibility', 'update_settings', 'install_plugin'])
 			expect(handleMcp({ id: 1, method: 'tools/call', params: { name } }, dm, 'Ombre', 'it', true)).toMatchObject({ error: { code: -32602 } });
 	});
@@ -251,6 +251,21 @@ describe('scrittura', () => {
 		expect(write(alice, 'create_folder', { name: 'X' }).isError).toBe(true);
 		// Il giocatore vede l'albero, ma non le pagine del Master.
 		expect(call(alice, 'wiki_tree').text).not.toContain('piano-malvagio');
+	});
+
+	it("si rinominano pagine e cartelle, l'indirizzo della pagina resta", () => {
+		const inn = getPageBySlug('locanda')!;
+		const versions = listRevisions(inn, dm).length;
+		expect(write(dm, 'rename', { key: `page-${inn.id}`, name: 'Locanda del Grifone' }).isError).toBe(false);
+		expect(getPageBySlug('locanda')).toMatchObject({ title: 'Locanda del Grifone', visibility: 'players', hasSecret: true });
+		expect(listRevisions(inn, dm)).toHaveLength(versions + 1);
+		const { key } = JSON.parse(write(dm, 'create_folder', { name: 'Luoghi' }).text);
+		write(dm, 'rename', { key, name: 'Posti' });
+		expect(JSON.parse(call(dm, 'wiki_tree').text)).toContainEqual({ key, folder: 'Posti' });
+		expect(write(alice, 'rename', { key, name: 'X' }).text).toContain('Solo il Master');
+		expect(write(alice, 'rename', { key: `page-${inn.id}`, name: 'X' }).text).toBe('Non puoi modificare questa pagina.');
+		expect(write(alice, 'rename', { key: `page-${getPageBySlug('piano-malvagio')!.id}`, name: 'X' }).text).toBe('Pagina non trovata.');
+		expect(write(dm, 'rename', { key, name: ' ' }).isError).toBe(true);
 	});
 
 	it('testo vuoto o troppo lungo: non si salva niente', () => {

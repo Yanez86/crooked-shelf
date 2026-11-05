@@ -59,8 +59,9 @@ Il testo delle pagine, la colonna a lato, i tag e l'ordine della barra a sinistr
 | `set_tags` | sostituisce i tag di una pagina |
 | `create_folder` | crea una cartella (solo il Master) |
 | `move` | sposta pagine, cartelle e divisori nell'albero, come trascinandoli (solo il Master) |
+| `rename` | rinomina una pagina (l'indirizzo resta) o una cartella (solo il Master) |
 
-**Non può** eliminare pagine o cartelle, cambiare titolo, visibilità o permessi, toccare template, mappe, cronologie e bacheche, caricare file, né arrivare a impostazioni, utenti, plugin, temi o backup: per queste cose non esiste nessuno strumento. Spostare una pagina in un'altra cartella non cambia chi la vede.
+**Non può** eliminare pagine o cartelle, cambiare visibilità o permessi, toccare template, mappe, cronologie e bacheche, caricare file, né arrivare a impostazioni, utenti, plugin, temi o backup: per queste cose non esiste nessuno strumento. Spostare una pagina in un'altra cartella non cambia chi la vede.
 
 Il testo passa da un convertitore che riconosce un elenco chiuso di elementi (titoli, grassetto, corsivo, elenchi, citazioni, collegamenti): HTML e codice restano testo e non vengono mai eseguiti. Valgono le regole del sito: un giocatore modifica solo le pagine che può modificare nel sito.
 

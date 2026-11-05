@@ -3,11 +3,11 @@ import { fromMarkdown } from '../content/markdown.ts';
 import type { DocNode, PageField } from '../content/types.ts';
 import type { Visibility } from '../roles.ts';
 import { slugify } from '../slug.ts';
-import { backlinks, createPage, getPageBySlug, listPages, pageMeta, TITLE_MAX, updatePage, viewContent, type PageRow } from './pages.ts';
+import { backlinks, createPage, getPageById, getPageBySlug, listPages, pageMeta, TITLE_MAX, updatePage, viewContent, type PageRow } from './pages.ts';
 import { cleanFields, CONTENT_MAX } from './pageForm.ts';
 import { pageView } from './pageView.ts';
 import { searchPages } from './search.ts';
-import { categoryTree, createCategory, moveTreeNode, pageTree, parseTagNames } from './taxonomy.ts';
+import { categoryTree, createCategory, getCategory, moveTreeNode, pageTree, parseTagNames, updateCategory } from './taxonomy.ts';
 import { childrenOf, locate, nodeKey, type TreeNode } from '../tree.ts';
 
 const PAGE_SIZE = 100;
@@ -103,6 +103,12 @@ const WRITE_TOOLS = [
 		description: "Sposta una voce dell'albero (pagina, cartella o divisorio) dentro parent (senza, nella radice), prima di before (senza, in fondo). Una pagina dentro una cartella ne prende la cartella; visibilità e testo non cambiano. Solo il Master.",
 		inputSchema: { type: 'object', properties: { key: KEY, parent: KEY, before: KEY }, required: ['key'] },
 		annotations: { readOnlyHint: false, destructiveHint: false }
+	},
+	{
+		name: 'rename',
+		description: "Rinomina una pagina o una cartella dell'albero. Di una pagina cambia solo il titolo: l'indirizzo (slug) e i collegamenti restano. Le cartelle le rinomina solo il Master.",
+		inputSchema: { type: 'object', properties: { key: KEY, name: { type: 'string' } }, required: ['key', 'name'] },
+		annotations: { readOnlyHint: false, destructiveHint: false }
 	}
 ];
 
@@ -135,13 +141,14 @@ function blocks(text: unknown): DocNode[] {
 const tagList = (raw: unknown) => (Array.isArray(raw) ? parseTagNames(raw.map(String).join(',')).slice(0, 20) : []);
 
 /**
- * Cambia solo testo, colonna a lato o tag: titolo, visibilità, permessi e cartella restano quelli che sono. La versione di prima resta nella cronologia.
+ * Cambia solo titolo, testo, colonna a lato o tag: visibilità, permessi e cartella restano quelli che sono. La versione di prima resta nella cronologia.
  * Il testo parte da viewContent, come nell'editor: i blocchi che chi scrive non vede li rimette updatePage.
  */
-function save(page: PageRow, u: Viewer, change: { content?: DocNode; fields?: PageField[]; tags?: string[] }) {
+function save(page: PageRow, u: Viewer, change: { title?: string; content?: DocNode; fields?: PageField[]; tags?: string[] }) {
 	const content = change.content ?? viewContent(page.content, u);
 	if (JSON.stringify(content).length > CONTENT_MAX) throw new ToolError('La pagina diventerebbe troppo lunga.');
-	const { title, visibility, playersCanEdit, categoryId, session } = page;
+	const { visibility, playersCanEdit, categoryId, session } = page;
+	const title = change.title ?? page.title;
 	const fields = change.fields ?? page.fields ?? [];
 	const tags = change.tags ?? pageMeta(page).tags.map((t) => t.name);
 	updatePage(page, { title, content, visibility, playersCanEdit, categoryId, session, fields, tags }, u, false);
@@ -178,6 +185,18 @@ function folder(args: Record<string, unknown>, u: Viewer) {
 	const key = nodeKey({ type: 'folder', id: c.id });
 	if (parent && !moveTreeNode(u, key, { parent, before: null })) throw new ToolError(`Cartella creata nella radice (${key}): lì dentro non può stare.`);
 	return { key, folder: c.name };
+}
+
+function rename(args: Record<string, unknown>, u: Viewer) {
+	const name = String(args.name ?? '').trim();
+	if (!name) throw new ToolError('Serve un nome.');
+	const [, type, id] = /^(folder|page)-(\d+)$/.exec(String(args.key ?? '')) ?? [];
+	if (type === 'page') return save(editable(getPageById(Number(id))?.slug, u), u, { title: name.slice(0, TITLE_MAX) });
+	organize(u);
+	const c = type === 'folder' ? getCategory(Number(id)) : undefined;
+	if (!c) throw new ToolError('Cartella non trovata.');
+	updateCategory(c.id, name.slice(0, 80), c.parentId, c.description);
+	return { key: args.key, folder: name.slice(0, 80) };
 }
 
 function move(args: Record<string, unknown>, u: Viewer) {
@@ -261,6 +280,8 @@ function callTool(name: string, args: Record<string, unknown>, u: Viewer, locale
 			return folder(args, u);
 		case 'move':
 			return move(args, u);
+		case 'rename':
+			return rename(args, u);
 		default:
 			return replace(args, u);
 	}

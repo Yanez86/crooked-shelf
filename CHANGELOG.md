@@ -6,7 +6,7 @@ Questo file è anche la pagina «Novità» della wiki (`/changelog`).
 ## 0.23.0 — 2026-11-05
 
 ### Aggiunte
-- Claude organizza la wiki: colonna a lato, tag, nuove cartelle e spostamenti nell'albero.
+- Claude organizza la wiki: colonna a lato, tag, nuove cartelle, spostamenti e nomi nell'albero.
 
 ## 0.22.0 — 2026-11-05
 
