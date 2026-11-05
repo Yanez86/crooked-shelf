@@ -82,18 +82,17 @@
 					{user ? t('profile.title') : t('nav.preferences')}
 				</a>
 			</li>
-			{#if campaign && user?.role === 'master'}
+			{#if user}
+				<!-- Tutte le opzioni delle campagne stanno lì; qui sopra restano solo quelle per entrarci. -->
 				<li><a href="/campaign" aria-current={current('/campaign')} onclick={(e) => openPanel(e, '/campaign', t('campaign.title'))}>{t('campaign.title')}</a></li>
+			{/if}
+			{#if campaign && user?.role === 'master'}
 				<li>
 					<form method="post" action="/campaign?/asPlayer">
 						<input type="hidden" name="next" value={page.url.pathname + page.url.search} />
 						<button type="submit">{t('campaign.asPlayer')}</button>
 					</form>
 				</li>
-			{/if}
-			{#if user}
-				<!-- Pagina intera, non il popup: dopo averla creata si entra nella campagna nuova. -->
-				<li><a href="/campaign/new" aria-current={current('/campaign/new')}>{t('campaign.newTitle')}</a></li>
 			{/if}
 			{#if user?.admin}
 				<li><a href="/admin" aria-current={current('/admin')} onclick={(e) => openPanel(e, '/admin', t('nav.admin'))}>{t('nav.admin')}</a></li>

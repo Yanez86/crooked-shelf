@@ -237,10 +237,10 @@ test('albero delle cartelle e delle pagine', async () => {
 	await expect(tree.getByRole('link', { name: 'Bartolo Pancia' })).toHaveAttribute('aria-current', 'page');
 	// Le cartelle aperte restano aperte.
 	await expect(locanda).toBeVisible();
-	// Niente barra orizzontale e niente sezioni: il menu del profilo ha solo Profilo, Campagna, Amministrazione, la vista giocatore ed Esci.
+	// Niente barra orizzontale e niente sezioni: il menu del profilo ha solo Profilo, Campagne, Amministrazione, la vista giocatore ed Esci.
 	await expect(admin.getByRole('navigation', { name: 'Navigazione principale' })).toHaveCount(0);
 	await admin.locator('.user-menu summary').click();
-	await expect(admin.locator('.user-menu .panel').getByRole('link')).toHaveText(['Profilo', 'Campagna', 'Nuova campagna', 'Amministrazione']);
+	await expect(admin.locator('.user-menu .panel').getByRole('link')).toHaveText(['Profilo', 'Campagne', 'Amministrazione']);
 	await expect(admin.locator('.user-menu .panel').getByRole('button', { name: /Esci/ })).toBeVisible();
 	await admin.locator('.user-menu summary').click();
 	// Il Cestino è sempre l'ultima voce della barra, anche sulla linguetta Risorse.

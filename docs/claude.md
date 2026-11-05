@@ -6,7 +6,7 @@ Claude lavora su una campagna **solo col suo Master**: i giocatori non possono c
 
 ## Installare
 
-1. Nella wiki, entra nella campagna di cui sei Master e apri Campagna › Claude. Spunta «Claude può anche scrivere» solo se ti serve, poi «Crea un token». Copia indirizzo e token: il token si vede una volta sola.
+1. Nella wiki, entra nella campagna di cui sei Master e apri Campagne › Claude. Spunta «Claude può anche scrivere» solo se ti serve, poi «Crea un token». Copia indirizzo e token: il token si vede una volta sola.
 2. In Claude Code:
 
    ```bash
@@ -22,7 +22,7 @@ La wiki deve essere raggiungibile dal computer su cui gira Claude Code.
 
 Da claude.ai (e dalle app di Claude) la wiki si aggiunge come connettore personalizzato, senza copiare token:
 
-1. Nella wiki, entra nella campagna di cui sei Master e copia da Campagna › Claude l'«Indirizzo del connettore», per esempio `https://wiki.esempio.it/mcp/2`.
+1. Nella wiki, entra nella campagna di cui sei Master e copia da Campagne › Claude l'«Indirizzo del connettore», per esempio `https://wiki.esempio.it/mcp/2`.
 2. In Claude apri Impostazioni › Connettori › Aggiungi connettore personalizzato, dagli il nome della campagna e incolla l'indirizzo. Lascia vuoti ID e segreto del client.
 3. Claude apre la wiki: fai l'accesso, scegli se Claude può anche scrivere, poi «Consenti».
 
@@ -30,15 +30,15 @@ Da claude.ai (e dalle app di Claude) la wiki si aggiunge come connettore persona
 
 La wiki deve essere raggiungibile da internet in HTTPS (vedi [Installazione](installazione.md)): a collegarsi sono i server di Anthropic, non il tuo computer.
 
-Il connettore ha un token suo, che non sostituisce quello del plugin. In Campagna › Claude si vede da quali siti è collegata la campagna; «Revoca» li chiude tutti, e per tornare basta ricollegarsi da Claude.
+Il connettore ha un token suo, che non sostituisce quello del plugin. In Campagne › Claude si vede da quali siti è collegata la campagna; «Revoca» li chiude tutti, e per tornare basta ricollegarsi da Claude.
 
 ## Il token
 
 - Vale per una sola campagna, e solo finché ne sei il Master. Il token del plugin è uno per campagna: crearne un altro sostituisce il precedente.
-- Si revoca da Campagna › Claude. Smette di valere anche cambiando la password, se l'account viene disattivato o se non sei più il Master della campagna.
+- Si revoca da Campagne › Claude. Smette di valere anche cambiando la password, se l'account viene disattivato o se non sei più il Master della campagna.
 - Di base legge soltanto: per farlo scrivere va creato con la casella spuntata, e i token creati prima restano in lettura.
 - Apre solo l'indirizzo `/mcp`: non vale per accedere al resto della wiki.
-- Fermo da 90 giorni, smette di valere da solo. In Campagna › Claude si vede quando è nato e quando è stato usato l'ultima volta.
+- Fermo da 90 giorni, smette di valere da solo. In Campagne › Claude si vede quando è nato e quando è stato usato l'ultima volta.
 
 Il testo delle pagine arriva a Claude, quindi ad Anthropic, come ogni contenuto di una conversazione. Crea il token solo se per il tuo gruppo va bene.
 

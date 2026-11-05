@@ -152,7 +152,7 @@ export function tableOf(u: Viewer | null) {
 	};
 }
 
-/** Per la pagina Campagna: i template tra cui il Master sceglie quello delle schede nuove, e quello scelto. */
+/** Per Campagne › Giocatori: i template tra cui il Master sceglie quello delle schede nuove, e quello scelto. */
 export function sheetTemplateChoice(u: Viewer) {
 	const id = currentCampaign().sheetTemplateId;
 	const current = id ? getPageById(id) : undefined;

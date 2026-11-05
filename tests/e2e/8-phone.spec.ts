@@ -5,7 +5,7 @@ import AxeBuilder from '@axe-core/playwright';
 test.describe.configure({ mode: 'serial' });
 test.use({ viewport: { width: 390, height: 844 }, hasTouch: true });
 
-const PAGES = ['/', '/wiki', '/wiki/vicolo-del-drago', '/wiki/vicolo-del-drago/edit', '/wiki/new', '/search?q=drago', '/tags', '/categories', '/gallery', '/resources', '/rules', '/calendar', '/schedule', '/profile', '/campaign', '/campaign/new', '/campaign?tab=players', '/campaign?tab=claude', '/admin', '/admin/users', '/admin/plugins'];
+const PAGES = ['/', '/wiki', '/wiki/vicolo-del-drago', '/wiki/vicolo-del-drago/edit', '/wiki/new', '/search?q=drago', '/tags', '/categories', '/gallery', '/resources', '/rules', '/calendar', '/schedule', '/profile', '/campaign', '/campaign?tab=new', '/campaign?tab=general', '/campaign?tab=players', '/campaign?tab=claude', '/admin', '/admin/users', '/admin/plugins'];
 
 test.beforeEach(async ({ page }) => {
 	await page.goto('/login');

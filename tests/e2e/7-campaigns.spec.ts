@@ -95,7 +95,13 @@ test('il Master vede solo la sua campagna e scrive una pagina segreta', async ()
 test('chi non è nella campagna non la raggiunge', async () => {
 	expect((await alice.goto(`/wiki/${SECRET_SLUG}`))?.status()).toBe(404);
 	expect((await admin.goto(`/wiki/${SECRET_SLUG}`))?.status()).toBe(404);
-	expect((await alice.goto('/campaign'))?.status()).toBe(404);
+	// Il pannello Campagne è di ogni account, ma le opzioni del Master solo per le campagne che si tengono.
+	await alice.goto('/campaign');
+	await expect(alice.getByRole('main')).toContainText('Le Cronache di Faerûn');
+	await expect(alice.getByRole('main')).not.toContainText('Avalon');
+	await expect(alice.getByRole('main').getByRole('link', { name: /Gestisci/ })).toHaveCount(0);
+	expect((await alice.goto('/campaign?tab=general'))?.status()).toBe(404);
+	expect((await alice.goto('/campaign?tab=general&id=2'))?.status()).toBe(404);
 	expect((await alice.request.post('/campaign?/switch', { form: { id: '2' }, headers: { origin: new URL(alice.url()).origin } })).status()).toBeLessThan(400);
 	await alice.goto('/');
 	await expect(alice.locator('.brand')).toContainText('Faerûn');
@@ -148,7 +154,7 @@ test("l'Admin invitato da un altro Master è un giocatore: non vede i segreti", 
 	await expect(admin.locator('.user-menu .panel').getByRole('link', { name: 'Amministrazione' })).toBeVisible();
 	await expect(admin.locator('.user-menu .panel').getByRole('button', { name: 'Visualizza come giocatore' })).toHaveCount(0);
 	expect((await admin.goto(`/wiki/${SECRET_SLUG}`))?.status()).toBe(404);
-	expect((await admin.goto('/campaign'))?.status()).toBe(404);
+	expect((await admin.goto('/campaign?tab=general'))?.status()).toBe(404);
 	await admin.goto('/admin/world');
 	await expect(admin.getByLabel(/Includi i segreti del Master/)).toHaveCount(0);
 
@@ -181,7 +187,7 @@ test('un giocatore non può eliminare la campagna', async () => {
 });
 
 test('il Master elimina la sua campagna, ma solo col nome giusto', async () => {
-	await dm.goto('/campaign');
+	await dm.goto('/campaign?tab=general');
 	// Il popup si apre dal pulsante rosso e si chiude con Annulla senza toccare niente.
 	await dm.getByRole('button', { name: 'Elimina la campagna Avalon', exact: true }).click();
 	const dlg = dm.getByRole('dialog', { name: 'Eliminare «Avalon»?' });
@@ -271,11 +277,11 @@ test('ognuno crea le sue campagne, fino al suo limite, che l\'Admin cambia a una
 	// Alice è una giocatrice rimasta senza campagne: ne crea una sua, e lì è il Master.
 	await alice.goto('/campaign');
 	await alice.getByRole('main').getByRole('link', { name: 'Nuova campagna' }).click();
-	await alice.waitForURL('**/campaign/new');
+	await alice.waitForURL('**/campaign?tab=new');
 	await expect(alice.getByText('Campagne che tieni: 0 su 3.')).toBeVisible();
 	await axe(alice, 'nuova campagna');
 	for (const name of ['Il regno di Alice', 'La seconda di Alice', 'La terza di Alice']) {
-		await alice.goto('/campaign/new');
+		await alice.goto('/campaign?tab=new');
 		await alice.getByLabel('Nome della campagna').fill(name);
 		await alice.getByRole('button', { name: 'Crea la campagna' }).click();
 		await alice.waitForURL((u) => u.pathname === '/');
@@ -285,11 +291,22 @@ test('ognuno crea le sue campagne, fino al suo limite, che l\'Admin cambia a una
 	await expect(alice.locator('.user-menu .role')).toHaveText('Master');
 	await expect(alice.locator('.user-menu .campaigns').getByRole('button')).toHaveCount(3);
 
+	// Dal pannello Campagne gestisce anche una campagna in cui non si trova, senza entrarci.
+	await alice.goto('/campaign');
+	await axe(alice, 'campagne: elenco');
+	await alice.getByRole('link', { name: 'Gestisci Il regno di Alice' }).click();
+	await expect(alice.getByRole('main')).toContainText('Stai gestendo: Il regno di Alice');
+	await alice.getByLabel('Nome della campagna').fill('Il reame di Alice');
+	await alice.locator('form[action^="?/rename"]').getByRole('button', { name: 'Salva' }).click();
+	await expect(alice.getByRole('status').first()).toContainText('Modifiche salvate');
+	await expect(alice.getByRole('main')).toContainText('Stai gestendo: Il reame di Alice');
+	await expect(alice.locator('.brand')).toContainText('La terza di Alice');
+
 	// Al limite il modulo non c'è più, e il server dice di no anche a chi lo manda lo stesso.
-	await alice.locator('.user-menu').getByRole('link', { name: 'Nuova campagna' }).click();
+	await alice.goto('/campaign?tab=new');
 	await expect(alice.getByText('Campagne che tieni: 3 su 3.')).toBeVisible();
 	await expect(alice.getByLabel('Nome della campagna')).toHaveCount(0);
-	const res = await alice.request.post('/campaign/new', { form: { name: 'Quarta' }, headers: { origin: new URL(alice.url()).origin } });
+	const res = await alice.request.post('/campaign?/newCampaign', { form: { name: 'Quarta' }, headers: { origin: new URL(alice.url()).origin } });
 	expect(res.status()).toBe(403);
 
 	// L'Admin alza il limite solo ad Alice: gli altri restano a 3.

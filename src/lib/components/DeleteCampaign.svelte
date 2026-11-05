@@ -4,9 +4,9 @@
 
 	/**
 	 * «Elimina la campagna»: un pulsante rosso che apre un popup con l'avviso e il nome da riscrivere per conferma
-	 * (lo controlla anche il server). Esc, la X o «Annulla» lo chiudono senza toccare niente.
+	 * (lo controlla anche il server). Esc, la X o «Annulla» lo chiudono senza toccare niente. `query` si aggiunge all'azione, come in Invites.
 	 */
-	let { id, name }: { id: number; name: string } = $props();
+	let { id, name, query = '' }: { id: number; name: string; query?: string } = $props();
 	const t = getT();
 	let dlg = $state<HTMLDialogElement>();
 	let input = $state<HTMLInputElement>();
@@ -29,7 +29,7 @@
 	<h2 id="delete-{id}-title">{t('campaign.deleteTitle', { name })}</h2>
 	<p id="delete-{id}-warning">{t('campaign.deleteWarning')}</p>
 	<!-- _top: anche dal popup, per non lasciare sotto la pagina di una campagna che non c'è più. -->
-	<form method="post" action="?/delete" target="_top">
+	<form method="post" action="?/delete{query}" target="_top">
 		<input type="hidden" name="id" value={id} />
 		<div class="field">
 			<label for="delete-{id}">{t('campaign.deleteConfirm', { name })}</label>

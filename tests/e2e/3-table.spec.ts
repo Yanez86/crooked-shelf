@@ -251,17 +251,17 @@ test('schede giocatore: la cartella PG, chi è al tavolo, le pagine dentro la sc
 	await admin.getByRole('button', { name: 'Salva' }).click();
 	await expect(admin.locator('.content .secret')).toContainText('corona del duca');
 
-	// Nella pagina Campagna: il template delle schede nuove, e la scheda di ogni giocatore.
+	// In Campagne › Giocatori: il template delle schede nuove, e la scheda di ogni giocatore.
 	await admin.goto('/campaign?tab=players');
 	await expect(admin.getByLabel('Template delle schede nuove')).toHaveValue('scheda-giocatore');
 	await expect(admin.locator('main').getByRole('link', { name: 'Alice' })).toHaveAttribute('href', '/wiki/alice');
 	await admin.getByLabel('Template delle schede nuove').selectOption('');
-	await admin.locator('form[action="?/sheetTemplate&tab=players"]').getByRole('button', { name: 'Salva' }).click();
+	await admin.locator('form[action^="?/sheetTemplate&tab=players"]').getByRole('button', { name: 'Salva' }).click();
 	await expect(admin.getByRole('status').filter({ hasText: 'Template delle schede salvato' })).toBeVisible();
 	await expect(admin.getByLabel('Template delle schede nuove')).toHaveValue('');
 	await axe(admin, 'campagna: schede giocatore');
 	await admin.getByLabel('Template delle schede nuove').selectOption('scheda-giocatore');
-	await admin.locator('form[action="?/sheetTemplate&tab=players"]').getByRole('button', { name: 'Salva' }).click();
+	await admin.locator('form[action^="?/sheetTemplate&tab=players"]').getByRole('button', { name: 'Salva' }).click();
 	await expect(admin.getByLabel('Template delle schede nuove')).toHaveValue('scheda-giocatore');
 
 	// Alice dà alla sua scheda il nome del personaggio.
@@ -308,17 +308,18 @@ test('schede giocatore: la cartella PG, chi è al tavolo, le pagine dentro la sc
 
 test('appuntamenti: un\'opzione della campagna, spenta finché il Master non la accende', async ({ browser }) => {
 	const p = await login(browser, PLAYER);
-	// Spenti: niente voce nella barra, niente scheda nella pagina Campagna, e le pagine non ci sono.
+	// Spenti: niente voce nella barra, niente scheda nel pannello Campagne, e le pagine non ci sono.
 	await admin.goto('/');
 	await expect(admin.locator('#explorer').getByRole('link', { name: 'Appuntamenti' })).toHaveCount(0);
 	expect((await admin.goto('/schedule'))?.status()).toBe(404);
 	expect((await admin.goto('/schedule/new'))?.status()).toBe(404);
 	expect((await p.goto('/schedule'))?.status()).toBe(404);
 	await admin.goto('/campaign?tab=schedule');
-	await expect(admin.getByRole('navigation', { name: 'Sezioni della campagna' }).getByRole('link', { name: 'Appuntamenti' })).toHaveCount(0);
-	await expect(admin.locator('form[action="?/schedule&tab=schedule"]')).toHaveCount(0);
+	await expect(admin.getByRole('navigation', { name: 'Sezioni delle campagne' }).getByRole('link', { name: 'Appuntamenti' })).toHaveCount(0);
+	await expect(admin.locator('form[action^="?/schedule&tab=schedule"]')).toHaveCount(0);
 	// Il Master li accende in Generale.
-	const opts = admin.locator('form[action="?/features"]');
+	await admin.goto('/campaign?tab=general');
+	const opts = admin.locator('form[action^="?/features"]');
 	await opts.getByLabel('Appuntamenti').check();
 	await opts.getByRole('button', { name: 'Salva' }).click();
 	await expect(opts.getByRole('status')).toContainText('Modifiche salvate');
@@ -330,9 +331,9 @@ test('appuntamenti: un\'opzione della campagna, spenta finché il Master non la 
 });
 
 test('appuntamenti: il Master fissa i giovedì, i giocatori rispondono, sotto il minimo si salta', async ({ browser }) => {
-	// Nella pagina Campagna: il link per il remoto e la regola del minimo.
+	// In Campagne › Appuntamenti: il link per il remoto e la regola del minimo.
 	await admin.goto('/campaign?tab=schedule');
-	const rules = admin.locator('form[action="?/schedule&tab=schedule"]');
+	const rules = admin.locator('form[action^="?/schedule&tab=schedule"]');
 	await rules.getByLabel('Link per il remoto (Discord o altro)').fill('javascript:alert(1)');
 	await rules.getByRole('button', { name: 'Salva' }).click();
 	await expect(admin.getByRole('alert')).toContainText('indirizzo web');

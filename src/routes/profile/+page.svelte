@@ -18,7 +18,7 @@
 	const swatch = (id: string) => [...THEMES, ...data.custom].find((th) => th.id === id)?.colors;
 	const themeIds = $derived([...data.options.theme, ...data.custom.map((c) => c.id)]);
 	const themeName = (id: string) => data.custom.find((c) => c.id === id)?.name ?? t('themes.' + id);
-	// Una scheda per indirizzo (?tab=…), come nella pagina Campagna. Chi non ha fatto l'accesso ha solo la lettura.
+	// Una scheda per indirizzo (?tab=…), come nel pannello Campagne. Chi non ha fatto l'accesso ha solo la lettura.
 	const TABS = ['profile', 'reading', 'password'] as const;
 	const TAB_TITLES = { profile: 'prefs.profile', reading: 'prefs.reading', password: 'prefs.password' };
 	const tab = $derived(user ? (TABS.find((x) => x === page.url.searchParams.get('tab')) ?? 'profile') : 'reading');
