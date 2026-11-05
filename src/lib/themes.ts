@@ -233,6 +233,10 @@ export const THEMES: Theme[] = [
 
 export const THEME_IDS = ['auto', ...THEMES.map((t) => t.id)];
 
+/** «Automatico», il tema di base: Aria di giorno, Aria di notte se il sistema è scuro. Anche la forma di Aria
+ *  (styles/aria.css) vale per «auto». Chiaro e Scuro restano da scegliere nel profilo. */
+export const AUTO_THEMES = { light: 'aria', dark: 'aria-dark' } as const;
+
 export const COLOR_KEYS = Object.keys(THEMES[0].colors) as (keyof ThemeColors)[];
 
 const HEX = /^#[0-9a-f]{6}$/i;
@@ -265,10 +269,10 @@ function vars(t: Theme) {
 	);
 }
 
-/** CSS di tutti i temi; "auto" segue l'impostazione chiaro/scuro del sistema. */
+/** CSS di tutti i temi; "auto" segue l'impostazione chiaro/scuro del sistema (vedi AUTO_THEMES). */
 export function themeCss(custom: Theme[] = []): string {
-	const light = THEMES.find((t) => t.id === 'light')!;
-	const dark = THEMES.find((t) => t.id === 'dark')!;
+	const light = THEMES.find((t) => t.id === AUTO_THEMES.light)!;
+	const dark = THEMES.find((t) => t.id === AUTO_THEMES.dark)!;
 	return [
 		...[...THEMES, ...custom].map((t) => `:root[data-theme="${t.id}"]{${vars(t)}}`),
 		`:root[data-theme="auto"]{${vars(light)}}`,

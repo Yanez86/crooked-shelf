@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { THEMES } from './themes.ts';
+import { AUTO_THEMES, THEMES } from './themes.ts';
 import { faviconHref } from './logo.ts';
 
 const svgOf = (href: string) => decodeURIComponent(href.replace('data:image/svg+xml,', ''));
@@ -12,9 +12,9 @@ describe('icona della scheda', () => {
 		expect(svg).toContain(`fill="${neon.colors.onPrimary}"`);
 		expect(svg).not.toContain('@media');
 	});
-	it('con «Automatico» segue il sistema, chiaro o scuro', () => {
+	it('con «Automatico» segue il sistema: Aria o Aria di notte', () => {
 		const svg = svgOf(faviconHref('auto', THEMES));
-		const [light, dark] = ['light', 'dark'].map((id) => THEMES.find((t) => t.id === id)!.colors);
+		const [light, dark] = [AUTO_THEMES.light, AUTO_THEMES.dark].map((id) => THEMES.find((t) => t.id === id)!.colors);
 		expect(svg).toContain(`fill="${light.primary}"`);
 		expect(svg).toContain(`@media (prefers-color-scheme: dark){.b{fill:${dark.primary}}.f{fill:${dark.onPrimary}}}`);
 	});

@@ -383,10 +383,10 @@ test('la home è una pagina: si modifica con la sua matita, i riquadri vanno a d
 	// La home non compare nei propri elenchi; dall'albero si torna qui.
 	await expect(recent.getByRole('link', { name: 'Le Cronache di Faerûn' })).toHaveCount(0);
 	expect((await recent.boundingBox())!.x).toBeGreaterThan((await presentation.boundingBox())!.x + 200);
-	// Le due colonne partono alla stessa altezza; la matita sta dentro la colonna centrale.
-	const left = (await admin.locator('#explorer').boundingBox())!;
+	// Col tema di base (Aria) le due barre partono dal bordo alto della finestra; la matita sta dentro la colonna centrale.
+	expect((await admin.getByRole('banner').boundingBox())!.y).toBe(0);
+	expect((await admin.locator('.side-col').boundingBox())!.y).toBe(0);
 	const right = (await admin.getByRole('complementary', { name: 'Scheda' }).boundingBox())!;
-	expect(right.y).toBe(left.y);
 	const pencil = (await admin.getByRole('link', { name: 'Modifica: Le Cronache di Faerûn' }).boundingBox())!;
 	expect(pencil.x + pencil.width).toBeLessThan(right.x);
 	await axe(admin, 'home');
@@ -400,7 +400,8 @@ test('la home è una pagina: si modifica con la sua matita, i riquadri vanno a d
 	await hideSide.click();
 	await expect(recent).toBeHidden();
 	await expect(showSide).toBeFocused();
-	expect((await middle.boundingBox())!.width).toBeGreaterThan(narrow + 200);
+	// Con Aria il centro aveva già i suoi margini accanto alla barra: guadagna meno della larghezza della colonna.
+	expect((await middle.boundingBox())!.width).toBeGreaterThan(narrow + 100);
 	await admin.reload();
 	await expect(recent).toBeHidden();
 	await showSide.click();

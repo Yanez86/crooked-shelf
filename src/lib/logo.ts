@@ -1,6 +1,6 @@
 /** Il marchio di Crooked Shelf: tre libri, uno storto, su uno scaffale. Un solo disegno per l'intestazione e per l'icona
  *  della scheda del browser; i colori vengono dal tema: il fondo è il colore principale, i libri quello che ci sta sopra. */
-import type { Theme, ThemeColors } from './themes.ts';
+import { AUTO_THEMES, type Theme, type ThemeColors } from './themes.ts';
 
 /** Le forme dei libri, su una tavola di 32×32. */
 export const LOGO_BOOKS =
@@ -20,7 +20,7 @@ export function faviconHref(themeId: string, themes: Theme[]): string {
 	const find = (id: string) => themes.find((t) => t.id === id);
 	const chosen = find(themeId);
 	if (chosen) return dataUri(svg('', ...pick(chosen.colors)));
-	const [lb, lf] = pick(find('light')!.colors);
-	const [db, df] = pick(find('dark')!.colors);
+	const [lb, lf] = pick(find(AUTO_THEMES.light)!.colors);
+	const [db, df] = pick(find(AUTO_THEMES.dark)!.colors);
 	return dataUri(svg(`<style>@media (prefers-color-scheme: dark){.b{fill:${db}}.f{fill:${df}}}</style>`, lb, lf));
 }
