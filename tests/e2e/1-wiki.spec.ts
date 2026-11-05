@@ -829,6 +829,13 @@ test('visitatori: spenti di default', async ({ browser }) => {
 	await expect(p.getByRole('navigation', { name: TREE })).toHaveCount(0);
 	expect(await p.content()).not.toContain('Bartolo Pancia');
 	await axe(p, 'login');
+	// Col tema di base (Aria) l'accesso è un solo riquadro al centro della finestra, con il titolo dentro.
+	const card = (await p.locator('.narrow').boundingBox())!;
+	const view = p.viewportSize()!;
+	expect(Math.abs(card.x + card.width / 2 - view.width / 2)).toBeLessThan(2);
+	expect(card.y + card.height / 2).toBeGreaterThan(view.height * 0.3);
+	expect(card.y + card.height / 2).toBeLessThan(view.height * 0.7);
+	await expect(p.locator('.narrow').getByRole('heading', { level: 1, name: 'Accesso' })).toBeVisible();
 	await shot(p, '07-login');
 	await p.context().close();
 });

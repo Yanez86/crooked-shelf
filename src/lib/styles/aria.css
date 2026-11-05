@@ -700,6 +700,83 @@
 	}
 }
 
+/* --- Pagine senza barre (accesso, prima configurazione, invito): un solo riquadro al centro della finestra ---
+   Titolo, modulo e nota stanno nello stesso riquadro; il nome della wiki in alto, senza barra; il piè di pagina in fondo,
+   senza filo. Il corpo è una colonna alta quanto la finestra, e lo spazio di mezzo mette il riquadro al centro. */
+
+:root:is([data-theme='aria'], [data-theme='aria-dark'], [data-theme='auto'], [data-theme='neon']):has(.header-inner.bare) body {
+	display: flex;
+	flex-direction: column;
+	min-height: 100vh;
+	min-height: 100dvh;
+}
+/* Il fondo della pagina è quello delle barre, il riquadro sta sopra come un foglio. Il Neon tiene il suo fondale. */
+:root:is([data-theme='aria'], [data-theme='aria-dark'], [data-theme='auto']):has(.header-inner.bare) body {
+	background: var(--c-surface2);
+}
+:root:is([data-theme='aria'], [data-theme='aria-dark'], [data-theme='auto'], [data-theme='neon']):has(.header-inner.bare) .site-header {
+	position: static;
+	margin: 0;
+	border: 0;
+	border-image: none;
+	background: none;
+	box-shadow: none;
+}
+:root:is([data-theme='aria'], [data-theme='aria-dark'], [data-theme='auto'], [data-theme='neon']):has(.header-inner.bare) .header-inner {
+	padding-top: 1.75rem;
+	padding-bottom: 0;
+}
+:root:is([data-theme='aria'], [data-theme='aria-dark'], [data-theme='auto'], [data-theme='neon']):has(.header-inner.bare) .brand {
+	font-size: var(--fs-md);
+}
+:root:is([data-theme='aria'], [data-theme='aria-dark'], [data-theme='auto'], [data-theme='neon']):has(.header-inner.bare) .shell {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	margin-bottom: 0;
+	padding-block: 2rem 3rem;
+}
+:root:is([data-theme='aria'], [data-theme='aria-dark'], [data-theme='auto'], [data-theme='neon']):has(.header-inner.bare) .narrow {
+	width: 100%;
+	margin: 0 auto;
+	padding: clamp(1.25rem, 5vw, 2.25rem);
+	border: 1px solid var(--c-border);
+	border-radius: calc(var(--aria-radius-lg) * 1.4);
+	background: var(--c-surface);
+	box-shadow:
+		0 1px 2px rgb(0 0 0 / 0.04),
+		0 1rem 2.5rem -1rem rgb(0 0 0 / 0.18);
+}
+:root:is([data-theme='aria'], [data-theme='aria-dark'], [data-theme='auto'], [data-theme='neon']):has(.header-inner.bare) .narrow > h1 {
+	margin: 0 0 1.25rem;
+	font-size: var(--fs-xl);
+}
+/* Il modulo era un riquadro a sé: ora è il riquadro intorno a fare da contenitore. */
+:root:is([data-theme='aria'], [data-theme='aria-dark'], [data-theme='auto'], [data-theme='neon']):has(.header-inner.bare) .narrow .card {
+	padding: 0;
+	border: 0;
+	border-radius: 0;
+	background: none;
+	box-shadow: none;
+}
+:root:is([data-theme='aria'], [data-theme='aria-dark'], [data-theme='auto'], [data-theme='neon']):has(.header-inner.bare) .narrow .btn-primary {
+	width: 100%;
+	margin-top: 0.25rem;
+}
+:root:is([data-theme='aria'], [data-theme='aria-dark'], [data-theme='auto'], [data-theme='neon']):has(.header-inner.bare) .narrow > :last-child {
+	margin-bottom: 0;
+}
+:root:is([data-theme='aria'], [data-theme='aria-dark'], [data-theme='auto'], [data-theme='neon']):has(.header-inner.bare) .narrow > .muted {
+	margin-top: 1.25rem;
+	font-size: var(--fs-sm);
+	text-align: center;
+}
+:root:is([data-theme='aria'], [data-theme='aria-dark'], [data-theme='auto'], [data-theme='neon']):has(.header-inner.bare) .site-footer {
+	border: 0;
+	background: none;
+}
+
 /* --- Colori forzati: le barre e i riquadri si riconoscono dai bordi del sistema --- */
 @media (forced-colors: active) {
 	:root:is([data-theme='aria'], [data-theme='aria-dark'], [data-theme='auto'], [data-theme='neon']) :is(.callout, .secret, .badge, .prose blockquote) {

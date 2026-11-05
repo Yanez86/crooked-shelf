@@ -3,6 +3,11 @@
 Le versioni seguono il [versionamento semantico](https://semver.org/lang/it/): MAGGIORE.MINORE.CORRETTIVA.
 Questo file è anche la pagina «Novità» della wiki (`/changelog`).
 
+## 0.20.1 — 2026-11-05
+
+### Modifiche
+- Accesso, prima configurazione e invito con Aria e Neon: un solo riquadro al centro della pagina.
+
 ## 0.20.0 — 2026-11-05
 
 ### Modifiche
