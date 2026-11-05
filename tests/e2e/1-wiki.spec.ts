@@ -550,6 +550,17 @@ test('editor: il più aggiunge testo o immagine dopo il blocco, l\'occhio lo osc
 	await expect(editor.locator('[data-visibility]')).toHaveCount(0);
 	await expect(editor.locator('.hidden-label')).toHaveCount(0);
 	await expect(lock).toHaveAttribute('aria-pressed', 'false');
+
+	// Anche una tabella si oscura: il riquadro che la contiene prende i colori del segreto, come gli altri blocchi.
+	await editor.getByText('In cima vive un gufo.').click();
+	await admin.getByRole('toolbar').getByRole('button', { name: 'Tabella', exact: true }).click();
+	await lock.click();
+	const hiddenTable = editor.locator('> .tableWrapper');
+	await expect(hiddenTable).toHaveAttribute('data-visibility', 'master');
+	const secretBg = await editor.locator('.hidden-label').evaluate((el) => getComputedStyle(el).backgroundColor);
+	await expect(hiddenTable).toHaveCSS('background-color', secretBg);
+	await lock.click();
+	await expect(hiddenTable).not.toHaveAttribute('data-visibility');
 });
 
 test('modifica concorrente non sovrascrive', async ({ browser }) => {

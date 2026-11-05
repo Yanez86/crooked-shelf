@@ -3,6 +3,11 @@
 Le versioni seguono il [versionamento semantico](https://semver.org/lang/it/): MAGGIORE.MINORE.CORRETTIVA.
 Questo file è anche la pagina «Novità» della wiki (`/changelog`).
 
+## 0.20.3 — 2026-11-05
+
+### Correzioni
+- Risolto un problema relativo alle tabelle segrete nell'editor.
+
 ## 0.20.2 — 2026-11-05
 
 ### Modifiche

@@ -206,6 +206,9 @@ const Blocks = Extension.create<{ canSecret: boolean; labels: EditorLabels }>({
 					state.doc.forEach((node, pos) => {
 						const hidden = !!node.attrs.visibility;
 						if (hidden && !before) out.push(Decoration.widget(pos, label, { side: -1, key: 'hidden-label', ignoreSelection: true }));
+						// Il segno va sull'elemento più esterno del blocco: per una tabella è il div che la contiene,
+						// ed è lui il figlio dell'editor che prende i colori del segreto (Editor.svelte).
+						if (hidden) out.push(Decoration.node(pos, pos + node.nodeSize, { 'data-visibility': String(node.attrs.visibility) }));
 						before = hidden;
 					});
 					return DecorationSet.create(state.doc, out);

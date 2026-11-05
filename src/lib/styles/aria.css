@@ -149,8 +149,10 @@
 :root:is([data-theme='aria'], [data-theme='aria-dark'], [data-theme='auto'], [data-theme='neon']) .prose :is(th, td):last-child {
 	padding-right: 0;
 }
-/* Nell'editor le celle restano visibili: senza bordi non si vedrebbe dove scrivere. */
+/* Nell'editor le celle restano visibili: senza bordi non si vedrebbe dove scrivere. Anche la prima e l'ultima colonna
+   hanno il loro margine, se no il testo tocca il bordo. */
 :root:is([data-theme='aria'], [data-theme='aria-dark'], [data-theme='auto'], [data-theme='neon']) .editor-content :is(th, td),
+:root:is([data-theme='aria'], [data-theme='aria-dark'], [data-theme='auto'], [data-theme='neon']) .editor-content :is(th, td):is(:first-child, :last-child),
 :root:is([data-theme='aria'], [data-theme='aria-dark'], [data-theme='auto'], [data-theme='neon']) .editor-content tr:last-child > td {
 	border: 1px solid var(--c-border);
 	padding-inline: 0.875rem;

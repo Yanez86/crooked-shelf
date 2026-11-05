@@ -762,6 +762,10 @@
 	.area :global(.selectedCell) {
 		background: var(--c-surface2);
 	}
+	/* Come nella pagina: due tabelle di fila restano due, anche quando una è segreta. */
+	.area :global(.tableWrapper) {
+		margin: 1rem 0;
+	}
 	.area :global(.suggestion) {
 		background: var(--c-surface2);
 		border-radius: 2px;
