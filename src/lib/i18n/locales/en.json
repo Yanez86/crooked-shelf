@@ -19,12 +19,10 @@
 	},
 	"tree": {
 		"label": "Pages and resources",
-		"manageTags": "Tag names and colors",
 		"title": "Menu and pages",
 		"hide": "Hide the left sidebar",
 		"show": "Show the left sidebar",
 		"empty": "No pages yet.",
-		"noTemplates": "No templates yet.",
 		"emptyFolder": "Empty folder",
 		"expandAll": "Open all folders",
 		"collapseAll": "Close all folders",
@@ -48,14 +46,7 @@
 		"branchAll": "Yes, them too",
 		"branchOne": "Only this page",
 		"visibilityChanged": "Visibility changed: {level}.",
-		"visibilityChangedBranch": "Visibility changed: {level}. Pages changed: {n}.",
-		"tabs": "What to show",
-		"tab": {
-			"pages": "Pages",
-			"tags": "Tags",
-			"resources": "Resources",
-			"templates": "Templates"
-		}
+		"visibilityChangedBranch": "Visibility changed: {level}. Pages changed: {n}."
 	},
 	"footer": {
 		"source": "Source code",

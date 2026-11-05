@@ -8,20 +8,16 @@
 	import type { Visibility } from '../roles.ts';
 	import { iconPath } from '../icons.ts';
 	import Icon from './Icon.svelte';
-	import { childrenOf, keyPlace, locate, nodeKey, pageIcon, placeAt, treePaths, treeTemplates, withoutTemplates, type Tree, type TreeNode, type TreePage, type TreePlace } from '../tree.ts';
-	import { RESOURCE_KINDS, type ResourceItem, type ResourceKind } from '../resources.ts';
+	import { childrenOf, keyPlace, locate, nodeKey, pageIcon, placeAt, treePaths, withoutTemplates, type Tree, type TreeNode, type TreePage, type TreePlace } from '../tree.ts';
 
-	// La barra a sinistra: in alto le linguette Pagine, Tag, Risorse e Template, sotto le icone delle azioni, poi l'albero.
-	// Le sezioni della wiki (galleria, regole, calendario…) stanno nel menu del profilo in alto a destra.
+	// La barra a sinistra: in alto le icone delle azioni, poi l'albero delle pagine e in fondo Risorse, Appuntamenti e Cestino.
 	// `docked`: sta accanto alla pagina (la freccia chiama `onhide`); altrimenti (e sempre sul telefono) è un pannello a scomparsa, aperto dal pulsante in alto.
 	let {
 		tree,
-		tags,
-		resources,
 		docked = true,
 		open: shown = $bindable(false),
 		onhide
-	}: { tree: Tree; tags: { id: number; name: string; slug: string; color: string; count: number }[]; resources: ResourceItem[]; docked?: boolean; open?: boolean; onhide?: () => void } = $props();
+	}: { tree: Tree; docked?: boolean; open?: boolean; onhide?: () => void } = $props();
 	const t = getT();
 	const canManage = $derived(isMaster(page.data.user));
 	const user = $derived(page.data.user);
@@ -31,9 +27,8 @@
 	// Cartelle aperte: quelle che portano alla pagina che stai leggendo, più quelle che hai aperto tu
 	// (ricordate in questo browser).
 	const STORE = 'cs-tree-open';
-	// Riordino e cartelle lavorano su ciò che si vede: i template stanno nella loro linguetta.
+	// Riordino e cartelle lavorano su ciò che si vede: i template non stanno nella barra.
 	const pagesTree = $derived<Tree>({ items: withoutTemplates(tree.items) });
-	const templates = $derived(treeTemplates(tree.items));
 	const paths = $derived(treePaths(pagesTree));
 	const path = $derived(page.url.pathname);
 	const current = $derived.by(() => {
@@ -55,62 +50,16 @@
 		untrack(() => ids.forEach((id) => open.add(id)));
 	});
 
-	// Quattro linguette: le pagine con le loro cartelle, i tag, le risorse (immagini, audio, altri file) e i template.
-	// Si apre quella di ciò che stai guardando; altrove resta l'ultima scelta, ricordata in questo browser.
-	type Tab = 'pages' | 'tags' | 'resources' | 'templates';
-	const TABS: Tab[] = ['pages', 'tags', 'resources', 'templates'];
-	const TAB_ICONS: Record<Tab, string> = { pages: 'doc', tags: 'tag', resources: 'image', templates: 'template' };
-	const TAB_STORE = 'cs-tree-tab';
-	const onTemplate = $derived(page.url.searchParams.get('kind') === 'template' || templates.some((p) => p.slug === current));
-	const currentTag = $derived(path === '/wiki' ? page.url.searchParams.get('tag') : null);
-	const tabFor = (p: string): Tab | null =>
-		p.startsWith('/resources') ? 'resources' : p === '/tags' || currentTag ? 'tags' : !p.startsWith('/wiki') ? null : onTemplate ? 'templates' : 'pages';
-	let tab = $state<Tab>(untrack(() => tabFor(page.url.pathname)) ?? 'pages');
-	$effect(() => {
-		const want = tabFor(path);
-		if (want) tab = want;
-	});
-
-	// Risorse divise per tipo; i gruppi sono aperti finché non li chiudi.
-	const RES_STORE = 'cs-tree-res-closed';
-	const groups = $derived(
-		RESOURCE_KINDS.map((kind) => ({ kind, items: resources.filter((r) => r.kind === kind) })).filter((g) => g.items.length)
-	);
-	const foldable = $derived(tab === 'pages' ? paths.parents.length > 0 : tab === 'resources' && groups.length > 0);
-	const newTemplate = $derived(canManage && tab === 'templates');
-	const newLabel = $derived(t(newTemplate ? 'kinds.new.template' : 'nav.newPage'));
-	const closed = new SvelteSet<string>();
-	const currentRes = $derived(/^\/resources\/([^/]+)/.exec(path)?.[1]);
+	const foldable = $derived(paths.parents.length > 0);
 
 	onMount(() => {
 		try {
 			const saved = JSON.parse(localStorage.getItem(STORE) ?? '[]');
 			if (Array.isArray(saved)) for (const id of saved) if (typeof id === 'string') open.add(id);
-			const shut = JSON.parse(localStorage.getItem(RES_STORE) ?? '[]');
-			if (Array.isArray(shut)) for (const k of shut) if (RESOURCE_KINDS.includes(k)) closed.add(k);
-			const last = localStorage.getItem(TAB_STORE);
-			if (!tabFor(path) && TABS.includes(last as Tab)) tab = last as Tab;
 		} catch {
 			/* memoria del browser non disponibile */
 		}
 	});
-
-	function selectTab(id: Tab, focus = false) {
-		tab = id;
-		if (focus) document.getElementById(`tree-tab-${id}`)?.focus();
-		remember(TAB_STORE, id);
-	}
-
-	// Frecce, Inizio e Fine passano da una linguetta all'altra.
-	function tabKeys(e: KeyboardEvent) {
-		const i = TABS.indexOf(tab);
-		const n = TABS.length;
-		const moves: Record<string, number> = { ArrowRight: (i + 1) % n, ArrowLeft: (i - 1 + n) % n, Home: 0, End: n - 1 };
-		const to = moves[e.key];
-		if (to === undefined) return;
-		e.preventDefault();
-		selectTab(TABS[to], true);
-	}
 
 	function toggled(id: string, isOpen: boolean) {
 		if (isOpen === open.has(id)) return;
@@ -119,20 +68,7 @@
 		save();
 	}
 
-	function toggledKind(kind: ResourceKind, isOpen: boolean) {
-		if (isOpen !== closed.has(kind)) return;
-		if (isOpen) closed.delete(kind);
-		else closed.add(kind);
-		remember(RES_STORE, JSON.stringify([...closed]));
-	}
-
 	function setAll(isOpen: boolean) {
-		if (tab === 'resources') {
-			closed.clear();
-			if (!isOpen) for (const g of groups) closed.add(g.kind);
-			remember(RES_STORE, JSON.stringify([...closed]));
-			return;
-		}
 		open.clear();
 		if (isOpen) for (const key of paths.parents) open.add(key);
 		save();
@@ -145,7 +81,6 @@
 	let nameInput = $state<HTMLInputElement>();
 
 	async function newFolder() {
-		selectTab('pages');
 		nameError = false;
 		naming = t('tree.newFolder');
 		await tick();
@@ -368,7 +303,7 @@
 		}
 	}
 
-	// Le pagine dentro questa, come nell'albero (i template stanno nella loro linguetta).
+	// Le pagine dentro questa, come nell'albero (senza i template).
 	function inside(p: TreePage): TreePage[] {
 		const hit = locate(pagesTree.items, nodeKey(p));
 		const out: TreePage[] = [];
@@ -500,23 +435,6 @@
 	{/if}
 {/snippet}
 
-{#snippet resourceLeaf(r: ResourceItem)}
-	<li>
-		<a href="/resources/{r.id}" aria-current={currentRes === String(r.id) ? 'page' : undefined}>
-			<svg class="ico doc" viewBox="0 0 24 24" aria-hidden="true">
-				{#if r.kind === 'image'}
-					<path d={iconPath('image')} />
-				{:else if r.kind === 'audio'}
-					<path d={iconPath('audio')} />
-				{:else}
-					<path d="M6 2.75h8.25L19 7.5v13.75H6zM14 2.75V7.5h5" />
-				{/if}
-			</svg>
-			<span>{r.title}</span>
-		</a>
-	</li>
-{/snippet}
-
 {#snippet rows(list: TreeNode[])}
 	{#each list as n (nodeKey(n))}
 		{#if n.type === 'divider'}
@@ -578,23 +496,35 @@
 <div id="explorer" class="explorer side-panel panel" class:floating={!docked} class:open={shown}>
 	<nav aria-label={t('tree.label')}>
 		<div class="explorer-head">
-			<div class="tabs" role="tablist" aria-label={t('tree.tabs')}>
-				{#each TABS as id (id)}
-					<button
-						type="button"
-						role="tab"
-						id="tree-tab-{id}"
-						aria-selected={tab === id}
-						aria-controls="tree-panel-{id}"
-						tabindex={tab === id ? 0 : -1}
-						onclick={() => selectTab(id)}
-						onkeydown={tabKeys}
-					>
-						<Icon name={TAB_ICONS[id]} />
-						{t('tree.tab.' + id)}
-					</button>
-				{/each}
-			</div>
+			{#if canNew}
+				<a class="tool new-page" href="/wiki/new" title={t('nav.newPage')} aria-label={t('nav.newPage')} aria-current={path === '/wiki/new' ? 'page' : undefined}>
+					<Icon name="docPlus" />
+				</a>
+			{/if}
+			{#if canManage}
+				<button
+					type="button"
+					id="tree-new-folder"
+					class="tool"
+					title={t('tree.newFolder')}
+					aria-label={t('tree.newFolder')}
+					disabled={naming !== null}
+					onclick={newFolder}
+				>
+					<Icon name="folderPlus" />
+				</button>
+				<button type="button" id="tree-new-divider" class="tool" title={t('tree.newDivider')} aria-label={t('tree.newDivider')} onclick={newDivider}>
+					<Icon name="divider" />
+				</button>
+			{/if}
+			{#if foldable}
+				<button type="button" class="tool" title={t('tree.collapseAll')} aria-label={t('tree.collapseAll')} onclick={() => setAll(false)}>
+					<Icon name="collapseAll" />
+				</button>
+				<button type="button" class="tool" title={t('tree.expandAll')} aria-label={t('tree.expandAll')} onclick={() => setAll(true)}>
+					<Icon name="expandAll" />
+				</button>
+			{/if}
 			<button type="button" class="tool close" title={t('common.close')} aria-label={t('common.close')} onclick={() => close()}>
 				<Icon name="close" />
 			</button>
@@ -604,148 +534,48 @@
 				</button>
 			{/if}
 		</div>
-		{#if canNew || foldable || (canManage && tab === 'tags')}
-			<div class="explorer-tools">
-				{#if canNew}
-					<a
-						class="tool new-page"
-						href={newTemplate ? '/wiki/new?kind=template' : '/wiki/new'}
-						title={newLabel}
-						aria-label={newLabel}
-						aria-current={path === '/wiki/new' ? 'page' : undefined}
-					>
-						<Icon name="docPlus" />
-					</a>
-				{/if}
-				{#if canManage && tab === 'pages'}
-					<button
-						type="button"
-						id="tree-new-folder"
-						class="tool"
-						title={t('tree.newFolder')}
-						aria-label={t('tree.newFolder')}
-						disabled={naming !== null}
-						onclick={newFolder}
-					>
-						<Icon name="folderPlus" />
-					</button>
-					<button type="button" id="tree-new-divider" class="tool" title={t('tree.newDivider')} aria-label={t('tree.newDivider')} onclick={newDivider}>
-						<Icon name="divider" />
-					</button>
-				{:else if canManage && tab === 'tags'}
-					<a class="tool" href="/tags" title={t('tree.manageTags')} aria-label={t('tree.manageTags')} aria-current={path === '/tags' ? 'page' : undefined}>
-						<Icon name="sliders" />
-					</a>
-				{:else if canManage && tab === 'resources'}
-					<a class="tool" href="/resources/new" title={t('resources.new')} aria-label={t('resources.new')}>
-						<Icon name="upload" />
-					</a>
-				{/if}
-				{#if foldable}
-					<button type="button" class="tool" title={t('tree.collapseAll')} aria-label={t('tree.collapseAll')} onclick={() => setAll(false)}>
-						<Icon name="collapseAll" />
-					</button>
-					<button type="button" class="tool" title={t('tree.expandAll')} aria-label={t('tree.expandAll')} onclick={() => setAll(true)}>
-						<Icon name="expandAll" />
-					</button>
-				{/if}
-			</div>
-		{/if}
-		<!-- Fuori dalle linguette: pagine, cartelle e template si spostano e si eliminano da linguette diverse. -->
 		{#if failed}<p class="folder-error" role="alert">{t('tree.actionError')}</p>{/if}
 		<p class="visually-hidden" aria-live="polite">{announce}</p>
-		<div role="tabpanel" id="tree-panel-pages" aria-labelledby="tree-tab-pages" hidden={tab !== 'pages'}>
-			{#if naming !== null}
-				<div class="naming">
-					<svg class="ico folder" viewBox="0 0 24 24" aria-hidden="true"><path d={iconPath('folder')} /></svg>
-					<input
-						type="text"
-						maxlength="80"
-						aria-label={t('tree.folderName')}
-						aria-invalid={nameError || undefined}
-						aria-describedby={nameError ? 'tree-folder-error' : undefined}
-						bind:value={naming}
-						bind:this={nameInput}
-						onkeydown={nameKeys}
-						onblur={createFolder}
-					/>
-				</div>
-				{#if nameError}<p id="tree-folder-error" class="folder-error" role="alert">{t('tree.folderError')}</p>{/if}
-			{/if}
-			{#if pagesTree.items.length}
-				<!-- svelte-ignore a11y_no_noninteractive_element_interactions (gli eventi arrivano dalle righe, che sono link e pulsanti) -->
-				<ul
-					class="list-plain level root"
-					class:sortable={canManage}
-					class:dragging
-					ondragstart={dragStart}
-					ondragover={dragOver}
-					ondragleave={dragLeave}
-					ondrop={dragDrop}
-					ondragend={dragEnd}
-					onkeydown={moveKeys}
-				>
-					{@render rows(pagesTree.items)}
-				</ul>
-			{:else if naming === null}
-				<p class="muted none">{t('tree.empty')}</p>
-			{/if}
-		</div>
-		<div role="tabpanel" id="tree-panel-tags" aria-labelledby="tree-tab-tags" hidden={tab !== 'tags'}>
-			{#if tags.length}
-				<ul class="list-plain level root">
-					{#each tags as tag (tag.id)}
-						<li>
-							<a href="/wiki?tag={encodeURIComponent(tag.slug)}" aria-current={currentTag === tag.slug ? 'page' : undefined}>
-								<span class="tag-dot tag-{tag.color}" aria-hidden="true"></span>
-								<span>{tag.name}</span>
-								<span class="muted count">{tag.count}</span>
-							</a>
-						</li>
-					{/each}
-				</ul>
-			{:else}
-				<p class="muted none">{t('tags.empty')}</p>
-			{/if}
-		</div>
-		<div role="tabpanel" id="tree-panel-resources" aria-labelledby="tree-tab-resources" hidden={tab !== 'resources'}>
-			{#if groups.length}
-				<ul class="list-plain level root">
-					{#each groups as g (g.kind)}
-						<li>
-							<details open={!closed.has(g.kind)} ontoggle={(e) => toggledKind(g.kind, e.currentTarget.open)}>
-								<summary>
-									<span class="chevron" aria-hidden="true"></span>
-									{@render folderIcon()}
-									<span>{t('resources.kinds.' + g.kind)}</span>
-								</summary>
-								<ul class="list-plain level">
-									{#each g.items as r (r.id)}{@render resourceLeaf(r)}{/each}
-								</ul>
-							</details>
-						</li>
-					{/each}
-				</ul>
-			{:else}
-				<p class="muted none">{t('resources.empty')}</p>
-			{/if}
-		</div>
-		<div role="tabpanel" id="tree-panel-templates" aria-labelledby="tree-tab-templates" hidden={tab !== 'templates'}>
-			{#if templates.length}
-				<ul class="list-plain level root">
-					{#each templates as p (p.id)}
-						<li class="row">
-							{@render link(p)}
-							{@render vis(p)}
-							{#if p.canTrash}{@render trash(p, p.title)}{/if}
-						</li>
-					{/each}
-				</ul>
-			{:else}
-				<p class="muted none">{t('tree.noTemplates')}</p>
-			{/if}
-		</div>
-		<!-- Fuori dalle linguette: sempre in fondo alla barra, anche ad albero vuoto. A chi non ha fatto l'accesso non servono. -->
+		{#if naming !== null}
+			<div class="naming">
+				<svg class="ico folder" viewBox="0 0 24 24" aria-hidden="true"><path d={iconPath('folder')} /></svg>
+				<input
+					type="text"
+					maxlength="80"
+					aria-label={t('tree.folderName')}
+					aria-invalid={nameError || undefined}
+					aria-describedby={nameError ? 'tree-folder-error' : undefined}
+					bind:value={naming}
+					bind:this={nameInput}
+					onkeydown={nameKeys}
+					onblur={createFolder}
+				/>
+			</div>
+			{#if nameError}<p id="tree-folder-error" class="folder-error" role="alert">{t('tree.folderError')}</p>{/if}
+		{/if}
+		{#if pagesTree.items.length}
+			<!-- svelte-ignore a11y_no_noninteractive_element_interactions (gli eventi arrivano dalle righe, che sono link e pulsanti) -->
+			<ul
+				class="list-plain level root"
+				class:sortable={canManage}
+				class:dragging
+				ondragstart={dragStart}
+				ondragover={dragOver}
+				ondragleave={dragLeave}
+				ondrop={dragDrop}
+				ondragend={dragEnd}
+				onkeydown={moveKeys}
+			>
+				{@render rows(pagesTree.items)}
+			</ul>
+		{:else if naming === null}
+			<p class="muted none">{t('tree.empty')}</p>
+		{/if}
+		<!-- Sempre in fondo alla barra, anche ad albero vuoto. Appuntamenti e Cestino non servono a chi non ha fatto l'accesso. -->
+		<a class="bin" href="/resources" aria-current={path.startsWith('/resources') ? 'page' : undefined}>
+			<svg class="ico doc" viewBox="0 0 24 24" aria-hidden="true"><path d={iconPath('image')} /></svg>
+			<span>{t('resources.title')}</span>
+		</a>
 		{#if user}
 			{#if page.data.campaign?.schedule}
 				<a class="bin" href="/schedule" aria-current={path.startsWith('/schedule') ? 'page' : undefined}>
@@ -813,45 +643,10 @@
 		padding: 0 0 0.2rem;
 		border-bottom: 1px solid var(--c-border);
 	}
-	.tabs {
-		flex: 1;
-		display: flex;
-		align-self: stretch;
-		min-width: 0;
-	}
-	/* Linguette: quella aperta è sottolineata, come la voce del menu in alto. */
-	[role='tab'] {
-		flex: 1;
-		display: inline-flex;
-		flex-direction: column;
-		align-items: center;
-		min-height: var(--tool);
-		margin-bottom: -0.2rem;
-		padding: 0 0.5rem 0.25rem;
-		border: 0;
-		border-bottom: 3px solid transparent;
-		background: none;
-		color: var(--c-muted);
-		font: inherit;
-		font-family: var(--font-head);
-		font-size: 0.7rem;
-		font-weight: 600;
-		line-height: 1.2;
-		cursor: pointer;
-	}
-	/* Più grandi delle altre icone; il tratto resta sottile come nel resto della barra. */
-	[role='tab'] :global(.icon) {
-		width: 1.6rem;
-		height: 1.6rem;
-		stroke-width: 1.25;
-	}
-	[role='tab']:hover {
-		color: var(--c-text);
-		border-bottom-color: var(--c-control);
-	}
-	[role='tab'][aria-selected='true'] {
-		color: var(--c-text);
-		border-bottom-color: var(--c-primary);
+	/* Chiudi e la freccia che nasconde la barra: a destra, dopo le azioni. */
+	.explorer-head > .close,
+	.explorer-head > .hide {
+		margin-left: auto;
 	}
 	.tool {
 		display: inline-flex;
@@ -877,11 +672,6 @@
 	.tool:disabled {
 		opacity: 0.5;
 		cursor: default;
-	}
-	.explorer-tools {
-		display: flex;
-		gap: 0;
-		margin: 0 0 0.2rem;
 	}
 	/* Nuova pagina: l'azione principale della barra. */
 	.new-page {
@@ -1190,14 +980,6 @@
 		box-shadow: inset 3px 0 0 var(--c-primary);
 		font-weight: 700;
 	}
-	/* Il tag: il pallino del suo colore al posto dell'icona, il numero di pagine in fondo alla riga. */
-	a > .tag-dot {
-		margin: 0.3rem 0.2rem 0;
-	}
-	.count {
-		margin-left: auto;
-		font-size: var(--fs-sm);
-	}
 	.chevron {
 		flex: none;
 		width: 0.9rem;
@@ -1248,7 +1030,6 @@
 	}
 	@media (forced-colors: active) {
 		a[aria-current='page'],
-		[role='tab'][aria-selected='true'],
 		.root [data-drop] {
 			outline: 2px solid CanvasText;
 		}

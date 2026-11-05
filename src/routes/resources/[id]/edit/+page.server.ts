@@ -13,7 +13,7 @@ function masterResource(id: string, u: App.Locals['user']) {
 
 export const load: PageServerLoad = ({ params, locals }) => {
 	const r = masterResource(params.id, locals.user);
-	return { id: r.id, wikiImage: !!r.sources, values: { title: r.title, description: r.description, visibility: r.visibility } };
+	return { id: r.id, wikiImage: typeof r.id === 'string', values: { title: r.title, description: r.description, visibility: r.visibility } };
 };
 
 export const actions: Actions = {

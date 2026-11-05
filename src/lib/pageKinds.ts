@@ -2,7 +2,7 @@ import { canWrite, isMaster, type Viewer } from './access.ts';
 import { iconPath } from './icons.ts';
 
 /**
- * Tipi di pagina. Tutte stanno nella barra a sinistra (i template nella loro linguetta) e si aprono in /wiki/<indirizzo>:
+ * Tipi di pagina. Tutte stanno nella barra a sinistra (tranne i template) e si aprono in /wiki/<indirizzo>:
  * - `page`: una pagina normale, bianca o fotocopiata da un template;
  * - `template`: una pagina da fotocopiare, con la struttura (blocchi, colonna a lato, icona) decisa da chi la scrive;
  * - `map`: una pagina con una mappa (pin, livelli, mappe annidate);

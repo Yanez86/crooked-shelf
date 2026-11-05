@@ -243,21 +243,11 @@ test('albero delle cartelle e delle pagine', async () => {
 	await expect(admin.locator('.user-menu .panel').getByRole('link')).toHaveText(['Profilo', 'Campagne', 'Amministrazione']);
 	await expect(admin.locator('.user-menu .panel').getByRole('button', { name: /Esci/ })).toBeVisible();
 	await admin.locator('.user-menu summary').click();
-	// Il Cestino è sempre l'ultima voce della barra, anche sulla linguetta Risorse.
+	// Niente linguette: in fondo alla barra Risorse e, per ultimo, il Cestino. Tag e template non ci sono.
+	await expect(tree.getByRole('tab')).toHaveCount(0);
 	await expect(tree.getByRole('link').last()).toHaveAttribute('href', '/trash');
-	await tree.getByRole('tab', { name: 'Risorse' }).click();
-	await expect(tree.getByRole('link').last()).toHaveAttribute('href', '/trash');
-	// I tag hanno la loro linguetta, tra Pagine e Risorse; il Master ne cambia nome e colore in Tag.
-	await expect(tree.getByRole('tab')).toHaveText(['Pagine', 'Tag', 'Risorse', 'Template']);
-	await tree.getByRole('tab', { name: 'Tag', exact: true }).click();
-	await expect(tree.getByRole('link', { name: /Taverna/ })).toHaveAttribute('href', '/wiki?tag=taverna');
-	await expect(tree.getByRole('link', { name: 'Nomi e colori dei tag' })).toHaveAttribute('href', '/tags');
-	// I template preparati con la wiki stanno nella loro linguetta, con il pulsante per farne uno nuovo.
-	await tree.getByRole('tab', { name: 'Template' }).click();
-	await expect(tree.getByRole('link', { name: 'Luogo, Template' })).toBeVisible();
-	await expect(tree.getByRole('link', { name: 'Nuovo template' })).toHaveAttribute('href', '/wiki/new?kind=template');
-	await expect(tree.getByRole('link').last()).toHaveAttribute('href', '/trash');
-	await tree.getByRole('tab', { name: 'Pagine' }).click();
+	await expect(tree.getByRole('link', { name: 'Risorse' })).toHaveAttribute('href', '/resources');
+	await expect(tree.getByRole('link', { name: 'Luogo, Template' })).toHaveCount(0);
 	await expect(admin.locator('#explorer').getByRole('link', { name: 'Nuova pagina' })).toHaveAttribute('href', '/wiki/new');
 	// Anche le cronologie preparate con la wiki sono pagine dell'albero; i template no.
 	await expect(tree.getByRole('link', { name: 'Cronologia del mondo, Cronologia' })).toBeVisible();

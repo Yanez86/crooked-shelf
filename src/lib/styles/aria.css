@@ -434,42 +434,11 @@
 		background: var(--aria-hover);
 	}
 }
-/* Le linguette come un selettore: una fascia tinta, quella aperta in rilievo. */
+/* Le azioni in cima, senza filetto sotto. */
 :root:is([data-theme='aria'], [data-theme='aria-dark'], [data-theme='auto'], [data-theme='neon']) .explorer-head {
 	margin-bottom: 0.5rem;
 	padding: 0;
 	border: 0;
-}
-:root:is([data-theme='aria'], [data-theme='aria-dark'], [data-theme='auto'], [data-theme='neon']) .explorer .tabs {
-	gap: 0.15rem;
-	padding: 0.2rem;
-	border-radius: calc(var(--aria-soft) * 1.5);
-	background: var(--aria-hover);
-}
-:root:is([data-theme='aria'], [data-theme='aria-dark'], [data-theme='auto'], [data-theme='neon']) .explorer [role='tab'] {
-	justify-content: center;
-	margin: 0;
-	padding: 0.3rem 0.2rem;
-	border: 0;
-	border-radius: calc(var(--aria-soft) * 1.1);
-	font-family: var(--font-body);
-}
-:root:is([data-theme='aria'], [data-theme='aria-dark'], [data-theme='auto'], [data-theme='neon']) .explorer [role='tab'] .icon {
-	width: 1.25rem;
-	height: 1.25rem;
-	stroke-width: 1.5;
-}
-:root:is([data-theme='aria'], [data-theme='aria-dark'], [data-theme='auto'], [data-theme='neon']) .explorer [role='tab'][aria-selected='true'] {
-	background: var(--c-surface);
-	box-shadow: 0 1px 2px rgb(0 0 0 / 0.1);
-}
-:root:is([data-theme='aria-dark'], [data-theme='neon']) .explorer [role='tab'][aria-selected='true'] {
-	background: color-mix(in srgb, var(--c-text) 15%, var(--c-surface2));
-}
-@media (prefers-color-scheme: dark) {
-	:root[data-theme='auto'] .explorer [role='tab'][aria-selected='true'] {
-		background: color-mix(in srgb, var(--c-text) 15%, var(--c-surface2));
-	}
 }
 :root:is([data-theme='aria'], [data-theme='aria-dark'], [data-theme='auto'], [data-theme='neon']) .explorer.floating,
 :root:is([data-theme='aria'], [data-theme='aria-dark'], [data-theme='auto'], [data-theme='neon']) .explorer.open {

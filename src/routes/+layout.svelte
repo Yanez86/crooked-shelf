@@ -49,7 +49,7 @@
 
 	const path = $derived(page.url.pathname);
 	const bare = $derived(path.startsWith('/setup') || path.startsWith('/login') || path.startsWith('/invite/'));
-	// La barra a sinistra è tutta la navigazione: pagine di ogni tipo, risorse e sezioni della wiki.
+	// La barra a sinistra è tutta la navigazione: l'albero delle pagine, poi Risorse, Appuntamenti e Cestino.
 	// Di base sta aperta accanto alla pagina; chiusa (si apre col pulsante) se lo chiede il profilo,
 	// in Amministrazione e sul telefono. La freccia la nasconde e la riporta accanto alla pagina.
 	// Nel Profilo parte nascosta a ogni visita: lì la freccia vale per la visita e non tocca la scelta delle altre pagine.
@@ -202,7 +202,7 @@ ${iconCss()}</style>`}
 {/if}
 
 <div class="container shell" class:wide class:with-tree={docked} class:collapsed class:framed>
-	{#if tree}<PageTree {tree} tags={data.treeTags ?? []} resources={data.resources ?? []} {docked} bind:open={treeOpen} onhide={() => hideTree(true)} />{/if}
+	{#if tree}<PageTree {tree} {docked} bind:open={treeOpen} onhide={() => hideTree(true)} />{/if}
 	{#if collapsed}
 		<button id="tree-show" class="btn tree-show" type="button" title={t('tree.show')} aria-label={t('tree.show')} onclick={() => hideTree(false)}>
 			<Icon name="arrowRight" />

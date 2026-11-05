@@ -93,7 +93,11 @@ export function resourceEntries(u: Viewer | null): ResourceEntry[] {
 	return [...listResources(u), ...images].sort((a, b) => collator.compare(a.title, b.title));
 }
 
-/** Una voce delle Risorse, dal suo indirizzo. */
+/** Una voce delle Risorse, dal suo indirizzo. Un'immagine caricata come risorsa dice anche dove altro compare. */
 export function resourceEntry(id: string, u: Viewer | null): ResourceEntry | undefined {
-	return getResource(Number(id), u) ?? resourceEntries(u).find((r) => r.id === id);
+	const r = getResource(Number(id), u);
+	if (!r) return resourceEntries(u).find((e) => e.id === id);
+	if (r.kind !== 'image') return r;
+	const href = `/resources/${r.id}`;
+	return { ...r, sources: galleryImages(u).find((i) => i.id === r.file.id)?.sources.filter((s) => s.href !== href) ?? [] };
 }

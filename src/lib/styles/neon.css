@@ -231,20 +231,13 @@
 	}
 }
 
-/* --- Albero delle pagine: la pagina aperta ha la sua striscia di luce, le linguette un filo sotto ---
+/* --- Albero delle pagine: la pagina aperta ha la sua striscia di luce ---
    Niente bagliore attorno alle lettere magenta: sarebbe magenta su magenta, e si leggerebbe peggio. */
 
 :root[data-theme='neon'] .explorer a[aria-current='page'] {
 	box-shadow:
 		inset 2px 0 0 var(--neon-magenta),
 		-0.2rem 0 0.8rem -0.3rem color-mix(in srgb, var(--neon-magenta) 70%, transparent);
-}
-:root[data-theme='neon'] .explorer [role='tab'][aria-selected='true'] {
-	box-shadow: inset 0 -2px 0 var(--neon-magenta);
-}
-:root[data-theme='neon'] .explorer [role='tab'] {
-	font-family: var(--font-mono);
-	letter-spacing: 0.02em;
 }
 
 /* --- Riquadri (Amministrazione, moduli): pannelli da terminale, con due angoli tagliati e due staffe di luce ---

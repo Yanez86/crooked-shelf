@@ -141,7 +141,7 @@ export function buildTree(
 	return root;
 }
 
-/** I template hanno la loro linguetta: qui non ci sono, chi stava dentro di loro risale, e una cartella che aveva solo loro sparisce. */
+/** I template non stanno nella barra: qui non ci sono, chi stava dentro di loro risale, e una cartella che aveva solo loro sparisce. */
 export function withoutTemplates(list: TreeNode[]): TreeNode[] {
 	return list.flatMap((n): TreeNode[] => {
 		if (n.type === 'divider') return [n];
@@ -149,19 +149,6 @@ export function withoutTemplates(list: TreeNode[]): TreeNode[] {
 		if (n.type === 'page' && n.kind === 'template') return items;
 		return n.type === 'folder' && n.items.length && !items.length ? [] : [{ ...n, items }];
 	});
-}
-
-/** Tutti i template dell'albero, dovunque stiano, per titolo. */
-export function treeTemplates(list: TreeNode[]): TreePage[] {
-	const out: TreePage[] = [];
-	const walk = (nodes: TreeNode[]) => {
-		for (const n of nodes) {
-			if (n.type === 'page' && n.kind === 'template') out.push(n);
-			walk(childrenOf(n));
-		}
-	};
-	walk(list);
-	return out.sort((a, b) => collator.compare(a.title, b.title));
 }
 
 /** Trova una voce: chi la contiene e la lista in cui sta. */

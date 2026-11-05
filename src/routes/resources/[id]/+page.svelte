@@ -17,7 +17,7 @@
 <PageHead page={{ slug: '', title: r.title, icon: null, cover: null }} canEdit={data.canEdit} editHref="/resources/{r.id}/edit" />
 {#if r.visibility !== 'players'}<p><span class="badge">{t('visibility.' + r.visibility)}</span></p>{/if}
 {#if r.description}<p class="description">{r.description}</p>{/if}
-{#if r.sources}
+{#if r.sources?.length}
 	<ul class="list-plain">
 		{#each r.sources as s (s.kind + s.href)}
 			<li><span class="muted">{t('gallery.kind.' + s.kind)}</span> <a href={s.href}>{s.title}</a></li>

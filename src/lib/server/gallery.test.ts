@@ -6,7 +6,7 @@ import { MIGRATIONS } from './db/migrations.ts';
 import { createPage, getPageBySlug, pageCover, renderPage, updatePage } from './pages.ts';
 import { readPageForm } from './pageForm.ts';
 import { createCategory, pageTree } from './taxonomy.ts';
-import { galleryImages, resourceEntries } from './gallery.ts';
+import { galleryImages, resourceEntries, resourceEntry } from './gallery.ts';
 import { createMap } from './maps.ts';
 import { createResource } from './resources.ts';
 import { renameFile } from './files.ts';
@@ -158,6 +158,8 @@ describe('galleria', () => {
 			file: { id: 'mapxxxxxxxx', name: 'map.png', mime: 'image/png' },
 			sources: [{ kind: 'map', title: 'Faerûn', href: '/wiki/faerun' }]
 		});
+		// La scheda della risorsa dice dove altro compare il suo file, senza ripetere sé stessa.
+		expect(resourceEntry(String(resource), alice)!.sources).toEqual([{ kind: 'cover', title: 'Elminster', href: '/wiki/elminster' }]);
 	});
 
 	it("rinominare un'immagine della wiki cambia il nome del file e tiene l'estensione", () => {

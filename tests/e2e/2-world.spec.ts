@@ -117,15 +117,8 @@ test('template PNG con scheda, segreto e immagine', async () => {
 });
 
 test('i template sono pagine: si modificano e si fotocopiano', async () => {
-	// Nella linguetta Template della barra a sinistra, che si apre da sola su un template.
-	await admin.goto('/wiki/elminster');
-	const tree = admin.getByRole('navigation', { name: TREE });
-	await tree.getByRole('tab', { name: 'Template' }).click();
-	await tree.getByRole('link', { name: 'Luogo, Template' }).click();
+	await admin.goto('/wiki/luogo');
 	await expect(admin.getByRole('heading', { level: 1, name: 'Luogo' })).toBeVisible();
-	await admin.reload();
-	await expect(tree.getByRole('tab', { name: 'Template' })).toHaveAttribute('aria-selected', 'true');
-	await tree.getByRole('tab', { name: 'Pagine' }).click();
 	await expect(admin.locator('main .meta')).toContainText('Template');
 
 	// La struttura la decide chi lo scrive: si aggiunge una sezione.

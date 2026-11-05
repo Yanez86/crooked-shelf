@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildTree, keyPlace, pageTrail, placeAt, treePaths, treeTemplates, withoutTemplates, type TreeNode } from './tree.ts';
+import { buildTree, keyPlace, pageTrail, placeAt, treePaths, withoutTemplates, type TreeNode } from './tree.ts';
 
 const cats = [
 	{ id: 1, name: 'Luoghi', slug: 'luoghi', parentId: null },
@@ -61,7 +61,6 @@ describe('albero delle pagine', () => {
 		const { items } = buildTree(folders, rows, true);
 		// La cartella che aveva solo template sparisce, quella già vuota resta, e Porto risale dal template che lo conteneva.
 		expect(shape(withoutTemplates(items))).toEqual(['Luoghi', ['Porto'], 'Vuota']);
-		expect(treeTemplates(items).map((p) => p.title)).toEqual(['Luogo', 'PNG']);
 	});
 
 	it('una categoria dentro sé stessa non fa sparire le pagine', () => {

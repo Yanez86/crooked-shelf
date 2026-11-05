@@ -19,12 +19,10 @@
 	},
 	"tree": {
 		"label": "Pagine e risorse",
-		"manageTags": "Nomi e colori dei tag",
 		"title": "Menu e pagine",
 		"hide": "Nascondi la barra a sinistra",
 		"show": "Mostra la barra a sinistra",
 		"empty": "Ancora nessuna pagina.",
-		"noTemplates": "Ancora nessun template.",
 		"emptyFolder": "Cartella vuota",
 		"expandAll": "Apri tutte le cartelle",
 		"collapseAll": "Chiudi tutte le cartelle",
@@ -48,14 +46,7 @@
 		"branchAll": "Sì, anche loro",
 		"branchOne": "Solo questa pagina",
 		"visibilityChanged": "Visibilità cambiata: {level}.",
-		"visibilityChangedBranch": "Visibilità cambiata: {level}. Pagine cambiate: {n}.",
-		"tabs": "Cosa mostrare",
-		"tab": {
-			"pages": "Pagine",
-			"tags": "Tag",
-			"resources": "Risorse",
-			"templates": "Template"
-		}
+		"visibilityChangedBranch": "Visibilità cambiata: {level}. Pagine cambiate: {n}."
 	},
 	"footer": {
 		"source": "Codice sorgente",

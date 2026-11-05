@@ -63,32 +63,15 @@ test('accesso', async ({ browser }) => {
 	admin = await login(browser, ADMIN);
 });
 
-test('linguette dell\'albero: pagine e risorse', async () => {
+test('Risorse è una voce in fondo alla barra e apre la galleria', async () => {
 	await admin.goto('/wiki/locanda-del-grifone');
 	const tree = admin.getByRole('navigation', { name: TREE });
-	const pages = tree.getByRole('tab', { name: 'Pagine' });
-	const resources = tree.getByRole('tab', { name: 'Risorse' });
-	// Dopo il pacchetto mondo reimportato le locande sono due: conta quella aperta.
-	const locanda = tree.locator('a[aria-current="page"]');
-	await expect(pages).toHaveAttribute('aria-selected', 'true');
-	await expect(locanda).toHaveText('Locanda del Grifone');
-	await expect(locanda).toBeVisible();
-
-	await resources.click();
-	await expect(resources).toHaveAttribute('aria-selected', 'true');
+	await tree.getByRole('link', { name: 'Risorse' }).click();
+	await expect(admin.getByRole('heading', { level: 1, name: 'Risorse' })).toBeVisible();
+	await expect(tree.getByRole('link', { name: 'Risorse' })).toHaveAttribute('aria-current', 'page');
 	// Le immagini delle pagine dei test precedenti ci sono già, anche senza aver caricato risorse.
-	await expect(tree.getByRole('tabpanel', { name: 'Risorse' }).locator('summary', { hasText: 'Immagini' })).toBeVisible();
-	await expect(locanda).toBeHidden();
-	await expect(tree.getByRole('link', { name: 'Carica una risorsa' })).toBeVisible();
-
-	// Da tastiera: le frecce passano da una linguetta all'altra (prima di Risorse c'è Tag).
-	await admin.keyboard.press('ArrowLeft');
-	await expect(tree.getByRole('tab', { name: 'Tag', exact: true })).toBeFocused();
-	await admin.keyboard.press('ArrowLeft');
-	await expect(pages).toBeFocused();
-	await expect(pages).toHaveAttribute('aria-selected', 'true');
-	await expect(locanda).toBeVisible();
-	await axe(admin, 'albero con linguette');
+	await expect(admin.locator('main').getByRole('heading', { level: 2, name: /^Immagini/ })).toBeVisible();
+	await expect(admin.getByRole('link', { name: 'Carica una risorsa' })).toBeVisible();
 });
 
 test('il Master carica una musica, un ritratto e una dispensa segreta', async () => {
@@ -116,12 +99,7 @@ test('il Master carica una musica, un ritratto e una dispensa segreta', async ()
 	const pdf = await admin.request.get(href);
 	expect(pdf.headers()['content-disposition']).toContain('attachment; filename="piano segreto.pdf"');
 
-	// Nell'albero si apre da sola la linguetta delle risorse, divise per tipo.
-	const tree = admin.getByRole('navigation', { name: TREE });
-	await expect(tree.getByRole('tab', { name: 'Risorse' })).toHaveAttribute('aria-selected', 'true');
-	const panel = tree.getByRole('tabpanel', { name: 'Risorse' });
-	for (const group of ['Immagini', 'Audio', 'Altri file']) await expect(panel.locator('summary', { hasText: group })).toBeVisible();
-	await expect(panel.getByRole('link', { name: 'Piano del drago' })).toHaveAttribute('aria-current', 'page');
+	await expect(admin.getByRole('navigation', { name: TREE }).getByRole('link', { name: 'Risorse' })).toHaveAttribute('aria-current', 'page');
 	await axe(admin, 'risorsa');
 	await shot(admin, '40-risorsa');
 
@@ -135,7 +113,6 @@ test('il Master carica una musica, un ritratto e una dispensa segreta', async ()
 	await admin.waitForURL(/\/resources\/[^/]*[^\d/][^/]*$/);
 	await expect(admin.locator('main img')).toBeVisible();
 	await expect(admin.locator('main ul a[href^="/wiki/"]').first()).toBeVisible();
-	await expect(panel.locator('a[aria-current="page"]')).toHaveCount(1);
 	await axe(admin, 'immagine della wiki');
 	await admin.getByRole('link', { name: /^Modifica: / }).click();
 	await expect(admin.locator('main input, main textarea')).toHaveCount(1);
@@ -147,7 +124,6 @@ test('il Master carica una musica, un ritratto e una dispensa segreta', async ()
 	await admin.getByLabel('Titolo').fill('Immagine rinominata');
 	await admin.getByRole('button', { name: 'Salva' }).click();
 	await expect(admin.getByRole('heading', { level: 1, name: /^Immagine rinominata/ })).toBeVisible();
-	await expect(panel.getByRole('link', { name: /^Immagine rinominata/ })).toHaveAttribute('aria-current', 'page');
 
 	await admin.goto('/gallery?show=resources');
 	await expect(admin.locator('main').getByRole('status')).toHaveText('1 immagini');
@@ -193,7 +169,7 @@ test('sul telefono la barra a sinistra è un pannello a scomparsa', async () => 
 	await admin.goto('/resources');
 	const toggle = admin.getByRole('button', { name: 'Menu e pagine' });
 	const tree = admin.getByRole('navigation', { name: TREE });
-	const tema = tree.getByRole('link', { name: 'Tema della locanda' });
+	const tema = tree.getByRole('link', { name: 'Cestino' });
 	const title = admin.getByRole('heading', { level: 1, name: 'Risorse' });
 	await expect(tema).toBeHidden();
 	const before = await title.boundingBox();
@@ -202,7 +178,7 @@ test('sul telefono la barra a sinistra è un pannello a scomparsa', async () => 
 	await toggle.click();
 	await expect(toggle).toHaveAttribute('aria-expanded', 'true');
 	await expect(admin.getByRole('link', { name: 'Nuova pagina' })).toBeFocused();
-	await expect(tree.getByRole('tab', { name: 'Risorse' })).toHaveAttribute('aria-selected', 'true');
+	await expect(tree.getByRole('link', { name: 'Risorse' })).toHaveAttribute('aria-current', 'page');
 	await expect(tema).toBeVisible();
 	expect((await title.boundingBox())?.y).toBe(before?.y);
 	await axe(admin, 'risorse telefono');
@@ -221,7 +197,7 @@ test('sul telefono la barra a sinistra è un pannello a scomparsa', async () => 
 	// Aprendo una pagina dal pannello, il pannello si richiude.
 	await toggle.click();
 	await tema.click();
-	await expect(admin.getByRole('heading', { level: 1, name: 'Tema della locanda' })).toBeVisible();
+	await expect(admin.getByRole('heading', { level: 1, name: 'Cestino' })).toBeVisible();
 	await expect(tema).toBeHidden();
 	await admin.setViewportSize({ width: 1280, height: 800 });
 });
