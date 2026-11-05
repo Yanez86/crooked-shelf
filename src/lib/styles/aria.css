@@ -273,11 +273,12 @@
 	margin: 0.75rem 0;
 }
 
-/* Il testo delle pagine sta in una misura comoda, al centro dello spazio che resta; mappe e bacheche usano tutta la larghezza. */
+/* Il testo delle pagine sta in una misura comoda, al centro dello spazio che resta; mappe e bacheche usano tutta la larghezza.
+   Mai più larga dello spazio: le immagini nel testo sono figlie dirette di .prose e qui perdono il loro max-width: 100%. */
 :root:is([data-theme='aria'], [data-theme='aria-dark']) .content > .head > :not(.page-cover),
 :root:is([data-theme='aria'], [data-theme='aria-dark']) .content > .prose > *,
 :root:is([data-theme='aria'], [data-theme='aria-dark']) .content > .foot > :not(.board) {
-	max-width: var(--aria-measure);
+	max-width: min(100%, var(--aria-measure));
 	margin-inline: auto;
 }
 :root:is([data-theme='aria'], [data-theme='aria-dark']) .content > .prose {

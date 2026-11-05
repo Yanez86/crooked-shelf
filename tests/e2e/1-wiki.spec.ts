@@ -872,6 +872,15 @@ test('temi: contrasti e accessibilità', async () => {
 	await admin.mouse.wheel(0, 600);
 	await expect.poll(async () => (await admin.locator('.side-col').boundingBox())!.y).toBe(0);
 	await shot(admin, '08-tema-aria-home');
+	// Sul telefono niente sfora: un'immagine più larga dello schermo si stringe con lui (Safari rimpicciolirebbe la pagina).
+	await admin.setViewportSize({ width: 390, height: 844 });
+	for (const url of ['/', '/wiki/torre-del-mago']) {
+		await admin.goto(url);
+		const overflow = await admin.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+		expect(overflow, url).toBe(0);
+	}
+	await shot(admin, '08-tema-aria-telefono');
+	await admin.setViewportSize({ width: 1280, height: 800 });
 	// I test che seguono girano col tema chiaro, non col Neon che li rallenterebbe.
 	await choose('Chiaro');
 });
