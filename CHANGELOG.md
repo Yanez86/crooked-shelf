@@ -3,6 +3,16 @@
 Le versioni seguono il [versionamento semantico](https://semver.org/lang/it/): MAGGIORE.MINORE.CORRETTIVA.
 Questo file è anche la pagina «Novità» della wiki (`/changelog`).
 
+## 0.16.0 — 2026-11-05
+
+### Aggiunte
+- Backup automatico ogni giorno in una cartella, anche sincronizzata con OneDrive, Google Drive o Dropbox.
+- Cifratura facoltativa dei backup automatici con una password.
+- Strumento per aprire un backup cifrato.
+
+### Modifiche
+- Lo strumento di ripristino apre anche i backup cifrati.
+
 ## 0.15.0 — 2026-11-04
 
 ### Modifiche

@@ -10,12 +10,16 @@ services:
       - "3000:3000"
     volumes:
       - crooked-shelf-data:/data
+      # Backup automatici in una cartella del computer, es. quella di OneDrive: togli il # qui e su CS_BACKUP_DIR più sotto,
+      # e scrivi il percorso della cartella (deve esistere già). Vedi docs/installazione.md, «Backup automatico».
+      # - "C:/Users/nome/OneDrive/Crooked Shelf:/backups"
     environment:
       # Dietro un proxy con HTTPS (Caddy, nginx…), togli il # dalle due righe qui sotto:
       # CS_ORIGIN: "https://wiki.esempio.it"
       # CS_TRUST_PROXY: "1"
       # Il codice della prima configurazione: senza, la wiki ne genera uno e lo scrive nei log (docker compose logs).
       # CS_SETUP_TOKEN: "scegli-un-codice"
+      # CS_BACKUP_DIR: "/backups"
       TZ: "Europe/Rome"
 
 volumes:

@@ -2,7 +2,7 @@
 
 **English** · [Italiano](#italiano)
 
-A self-hosted wiki for tabletop RPG campaigns. Built for D&D 5.5, usable with any system. Version 0.15.0.
+A self-hosted wiki for tabletop RPG campaigns. Built for D&D 5.5, usable with any system. Version 0.16.0.
 
 ## How it works
 
@@ -22,7 +22,7 @@ You install it once on a computer (PC, Raspberry Pi or VPS) and everyone uses it
 - **Languages**: Italian and English; more via a file or a plugin.
 - **Plugins**: data only (themes, templates, calendars, languages, rules, links), never code.
 - **Claude**: the Master can connect Claude to a campaign to search, read and, if allowed, write pages.
-- **Your data**: full backup, Markdown export (Obsidian-ready), `.shelf` world pack to move a world to another campaign.
+- **Your data**: full backup, also automatic every day into a folder such as OneDrive or Google Drive, optionally encrypted with a password; Markdown export (Obsidian-ready), `.shelf` world pack to move a world to another campaign.
 
 ## Quick start
 
@@ -58,7 +58,7 @@ SRD 5.2 texts: Wizards of the Coast, CC-BY-4.0; data from the 5e-database projec
 
 [English](#crooked-shelf) · **Italiano**
 
-Una wiki self-hosted per campagne di giochi di ruolo da tavolo. Pensata per D&D 5.5, usabile con ogni sistema. Versione 0.15.0.
+Una wiki self-hosted per campagne di giochi di ruolo da tavolo. Pensata per D&D 5.5, usabile con ogni sistema. Versione 0.16.0.
 
 ## Come funziona
 
@@ -78,7 +78,7 @@ La installi una volta su un computer (PC, Raspberry Pi o VPS) e tutti la usano d
 - **Lingue**: italiano e inglese; altre con un file o un plugin.
 - **Plugin**: solo dati (temi, template, calendari, lingue, regole, link), mai codice.
 - **Claude**: il Master può collegare Claude a una campagna per cercare, leggere e, se lo permette, scrivere pagine.
-- **I tuoi dati**: backup completo, esportazione in Markdown (compatibile con Obsidian), pacchetto mondo `.shelf` per portare un mondo in un'altra campagna.
+- **I tuoi dati**: backup completo, anche automatico ogni giorno in una cartella come quella di OneDrive o Google Drive, se vuoi cifrato con una password; esportazione in Markdown (compatibile con Obsidian), pacchetto mondo `.shelf` per portare un mondo in un'altra campagna.
 
 ## Avvio rapido
 

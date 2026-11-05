@@ -96,7 +96,7 @@ La wiki non è esposta direttamente: dall'esterno si passa solo da Caddy, e `CS_
 
 Consigli per una wiki affidabile:
 
-- attiva i **backup automatici del server** offerti dal fornitore e, ogni tanto, scarica anche il backup della wiki (vedi [Backup e ripristino](#backup-e-ripristino)) su un disco tuo;
+- attiva i **backup automatici del server** offerti dal fornitore e il [backup automatico](#backup-automatico) della wiki, magari cifrato e copiato altrove con rclone; ogni tanto scarica anche il backup su un disco tuo;
 - accedi al server con una chiave SSH e lascia che il sistema installi da solo gli aggiornamenti di sicurezza (su Ubuntu: `apt install unattended-upgrades`).
 
 Se usi già un altro proxy (nginx, Caddy installato a mano…), resta valido `docker-compose.yml`: punta il proxy a `localhost:3000` e togli il `#` da queste righe:
@@ -141,6 +141,7 @@ Va bene per provarla, non per giocarci una campagna: per quello usa uno dei modi
 | `CS_SETUP_TOKEN` | il codice della prima configurazione; senza, la wiki ne genera uno e lo scrive nei log | — |
 | `CS_UPLOAD_QUOTA_MB` | spazio per le immagini di ogni account giocatore (Master e Admin non hanno limite) | `512` |
 | `CS_PACK_MAX_MB` | dimensione massima, decompressa, di un pacchetto mondo da importare | `200` |
+| `CS_BACKUP_DIR` | cartella dei backup automatici, es. quella di OneDrive (vedi [Backup automatico](#backup-automatico)); deve esistere già | `<CS_DATA_DIR>/backups` |
 | `TZ` | fuso orario del tavolo, es. `Europe/Rome`: decide «oggi» e quando un appuntamento salta | quello del sistema (`docker-compose.yml`: `Europe/Rome`) |
 
 Senza `CS_ORIGIN` la wiki usa l'indirizzo con cui viene raggiunta, in `http`: così funziona subito in rete locale.
@@ -150,6 +151,53 @@ In Amministrazione › Impostazioni la wiki confronta la sua versione con quella
 ## Backup e ripristino
 
 **Backup**: Amministrazione › Backup › «Scarica il backup». Il file contiene database, immagini e plugin installati, in chiaro: contiene tutto, segreti di ogni campagna e password cifrate comprese. Conservalo su un altro disco, al sicuro.
+
+### Backup automatico
+
+In Amministrazione › Backup l'Admin accende il **backup automatico**: una volta al giorno, all'ora scelta (quella del server), la wiki salva un backup completo in una cartella e tiene solo gli ultimi (7, se non scegli altro). Se il computer è spento a quell'ora, il backup parte appena si riaccende; se non riesce, la wiki riprova ogni ora e lo scrive nella pagina e nel Registro. C'è anche il pulsante «Fai un backup adesso».
+
+I file si chiamano `crooked-shelf-backup-2026-11-05-030000.zip` (o `.zip.enc`, se cifrati). La wiki cancella solo i suoi backup automatici più vecchi, riconosciuti dal nome: gli altri file della cartella restano dove sono. Ogni file nasce con un nome provvisorio (`~crooked-shelf-backup-….tmp`) e prende il nome vero solo a lavoro finito.
+
+**Portarli in cloud.** La wiki non si collega a OneDrive, Google Drive o Dropbox: scrive i backup in una cartella, e se è quella del loro programma ci pensa lui a caricarli. La cartella la sceglie chi installa la wiki, con la variabile `CS_BACKUP_DIR`; senza, i backup vanno in `backups` dentro la cartella dei dati, che protegge da un errore ma non da un disco rotto. La cartella deve esistere già: se manca (disco staccato, cartella non collegata a Docker) il backup non riesce e la pagina lo dice.
+
+- **Windows, senza Docker** (PowerShell, dalla cartella di Crooked Shelf):
+
+  ```powershell
+  mkdir "$env:USERPROFILE\OneDrive\Crooked Shelf"
+  $env:CS_BACKUP_DIR = "$env:USERPROFILE\OneDrive\Crooked Shelf"
+  npm start
+  ```
+
+  Con Google Drive per desktop la cartella è di solito `G:\Il mio Drive\Crooked Shelf`.
+
+- **Docker** (anche Docker Desktop su Windows e Mac): in `docker-compose.yml` togli il `#` dalle righe del backup e scrivi il percorso della cartella sul tuo computer, poi `docker compose up -d`:
+
+  ```yaml
+  volumes:
+    - crooked-shelf-data:/data
+    - "C:/Users/nome/OneDrive/Crooked Shelf:/backups"
+  environment:
+    CS_BACKUP_DIR: "/backups"
+  ```
+
+  Su Linux la cartella deve essere scrivibile dall'utente del container: `sudo chown 1000:1000 /percorso/della/cartella`. I backup sono leggibili solo da quell'utente (e da root), perché contengono tutto.
+
+- **Su un server (VPS)** non c'è il programma di OneDrive: collega una cartella del server come sopra (es. `/opt/crooked-shelf-backup:/backups`) e caricala con [rclone](https://rclone.org/), che sa parlare con Google Drive, OneDrive e molti altri. Dopo averlo configurato (`rclone config`), una riga in `crontab -e` la copia ogni mattina, senza i file ancora a metà:
+
+  ```bash
+  30 4 * * * rclone copy /opt/crooked-shelf-backup drive:CrookedShelf --exclude "~*"
+  ```
+
+Le copie vecchie che la wiki cancella spariscono anche dal cloud (di solito finiscono nel cestino di OneDrive o Drive); `rclone copy` invece non cancella niente.
+
+**Cifrare i backup automatici.** Un backup contiene tutto, in chiaro: chi arriva al file, o al tuo account cloud, legge pagine e segreti di ogni campagna, account, registro con gli indirizzi IP. Per questo l'Admin può scegliere una **password dei backup** (almeno 12 caratteri; meglio una frase di quattro o cinque parole): da quel momento i backup automatici sono file `.zip.enc` che si aprono solo con quella.
+
+- La password **non viene salvata da nessuna parte**: la wiki tiene solo una chiave che serve a chiudere i file, non ad aprirli. Chi entra nella wiki, o legge un backup in chiaro, non trova niente che apra quelli cifrati.
+- **Se la perdi, i backup cifrati non si aprono più**, da nessuno. Scrivila in un gestore di password o su un foglio in un posto sicuro. In Amministrazione › Backup puoi controllare di ricordarla senza cambiare niente.
+- Cambiando password, i backup già fatti restano con quella di prima. Togliendo la cifratura, i prossimi backup tornano in chiaro.
+- Il backup scaricato con «Scarica il backup» resta sempre in chiaro.
+
+Tecnicamente: dalla password nasce con scrypt una coppia di chiavi X25519, di cui la wiki tiene la metà pubblica; ogni backup ha una sua chiave usa e getta ed è cifrato con AES-256-GCM, che si accorge se il file è stato cambiato o è incompleto. Il formato è descritto in `tools/backup-crypto.mjs`.
 
 **Ripristino senza Docker** (wiki ferma):
 
@@ -163,6 +211,14 @@ node tools/restore.mjs crooked-shelf-backup-2026-10-29.zip ./data --force
 docker compose stop
 docker compose run --rm -v "$PWD:/backup" crooked-shelf node tools/restore.mjs /backup/crooked-shelf-backup-2026-10-29.zip /data --force
 docker compose start
+```
+
+In PowerShell scrivi `"${PWD}:/backup"` al posto di `"$PWD:/backup"`.
+
+Un backup cifrato (`.zip.enc`) si ripristina con gli stessi comandi: lo strumento chiede la password senza mostrarla mentre la scrivi (oppure la legge dalla variabile `CS_BACKUP_PASSWORD`). Se la password è sbagliata o il file è danneggiato, non tocca niente. Per aprire un backup cifrato senza ripristinarlo, ad esempio per guardarci dentro:
+
+```bash
+node tools/decrypt-backup.mjs crooked-shelf-backup-2026-11-05-030000.zip.enc
 ```
 
 Il database che c'era prima non viene cancellato: viene rinominato `crooked-shelf.db.prima-del-ripristino-…`.

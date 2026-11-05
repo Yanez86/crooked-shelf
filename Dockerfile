@@ -29,7 +29,7 @@ COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/package.json ./package.json
 COPY server.js ./
 COPY plugins ./plugins
-COPY tools/restore.mjs ./tools/restore.mjs
+COPY tools/restore.mjs tools/decrypt-backup.mjs tools/backup-crypto.mjs ./tools/
 RUN mkdir -p /data && chown node:node /data
 USER node
 VOLUME /data

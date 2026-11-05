@@ -212,5 +212,6 @@ Tutta la wiki si usa da tastiera e con i lettori di schermo; i colori rispettano
 - **Inviti**: link per entrare nel sito, uno per persona.
 - **Temi**: copia un tema e cambia i colori; si salva solo se il testo resta leggibile. Un tema può avere un'immagine di sfondo, che sta dietro i riquadri e si vede solo sugli schermi larghi. Esporta e importa come file (solo i colori: lo sfondo viaggia col pacchetto mondo).
 - **Plugin**: accendi e spegni i plugin installati; cliccandone uno si apre una finestra con scopo, istruzioni, autore e contenuto (per crearne uno, vedi [plugin.md](plugin.md)).
-- **Backup**, **Pacchetto mondo**, **Esporta in Markdown**: vedi [installazione.md](installazione.md#backup-e-ripristino).
+- **Backup**: il backup completo da scaricare e il **backup automatico** di ogni giorno in una cartella (anche quella di OneDrive, Google Drive o Dropbox, che lo porta in cloud), con ora, numero di copie da tenere e, se vuoi, una **password** che lo cifra. La pagina spiega cosa c'è in un backup; la password non si può recuperare. Vedi [installazione.md](installazione.md#backup-automatico).
+- **Pacchetto mondo**, **Esporta in Markdown**: vedi [installazione.md](installazione.md#backup-e-ripristino).
 - **Registro**: accessi riusciti e falliti, cambi di ruolo e password, inviti, token di Claude, consensi, backup ed esportazioni degli ultimi sei mesi.

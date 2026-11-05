@@ -10,6 +10,7 @@
 //   CS_SETUP_TOKEN  codice della prima configurazione (senza, ne viene generato uno e scritto nei log)
 //   CS_UPLOAD_QUOTA_MB  spazio per le immagini di ogni giocatore (512)
 //   CS_PACK_MAX_MB  dimensione massima decompressa di un pacchetto mondo (200)
+//   CS_BACKUP_DIR   cartella dei backup automatici, es. quella di OneDrive (predefinita <CS_DATA_DIR>/backups)
 //
 // Senza CS_ORIGIN la wiki usa l'indirizzo con cui viene raggiunta, in http: così funziona
 // subito anche in rete locale (es. http://192.168.1.20:3000) senza certificati.

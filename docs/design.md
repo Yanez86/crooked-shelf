@@ -2,7 +2,7 @@
 
 Wiki self-hosted per creare, curare e registrare campagne di giochi di ruolo da tavolo (pensata per D&D 5.5, aperta ad altri sistemi).
 
-> Stato: **in uso**, versione 0.15.0. Le novità di ogni versione sono in [CHANGELOG.md](../CHANGELOG.md).
+> Stato: **in uso**, versione 0.16.0. Le novità di ogni versione sono in [CHANGELOG.md](../CHANGELOG.md).
 
 ## 1. Obiettivi
 
@@ -181,6 +181,8 @@ Tutto ciò che si scrive è una pagina, nell'albero a sinistra e all'indirizzo `
 
 ### Backup completo
 - Un comando/pulsante produce un archivio con database e file caricati; ripristino nella stessa o in un'altra installazione.
+- Backup automatico (`src/lib/server/autoBackup.ts`): una volta al giorno, all'ora scelta dall'Admin, nella cartella `CS_BACKUP_DIR` (o `<dati>/backups`). Un timer suo, avviato dall'hook `init`, controlla ogni minuto: se il computer era spento all'orario parte appena si riaccende, dopo un errore riprova ogni ora. Il file nasce come `~….tmp` e prende il nome vero a lavoro finito, così chi sincronizza (OneDrive, Google Drive, Dropbox, rclone) non carica mai un backup a metà; la pulizia cancella solo i backup automatici, riconosciuti dal nome. La cartella la sceglie chi installa, non l'Admin dal browser: dalla pagina non si scrive in giro per il disco. Nessun collegamento diretto ai servizi cloud: niente app da registrare né credenziali da custodire.
+- Cifratura facoltativa (`tools/backup-crypto.mjs`, la stessa per la wiki e per gli strumenti): dalla password nasce con scrypt una coppia X25519 e la wiki tiene solo la chiave pubblica, così né il database né un backup in chiaro bastano ad aprire i backup cifrati. Ogni file ha una chiave usa e getta (X25519 + HKDF) ed è cifrato con AES-256-GCM, intestazione compresa nei dati autenticati. La password non si conserva e non si recupera.
 
 ### Pacchetto mondo (`.shelf`)
 Per riusare un mondo in un'altra campagna. È uno zip con Markdown, immagini e JSON leggibili anche senza Crooked Shelf.

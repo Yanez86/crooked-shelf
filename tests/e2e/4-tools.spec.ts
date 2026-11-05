@@ -133,9 +133,73 @@ test('backup completo', async () => {
 	expect(files.some((f) => f.startsWith('uploads/'))).toBe(true);
 });
 
+test('backup automatico: cartella, cifratura con password, backup adesso', async () => {
+	const BACKUP_PASSWORD = 'lanterna fiume castagna vento';
+	await admin.goto('/admin/backup');
+	// Senza CS_BACKUP_DIR la cartella è dentro i dati: la pagina lo dice, e dice cosa c'è in un backup.
+	await expect(admin.getByText('La cartella è dentro i dati della wiki')).toBeVisible();
+	await expect(admin.getByText('compresi i segreti dei Master')).toBeVisible();
+	await expect(admin.getByText('Cifratura spenta.', { exact: true })).toBeVisible();
+
+	await admin.getByLabel('Fai un backup automatico ogni giorno').check();
+	await admin.getByLabel('Ora', { exact: true }).selectOption('4');
+	await admin.getByLabel('Quanti tenerne').fill('3');
+	await admin.getByRole('button', { name: 'Salva' }).click();
+	await expect(admin.getByRole('status').first()).toContainText('Modifiche salvate');
+	await expect(admin.getByLabel('Fai un backup automatico ogni giorno')).toBeChecked();
+
+	// Senza la conferma di aver capito non si cifra; con una password corta nemmeno.
+	await admin.getByLabel('Password dei backup').fill('corta');
+	await admin.getByLabel('Ripeti la password').fill('corta');
+	await admin.getByLabel('Ho capito: se perdo questa password').evaluate((el: HTMLInputElement) => (el.required = false));
+	await admin.getByRole('button', { name: 'Cifra i backup' }).evaluate((el: HTMLButtonElement) => el.form!.setAttribute('novalidate', ''));
+	await admin.getByRole('button', { name: 'Cifra i backup' }).click();
+	await expect(admin.getByRole('alert')).toContainText('conferma di aver capito');
+
+	await expect(admin.getByText('Se perdi la password, perdi i backup')).toBeVisible();
+	await admin.getByLabel('Password dei backup').fill(BACKUP_PASSWORD);
+	await admin.getByLabel('Ripeti la password').fill(BACKUP_PASSWORD);
+	await admin.getByLabel('Ho capito: se perdo questa password').check();
+	await admin.getByRole('button', { name: 'Cifra i backup' }).click();
+	await expect(admin.getByRole('status').first()).toContainText('Cifratura accesa');
+	await expect(admin.getByText('Cifratura accesa.', { exact: true })).toBeVisible();
+
+	await admin.locator('#check-password').fill('non è lei di sicuro');
+	await admin.getByRole('button', { name: 'Controlla la password' }).click();
+	await expect(admin.getByRole('alert')).toContainText('Non è la password dei backup');
+	await admin.locator('#check-password').fill(BACKUP_PASSWORD);
+	await admin.getByRole('button', { name: 'Controlla la password' }).click();
+	await expect(admin.getByRole('status').first()).toContainText('La password è giusta');
+
+	await admin.getByRole('button', { name: 'Fai un backup adesso' }).click();
+	await expect(admin.getByRole('status').first()).toContainText('Backup salvato');
+	await expect(admin.getByText('Riuscito')).toBeVisible();
+	const file = (await admin.locator('dd code').first().textContent())!.trim();
+	expect(file).toMatch(/^crooked-shelf-backup-\d{4}-\d{2}-\d{2}-\d{6}\.zip\.enc$/);
+	if (!process.env.E2E_BASE_URL) {
+		const { readFileSync } = await import('node:fs');
+		expect(readFileSync(`.e2e-data/backups/${file}`).subarray(0, 8).toString()).toBe('CSBACKUP');
+	}
+	await axe(admin, 'backup automatico');
+	await shot(admin, '4-backup-automatico');
+
+	await admin.locator('summary', { hasText: 'Togli la cifratura' }).click();
+	await admin.getByLabel('Ho capito: da adesso i backup automatici si leggono senza password').check();
+	await admin.locator('form[action="?/plain"]').getByRole('button').click();
+	await expect(admin.getByRole('status').first()).toContainText('Cifratura tolta');
+	await admin.getByLabel('Fai un backup automatico ogni giorno').uncheck();
+	await admin.getByRole('button', { name: 'Salva' }).click();
+	await expect(admin.getByRole('status').first()).toContainText('Modifiche salvate');
+
+	await admin.goto('/admin/audit');
+	await expect(admin.getByRole('cell', { name: 'Backup automatico', exact: true }).first()).toBeVisible();
+});
+
 test('il giocatore non può scaricare backup e pacchetti', async ({ browser }) => {
 	const p = await login(browser, PLAYER);
 	expect((await p.request.get('/admin/backup/download')).status()).toBe(404);
+	const origin = new URL(p.url()).origin;
+	expect((await p.request.post('/admin/backup?/run', { headers: { origin }, form: {} })).status()).toBe(404);
 	expect((await p.request.get('/admin/world/download?pages=all')).status()).toBe(404);
 	expect((await p.request.get('/admin/export/download')).status()).toBe(404);
 	await p.context().close();

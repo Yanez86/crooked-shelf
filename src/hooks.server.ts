@@ -1,7 +1,8 @@
 import { error, redirect } from '@sveltejs/kit';
-import type { Handle } from '@sveltejs/kit/hooks';
+import type { Handle, ServerInit } from '@sveltejs/kit/hooks';
 import { clearSessionCookie, hasUsers, sessionCookie, setSessionCookie, validateApiToken, validateSession } from '#lib/server/auth.ts';
 import { maintenance } from '#lib/server/maintenance.ts';
+import { startAutoBackup } from '#lib/server/autoBackup.ts';
 import { getSettings } from '#lib/server/settings.ts';
 import { announceSetupToken } from '#lib/server/setup.ts';
 import { limited } from '#lib/server/ratelimit.ts';
@@ -34,7 +35,9 @@ const LIMITS: { test: (path: string, search: string) => boolean; name: string; m
 	{ test: (p, s) => p === '/profile' && s.startsWith('?/password'), name: 'password', max: 10, window: 10 * MINUTE },
 	{ test: (p) => p === '/oauth/token', name: 'oauth', max: 30, window: 10 * MINUTE },
 	{ test: (p) => p === '/api/files', name: 'upload', max: 60, window: 10 * MINUTE },
-	{ test: (p) => p.startsWith('/mcp'), name: 'mcp', max: 300, window: MINUTE }
+	{ test: (p) => p.startsWith('/mcp'), name: 'mcp', max: 300, window: MINUTE },
+	// Password dei backup (ogni prova costa 128 MB di memoria) e backup fatti a mano.
+	{ test: (p) => p === '/admin/backup', name: 'backup', max: 30, window: 10 * MINUTE }
 ];
 // Dimensione massima del corpo per tipo di route: i moduli che caricano file hanno il limite del server (BODY_SIZE_LIMIT).
 const UPLOADS = [/^\/api\/files$/, /^\/profile$/, /^\/wiki\/new$/, /^\/wiki\/[^/]+\/edit$/, /^\/resources\//, /^\/admin\/world$/, /^\/admin\/themes\//];
@@ -48,6 +51,9 @@ function readCookiePrefs(raw: string | undefined): Record<string, unknown> | nul
 		return null;
 	}
 }
+
+// All'avvio del server: il backup automatico ha un suo timer, perché deve partire anche di notte, senza visite.
+export const init: ServerInit = () => startAutoBackup();
 
 export const handle: Handle = async ({ event, resolve }) => {
 	const { cookies, url, locals, request } = event;

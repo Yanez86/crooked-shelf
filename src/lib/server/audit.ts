@@ -23,6 +23,8 @@ export type AuditAction =
 	| 'token_revoked'
 	| 'oauth_consent'
 	| 'backup_downloaded'
+	| 'backup_auto'
+	| 'backup_auto_failed'
 	| 'export_downloaded'
 	| 'world_imported'
 	| 'settings_changed'
