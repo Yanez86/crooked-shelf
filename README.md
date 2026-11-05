@@ -2,7 +2,7 @@
 
 **English** · [Italiano](#italiano)
 
-A self-hosted wiki for tabletop RPG campaigns. Built for D&D 5.5, usable with any system. Version 0.16.0.
+A self-hosted wiki for tabletop RPG campaigns. Built for D&D 5.5, usable with any system. Version 0.17.0.
 
 ## How it works
 
@@ -58,7 +58,7 @@ SRD 5.2 texts: Wizards of the Coast, CC-BY-4.0; data from the 5e-database projec
 
 [English](#crooked-shelf) · **Italiano**
 
-Una wiki self-hosted per campagne di giochi di ruolo da tavolo. Pensata per D&D 5.5, usabile con ogni sistema. Versione 0.16.0.
+Una wiki self-hosted per campagne di giochi di ruolo da tavolo. Pensata per D&D 5.5, usabile con ogni sistema. Versione 0.17.0.
 
 ## Come funziona
 

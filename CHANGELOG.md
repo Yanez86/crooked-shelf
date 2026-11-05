@@ -3,6 +3,15 @@
 Le versioni seguono il [versionamento semantico](https://semver.org/lang/it/): MAGGIORE.MINORE.CORRETTIVA.
 Questo file è anche la pagina «Novità» della wiki (`/changelog`).
 
+## 0.17.0 — 2026-11-05
+
+### Aggiunte
+- Tabelle di tiro: tabelle nelle pagine da cui esce un risultato a caso, create dal Master.
+- Tiro sulle tabelle dalla pagina e, mentre si scrive, dall'editor.
+
+### Correzioni
+- Risolto un problema relativo all'accessibilità dei suggerimenti nell'editor.
+
 ## 0.16.0 — 2026-11-05
 
 ### Aggiunte
