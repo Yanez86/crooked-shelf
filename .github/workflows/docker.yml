@@ -1,10 +1,11 @@
 name: Immagine Docker
 
-# Pubblica l'immagine su ghcr.io/<proprietario>/crooked-shelf per computer (amd64) e Raspberry Pi (arm64)
-# a ogni versione (tag v1.2.3) o quando la si avvia a mano dalla scheda Actions.
+# Pubblica l'immagine su ghcr.io/<proprietario>/crooked-shelf per computer (amd64) e Raspberry Pi (arm64).
+# Per ora parte solo a mano, dalla scheda Actions: per una versione scegli il suo tag (v1.2.3) in «Use workflow from».
+# Per pubblicarla di nuovo a ogni versione, aggiungi sopra a workflow_dispatch:
+#   push:
+#     tags: ['v*']
 on:
-  push:
-    tags: ['v*']
   workflow_dispatch:
 
 permissions:
