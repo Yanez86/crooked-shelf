@@ -3,6 +3,11 @@
 Le versioni seguono il [versionamento semantico](https://semver.org/lang/it/): MAGGIORE.MINORE.CORRETTIVA.
 Questo file è anche la pagina «Novità» della wiki (`/changelog`).
 
+## 0.20.2 — 2026-11-05
+
+### Modifiche
+- Barre laterali di Aria e Neon un po' più larghe e più compatte: i nomi delle pagine vanno a capo meno spesso.
+
 ## 0.20.1 — 2026-11-05
 
 ### Modifiche
