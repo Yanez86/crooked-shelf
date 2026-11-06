@@ -441,6 +441,27 @@ test('copertina: dalla galleria, riposizionata da tastiera, poi un colore e un f
 	await expect(admin.getByRole('heading', { level: 1, name: 'Locanda del Grifone' })).toBeVisible();
 	await expect(cover.locator('img')).toBeVisible();
 	await expect(cover.locator('img')).toHaveCSS('object-position', '50% 50%');
+
+	// Con Aria la copertina arriva fino al bordo: la freccia per riaprire la colonna a lato le sta sopra.
+	const theme = async (name: string) => {
+		await admin.goto('/preferences');
+		await admin.getByRole('radio', { name, exact: true }).check();
+		await admin.getByRole('button', { name: 'Salva' }).first().click();
+		await expect(admin.getByRole('status').first()).toContainText('Preferenze salvate');
+	};
+	await theme('Aria');
+	await admin.goto('/wiki/elminster/edit');
+	await admin.getByRole('button', { name: 'Aggiungi copertina' }).click();
+	await picker.getByRole('button', { name: 'Il mago nella sua torre' }).click();
+	await admin.getByRole('button', { name: 'Salva' }).click();
+	await admin.getByRole('button', { name: 'Nascondi la colonna a destra' }).click();
+	await admin.getByRole('button', { name: 'Mostra la colonna a destra' }).click();
+	await expect(admin.getByRole('complementary', { name: 'Scheda' })).toBeVisible();
+	await admin.goto('/wiki/elminster/edit');
+	await admin.getByRole('button', { name: 'Togli la copertina' }).click();
+	await admin.getByRole('button', { name: 'Salva' }).click();
+	await expect(cover).toHaveCount(0);
+	await theme('Vintage bianca');
 });
 
 test('un file che non è un\'immagine viene rifiutato', async () => {

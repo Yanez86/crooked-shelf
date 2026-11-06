@@ -173,8 +173,10 @@
 	.side-hidden .side-col {
 		display: none;
 	}
+	/* Sopra la copertina, che nei temi a tutta larghezza arriva fino al bordo e la coprirebbe. */
 	.side-show {
 		position: sticky;
+		z-index: 1;
 		top: 1rem;
 		grid-column: 2;
 		grid-row: 1;
