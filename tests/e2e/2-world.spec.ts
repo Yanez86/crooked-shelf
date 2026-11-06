@@ -92,6 +92,21 @@ test('template PNG con scheda, segreto e immagine', async () => {
 	await expect(editor.locator('img')).toHaveAttribute('alt', 'Ritratto di un vecchio mago con la barba');
 	await axe(admin, 'editor con template');
 
+	// Anche nel testo l'immagine si ritaglia: il ritaglio prende il posto dell'immagine, la descrizione resta; si annulla come il resto.
+	const inText = editor.locator('img');
+	const whole = (await inText.getAttribute('src'))!;
+	await inText.click();
+	await admin.getByRole('toolbar').getByRole('button', { name: 'Ritaglia' }).click();
+	const cropText = admin.getByRole('dialog', { name: "Ritaglia l'immagine" });
+	await cropText.getByRole('button', { name: 'Parte da tenere' }).focus();
+	await admin.keyboard.press('Shift+ArrowLeft');
+	await cropText.getByRole('button', { name: 'Ritaglia', exact: true }).click();
+	await expect(cropText).toBeHidden();
+	await expect(inText).not.toHaveAttribute('src', whole);
+	await expect(inText).toHaveAttribute('alt', 'Ritratto di un vecchio mago con la barba');
+	await admin.getByRole('toolbar').getByRole('button', { name: "Annulla l'ultima azione" }).click();
+	await expect(inText).toHaveAttribute('src', whole);
+
 	await admin.getByRole('button', { name: 'Crea la pagina' }).click();
 	await expect(admin.getByRole('heading', { level: 1, name: 'Elminster' })).toBeVisible();
 	const box = admin.getByRole('complementary', { name: 'Scheda' });
@@ -407,6 +422,15 @@ test('copertina: dalla galleria, riposizionata da tastiera, poi un colore e un f
 	await admin.keyboard.press('Enter');
 	await expect(admin.getByRole('button', { name: 'Riposiziona la copertina' })).toBeFocused();
 	await axe(admin, 'copertina in modifica');
+
+	// Si ritaglia anche la copertina: diventa il ritaglio, il fuoco torna sul pulsante.
+	const coverSrc = (await cover.locator('img').getAttribute('src'))!;
+	await admin.getByRole('button', { name: 'Ritaglia la copertina' }).click();
+	const cropCover = admin.getByRole('dialog', { name: "Ritaglia l'immagine" });
+	await cropCover.getByRole('button', { name: 'Ritaglia', exact: true }).click();
+	await expect(cropCover).toBeHidden();
+	await expect(cover.locator('img')).not.toHaveAttribute('src', coverSrc);
+	await expect(admin.getByRole('button', { name: 'Ritaglia la copertina' })).toBeFocused();
 	await shot(admin, '11f-copertina-modifica');
 	await admin.getByRole('button', { name: 'Salva' }).click();
 

@@ -3,7 +3,7 @@
 	import Icon from './Icon.svelte';
 
 	/**
-	 * Ritaglio di un'immagine della colonna a lato. Si trascina il riquadro per spostarlo, l'angolo per cambiarne la misura,
+	 * Ritaglio di un'immagine (colonna a lato, testo, copertina). Si trascina il riquadro per spostarlo, l'angolo per cambiarne la misura,
 	 * o se ne disegna uno nuovo fuori; da tastiera le frecce (con Maiusc la misura). `ondone` riceve il file ritagliato,
 	 * o null se si chiude senza ritagliare: il file nuovo si carica come un'immagine scelta, l'originale non si tocca.
 	 */

@@ -3,9 +3,10 @@
 	import { getT } from '../i18n/index.ts';
 	import { COVER_COLORS, COVER_Y_DEFAULT, type PageCover } from '../covers.ts';
 	import Icon from './Icon.svelte';
+	import ImageCrop from './ImageCrop.svelte';
 
 	/**
-	 * La copertina in modifica. Sul lato tre icone: cambia, riposiziona (solo le immagini), togli.
+	 * La copertina in modifica. Sul lato le icone: cambia, riposiziona e ritaglia (solo le immagini), togli.
 	 * Senza copertina il pannello si apre dall'icona accanto a Salva e Annulla (`openPicker`, chiamata dalla pagina).
 	 * Il pannello sceglie un'immagine della galleria, un colore pieno o un file nuovo.
 	 * `picking`: il pannello è aperto (la pagina non sovrappone l'icona alla copertina).
@@ -23,6 +24,8 @@
 	let uploading = $state(false);
 	let uploadError = $state('');
 	let moving = $state(false);
+	let cropping = $state(false);
+	let cropError = $state('');
 	let frame = $state<HTMLDivElement>();
 	let img = $state<HTMLImageElement>();
 	let slider = $state<HTMLDivElement>();
@@ -83,6 +86,24 @@
 		} finally {
 			uploading = false;
 		}
+	}
+
+	// Il ritaglio si carica come un file nuovo e diventa la copertina; l'originale resta nella galleria.
+	async function cropped(file: File | null) {
+		cropping = false;
+		cropError = '';
+		if (file) {
+			const body = new FormData();
+			body.append('file', file);
+			const r = await fetch('/api/files', { method: 'POST', body }).catch(() => null);
+			const res = r ? await r.json().catch(() => ({})) : {};
+			if (r?.ok && res.id) {
+				cover = { image: res.id, color: null, y: cover?.y ?? COVER_Y_DEFAULT };
+				gallery = gallery && [{ id: res.id, url: res.url, alt: file.name }, ...gallery];
+			} else cropError = res.error ?? 'errors.generic';
+		}
+		await tick();
+		document.getElementById('cover-crop')?.focus();
 	}
 
 	async function remove() {
@@ -182,6 +203,9 @@
 					<button id="cover-move" class="tool" type="button" title={t('cover.reposition')} onclick={startMoving}>
 						<Icon name="move" /><span class="visually-hidden">{t('cover.reposition')}</span>
 					</button>
+					<button id="cover-crop" class="tool" type="button" title={t('cover.crop')} onclick={() => (cropping = true)}>
+						<Icon name="crop" /><span class="visually-hidden">{t('cover.crop')}</span>
+					</button>
 				{/if}
 				<button id="cover-remove" class="tool" type="button" title={t('cover.remove')} onclick={remove}>
 					<Icon name="trash" /><span class="visually-hidden">{t('cover.remove')}</span>
@@ -190,6 +214,9 @@
 		{/if}
 	</div>
 {/if}
+
+{#if cropError}<p class="alert alert-error" role="alert">{t(cropError)}</p>{/if}
+{#if cropping && cover?.image}<ImageCrop src="/files/{cover.image}" ondone={cropped} />{/if}
 
 {#if picking}
 	<!-- svelte-ignore a11y_no_noninteractive_element_interactions (Esc chiude il pannello, come nei menu) -->
@@ -267,6 +294,9 @@
 		right: 0.5rem;
 		display: flex;
 		flex-direction: column;
+		/* Sulla copertina più bassa quattro icone non ci stanno in colonna: le altre vanno a sinistra. */
+		flex-wrap: wrap-reverse;
+		max-height: calc(100% - 1rem);
 		gap: 0.25rem;
 	}
 	.tool {

@@ -23,6 +23,7 @@
 	import type { DocNode } from '../content/types.ts';
 	import Icon from '../components/Icon.svelte';
 	import PromptDialog from '../components/PromptDialog.svelte';
+	import ImageCrop from '../components/ImageCrop.svelte';
 
 	let {
 		content,
@@ -221,7 +222,8 @@
 	let fileInput: HTMLInputElement;
 	let status = $state('');
 
-	async function uploadImage(file: File) {
+	/** Carica il file e ne dà l'indirizzo, o null (il perché è nello stato). */
+	async function sendImage(file: File): Promise<string | null> {
 		status = t('editor.uploading');
 		const body = new FormData();
 		body.append('file', file);
@@ -229,11 +231,42 @@
 		const data = r ? await r.json().catch(() => ({})) : {};
 		if (!r?.ok || !data.url) {
 			status = t(data.error ?? 'errors.generic');
-			return;
+			return null;
 		}
-		const alt = (await ask(t('editor.altPrompt'), '')) ?? '';
-		chain().setImage({ src: data.url, alt: alt.trim() }).run();
 		status = t('editor.uploaded');
+		return data.url;
+	}
+
+	async function uploadImage(file: File) {
+		const src = await sendImage(file);
+		if (!src) return;
+		const alt = (await ask(t('editor.altPrompt'), '')) ?? '';
+		chain().setImage({ src, alt: alt.trim() }).run();
+	}
+
+	// L'immagine che si sta ritagliando: dov'è nel testo e il suo file.
+	let cropping = $state<{ pos: number; src: string } | null>(null);
+
+	function startCrop(pos: number) {
+		const node = editor!.state.doc.nodeAt(pos);
+		if (node?.type.name === 'image') cropping = { pos, src: node.attrs.src };
+	}
+
+	/** Il ritaglio è un file nuovo e prende il posto dell'immagine; l'originale resta tra i file. */
+	async function cropped(file: File | null) {
+		const { pos, src } = cropping!;
+		cropping = null;
+		const url = file && (await sendImage(file));
+		// Se nel frattempo l'immagine si è spostata o è sparita, non si tocca niente.
+		if (url && editor!.state.doc.nodeAt(pos)?.attrs.src === src) {
+			chain()
+				.command(({ tr }) => {
+					tr.setNodeAttribute(pos, 'src', url);
+					return true;
+				})
+				.setNodeSelection(pos)
+				.run();
+		} else editor!.commands.focus();
 	}
 
 	// L'immagine selezionata e la sua larghezza (null = la sua), per la tendina della barra.
@@ -460,6 +493,7 @@
 		{@render btn('image', t('editor.image'), () => fileInput.click())}
 		{#if imageHere}
 			<button type="button" title={t('editor.altEdit')} onclick={editAlt}>Alt</button>
+			{@render btn('crop', t('fields.crop'), () => startCrop(imageHere.pos))}
 			<select
 				aria-label={t('editor.imageSize')}
 				title={t('editor.imageSize')}
@@ -586,6 +620,9 @@
 					>
 						<Icon name="resize" /><span class="visually-hidden">{t('editor.imageSize')}</span>
 					</button>
+					<button type="button" title={t('fields.crop')} tabindex="-1" onmousedown={(e) => e.preventDefault()} onclick={() => startCrop(hoveredPos())}>
+						<Icon name="crop" /><span class="visually-hidden">{t('fields.crop')}</span>
+					</button>
 				{/if}
 				{#if canSecret}
 					{@const label = hoveredHidden ? t('editor.showBlock') : t('editor.hideBlock')}
@@ -640,6 +677,7 @@
 			{/if}
 		{/if}
 	</div>
+	{#if cropping}<ImageCrop src={cropping.src} ondone={cropped} />{/if}
 	<input type="hidden" {name} value={json} />
 	<noscript><p class="alert alert-error">{t('editor.noscript')}</p></noscript>
 </div>
