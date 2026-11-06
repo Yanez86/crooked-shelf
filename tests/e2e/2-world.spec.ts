@@ -509,6 +509,8 @@ test('cronologia del mondo', async () => {
 		await admin.getByLabel('Giorno').fill(d);
 		if (extra) await extra();
 		await admin.getByRole('button', { name: 'Aggiungi', exact: true }).click();
+		// Si aggiunge senza ricaricare la pagina: si aspetta l'evento, perché il messaggio c'è già dal primo.
+		await expect(admin.locator('main li.event', { hasText: title })).toHaveCount(1);
 		await expect(admin.getByRole('status').first()).toContainText('Evento aggiunto');
 	};
 	await add('Arrivo degli eroi a Waterdeep', '1491', 'Mirtul', '15', async () => {
@@ -543,9 +545,77 @@ test('cronologia del mondo', async () => {
 	await shot(admin, '12-cronologia-mondo');
 
 	await admin.getByRole('link', { name: 'Linea del tempo' }).click();
-	await expect(admin.getByRole('region', { name: 'Linea del tempo' })).toBeVisible();
+	const line = admin.getByRole('region', { name: 'Linea del tempo' });
+	await expect(line).toBeVisible();
+	await expect(admin).toHaveURL(/\?view=line$/);
+	// In scala: il salto lungo tra il 714 e il 1490 è accorciato, e dice quanto copre.
+	await expect(line).toContainText(/≈ 776 anni/);
 	await axe(admin, 'cronologia linea');
 	await shot(admin, '13-cronologia-linea');
+
+	// Si sceglie un evento, anche con le frecce, e sotto la linea compare tutto.
+	await line.getByRole('button', { name: /Caduta di Myth Drannor/ }).click();
+	await expect(admin.getByRole('region', { name: 'Caduta di Myth Drannor' })).toContainText('777 anni fa');
+	await admin.keyboard.press('ArrowRight');
+	const secret = line.getByRole('button', { name: /Il patto segreto/ });
+	await expect(secret).toBeFocused();
+	await expect(secret).toHaveAttribute('aria-current', 'true');
+	await expect(admin.getByRole('region', { name: 'Il patto segreto' })).toContainText('Solo Master');
+	await admin.getByRole('button', { name: 'Successivo' }).click();
+	await expect(admin.getByRole('region', { name: 'Arrivo degli eroi a Waterdeep' }).getByRole('link', { name: 'Bartolo Pancia' })).toBeVisible();
+	await axe(admin, 'cronologia linea, evento scelto');
+
+	// Zoom e panoramica; «Tutto» torna a mostrare l'intera cronologia.
+	const all = admin.getByRole('button', { name: 'Tutto' });
+	await expect(all).toHaveAttribute('aria-pressed', 'true');
+	await admin.getByRole('button', { name: 'Avvicina' }).click();
+	await expect(all).toHaveAttribute('aria-pressed', 'false');
+	await expect(admin.getByRole('slider', { name: 'Panoramica della cronologia' })).toHaveAttribute('aria-valuetext', /^Al centro: .*\d+ DR$/);
+	await all.click();
+	await expect(all).toHaveAttribute('aria-pressed', 'true');
+
+	// Doppio clic in un punto vuoto: il modulo per aggiungere parte con quella data.
+	const box = (await line.boundingBox())!;
+	await line.dblclick({ position: { x: 8, y: box.height - 10 } });
+	await expect(admin.getByLabel('Titolo')).toBeFocused();
+	await expect(admin.getByLabel('Anno')).toHaveValue(/^\d+$/);
+	await admin.getByText('Aggiungi un evento').click();
+
+	// Ricerca e filtri, nell'elenco: la vista cambia senza ricaricare la pagina.
+	await admin.getByRole('link', { name: 'Elenco' }).click();
+	await expect(admin).toHaveURL(/\?view=list$/);
+	await admin.getByLabel('Cerca negli eventi').fill('drannor');
+	await expect(items).toHaveCount(1);
+	await expect(admin.getByText('1 evento su 3')).toBeVisible();
+	await admin.getByRole('button', { name: 'Togli ricerca e filtri' }).click();
+	await expect(items).toHaveCount(3);
+	const withPage = admin.getByRole('button', { name: 'Con pagina' });
+	await withPage.click();
+	await expect(withPage).toHaveAttribute('aria-pressed', 'true');
+	await expect(items).toHaveCount(1);
+	await expect(items.first()).toContainText('Arrivo degli eroi a Waterdeep');
+	await withPage.click();
+	await expect(items).toHaveCount(3);
+
+	// La matita apre il modulo sul posto: si salva senza lasciare la cronologia.
+	await items.first().getByRole('link', { name: 'Modifica: Caduta di Myth Drannor' }).click();
+	await expect(items.first().getByLabel('Titolo')).toHaveValue('Caduta di Myth Drannor');
+	await expect(items.first().getByLabel('Data approssimativa')).toHaveValue('circa 800 anni fa');
+	await axe(admin, 'cronologia, modifica sul posto');
+	await items.first().getByLabel('Descrizione').fill('Gli elfi lasciano la città.');
+	await items.first().getByRole('button', { name: 'Salva' }).click();
+	await expect(admin.getByText('Evento salvato.')).toBeVisible();
+	await expect(admin).toHaveURL(/\/wiki\/cronologia-del-mondo/);
+	await expect(items.first()).toContainText('Gli elfi lasciano la città.');
+	await expect(items.first().getByRole('link', { name: 'Modifica: Caduta di Myth Drannor' })).toBeFocused();
+
+	// Su uno schermo stretto la linea lascia il posto all'elenco.
+	await admin.setViewportSize({ width: 390, height: 800 });
+	await admin.goto('/wiki/cronologia-del-mondo?view=line');
+	await expect(items.first()).toBeVisible();
+	await expect(admin.getByRole('region', { name: 'Linea del tempo' })).toHaveCount(0);
+	await axe(admin, 'cronologia, schermo stretto');
+	await admin.setViewportSize({ width: 1280, height: 720 });
 
 	// L'evento compare anche nella pagina collegata.
 	await admin.goto('/wiki/locanda-del-grifone');
@@ -570,6 +640,16 @@ test('resoconto di sessione nella cronologia della campagna', async () => {
 	await expect(ev.getByRole('link', { name: 'Sessione 1: il Grifone' })).toBeVisible();
 	await expect(ev).toContainText('Sessione');
 	await axe(admin, 'cronologia campagna');
+
+	// Si sceglie l'ordine: per data di gioco (i mesi) o per data nel mondo (gli anni).
+	await expect(admin.getByRole('heading', { level: 2, name: 'ottobre 2026' })).toBeVisible();
+	await admin.getByRole('button', { name: 'Data nel mondo' }).click();
+	await expect(admin.getByRole('heading', { level: 2, name: '1491 DR' })).toBeVisible();
+	await admin.getByRole('button', { name: 'Sessioni' }).click();
+	await expect(ev).toContainText('Sessione 1: il Grifone');
+	await admin.getByRole('link', { name: 'Linea del tempo' }).click();
+	await expect(admin.getByRole('region', { name: 'Linea del tempo' }).getByRole('button', { name: /Sessione 1: il Grifone/ })).toBeVisible();
+	await axe(admin, 'cronologia campagna, linea');
 });
 
 test('una cronologia nuova è una pagina con i suoi eventi', async () => {

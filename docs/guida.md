@@ -184,7 +184,12 @@ Una cronologia è una pagina (Nuova pagina › «Nuova cronologia»), e se ne fa
 - **del mondo**: la storia in ordine di data, scritta dal Master (la wiki nasce con la «Cronologia del mondo»);
 - **della campagna**: cosa è successo al tavolo, in ordine di data di gioco. Anche i giocatori aggiungono eventi, e i **resoconti di sessione** entrano da soli (la wiki nasce con la «Cronologia della campagna»).
 
-Gli eventi si vedono in elenco o sulla linea del tempo.
+Gli eventi si vedono in due modi:
+
+- **Elenco**: l'anno a sinistra (nella cronologia della campagna il mese di gioco), i salti lunghi segnati («≈ 318 anni») e la riga «Oggi». Con molti anni, «Vai a» porta a quello che cerchi.
+- **Linea del tempo**: gli eventi in scala, su più corsie; i salti lunghi si accorciano e dicono quanto coprono. Lo zoom va con − e +, con Ctrl + rotella o con due dita, e «Tutto» mostra l'intera cronologia; si trascina per spostarsi, e la panoramica in alto porta in un punto. Scelto un evento, anche con le frecce, sotto la linea compare tutto, con Precedente e Successivo. Un doppio clic in un punto vuoto apre «Aggiungi un evento» con quella data. Sul telefono, o dove la linea non ci sta, si vede l'elenco.
+
+In tutte e due si cerca nel testo e si filtra: con una pagina collegata, Solo Master, sessioni. Nella cronologia della campagna si sceglie l'ordine: data di gioco o data nel mondo. La matita modifica l'evento sul posto, dove c'è anche «Elimina l'evento»; l'icona del collegamento copia l'indirizzo dell'evento.
 
 Il **calendario** può essere gregoriano, Harptos (Forgotten Realms), semplice o inventato (mesi, feste, anni bisestili, ere, «oggi nel mondo»).
 

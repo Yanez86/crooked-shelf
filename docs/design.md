@@ -143,7 +143,8 @@ Tutto ciò che si scrive è una pagina, nell'albero a sinistra e all'indirizzo `
 - **Calendario personalizzabile**: nomi e durata dei mesi, giorni della settimana, ere, feste, lune. Calendari preimpostati (gregoriano, Harptos dei Forgotten Realms come esempio).
 - Eventi con data (anche approssimata: "circa 300 anni fa"), descrizione, pagine collegate, visibilità.
 - I **resoconti di sessione** aggiungono in automatico una voce alle cronologie della campagna (data reale + data nel mondo).
-- Vista a linea orizzontale e vista elenco (più accessibile).
+- Vista elenco (più accessibile: l'anno a sinistra, i salti lunghi segnati, la riga «Oggi») e linea orizzontale in scala: corsie per gli eventi vicini, salti oltre il 60% dello spazio visibile accorciati e segnati, zoom (pulsanti, Ctrl + rotella, due dita), panoramica che si usa anche da tastiera, frecce tra gli eventi, dettagli sotto la linea. I conti (posizioni, corsie, tacche dei mesi e degli anni) sono in `src/lib/timelineScale.ts`. Ricerca e filtri lavorano nel browser sugli eventi che il server ha già scelto per chi guarda. Sotto i 520 px di spazio la linea lascia il posto all'elenco, che è anche la vista senza JavaScript.
+- Si aggiunge, si modifica e si elimina senza ricaricare la pagina: la modifica sul posto usa le azioni della pagina dell'evento (`/wiki/…/events/…`), che resta per chi arriva da un link o non ha JavaScript.
 
 ## 9. Bacheca appunti
 

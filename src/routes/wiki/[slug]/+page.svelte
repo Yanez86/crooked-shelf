@@ -78,7 +78,8 @@
 		</section>
 	{:else if data.timelineData}
 		<section class="board" aria-label={t('kinds.timeline')}>
-			<TimelineBoard data={data.timelineData} slug={data.page.slug} form={result} />
+			<!-- Da una cronologia all'altra ricerca, filtri e vista ripartono da capo. -->
+			{#key data.page.slug}<TimelineBoard data={data.timelineData} slug={data.page.slug} form={result} />{/key}
 		</section>
 	{:else if data.boardData}
 		<section class="board" aria-label={t('kinds.board')}>

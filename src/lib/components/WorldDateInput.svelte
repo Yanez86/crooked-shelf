@@ -8,8 +8,11 @@
 		months,
 		value = null,
 		legend,
-		required = false
-	}: { prefix: string; months: CalMonth[]; value?: WorldDate | null; legend: string; required?: boolean } = $props();
+		required = false,
+		idPrefix
+	}: { prefix: string; months: CalMonth[]; value?: WorldDate | null; legend: string; required?: boolean; idPrefix?: string } = $props();
+	// I nomi dei campi restano quelli del modulo; gli id cambiano quando nella pagina ce n'è più d'uno.
+	const id = $derived(idPrefix ?? prefix);
 	const t = getT();
 </script>
 
@@ -17,12 +20,12 @@
 	<legend>{legend}</legend>
 	<div class="parts">
 		<div class="field">
-			<label for="{prefix}Year">{t('calendar.year')}</label>
-			<input id="{prefix}Year" name="{prefix}Year" type="number" step="1" {required} value={value?.year ?? ''} inputmode="numeric" />
+			<label for="{id}Year">{t('calendar.year')}</label>
+			<input id="{id}Year" name="{prefix}Year" type="number" step="1" {required} value={value?.year ?? ''} inputmode="numeric" />
 		</div>
 		<div class="field">
-			<label for="{prefix}Month">{t('calendar.month')}</label>
-			<select id="{prefix}Month" name="{prefix}Month">
+			<label for="{id}Month">{t('calendar.month')}</label>
+			<select id="{id}Month" name="{prefix}Month">
 				<option value="">—</option>
 				{#each months as m, i (i)}
 					<option value={i + 1} selected={value?.month === i + 1}>{m.name}</option>
@@ -30,8 +33,8 @@
 			</select>
 		</div>
 		<div class="field">
-			<label for="{prefix}Day">{t('calendar.day')}</label>
-			<input id="{prefix}Day" name="{prefix}Day" type="number" min="1" max="99" step="1" value={value?.day ?? ''} inputmode="numeric" />
+			<label for="{id}Day">{t('calendar.day')}</label>
+			<input id="{id}Day" name="{prefix}Day" type="number" min="1" max="99" step="1" value={value?.day ?? ''} inputmode="numeric" />
 		</div>
 	</div>
 	<p class="hint">{t('calendar.dateHint')}</p>

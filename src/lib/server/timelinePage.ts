@@ -7,7 +7,7 @@ import { pageChoices, resolverFor, type PageRow } from './pages.ts';
 import { renderInline } from '../content/render.ts';
 import { inlineLinks } from '../content/extract.ts';
 import { contentLabels } from './pageForm.ts';
-import { formatDate, weekday } from '../calendar.ts';
+import { dayNumber, formatDate, weekday } from '../calendar.ts';
 import { hasRule } from './rules/index.ts';
 
 /** Quello che serve per mostrare gli eventi di una pagina «cronologia». */
@@ -18,12 +18,17 @@ export function timelineView(page: PageRow, u: Viewer | null, locale: string, ur
 	const rows = listEvents(tl, u);
 	const resolve = resolverFor(rows.flatMap((r) => inlineLinks(r.description)), u);
 	const labels = contentLabels(locale);
+	const choices = u ? pageChoices(u) : [];
+	const choiceLabel = new Map(choices.map((c) => [c.id, c.label]));
 	const events = rows.map((r) => {
 		const d = r.year !== null ? { year: r.year, month: r.month, day: r.day } : null;
 		const pageOk = r.pageSlug && canView({ visibility: r.pageVisibility!, authorId: r.pageAuthor, playersCanEdit: false, hasSecret: false }, u);
+		const canEdit = canEditEvent(r, u);
 		return {
 			id: r.id,
 			title: r.title,
+			/** Posizione sulla linea del mondo: il numero del giorno nel calendario. */
+			t: d ? dayNumber(cal, d) : null,
 			html: renderInline(r.description, { resolve, labels, hasRule }),
 			when: d ? formatDate(cal, d) : null,
 			weekday: d ? weekday(cal, d) : null,
@@ -35,7 +40,11 @@ export function timelineView(page: PageRow, u: Viewer | null, locale: string, ur
 			page: pageOk ? { slug: r.pageSlug!, title: r.pageTitle! } : null,
 			visibility: r.visibility,
 			session: r.source === 'session',
-			canEdit: canEditEvent(r, u)
+			canEdit,
+			/** Per modificarlo sul posto: il testo com'è scritto e la pagina com'è nel modulo (solo a chi lo può modificare). */
+			edit: canEdit
+				? { date: d, description: r.description, page: (r.pageId && (choiceLabel.get(r.pageId) ?? (pageOk ? r.pageTitle : null))) || '' }
+				: null
 		};
 	});
 	return {
@@ -43,11 +52,15 @@ export function timelineView(page: PageRow, u: Viewer | null, locale: string, ur
 		view: url.searchParams.get('view') === 'line' ? ('line' as const) : ('list' as const),
 		events,
 		calendarName: cal.name,
+		calendar: cal,
 		months: cal.months,
 		today: cal.today ? formatDate(cal, cal.today) : null,
+		todayT: cal.today ? dayNumber(cal, cal.today) : null,
+		/** Oggi fuori dal gioco, per la data di gioco: deciso dal server, così pagina e browser sono d'accordo. */
+		todayReal: new Date().toISOString().slice(0, 10),
 		canAdd: canAdd(tl.mode, u),
 		visibilities: eventVisibilities(u),
-		pageTitles: u ? pageChoices(u).slice(0, 500).map((c) => c.label) : []
+		pageTitles: choices.slice(0, 500).map((c) => c.label)
 	};
 }
 

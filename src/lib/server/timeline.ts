@@ -80,6 +80,7 @@ export function listEvents(tl: TimelineRef, u: Viewer | null) {
 			source: ev.source,
 			visibility: ev.visibility,
 			createdBy: ev.createdBy,
+			pageId: ev.pageId,
 			pageSlug: pages.slug,
 			pageTitle: pages.title,
 			pageVisibility: pages.visibility,
