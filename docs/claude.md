@@ -63,7 +63,7 @@ Il testo delle pagine, la colonna a lato, i tag e l'ordine della barra a sinistr
 
 **Non può** eliminare pagine o cartelle, cambiare visibilità o permessi, toccare template, mappe, cronologie e bacheche, caricare file, né arrivare a impostazioni, utenti, plugin, temi o backup: per queste cose non esiste nessuno strumento. Spostare una pagina in un'altra cartella non cambia chi la vede.
 
-Il testo passa da un convertitore che riconosce un elenco chiuso di elementi (titoli, grassetto, corsivo, elenchi, citazioni, collegamenti): HTML e codice restano testo e non vengono mai eseguiti. Valgono le regole del sito: un giocatore modifica solo le pagine che può modificare nel sito.
+Il testo passa da un convertitore che riconosce un elenco chiuso di elementi (titoli, grassetto, corsivo, elenchi, citazioni, tabelle, collegamenti): HTML e codice restano testo e non vengono mai eseguiti. Valgono le regole del sito: un giocatore modifica solo le pagine che può modificare nel sito.
 
 Ogni modifica lascia una versione nella cronologia della pagina, a tuo nome: da lì si torna indietro.
 

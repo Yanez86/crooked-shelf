@@ -12,7 +12,7 @@ import { childrenOf, locate, nodeKey, type TreeNode } from '../tree.ts';
 
 const PAGE_SIZE = 100;
 const TEXT_MAX = 100_000;
-const MARKDOWN = 'Markdown: titoli, **grassetto**, *corsivo*, elenchi, citazioni, [testo](https://…), [[Titolo pagina]] per collegare le pagine, @incantesimo[Nome] per le regole.';
+const MARKDOWN = 'Markdown: titoli, **grassetto**, *corsivo*, elenchi, citazioni, tabelle (| A | B | con sotto | --- | --- |), [testo](https://…), [[Titolo pagina]] per collegare le pagine, @incantesimo[Nome] per le regole.';
 
 const TOOLS = [
 	{

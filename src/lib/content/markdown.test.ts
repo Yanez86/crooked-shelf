@@ -73,16 +73,53 @@ describe('fromMarkdown', () => {
 		expect(fromMarkdown('**forte *e storto***')[0].content?.[0].marks?.[0].type).toBe('bold');
 	});
 
+	it('tabelle: la prima riga è l\'intestazione, ogni riga ha le colonne dell\'intestazione', () => {
+		const md = 'Gli stadi:\n| Follia | Stadio |\n|---|:---:|\n| 0–4 | **Lucido** |\n| 5–9 |\n| 10 | Incrinato | in più |\n\nDopo.';
+		expect(types(md)).toEqual(['paragraph', 'table', 'paragraph']);
+		const rows = fromMarkdown(md)[1].content!;
+		const texts = rows.map((r) => r.content!.map((c) => c.content![0].content?.map((n) => n.text).join('') ?? ''));
+		expect(texts).toEqual([
+			['Follia', 'Stadio'],
+			['0–4', 'Lucido'],
+			['5–9', ''],
+			['10', 'Incrinato']
+		]);
+		expect(rows.map((r) => r.content![0].type)).toEqual(['tableHeader', 'tableCell', 'tableCell', 'tableCell']);
+		expect(rows[1].content![1].content![0].content![0].marks).toEqual([{ type: 'bold' }]);
+		expect(rows[2].content![1]).toEqual({ type: 'tableCell', content: [{ type: 'paragraph' }] });
+	});
+
+	it('tabelle: senza | ai lati, con \\| nel testo e coi | dei collegamenti', () => {
+		const [t] = fromMarkdown('A | B\n--- | ---\n[[Città di Neverwinter|la città]] | uno \\| due');
+		const [link, text] = t.content![1].content!.map((c) => c.content![0].content![0]);
+		expect(link).toMatchObject({ type: 'wikiLink', attrs: { title: 'Città di Neverwinter', label: 'la città' } });
+		expect(text.text).toBe('uno | due');
+	});
+
+	it('senza la riga dei trattini, o con colonne diverse, non è una tabella', () => {
+		expect(types('| a | b |\n| c | d |')).toEqual(['paragraph']);
+		expect(types('| a | b |\n|---|')).toEqual(['paragraph']);
+		expect(types('|\n|---|')).toEqual(['paragraph']);
+	});
+
 	it('un testo lunghissimo fatto apposta non blocca il server', () => {
 		const start = Date.now();
 		fromMarkdown('['.repeat(100_000));
 		fromMarkdown('*'.repeat(100_000));
 		fromMarkdown('> '.repeat(50_000));
+		fromMarkdown('|'.repeat(100_000));
+		fromMarkdown(`${'|a'.repeat(20)}|\n${'|-'.repeat(20)}|\n${'|\n'.repeat(50_000)}`);
 		expect(Date.now() - start).toBeLessThan(2000);
+	});
+
+	it('una tabella fatta apposta non diventa enorme', () => {
+		const [t] = fromMarkdown(`${'|a'.repeat(20)}|\n${'|-'.repeat(20)}|\n${'|\n'.repeat(50_000)}`);
+		expect(t.type).toBe('table');
+		expect(t.content!.length * 20).toBeLessThanOrEqual(10_000);
 	});
 
 	it('non crea mai nodi di testo vuoti, che l\'editor rifiuta', () => {
 		const empty = (n: { text?: string; type: string; content?: never[] }): boolean => (n.type === 'text' && !n.text) || (n.content ?? []).some(empty);
-		for (const s of ['****', '** **', '*', '> ', '# **', '- [[ ]]']) expect(fromMarkdown(s).some(empty as never)).toBe(false);
+		for (const s of ['****', '** **', '*', '> ', '# **', '- [[ ]]', '| ** | [[ ]] |\n|---|---|\n| | ** |']) expect(fromMarkdown(s).some(empty as never)).toBe(false);
 	});
 });

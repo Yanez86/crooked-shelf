@@ -159,11 +159,43 @@ const QUOTE = /^>\s?(.*)$/;
 const paragraph = (s: string): DocNode => ({ type: 'paragraph', content: inlineNodes(s) });
 const list = (type: string, items: string[]): DocNode => ({ type, content: items.map((s) => ({ type: 'listItem', content: [paragraph(s)] })) });
 
+const DELIMITER = /^:?-+:?$/;
+/** Oltre, una tabella si ferma: il testo arriva da fuori, e ogni riga si allarga fino alle colonne dell'intestazione. */
+const TABLE_CELLS = 10_000;
+
+// Un | divide le celle, ma non quello scritto \| né quello di [[Pagina|testo]] e @regola[Nome|testo].
+const CELL_BAR = new RegExp(`${INLINE_LINK.source}|\\\\\\||\\|`, 'g');
+
+/** Le celle di una riga di tabella; i | ai lati sono facoltativi. */
+function cells(line: string): string[] {
+	const bars = [...line.matchAll(CELL_BAR)].filter((m) => m[0] === '|').map((m) => m.index);
+	if (bars[0] !== 0) bars.unshift(-1);
+	if (bars.at(-1) !== line.length - 1) bars.push(line.length);
+	return bars.slice(1).map((b, k) => line.slice(bars[k] + 1, b).trim().replace(/\\\|/g, '|'));
+}
+
+/** Le colonne della tabella che comincia alla riga i (l'intestazione e sotto | --- | :---: |), 0 se lì non comincia una tabella. */
+function tableAt(lines: string[], i: number): number {
+	if (!lines[i]?.includes('|') || !lines[i + 1]?.includes('|')) return 0;
+	const width = cells(lines[i]).length;
+	const marks = cells(lines[i + 1]);
+	return width <= TABLE_CELLS && marks.length === width && marks.every((c) => DELIMITER.test(c)) ? width : 0;
+}
+
+/** Come nell'editor: la prima riga è l'intestazione, e ogni riga ha tante celle quante l'intestazione (le altre si perdono). */
+function table(rows: string[][], width: number): DocNode {
+	const cell = (type: string, s: string): DocNode => ({ type, content: [s ? paragraph(s) : { type: 'paragraph' }] });
+	return {
+		type: 'table',
+		content: rows.map((r, j) => ({ type: 'tableRow', content: Array.from({ length: width }, (_, k) => cell(j ? 'tableCell' : 'tableHeader', r[k] ?? '')) }))
+	};
+}
+
 /**
  * Markdown scritto da fuori (Claude) in blocchi dell'editor. Può nascere solo ciò che è qui:
  * mai segreti, immagini o HTML, che resta testo. I livelli dei titoli sono quelli dell'editor.
  */
-// ponytail: tabelle e blocchi di codice restano testo, aggiungerli se Claude ne ha bisogno.
+// ponytail: i blocchi di codice restano testo, aggiungerli se Claude ne ha bisogno.
 export function fromMarkdown(text: string): DocNode[] {
 	const lines = text.split(/\r?\n/).map((l) => l.trim());
 	const out: DocNode[] = [];
@@ -188,9 +220,15 @@ export function fromMarkdown(text: string): DocNode[] {
 		else if (QUOTE.test(line)) {
 			const quote = run(QUOTE).filter(Boolean).map(paragraph);
 			if (quote.length) out.push({ type: 'blockquote', content: quote });
+		} else if (tableAt(lines, i)) {
+			const width = tableAt(lines, i);
+			const rows = [cells(lines[i])];
+			i += 2;
+			while (lines[i]?.includes('|') && (rows.length + 1) * width <= TABLE_CELLS) rows.push(cells(lines[i++]));
+			out.push(table(rows, width));
 		} else {
 			const para: string[] = [];
-			while (lines[i] && ![HEADING, RULE, BULLET, NUMBER, QUOTE].some((re) => re.test(lines[i]))) para.push(lines[i++]);
+			while (lines[i] && ![HEADING, RULE, BULLET, NUMBER, QUOTE].some((re) => re.test(lines[i])) && !tableAt(lines, i)) para.push(lines[i++]);
 			out.push(paragraph(para.join(' ')));
 		}
 	}

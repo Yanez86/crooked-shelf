@@ -309,7 +309,7 @@ test('Claude legge la campagna col token del Master, e solo il Master lo crea', 
 	await expect(admin.getByLabel('Claude può anche scrivere')).toBeChecked();
 	expect((await mcp(master, 'list_pages', {})).status()).toBe(401);
 
-	const text2 = '## Riassunto\n\nSi parla di [[Bartolo Pancia]] e di @incantesimo[Fireball].\n\n- primo fatto\n- secondo fatto\n\n<script>window.preso = 1</script>';
+	const text2 = '## Riassunto\n\nSi parla di [[Bartolo Pancia]] e di @incantesimo[Fireball].\n\n- primo fatto\n- secondo fatto\n\n| Follia | Stadio |\n|---|---|\n| 0–4 | **Lucido** |\n\n<script>window.preso = 1</script>';
 	const made = JSON.parse(await text(writer, 'create_page', { title: 'Scritta da Claude', text: text2, visibility: 'players' }));
 	expect(made.slug).toBe('scritta-da-claude');
 	await text(writer, 'append_to_page', { slug: made.slug, text: 'Nota del Master', secret: true });
@@ -323,15 +323,19 @@ test('Claude legge la campagna col token del Master, e solo il Master lo crea', 
 	await expect(content.getByRole('link', { name: 'Bartolo Pancia' })).toHaveAttribute('href', '/wiki/bartolo-pancia');
 	await expect(content.locator('.secret')).toContainText('Nota del Master');
 	await expect(content).toContainText('fatto corretto');
+	await expect(content.getByRole('columnheader', { name: 'Stadio' })).toBeVisible();
+	await expect(content.getByRole('cell', { name: 'Lucido' }).locator('strong')).toBeVisible();
 	await expect(content).toContainText('<script>window.preso = 1</script>');
 	expect(await admin.evaluate(() => (window as unknown as { preso?: number }).preso)).toBeUndefined();
 
 	// L'editor del sito apre e salva quello che ha scritto Claude.
 	await admin.goto(`/wiki/${made.slug}/edit`);
 	await expect(admin.locator('.editor-content')).toContainText('fatto corretto');
+	await expect(admin.locator('.editor-content table')).toContainText('Lucido');
 	await admin.getByRole('button', { name: 'Salva' }).click();
 	await admin.waitForURL(`**/wiki/${made.slug}`);
 	await expect(admin.locator('.content .secret')).toContainText('Nota del Master');
+	await expect(admin.locator('.content').getByRole('columnheader', { name: 'Stadio' })).toBeVisible();
 	expect(errors).toEqual([]);
 
 	await admin.goto(`/wiki/${made.slug}/history`);

@@ -142,6 +142,17 @@ describe('scrittura', () => {
 		expect(pageMeta(page).tags.map((t) => t.name)).toEqual(['Mare']);
 	});
 
+	it('le tabelle in Markdown diventano tabelle, anche nei segreti', () => {
+		write(dm, 'create_page', { title: 'Follia', text: 'Stadi:\n\n| Follia | Stadio |\n|---|---|\n| 0–4 | **Lucido** |' });
+		const html = call(dm, 'read_page', { slug: 'follia' }).text;
+		expect(html).toContain('<table>');
+		expect(html).toContain('<strong>Lucido</strong>');
+		expect(html).not.toContain('|---|');
+		write(dm, 'append_to_page', { slug: 'locanda', text: '| Chi | Cosa |\n| --- | --- |\n| Oste | Spia |', secret: true });
+		expect(call(dm, 'read_page', { slug: 'locanda' }).text).toContain('Spia');
+		expect(call(alice, 'read_page', { slug: 'locanda' }).text).not.toContain('Spia');
+	});
+
 	it('HTML e script restano testo: nella pagina non arriva nulla di eseguibile', () => {
 		write(dm, 'create_page', { title: 'Trappola', text: '<script>alert(1)</script>\n\n[x](javascript:alert(1)) <img src=x onerror=alert(1)>' });
 		const html = call(dm, 'read_page', { slug: 'trappola' }).text;
