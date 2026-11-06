@@ -27,9 +27,9 @@ export interface SessionUser {
 	displayName: string;
 	/** Il ruolo dell'account; hooks.server.ts lo sostituisce col ruolo nella campagna (vedi roleIn). */
 	role: Role;
-	/** L'account è Admin: resta vero anche quando `role` diventa il ruolo nella campagna. */
+	/** L'account è l'Admin: resta vero anche quando `role` diventa il ruolo nella campagna. */
 	admin: boolean;
-	/** Il ruolo dell'account (admin, master, player), che non cambia con la campagna: decide la quota di spazio. */
+	/** Il ruolo dell'account, che non cambia con la campagna: `admin` per l'Admin (uno solo), `player` per tutti gli altri. */
 	accountRole: Role;
 	prefs: Record<string, string>;
 	/** Nome di un'icona delle pagine; senza, la sagoma di una persona. */
@@ -93,13 +93,16 @@ export async function createUser(input: NewUser & { password: string }): Promise
 	return insertUser(input, await hashPassword(input.password));
 }
 
-/** Registra un utente da invito: invito controllato e consumato nello stesso passaggio. */
+/**
+ * Registra un utente da invito: invito controllato e consumato nello stesso passaggio. L'account è sempre normale:
+ * l'Admin è uno solo, e Master lo si è nelle campagne che si tengono.
+ */
 export async function redeemInvite(token: string, input: Omit<NewUser, 'role'> & { password: string }): Promise<number | null> {
 	const passwordHash = await hashPassword(input.password);
 	return getDb().transaction(() => {
 		const inv = findInvite(token);
 		if (!inv) return null;
-		const id = insertUser({ ...input, role: inv.role }, passwordHash);
+		const id = insertUser({ ...input, role: 'player' }, passwordHash);
 		if (inv.campaignId) addMember(inv.campaignId, id);
 		markInviteUsed(inv.id, id);
 		return id;
@@ -314,12 +317,13 @@ export function validateApiToken(header: string | null): { user: SessionUser; ca
 
 // --- Inviti ---
 
-export function createInvite(role: Role, createdBy: number, days: number, campaignId: number | null): string {
+/** Un invito crea un account normale; con `campaignId` lo fa entrare in quella campagna, come giocatore. */
+export function createInvite(createdBy: number, days: number, campaignId: number | null): string {
 	const token = newToken();
 	const now = Date.now();
 	getDb()
 		.insert(invites)
-		.values({ tokenHash: sha256(token), role, createdBy, createdAt: now, expiresAt: now + days * DAY, campaignId })
+		.values({ tokenHash: sha256(token), role: 'player', createdBy, createdAt: now, expiresAt: now + days * DAY, campaignId })
 		.run();
 	return token;
 }
@@ -337,7 +341,6 @@ export function activeInvites(campaignId?: number) {
 	return getDb()
 		.select({
 			id: invites.id,
-			role: invites.role,
 			createdAt: invites.createdAt,
 			expiresAt: invites.expiresAt,
 			by: users.displayName,

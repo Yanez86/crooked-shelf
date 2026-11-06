@@ -4,23 +4,32 @@
 	import FormError from './FormError.svelte';
 	import FormOk from './FormOk.svelte';
 	import RelTime from './RelTime.svelte';
-	import type { Role } from '../roles.ts';
 
 	interface Invite {
 		id: number;
-		role: Role;
 		expiresAt: number;
 		by: string | null;
 		campaign: string | null;
 	}
 
-	/** Senza `roles` si invitano solo giocatori, nella campagna della pagina. `query` si aggiunge alle azioni, es. la scheda in cui tornare. */
+	/**
+	 * Ogni invito crea un account normale (l'Admin è uno solo; Master e giocatori si è nelle campagne). Senza `site` si invitano
+	 * giocatori nella campagna della pagina; con `site` (Amministrazione) si sceglie se entrano in `campaign`, quella in cui si è,
+	 * o in nessuna. `query` si aggiunge alle azioni, es. la scheda in cui tornare.
+	 */
 	let {
 		invites,
-		roles = null,
+		site = false,
+		campaign = null,
 		form,
 		query = ''
-	}: { invites: Invite[]; roles?: Role[] | null; form: { error?: string; ok?: string; link?: string; role?: Role } | null | undefined; query?: string } = $props();
+	}: {
+		invites: Invite[];
+		site?: boolean;
+		campaign?: string | null;
+		form: { error?: string; ok?: string; link?: string; campaign?: string | null } | null | undefined;
+		query?: string;
+	} = $props();
 	const t = getT();
 	const locale = $derived(page.data.locale as string);
 	let copied = $state(false);
@@ -40,7 +49,7 @@
 
 {#if form?.link}
 	<div class="alert alert-ok" role="status">
-		<p><strong>{t('admin.inviteCreated', { role: t('roles.' + form.role) })}</strong></p>
+		<p><strong>{form.campaign ? t('admin.inviteCreatedFor', { campaign: form.campaign }) : t('admin.inviteCreated')}</strong></p>
 		<p>{t('admin.inviteOnce')}</p>
 		<label for="invite-link">{t('admin.inviteLink')}</label>
 		<div class="link-row">
@@ -52,11 +61,12 @@
 {/if}
 
 <form method="post" action="?/create{query}" class="card inline-form">
-	{#if roles}
+	{#if site && campaign}
 		<div class="field">
-			<label for="role">{t('admin.role')}</label>
-			<select id="role" name="role">
-				{#each roles as r (r)}<option value={r} selected={r === 'player'}>{t('roles.' + r)}</option>{/each}
+			<label for="where">{t('admin.inviteWhere')}</label>
+			<select id="where" name="where">
+				<option value="campaign" selected>{t('admin.inviteInCampaign', { campaign })}</option>
+				<option value="none">{t('admin.inviteNoCampaign')}</option>
 			</select>
 		</div>
 	{/if}
@@ -77,8 +87,7 @@
 		<table class="data">
 			<thead>
 				<tr>
-					<th scope="col">{t('admin.role')}</th>
-					{#if roles}<th scope="col">{t('admin.campaign')}</th>{/if}
+					{#if site}<th scope="col">{t('admin.campaign')}</th>{/if}
 					<th scope="col">{t('admin.createdBy')}</th>
 					<th scope="col">{t('admin.expiresAt')}</th>
 					<th scope="col" class="col-end"><span class="visually-hidden">{t('common.actions')}</span></th>
@@ -87,8 +96,7 @@
 			<tbody>
 				{#each invites as i (i.id)}
 					<tr>
-						<td>{t('roles.' + i.role)}</td>
-						{#if roles}<td>{i.campaign ?? '—'}</td>{/if}
+						{#if site}<td>{i.campaign ?? '—'}</td>{/if}
 						<td>{i.by ?? '—'}</td>
 						<td><RelTime ts={i.expiresAt} {locale} /></td>
 						<td class="col-end">

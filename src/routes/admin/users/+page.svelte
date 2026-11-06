@@ -10,6 +10,8 @@
 	let { data, form }: PageProps = $props();
 	const t = getT();
 	const me = $derived(page.data.user?.id);
+	// A chi passare l'amministrazione: gli altri account attivi.
+	const heirs = $derived(data.users.filter((u) => u.id !== me && !u.disabled));
 </script>
 
 <svelte:head><title>{t('admin.users')}</title></svelte:head>
@@ -34,7 +36,6 @@
 		<thead>
 			<tr>
 				<th scope="col">{t('admin.user')}</th>
-				<th scope="col">{t('admin.role')}</th>
 				<th scope="col">{t('admin.campaignLimit')}</th>
 				<th scope="col" class="col-center">{t('admin.disabled')}</th>
 				<th scope="col" class="col-end"><span class="visually-hidden">{t('common.actions')}</span></th>
@@ -46,17 +47,13 @@
 					<th scope="row">
 						<span class="who">
 							<UserIcon icon={u.icon} avatar={u.avatar} />
-							<span>{u.displayName}{#if u.id === me}{' '}<span class="badge">{t('admin.you')}</span>{/if}<br /><span class="hint">@{u.username}</span></span>
+							<span>
+								{u.displayName}{#if u.admin}{' '}<span class="badge">{t('roles.admin')}</span>{/if}{#if u.id === me}{' '}<span class="badge">{t('admin.you')}</span>{/if}<br /><span class="hint">@{u.username}</span>
+							</span>
 						</span>
 					</th>
 					<td>
 						<form id="user-{u.id}" method="post" action="?/update"><input type="hidden" name="id" value={u.id} /></form>
-						<label class="visually-hidden" for="role-{u.id}">{t('admin.role')}: {u.username}</label>
-						<select id="role-{u.id}" name="role" form="user-{u.id}">
-							{#each data.roles as r (r)}<option value={r} selected={u.role === r}>{t('roles.' + r)}</option>{/each}
-						</select>
-					</td>
-					<td>
 						<!-- Quante ne tiene, e fino a quante ne può creare da sé. -->
 						<span class="limit">
 							<span aria-hidden="true">{u.held} /</span>
@@ -85,9 +82,31 @@
 
 <p class="hint">{t('admin.campaignLimitHint')}</p>
 
+<h3>{t('admin.transferTitle')}</h3>
+<p>{t('admin.transferIntro')}</p>
+{#if heirs.length}
+	<!-- _top: anche dal popup dell'amministrazione, che dopo non è più sua. -->
+	<form method="post" action="?/transfer" target="_top" class="card inline-form">
+		<div class="field">
+			<label for="transfer-to">{t('admin.transferTo')}</label>
+			<select id="transfer-to" name="id" required>
+				{#each heirs as u (u.id)}<option value={u.id}>{u.displayName} (@{u.username})</option>{/each}
+			</select>
+		</div>
+		<label class="choice field">
+			<input type="checkbox" name="confirm" required />
+			<span>{t('admin.transferConfirm')}</span>
+		</label>
+		<div class="field"><button class="btn" type="submit">{t('admin.transferSubmit')}</button></div>
+	</form>
+{:else}
+	<p class="muted">{t('admin.transferNone')}</p>
+{/if}
+
 <h3>{t('admin.rolesTitle')}</h3>
+<p>{t('admin.rolesIntro')}</p>
 <dl class="card roles">
-	{#each data.roles as r (r)}
+	{#each ['admin', 'master', 'player'] as r (r)}
 		<dt>{t('roles.' + r)}</dt>
 		<dd>{t('roles.' + r + 'Hint')}</dd>
 	{/each}
@@ -123,6 +142,15 @@
 	}
 	.limit input {
 		width: 4.5rem;
+	}
+	.inline-form {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.75rem 1rem;
+		align-items: flex-end;
+	}
+	.inline-form .field {
+		margin-bottom: 0;
 	}
 	.roles {
 		display: grid;

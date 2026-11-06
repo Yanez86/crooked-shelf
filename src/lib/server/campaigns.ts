@@ -1,5 +1,5 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
-import { and, asc, eq, inArray, or, sql } from 'drizzle-orm';
+import { and, asc, eq, or, sql } from 'drizzle-orm';
 import type { SQLiteColumn } from 'drizzle-orm/sqlite-core';
 import type { Cookies } from '@sveltejs/kit';
 import { getDb, getSqlite, schema } from './db/index.ts';
@@ -53,12 +53,15 @@ export function campaignsFor(u: Viewer | null, visitors: boolean): CampaignRow[]
 /** Il ruolo in una campagna: Master è solo chi la tiene, tutti gli altri (Admin compresi) sono giocatori. */
 export const roleIn = (c: CampaignRow, u: Viewer): Role => (c.masterId === u.id ? 'master' : 'player');
 
-/** Chi può tenere una campagna: gli account attivi da Master o Admin, e chi ne tiene già una (per non cambiarlo di nascosto salvando il nome). */
+/**
+ * Chi può tenere una campagna: ogni account attivo (Master non è un ruolo dell'account: lo si è nelle campagne che si tengono),
+ * e chi ne tiene già una (per non cambiarlo di nascosto salvando il nome).
+ */
 export const masterCandidates = () =>
 	getDb()
 		.select({ id: users.id, displayName: users.displayName, username: users.username })
 		.from(users)
-		.where(or(and(inArray(users.role, ['master', 'admin']), eq(users.disabled, false)), sql`${users.id} IN (SELECT ${campaigns.masterId} FROM ${campaigns})`))
+		.where(or(eq(users.disabled, false), sql`${users.id} IN (SELECT ${campaigns.masterId} FROM ${campaigns})`))
 		.orderBy(asc(users.displayName))
 		.all();
 

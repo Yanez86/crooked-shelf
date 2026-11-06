@@ -110,7 +110,7 @@
 
 		<h2>{t('admin.invites')}</h2>
 		<p>{t('campaign.inviteIntro')}</p>
-		<Invites invites={m.invites} form={form?.section === 'players' && 'link' in form ? { link: form.link, role: form.role } : null} query="&tab=players" />
+		<Invites invites={m.invites} form={form?.section === 'players' && 'link' in form ? { link: form.link, campaign: form.campaign } : null} query="&tab=players" />
 
 		{#if m.sheets}
 			<h2 id="sheets-title">{t('sheets.templateTitle')}</h2>

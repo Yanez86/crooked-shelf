@@ -11,4 +11,4 @@
 
 <h2>{t('admin.invites')}</h2>
 <p>{t('admin.invitesIntro')}</p>
-<Invites invites={data.invites} roles={data.roles} {form} />
+<Invites invites={data.invites} site campaign={data.campaign} {form} />

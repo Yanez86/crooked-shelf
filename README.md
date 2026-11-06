@@ -8,7 +8,7 @@ A self-hosted wiki for tabletop RPG campaigns, usable with any system.
 
 You install it once on a computer (PC, Raspberry Pi or VPS) and everyone uses it from the browser, phone included.
 
-- **Roles**: the Admin runs the site, the Master runs a campaign, Players write and read. Access by invitation only.
+- **Roles**: one Admin runs the site; in each campaign whoever runs it is the Master and the invited are the Players. Access by invitation only.
 - **Campaigns**: one installation, many campaigns. Each one has its own Master, players and pages. Everyone can create their own, up to a limit set by the Admin, and manages them all from the Campaigns panel.
 - **Pages**: block editor with Markdown, `[[Page]]` links, cover, icon, tags and search. Start blank or from a **template**.
 - **Master's secrets**: the Master hides single blocks with the eye icon. Players never receive them, not even in search, versions or exports, and can still edit the page.
@@ -64,7 +64,7 @@ Una wiki self-hosted per campagne di giochi di ruolo da tavolo, usabile con ogni
 
 La installi una volta su un computer (PC, Raspberry Pi o VPS) e tutti la usano dal browser, anche dal telefono.
 
-- **Ruoli**: l'Admin gestisce il sito, il Master una campagna, i Giocatori leggono e scrivono. Si entra solo su invito.
+- **Ruoli**: l'Admin, uno solo, gestisce il sito; in ogni campagna chi la tiene è il Master e gli invitati sono i Giocatori. Si entra solo su invito.
 - **Campagne**: una installazione, più campagne. Ognuna ha il suo Master, i suoi giocatori e le sue pagine. Ognuno può crearne di sue, fino al limite scelto dall'Admin, e le gestisce tutte dal pannello Campagne.
 - **Pagine**: editor a blocchi con Markdown, collegamenti `[[Pagina]]`, copertina, icona, tag e ricerca. Si parte da una pagina bianca o da un **template**.
 - **Segreti del Master**: il Master oscura un singolo blocco con l'occhio. Ai giocatori non arriva mai, neanche nella ricerca, nelle versioni o nelle esportazioni, e possono comunque modificare la pagina.

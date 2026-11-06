@@ -83,7 +83,7 @@ export const actions: Actions = {
 		const days = Number((await request.formData()).get('days'));
 		if (![1, 7, 30].includes(days)) return fail(400, { section: 'players', error: 'errors.generic' });
 		audit('invite_created', { userId: me.id, ip: locals.ip }, `player ${campaign.name}`);
-		return { section: 'players', link: `${url.origin}/invite/${createInvite('player', me.id, days, campaign.id)}`, role: 'player' as const };
+		return { section: 'players', link: `${url.origin}/invite/${createInvite(me.id, days, campaign.id)}`, campaign: campaign.name };
 	},
 	revoke: async ({ request, locals, params }) => {
 		const { campaign } = mine(locals, params);

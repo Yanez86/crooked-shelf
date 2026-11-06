@@ -616,7 +616,8 @@ test('ricerca', async () => {
 
 test('invito di un giocatore', async ({ browser }) => {
 	await admin.goto('/admin/invites');
-	await admin.getByLabel('Ruolo').selectOption('player');
+	// Niente ruolo da scegliere: l'invito crea un account, qui per giocare nella campagna in cui si è.
+	await admin.getByLabel('Dove entra').selectOption('campaign');
 	await admin.getByRole('button', { name: 'Crea invito' }).click();
 	inviteLink = await admin.getByLabel('Link di invito').inputValue();
 	expect(inviteLink).toMatch(/\/invite\/[\w-]{20,}$/);
@@ -625,7 +626,7 @@ test('invito di un giocatore', async ({ browser }) => {
 	const ctx = await browser.newContext({ locale: 'it-IT' });
 	const p = await ctx.newPage();
 	await p.goto(inviteLink);
-	await expect(p.getByText('invitato come Giocatore')).toBeVisible();
+	await expect(p.getByText('invitato a giocare in')).toBeVisible();
 	await p.getByLabel('Nome utente').fill(PLAYER.user);
 	await p.getByLabel('Nome visualizzato').fill('Alice');
 	await p.getByLabel('Password', { exact: true }).fill(PLAYER.pass);

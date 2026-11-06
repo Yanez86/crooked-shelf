@@ -31,12 +31,14 @@ Wiki self-hosted per creare, curare e registrare campagne di giochi di ruolo da 
 ### Ruoli
 | Ruolo | Cosa può fare |
 |---|---|
-| **Admin** | Il sito: impostazioni, utenti, campagne, temi, plugin, backup, esportazioni. Nelle campagne nessun potere in più (vedi sotto) |
+| **Admin** | Uno solo. Il sito: impostazioni, utenti, campagne, temi, plugin, backup, esportazioni. Nelle campagne nessun potere in più (vedi sotto) |
 | **Master** | Crea e modifica tutte le pagine, vede e scrive i contenuti segreti, gestisce mappe, cronologie e template |
 | **Giocatore** | Legge le pagine per giocatori, modifica quelle consentite (es. il proprio personaggio, i resoconti), usa la bacheca |
 | **Visitatore** | Solo lettura delle pagine pubbliche (accesso anonimo attivabile o disattivabile) |
 
-Un utente può essere Admin e Master insieme: Admin vale per il sito, Master solo nella campagna che tiene. Un Admin che non tiene una campagna ci entra solo se è invitato, da giocatore, e non ne vede i segreti. Non può nominarsi Master di una campagna che esiste già (`canAppoint`): glielo fa un altro Admin, così i segreti non se li apre da solo; una campagna nuova, che segreti non ne ha, la può tenere.
+Un utente può essere Admin e Master insieme: Admin vale per il sito, Master solo nella campagna che tiene. Un Admin che non tiene una campagna ci entra solo se è invitato, da giocatore, e non ne vede i segreti. Non può nominarsi Master di una campagna che esiste già (`canAppoint`), così i segreti non se li apre da solo; una campagna nuova, che segreti non ne ha, la può tenere.
+
+Master e Giocatore non sono ruoli dell'account. L'Admin è uno solo: l'indice `users_one_admin` non ne accetta un secondo, e Amministrazione › Utenti (`transfer`) passa l'amministrazione a un altro account attivo, togliendola a chi la dà nella stessa transazione.
 
 ### Visibilità
 Ogni **pagina** e ogni **singolo blocco** ha una visibilità:
@@ -70,7 +72,7 @@ Per questo `canEdit` non guarda più i segreti: un giocatore modifica anche le p
 - `pages`, `categories`, `tags`, `tree_dividers` e `resources` hanno `campaign_id`; le tabelle legate a una pagina (mappe, cronologie, bacheche, versioni, collegamenti) dipendono dalla pagina. Indirizzi, nomi delle cartelle e dei tag sono unici nella campagna, altrimenti un collegamento rosso creerebbe `porto-2` e resterebbe rosso. I file restano dell'installazione: l'indirizzo casuale non si indovina.
 - Sito: nome, lingua, visitatori, temi e plugin restano unici per l'installazione.
 - **Campagna della richiesta**: `hooks.server.ts` la sceglie tra quelle accessibili (cookie `cs_campaign`, altrimenti la prima) e fa girare la richiesta dentro `inCampaign`. Le query usano `ofCampaign`/`pageInCampaign`; `visibleTo` lo fa da sé. Gli indirizzi non contengono la campagna: `/wiki/porto` è la pagina della campagna corrente.
-- **Ruolo nella campagna**: l'hook sostituisce `locals.user.role` con `roleIn`: Master solo chi tiene la campagna, tutti gli altri giocatori, Admin compresi; che l'account sia Admin resta in `locals.user.admin` e serve solo all'amministrazione. Così `isMaster` e gli altri controlli non sanno che esistono più campagne. `users.role` dice solo cosa può essere un account: Master vuol dire che può ricevere campagne.
+- **Ruolo nella campagna**: l'hook sostituisce `locals.user.role` con `roleIn`: Master solo chi tiene la campagna, tutti gli altri giocatori, Admin compresi; che l'account sia Admin resta in `locals.user.admin` e serve solo all'amministrazione. Così `isMaster` e gli altri controlli non sanno che esistono più campagne. `users.role` dice solo se l'account è l'Admin (`admin`) o no (`player`): gli account Master e gli Admin in più li ha resi normali `oneAdminMigration`, che tiene Admin il più vecchio tra quelli attivi. Le campagne l'Admin le affida a ogni account attivo (`masterCandidates`), e gli inviti creano sempre account normali.
 - **Creare una campagna** (`/campaign`, azione `newCampaign`): ogni account, anche da giocatore o nella vista giocatore, ne crea una e ne è il Master, fino al suo limite (`users.campaign_limit`, 3 di partenza; lo cambia l'Admin in Amministrazione › Utenti). Contano le campagne di cui è Master (`campaignAllowance`), anche quelle avute dall'Admin, che da Amministrazione › Campagne ne crea per chiunque anche oltre il limite. Il controllo è sul server, nella stessa richiesta che la crea.
 - Chi ha un account ma nessuna campagna vede solo `/campaign` (le proprie campagne e una nuova), `/profile` e l'uscita.
 - **Il pannello Campagne** (`/campaign`): è dell'account, con le proprie campagne e una nuova. Le opzioni di una campagna stanno in `/campaign/<id>`, solo per il suo Master e non nella vista giocatore (`mine` in `routes/campaign/[id=id]/+page.server.ts`), anche se non è la campagna in cui si è; template e schede si leggono dentro quella campagna (`inCampaign`). Nella barra, «Impostazioni campagna» porta a quella corrente. `NO_CAMPAIGN` ha un id che non esiste: non si legge niente, e scrivere fallisce sul vincolo.

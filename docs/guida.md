@@ -4,12 +4,14 @@
 
 | Ruolo | Cosa può fare |
 |---|---|
-| **Admin** | Gestisce il sito: campagne (per chiunque, scegliendone il Master), impostazioni, utenti e quante campagne crea ognuno, inviti, temi, plugin, backup, pacchetti mondo. Nelle campagne non ha poteri in più: è Master in quelle che tiene e giocatore in quelle in cui è invitato |
+| **Admin** | È uno solo e gestisce il sito: campagne (per chiunque, scegliendone il Master), impostazioni, utenti e quante campagne crea ognuno, inviti, temi, plugin, backup, pacchetti mondo. Nelle campagne non ha poteri in più: è Master in quelle che tiene e giocatore in quelle in cui è invitato |
 | **Master** | Nella sua campagna crea e modifica tutte le pagine, scrive e vede i segreti, gestisce categorie, tag, mappe, risorse, calendario, cronologia del mondo e giocatori |
 | **Giocatore** | Legge, crea pagine, modifica le sue e quelle aperte ai giocatori, ha la sua scheda, aggiunge eventi alla cronologia della campagna, usa le bacheche |
 | **Visitatore** | Solo le pagine pubbliche, se l'Admin ha acceso l'accesso dei visitatori |
 
-Si entra con un **invito**: il Master lo crea in Impostazioni campagna › Giocatori, l'Admin in Amministrazione › Inviti. Ogni link vale una volta sola.
+Master e Giocatore non sono ruoli dell'account: li decide la campagna. Si è Master delle campagne che si tengono e giocatori in quelle in cui si è invitati, quindi la stessa persona può fare il Master in una campagna e giocare in un'altra. L'Admin è uno solo, di solito chi ha installato la wiki.
+
+Si entra con un **invito**: il Master lo crea in Impostazioni campagna › Giocatori, l'Admin in Amministrazione › Inviti (per la campagna in cui si trova, o per nessuna). Ogni link vale una volta sola.
 
 Chiunque abbia un account, anche un giocatore, può **creare le sue campagne** e farne il Master.
 
@@ -23,7 +25,7 @@ Un'installazione può contenere più campagne. Ognuna è una wiki a sé: pagine,
 - **Invitare i giocatori**: in Impostazioni campagna › Giocatori il Master crea un link. Chi non ha un account lo crea; chi lo ha entra col suo.
 - **Cambiare campagna**: dal menu del profilo, in cima, o dal pannello Campagne. La scelta resta sul dispositivo. Un collegamento a una pagina si apre nella campagna in cui ti trovi.
 - **Eliminarne una**: il Master elimina la sua da Impostazioni campagna › Generale, l'Admin qualsiasi da Amministrazione › Campagne (il pulsante rosso accanto a Salva), anche l'ultima. Il popup dice cosa sparisce e chiede di riscrivere il nome; Annulla, Esc o la X lo chiudono. Pagine, mappe, cronologie, bacheche, risorse e immagini spariscono per tutti, e tornano solo ripristinando un backup. Chi resta senza campagne può ancora accedere, e aspetta un invito o ne crea una.
-- Si è Master solo nelle proprie campagne; nelle altre si è giocatori, se invitati. Vale anche per l'Admin: entra solo dove è Master o invitato, e vede i segreti solo nelle sue. Le altre le gestisce da Amministrazione › Campagne senza entrarci, e non può nominarsi Master di una campagna che esiste già (lo fa un altro Admin); di una nuova sì.
+- Si è Master solo nelle proprie campagne; nelle altre si è giocatori, se invitati. Vale anche per l'Admin: entra solo dove è Master o invitato, e vede i segreti solo nelle sue. Le altre le gestisce da Amministrazione › Campagne senza entrarci, e non può nominarsi Master di una campagna che esiste già (ne vedrebbe i segreti); di una nuova sì.
 - Esportazione e pacchetti mondo riguardano la campagna in cui ti trovi; il backup tutta l'installazione.
 
 ## Schede giocatore
@@ -230,9 +232,9 @@ Tutta la wiki si usa da tastiera e con i lettori di schermo; i colori rispettano
 ## Amministrazione
 
 - **Impostazioni**: nome del sito, lingua predefinita, visitatori. Sotto, la **versione** installata confrontata con l'ultima su GitHub («Aggiornata» o «Non aggiornata»), coi link alle novità e a come aggiornare.
-- **Campagne**: crearle per chiunque (anche oltre il limite), sceglierne il Master, eliminarle.
-- **Utenti**: ruoli, quante campagne crea ognuno (e quante ne tiene), disattivazione e, per chi ha dimenticato la password, un link di reimpostazione (vale due giorni, una volta sola).
-- **Inviti**: link per entrare nel sito, uno per persona.
+- **Campagne**: crearle per chiunque (anche oltre il limite), sceglierne il Master tra tutti gli account, eliminarle.
+- **Utenti**: quante campagne crea ognuno (e quante ne tiene), disattivazione e, per chi ha dimenticato la password, un link di reimpostazione (vale due giorni, una volta sola). Qui non si scelgono ruoli. In fondo, **Passa l'amministrazione**: l'Admin la dà a un altro account attivo e diventa un account come gli altri, con le sue campagne.
+- **Inviti**: link per entrare nel sito, uno per persona: entra come giocatore nella campagna in cui ti trovi, o in nessuna.
 - **Temi**: copia un tema e cambia i colori; si salva solo se il testo resta leggibile. Può avere un'immagine di sfondo, dietro i riquadri, visibile sugli schermi larghi. Si esporta e importa come file (solo i colori: lo sfondo viaggia col pacchetto mondo).
 - **Plugin**: accendi e spegni i plugin installati; cliccandone uno vedi scopo, istruzioni, autore e contenuto (per crearne uno: [plugin.md](plugin.md)).
 - **Backup**: il backup completo da scaricare e quello **automatico** di ogni giorno in una cartella (anche di OneDrive, Google Drive o Dropbox), con ora, copie da tenere e una **password** facoltativa che lo cifra e non si può recuperare. Vedi [installazione.md](installazione.md#backup-automatico).

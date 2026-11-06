@@ -139,7 +139,7 @@ Va bene per provarla, non per giocarci.
 | `CS_PLUGINS_BUNDLED` | cartella dei plugin inclusi | `./plugins` |
 | `CS_UPDATE_CHECK` | `0` = non controllare su GitHub se c'è una versione nuova | — |
 | `CS_SETUP_TOKEN` | il codice della prima configurazione; senza, la wiki ne genera uno e lo scrive nei log | — |
-| `CS_UPLOAD_QUOTA_MB` | spazio per le immagini di ogni account giocatore (Master e Admin non hanno limite) | `512` |
+| `CS_UPLOAD_QUOTA_MB` | spazio per le immagini di ogni account che non tiene campagne (chi è Master di almeno una e l'Admin non hanno limite) | `512` |
 | `CS_PACK_MAX_MB` | dimensione massima, decompressa, di un pacchetto mondo da importare | `200` |
 | `CS_BACKUP_DIR` | cartella dei backup automatici, es. quella di OneDrive (vedi [Backup automatico](#backup-automatico)); deve esistere già | `<CS_DATA_DIR>/backups` |
 | `TZ` | fuso orario del tavolo, es. `Europe/Rome`: decide «oggi» e quando un appuntamento salta | quello del sistema (`docker-compose.yml`: `Europe/Rome`) |
@@ -230,9 +230,9 @@ Altri modi di portare via i dati (Amministrazione):
 
 ## Sicurezza: cosa sapere
 
-- **L'Admin possiede i dati.** Nelle campagne che non tiene non vede i segreti, ma può scaricare il backup, creare altri Admin e nominare Master: è una cortesia tra persone che si fidano, non una barriera. Dai il ruolo Admin solo a chi affideresti il server.
+- **L'Admin possiede i dati.** Nelle campagne che non tiene non vede i segreti, ma può scaricare il backup e nominare Master: è una cortesia tra persone che si fidano, non una barriera. L'Admin è uno solo: se a gestire il server sarà un altro, passagli l'amministrazione da Amministrazione › Utenti.
 - **Chi accede** lo decidono gli inviti: senza invito non ci si registra. I visitatori senza account si accendono in Amministrazione › Impostazioni.
-- **Limiti**: 20 accessi falliti ogni 10 minuti per indirizzo (e 5 per nome utente), un tetto agli hash delle password in corso, 60 caricamenti di immagini ogni 10 minuti, una quota di spazio per i giocatori. Le immagini si scaricano solo da chi può vedere la pagina (o la risorsa) che le usa; quelle che nessuno usa da un giorno si eliminano da sole.
+- **Limiti**: 20 accessi falliti ogni 10 minuti per indirizzo (e 5 per nome utente), un tetto agli hash delle password in corso, 60 caricamenti di immagini ogni 10 minuti, una quota di spazio per chi non tiene campagne. Le immagini si scaricano solo da chi può vedere la pagina (o la risorsa) che le usa; quelle che nessuno usa da un giorno si eliminano da sole.
 - **Sessioni**: scadono dopo 30 giorni senza visite e comunque dopo 90 dall'accesso; dal Profilo si chiudono quelle sugli altri dispositivi. Un token di Claude fermo da 90 giorni smette di valere.
 - **Password dimenticata**: l'Admin crea un link di reimpostazione da Amministrazione › Utenti, che vale due giorni e una volta sola.
 - **Registro**: Amministrazione › Registro elenca accessi, cambi di ruolo e password, inviti, token di Claude e backup degli ultimi sei mesi.

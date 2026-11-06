@@ -33,11 +33,11 @@ async function inviteLink(page: Page) {
 	return page.getByLabel('Link di invito').inputValue();
 }
 
-test('un account da Master senza campagne aspetta di riceverne una', async ({ browser }) => {
+test('un account invitato senza campagna aspetta di riceverne una', async ({ browser }) => {
 	admin = await login(browser, ADMIN);
 	alice = await login(browser, PLAYER);
 	await admin.goto('/admin/invites');
-	await admin.getByLabel('Ruolo').selectOption({ label: 'Master' });
+	await admin.getByLabel('Dove entra').selectOption({ label: 'In nessuna campagna' });
 	await admin.getByRole('button', { name: 'Crea invito' }).click();
 	const link = await inviteLink(admin);
 
@@ -325,6 +325,37 @@ test('ognuno crea le sue campagne, fino al suo limite, che l\'Admin cambia a una
 	await alice.reload();
 	await expect(alice.getByText('Campagne che tieni: 3 su 4.')).toBeVisible();
 	await expect(alice.getByLabel('Nome della campagna')).toBeVisible();
+});
+
+test("utenti: niente ruoli da scegliere; l'Admin è uno e passa l'amministrazione a un altro", async () => {
+	await admin.goto('/admin/users');
+	// Master e Giocatore li decide la campagna: nella tabella non c'è nessuna tendina dei ruoli, e l'Admin è un'etichetta.
+	await expect(admin.locator('table.data select')).toHaveCount(0);
+	const row = (p: Page, user: string) => p.getByRole('row', { name: new RegExp(`@${user}`) });
+	await expect(row(admin, 'davide').locator('.badge', { hasText: 'Admin' })).toBeVisible();
+	await expect(row(admin, 'alice').locator('.badge', { hasText: 'Admin' })).toHaveCount(0);
+	await axe(admin, "utenti: passa l'amministrazione");
+	// Disattivarsi lascerebbe il sito senza Admin: il server dice di no.
+	const davide = await row(admin, 'davide').locator('input[name="id"]').first().inputValue();
+	const res = await admin.request.post('/admin/users?/update', { form: { id: davide, disabled: 'on', campaignLimit: '3' }, headers: { origin: new URL(admin.url()).origin } });
+	expect(await res.text()).toContain('selfDisable');
+
+	await admin.getByLabel('Nuovo Admin').selectOption({ label: 'Alice (@alice)' });
+	await admin.getByLabel('Ho capito: non sarò più Admin').check();
+	await admin.getByRole('button', { name: "Passa l'amministrazione" }).click();
+	await admin.waitForURL((url) => url.pathname === '/');
+	expect((await admin.goto('/admin/users'))?.status()).toBe(404);
+
+	// Ora l'Admin è Alice; la ridà a Davide e si torna come prima.
+	await alice.goto('/admin/users');
+	await expect(row(alice, 'alice').locator('.badge', { hasText: 'Admin' })).toBeVisible();
+	await expect(row(alice, 'davide').locator('.badge', { hasText: 'Admin' })).toHaveCount(0);
+	await alice.getByLabel('Nuovo Admin').selectOption(davide);
+	await alice.getByLabel('Ho capito: non sarò più Admin').check();
+	await alice.getByRole('button', { name: "Passa l'amministrazione" }).click();
+	await alice.waitForURL((url) => url.pathname === '/');
+	await admin.goto('/admin/audit');
+	await expect(admin.getByRole('main')).toContainText('Amministrazione passata');
 	await dm.context().close();
 	await alice.context().close();
 	await admin.context().close();

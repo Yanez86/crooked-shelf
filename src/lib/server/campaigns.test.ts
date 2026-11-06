@@ -6,7 +6,7 @@ import { eq } from 'drizzle-orm';
 import { getDb, getSqlite, migrate, useMemoryDb, schema } from './db/index.ts';
 import { MIGRATIONS } from './db/migrations.ts';
 import { campaignsMigration } from './db/campaigns.ts';
-import { campaignAllowance, campaignsFor, campaignsHeld, canAppoint, DEFAULT_CAMPAIGN_LIMIT, currentCampaign, deleteCampaign, FIRST_CAMPAIGN, getCampaign, inCampaign, membersOf, ofCampaign, roleIn, saveCampaign, setMaster, addMember, type CampaignRow } from './campaigns.ts';
+import { campaignAllowance, campaignsFor, campaignsHeld, canAppoint, DEFAULT_CAMPAIGN_LIMIT, currentCampaign, deleteCampaign, FIRST_CAMPAIGN, getCampaign, inCampaign, masterCandidates, membersOf, ofCampaign, roleIn, saveCampaign, setMaster, addMember, type CampaignRow } from './campaigns.ts';
 import { createInvite, activeInvites, joinInvite, redeemInvite } from './auth.ts';
 import { createPage, getPageById, getPageBySlug, listPages, listTrash, deletePage, renderPage, resolverFor, backlinks, updatePage } from './pages.ts';
 import { filePath, getFile, saveImage } from './files.ts';
@@ -200,16 +200,33 @@ describe('campagne e persone', () => {
 	});
 
 	it('un invito porta nella sua campagna, una volta sola', async () => {
-		const token = createInvite('player', dm.id, 7, a.id);
+		const token = createInvite(dm.id, 7, a.id);
 		expect(activeInvites(b.id)).toEqual([]);
 		expect(activeInvites(a.id)[0].campaign).toBe('Ombre');
 		const id = (await redeemInvite(token, { username: 'nuovo', displayName: 'Nuovo', password: 'password-lunga' }))!;
 		expect(campaignsFor({ id, role: 'player' }, false).map((c) => c.id)).toEqual([a.id]);
 		expect(joinInvite(token, alice.id)).toBeNull();
 
-		const again = createInvite('player', dm.id, 7, b.id);
+		const again = createInvite(dm.id, 7, b.id);
 		expect(joinInvite(again, alice.id)).toBe(b.id);
 		expect(campaignsFor(alice, false).map((c) => c.id)).toEqual([b.id]);
+	});
+
+	it("un invito crea sempre un account normale: l'Admin è uno solo, e Master lo si è nelle campagne", async () => {
+		const token = createInvite(admin.id, 7, null);
+		const id = (await redeemInvite(token, { username: 'nuova', displayName: 'Nuova', password: 'password-lunga' }))!;
+		expect(getDb().select({ role: schema.users.role }).from(schema.users).where(eq(schema.users.id, id)).get()?.role).toBe('player');
+		expect(campaignsFor({ id, role: 'player' }, false)).toEqual([]);
+	});
+
+	it("l'Admin può affidare una campagna a ogni account attivo, non solo a chi ne tiene già", () => {
+		const ids = () => masterCandidates().map((m) => m.id);
+		expect(ids()).toContain(alice.id);
+		// Disattivato, non si nomina più; chi ne tiene già una resta nell'elenco, per non cambiarlo salvando il nome.
+		getDb().update(schema.users).set({ disabled: true }).where(eq(schema.users.id, alice.id)).run();
+		getDb().update(schema.users).set({ disabled: true }).where(eq(schema.users.id, dm.id)).run();
+		expect(ids()).not.toContain(alice.id);
+		expect(ids()).toContain(dm.id);
 	});
 
 	it('ognuno tiene le sue campagne fino al suo limite, che parte da 3', () => {
@@ -266,7 +283,7 @@ describe('eliminare una campagna', () => {
 			createDivider();
 		});
 		addMember(a.id, alice.id);
-		createInvite('player', dm.id, 7, a.id);
+		createInvite(dm.id, 7, a.id);
 		const paths = Object.values(files).map((f) => filePath(f)!);
 		const kept = inCampaign(b, () => createPage({ ...base, title: 'Antro', tags: ['Grotte'], content: text('il drago di Luci') }, otherDm));
 		const pagesOfB = inCampaign(b, () => listPages(otherDm, { limit: 100 }).total);

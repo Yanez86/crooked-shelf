@@ -86,11 +86,16 @@ describe('chi scarica un file', () => {
 });
 
 describe('quota e orfani', () => {
-	it('i giocatori hanno una quota, Master e Admin no', () => {
+	it("chi gioca soltanto ha una quota; chi tiene una campagna e l'Admin no", () => {
 		expect(usedBy(2)).toBe(100);
 		expect(withinQuota({ id: 2, accountRole: 'player' }, 512 * 1024 * 1024)).toBe(false);
 		expect(withinQuota({ id: 2, accountRole: 'player' }, 1000)).toBe(true);
-		expect(withinQuota({ id: 1, accountRole: 'master' }, 10 ** 12)).toBe(true);
+		// L'account 1 è come gli altri, ma tiene la campagna: niente limite, in qualunque campagna carichi.
+		expect(withinQuota({ id: 1, accountRole: 'player' }, 10 ** 12)).toBe(true);
+		expect(withinQuota({ id: 3, accountRole: 'admin' }, 10 ** 12)).toBe(true);
+		// Diventato Master di una sua campagna, anche Alice.
+		insertCampaign('Di Alice', 2);
+		expect(withinQuota({ id: 2, accountRole: 'player' }, 512 * 1024 * 1024)).toBe(true);
 	});
 
 	it('i file che nessuno usa da un giorno si eliminano', () => {

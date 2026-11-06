@@ -8,9 +8,9 @@ import { audit } from '#lib/server/audit.ts';
 
 export const load: PageServerLoad = ({ params, locals }) => {
 	const inv = findInvite(params.token);
-	// Gli inviti da Master e Admin sono per chi non ha ancora un account.
+	// Un invito senza campagna (dall'Admin) è per chi non ha ancora un account.
 	if (locals.user && !inv?.campaignId) redirect(303, '/');
-	return { valid: !!inv, role: inv?.role ?? null, campaign: inv?.campaignId ? (getCampaign(inv.campaignId)?.name ?? null) : null, loggedIn: !!locals.user };
+	return { valid: !!inv, campaign: inv?.campaignId ? (getCampaign(inv.campaignId)?.name ?? null) : null, loggedIn: !!locals.user };
 };
 
 export const actions: Actions = {

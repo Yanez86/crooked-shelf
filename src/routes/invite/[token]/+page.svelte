@@ -21,7 +21,7 @@
 		<FormError error={form?.error} />
 		<form method="post" action="?/join"><button class="btn btn-primary" type="submit">{t('invite.join')}</button></form>
 	{:else}
-		<p>{t('invite.intro', { role: t('roles.' + data.role) })}</p>
+		<p>{data.campaign ? t('invite.introCampaign', { campaign: data.campaign }) : t('invite.intro')}</p>
 		{#if data.campaign}<p>{t('invite.haveAccount', { campaign: data.campaign })} <a href="/login?next={encodeURIComponent(page.url.pathname)}">{t('auth.loginTitle')}</a></p>{/if}
 		<FormError error={form?.error} />
 		<form method="post" action="?/register" class="card">

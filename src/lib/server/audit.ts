@@ -15,6 +15,7 @@ export type AuditAction =
 	| 'password_reset_link'
 	| 'password_reset'
 	| 'user_updated'
+	| 'admin_transferred'
 	| 'invite_created'
 	| 'invite_revoked'
 	| 'campaign_created'

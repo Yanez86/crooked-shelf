@@ -164,7 +164,7 @@ export function fileUsesOf(fileId: string) {
 // --- Quota e pulizia ---
 
 const MB = 1024 * 1024;
-/** Spazio per le immagini di un account giocatore (Master e Admin non hanno limite): CS_UPLOAD_QUOTA_MB, 512 MB di base. */
+/** Spazio per le immagini di chi non tiene campagne (chi ne tiene una e l'Admin non hanno limite): CS_UPLOAD_QUOTA_MB, 512 MB di base. */
 export const uploadQuota = () => Math.max(0, Number(process.env.CS_UPLOAD_QUOTA_MB ?? 512)) * MB;
 
 /** Quanto ha caricato una persona. */
@@ -172,10 +172,15 @@ export function usedBy(userId: number): number {
 	return getDb().select({ n: sql<number>`coalesce(sum(${schema.files.size}), 0)` }).from(schema.files).where(eq(schema.files.uploadedBy, userId)).get()?.n ?? 0;
 }
 
-/** Un giocatore resta nella sua quota; chi tiene la wiki (Master, Admin) no. */
+/**
+ * Chi gioca soltanto resta nella sua quota; chi tiene la wiki no: l'Admin e chi è Master di almeno una campagna, quale che sia
+ * quella in cui carica. Chi crea una campagna apposta la aggira: l'Admin può mettere a 0 il suo limite di campagne.
+ */
 export function withinQuota(u: { id: number; accountRole: Role }, size: number): boolean {
-	return u.accountRole !== 'player' || usedBy(u.id) + size <= uploadQuota();
+	return u.accountRole === 'admin' || holdsCampaign(u.id) || usedBy(u.id) + size <= uploadQuota();
 }
+
+const holdsCampaign = (userId: number) => !!getDb().select({ id: schema.campaigns.id }).from(schema.campaigns).where(eq(schema.campaigns.masterId, userId)).get();
 
 const ORPHAN_AGE = 24 * 60 * 60 * 1000;
 

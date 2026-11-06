@@ -447,8 +447,27 @@ export const MIGRATIONS: (string | ((db: Database.Database) => void) | { rebuild
 	// rovinate resta com'è (CASE: json_extract su un testo che non è JSON fermerebbe la migrazione).
 	themesRemovedMigration,
 	// Ogni account crea le sue campagne, fino a un tetto che l'Admin cambia persona per persona.
-	`ALTER TABLE users ADD COLUMN campaign_limit INTEGER NOT NULL DEFAULT 3;`
+	`ALTER TABLE users ADD COLUMN campaign_limit INTEGER NOT NULL DEFAULT 3;`,
+	oneAdminMigration
 ];
+
+/**
+ * Un solo Admin, e Master e Giocatore si è nelle campagne, non nell'account: gli account Master diventano account
+ * normali (`player`), come gli inviti in attesa. Degli Admin resta il più vecchio tra quelli attivi (di solito chi ha
+ * installato la wiki); gli altri diventano account normali, e il registro lo dice. L'indice tiene un Admin solo.
+ */
+export function oneAdminMigration(db: Database.Database) {
+	const keep = db.prepare("SELECT id FROM users WHERE role = 'admin' ORDER BY disabled, id LIMIT 1").get() as { id: number } | undefined;
+	const now = Date.now();
+	const log = db.prepare("INSERT INTO audit_log (at, user_id, action, detail) VALUES (?, NULL, 'user_updated', ?)");
+	for (const u of db.prepare("SELECT username FROM users WHERE role = 'admin' AND id <> ?").all(keep?.id ?? 0) as { username: string }[])
+		log.run(now, `${u.username}: admin → player (one admin)`);
+	db.prepare("UPDATE users SET role = 'player' WHERE role <> 'player' AND id <> ?").run(keep?.id ?? 0);
+	db.exec(`
+	UPDATE invites SET role = 'player' WHERE role <> 'player';
+	CREATE UNIQUE INDEX users_one_admin ON users(role) WHERE role = 'admin';
+	`);
+}
 
 export const REMOVED_THEMES: Record<string, string> = { lake: 'aria', 'lake-dark': 'aria-dark' };
 
