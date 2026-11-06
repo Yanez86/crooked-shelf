@@ -267,7 +267,7 @@ test('la home: una sola, in cima all\'albero, fuori dalle cartelle, non si elimi
 
 test('Claude legge la campagna col token del Master, e solo il Master lo crea', async ({ browser, request }) => {
 	const createToken = async (p: Page) => {
-		await p.goto('/campaign?tab=claude');
+		await p.goto('/campaign/1?tab=claude');
 		await p.getByRole('button', { name: 'Crea un token' }).click();
 		await expect(p.getByLabel('Indirizzo', { exact: true })).toHaveValue(/\/mcp$/);
 		await axe(p, 'campagna: Claude');
@@ -280,7 +280,7 @@ test('Claude legge la campagna col token del Master, e solo il Master lo crea', 
 
 	// Claude lavora su una campagna solo col suo Master: il giocatore non arriva alla scheda.
 	const p = await login(browser, PLAYER);
-	expect((await p.goto('/campaign?tab=claude'))?.status()).toBe(404);
+	expect((await p.goto('/campaign/1?tab=claude'))?.status()).toBe(404);
 	await p.context().close();
 
 	const master = await createToken(admin);
@@ -300,7 +300,7 @@ test('Claude legge la campagna col token del Master, e solo il Master lo crea', 
 	expect((await (await mcp(master, 'create_page', { title: 'Abusiva', text: 'x' })).json()).error.code).toBe(-32602);
 
 	// Con la casella Claude scrive, ma solo testo delle pagine.
-	await admin.goto('/campaign?tab=claude');
+	await admin.goto('/campaign/1?tab=claude');
 	await admin.getByLabel('Claude può anche scrivere').check();
 	await axe(admin, 'profilo: token che scrive');
 	await admin.getByRole('button', { name: 'Sostituisci il token' }).click();
@@ -348,7 +348,7 @@ test('Claude legge la campagna col token del Master, e solo il Master lo crea', 
 
 test('Claude si collega come connettore (OAuth), uno per campagna e solo col Master', async ({ browser, request }) => {
 	// L'indirizzo del connettore è nella scheda Claude della campagna, che vede solo il Master; da lì, senza token, Claude trova dove chiedere il consenso e si registra.
-	await admin.goto('/campaign?tab=claude');
+	await admin.goto('/campaign/1?tab=claude');
 	const connector = await admin.getByLabel('Indirizzo del connettore per claude.ai').inputValue();
 	expect(connector).toMatch(/\/mcp\/\d+$/);
 	const denied = await request.post(connector, { data: { jsonrpc: '2.0', id: 1, method: 'tools/list' } });
@@ -398,7 +398,7 @@ test('Claude si collega come connettore (OAuth), uno per campagna e solo col Mas
 	expect((await read(connector.replace(/\d+$/, (n) => String(Number(n) + 1)))).status()).toBe(401);
 
 	await admin.unroute('https://claude.ai/**');
-	await admin.goto('/campaign?tab=claude');
+	await admin.goto('/campaign/1?tab=claude');
 	await expect(admin.getByRole('region', { name: 'Collegamenti attivi' })).toContainText('collegato da claude.ai');
 	await admin.getByRole('button', { name: 'Revoca' }).click();
 	await expect(admin.getByRole('status').filter({ hasText: 'Token revocato' })).toBeVisible();

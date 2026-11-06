@@ -243,9 +243,10 @@ test('albero delle cartelle e delle pagine', async () => {
 	await expect(admin.locator('.user-menu .panel').getByRole('link')).toHaveText(['Profilo', 'Campagne', 'Amministrazione']);
 	await expect(admin.locator('.user-menu .panel').getByRole('button', { name: /Esci/ })).toBeVisible();
 	await admin.locator('.user-menu summary').click();
-	// Niente linguette: in fondo alla barra Risorse e, per ultimo, il Cestino. Tag e template non ci sono.
+	// Niente linguette: in fondo alla barra Risorse, il Cestino e, per il Master, Impostazioni campagna. Tag e template non ci sono.
 	await expect(tree.getByRole('tab')).toHaveCount(0);
-	await expect(tree.getByRole('link').last()).toHaveAttribute('href', '/trash');
+	await expect(tree.getByRole('link').nth(-2)).toHaveAttribute('href', '/trash');
+	await expect(tree.getByRole('link').last()).toHaveAttribute('href', '/campaign/1');
 	await expect(tree.getByRole('link', { name: 'Risorse' })).toHaveAttribute('href', '/resources');
 	await expect(tree.getByRole('link', { name: 'Luogo, Template' })).toHaveCount(0);
 	await expect(admin.locator('#explorer').getByRole('link', { name: 'Nuova pagina' })).toHaveAttribute('href', '/wiki/new');

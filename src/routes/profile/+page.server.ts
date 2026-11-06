@@ -13,7 +13,7 @@ import { addFileUses, deleteFile, saveImage, withinQuota } from '#lib/server/fil
 import { extraThemes } from '#lib/server/plugins.ts';
 import { PAGE_ICONS } from '#lib/pageIcons.ts';
 
-// Claude si collega da Campagne › Claude: è del Master, una campagna per volta.
+// Claude si collega da Impostazioni campagna › Claude: è del Master, una campagna per volta.
 export const load: PageServerLoad = ({ locals }) => ({
 	// Le sessioni aperte (dispositivi e browser), per chiuderle tutte tranne questa.
 	sessions: locals.user ? countSessions(locals.user.id) : 0,

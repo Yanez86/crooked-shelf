@@ -5,7 +5,7 @@ import AxeBuilder from '@axe-core/playwright';
 test.describe.configure({ mode: 'serial' });
 test.use({ viewport: { width: 390, height: 844 }, hasTouch: true });
 
-const PAGES = ['/', '/wiki', '/wiki/vicolo-del-drago', '/wiki/vicolo-del-drago/edit', '/wiki/new', '/search?q=drago', '/tags', '/categories', '/gallery', '/resources', '/rules', '/calendar', '/schedule', '/profile', '/campaign', '/campaign?tab=new', '/campaign?tab=general', '/campaign?tab=players', '/campaign?tab=claude', '/admin', '/admin/users', '/admin/plugins'];
+const PAGES = ['/', '/wiki', '/wiki/vicolo-del-drago', '/wiki/vicolo-del-drago/edit', '/wiki/new', '/search?q=drago', '/tags', '/categories', '/gallery', '/resources', '/rules', '/calendar', '/schedule', '/profile', '/campaign', '/admin', '/admin/users', '/admin/plugins'];
 
 test.beforeEach(async ({ page }) => {
 	await page.goto('/login');
@@ -32,9 +32,12 @@ test('si scrive una pagina dal telefono: Salva è sotto il testo', async ({ page
 });
 
 test('niente sfora lo schermo, nemmeno a 320px', async ({ page }) => {
+	// Le impostazioni della campagna in cui si è: l'indirizzo è nella voce in fondo alla barra, che sul telefono è chiusa.
+	const settings = await page.locator('#explorer a[href^="/campaign/"]').getAttribute('href');
+	const pages = [...PAGES, ...['', '?tab=players', '?tab=schedule', '?tab=claude'].map((x) => settings + x)];
 	for (const width of [390, 320]) {
 		await page.setViewportSize({ width, height: 700 });
-		for (const path of PAGES) {
+		for (const path of pages) {
 			await page.goto(path);
 			expect(await overflow(page), `${path} a ${width}px`).toBeLessThanOrEqual(0);
 		}

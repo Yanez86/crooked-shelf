@@ -251,8 +251,8 @@ test('schede giocatore: la cartella PG, chi è al tavolo, le pagine dentro la sc
 	await admin.getByRole('button', { name: 'Salva' }).click();
 	await expect(admin.locator('.content .secret')).toContainText('corona del duca');
 
-	// In Campagne › Giocatori: il template delle schede nuove, e la scheda di ogni giocatore.
-	await admin.goto('/campaign?tab=players');
+	// In Impostazioni campagna › Giocatori: il template delle schede nuove, e la scheda di ogni giocatore.
+	await admin.goto('/campaign/1?tab=players');
 	await expect(admin.getByLabel('Template delle schede nuove')).toHaveValue('scheda-giocatore');
 	await expect(admin.locator('main').getByRole('link', { name: 'Alice' })).toHaveAttribute('href', '/wiki/alice');
 	await admin.getByLabel('Template delle schede nuove').selectOption('');
@@ -308,19 +308,19 @@ test('schede giocatore: la cartella PG, chi è al tavolo, le pagine dentro la sc
 
 test('appuntamenti: un\'opzione della campagna, spenta finché il Master non la accende', async ({ browser }) => {
 	const p = await login(browser, PLAYER);
-	// Spenti: niente voce nella barra, niente scheda nel pannello Campagne, e le pagine non ci sono.
+	// Spenti: niente voce nella barra, e le pagine non ci sono.
 	await admin.goto('/');
 	await expect(admin.locator('#explorer').getByRole('link', { name: 'Appuntamenti' })).toHaveCount(0);
 	expect((await admin.goto('/schedule'))?.status()).toBe(404);
 	expect((await admin.goto('/schedule/new'))?.status()).toBe(404);
 	expect((await p.goto('/schedule'))?.status()).toBe(404);
-	await admin.goto('/campaign?tab=schedule');
-	await expect(admin.getByRole('navigation', { name: 'Sezioni delle campagne' }).getByRole('link', { name: 'Appuntamenti' })).toHaveCount(0);
+	// Nelle impostazioni la scheda Appuntamenti c'è lo stesso: il Master li accende lì.
+	await admin.goto('/');
+	await admin.locator('#explorer').getByRole('link', { name: 'Impostazioni campagna' }).click();
+	await admin.getByRole('navigation', { name: 'Sezioni della campagna' }).getByRole('link', { name: 'Appuntamenti' }).click();
 	await expect(admin.locator('form[action^="?/schedule&tab=schedule"]')).toHaveCount(0);
-	// Il Master li accende in Generale.
-	await admin.goto('/campaign?tab=general');
 	const opts = admin.locator('form[action^="?/features"]');
-	await opts.getByLabel('Appuntamenti').check();
+	await opts.getByLabel('Usa gli appuntamenti').check();
 	await opts.getByRole('button', { name: 'Salva' }).click();
 	await expect(opts.getByRole('status')).toContainText('Modifiche salvate');
 	await axe(admin, 'campagna: opzioni');
@@ -331,8 +331,8 @@ test('appuntamenti: un\'opzione della campagna, spenta finché il Master non la 
 });
 
 test('appuntamenti: il Master fissa i giovedì, i giocatori rispondono, sotto il minimo si salta', async ({ browser }) => {
-	// In Campagne › Appuntamenti: il link per il remoto e la regola del minimo.
-	await admin.goto('/campaign?tab=schedule');
+	// In Impostazioni campagna › Appuntamenti: il link per il remoto e la regola del minimo.
+	await admin.goto('/campaign/1?tab=schedule');
 	const rules = admin.locator('form[action^="?/schedule&tab=schedule"]');
 	await rules.getByLabel('Link per il remoto (Discord o altro)').fill('javascript:alert(1)');
 	await rules.getByRole('button', { name: 'Salva' }).click();
@@ -422,7 +422,7 @@ test('appuntamenti: il Master fissa i giovedì, i giocatori rispondono, sotto il
 	await expect(admin.locator('time[datetime="2030-01-17T20:00"]')).toHaveCount(0);
 
 	// Senza regola, niente stato.
-	await admin.goto('/campaign?tab=schedule');
+	await admin.goto('/campaign/1?tab=schedule');
 	await rules.getByLabel('Giocatori minimi').fill('0');
 	await rules.getByRole('button', { name: 'Salva' }).click();
 	await expect(rules.getByRole('status')).toContainText('Modifiche salvate');
@@ -471,7 +471,7 @@ test('Stars & Wishes: chi c\'era risponde dopo la sessione, una volta sola; il M
 	await expect(p.getByRole('dialog', { name: 'Stars & Wishes' })).toHaveCount(0);
 
 	// Spento finché il Master non lo accende.
-	await admin.goto('/campaign?tab=schedule');
+	await admin.goto('/campaign/1?tab=schedule');
 	const rules = admin.locator('form[action^="?/schedule"]');
 	await rules.getByLabel(/^Stars & Wishes/).check();
 	await rules.getByRole('button', { name: 'Salva' }).click();
@@ -520,7 +520,7 @@ test('Stars & Wishes: chi c\'era risponde dopo la sessione, una volta sola; il M
 	await axe(admin, 'star & wishes: il Master');
 
 	// Spento: le risposte spariscono dalla vista, ma restano salvate.
-	await admin.goto('/campaign?tab=schedule');
+	await admin.goto('/campaign/1?tab=schedule');
 	await rules.getByLabel(/^Stars & Wishes/).uncheck();
 	await rules.getByRole('button', { name: 'Salva' }).click();
 	await expect(rules.getByRole('status')).toContainText('Modifiche salvate');

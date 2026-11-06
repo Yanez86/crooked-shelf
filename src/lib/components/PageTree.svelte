@@ -587,6 +587,13 @@
 				<svg class="ico doc" viewBox="0 0 24 24" aria-hidden="true"><path d={iconPath('trash')} /></svg>
 				<span>{t('trash.title')}</span>
 			</a>
+			<!-- Le opzioni della campagna in cui si è: solo per il suo Master (nella vista giocatore non è Master). -->
+			{#if canManage && page.data.campaign}
+				<a class="bin" href="/campaign/{page.data.campaign.id}" aria-current={path.startsWith(`/campaign/${page.data.campaign.id}`) ? 'page' : undefined}>
+					<svg class="ico doc" viewBox="0 0 24 24" aria-hidden="true"><path d={iconPath('sliders')} /></svg>
+					<span>{t('campaign.settings')}</span>
+				</a>
+			{/if}
 		{/if}
 		<!-- Un solo menu per tutte le righe, in primo piano (popover): non lo taglia il bordo della barra. Esc o un clic fuori lo chiudono. -->
 		<div
