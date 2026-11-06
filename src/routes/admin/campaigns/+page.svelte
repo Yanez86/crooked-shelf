@@ -53,7 +53,8 @@
 	<div class="field">
 		<label for="new-master">{t('campaign.master')}</label>
 		<select id="new-master" name="masterId" required>
-			{#each data.masters as m (m.id)}<option value={m.id}>{m.displayName} (@{m.username})</option>{/each}
+			<!-- Tra tutti gli account si propone l'Admin: una campagna nuova, senza segreti, la può tenere. -->
+			{#each data.masters as m (m.id)}<option value={m.id} selected={m.id === data.me}>{m.displayName} (@{m.username})</option>{/each}
 		</select>
 	</div>
 	<div class="field"><button class="btn btn-primary" type="submit">{t('admin.newCampaign')}</button></div>
