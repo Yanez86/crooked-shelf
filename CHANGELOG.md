@@ -3,6 +3,26 @@
 Le versioni seguono il [versionamento semantico](https://semver.org/lang/it/): MAGGIORE.MINORE.CORRETTIVA.
 Questo file è anche la pagina «Novità» della wiki (`/changelog`).
 
+## 0.24.0 — 2026-11-06
+
+### Aggiunte
+- Cronologie: linea del tempo in scala, con zoom, panoramica e i dettagli dell'evento scelto.
+- Cronologie: ricerca, filtri e, nella cronologia della campagna, l'ordine per data di gioco o nel mondo.
+- Ritaglio delle immagini nella colonna a lato, nel testo e nella copertina.
+- Markdown nei testi della colonna a lato.
+- La wiki si installa come app dal browser.
+
+### Modifiche
+- Cronologie: l'elenco ha l'anno a sinistra, e gli eventi si aggiungono e si modificano senza ricaricare la pagina.
+- Campagne: l'elenco delle proprie campagne e, per ognuna, la sua pagina di impostazioni.
+- La barra a sinistra non ha più linguette: Risorse è una voce in fondo, come Appuntamenti e Cestino.
+- Colonna a lato: titoli uguali con ogni tema e anteprima con l'immagine a sinistra.
+- Guide più brevi e chiare.
+
+### Correzioni
+- Risolto un problema relativo alla freccia che riapre la colonna a lato.
+- Risolto un problema relativo all'invito a cominciare nella home di una wiki vuota.
+
 ## 0.23.0 — 2026-11-05
 
 ### Aggiunte
