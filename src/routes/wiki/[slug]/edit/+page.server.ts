@@ -6,6 +6,8 @@ import { readPageForm } from '#lib/server/pageForm.ts';
 import { mapFormValues, readMapForm } from '#lib/server/mapForm.ts';
 import { getMapOfPage, listMaps, updateMap } from '#lib/server/maps.ts';
 import { getTimeline, setTimelineMode } from '#lib/server/timeline.ts';
+import { getHexMapOfPage, updateHexMap } from '#lib/server/hexmaps.ts';
+import { hexFormValues, readHexForm, tilesetChoices } from '#lib/server/hexPage.ts';
 import { saveImage } from '#lib/server/files.ts';
 import { categoryTree, listTags } from '#lib/server/taxonomy.ts';
 import { getCalendar, isHomePage } from '#lib/server/settings.ts';
@@ -23,6 +25,7 @@ export const load: PageServerLoad = ({ params, locals, url }) => {
 	if (!locals.user) redirect(303, `/login?next=${encodeURIComponent(url.pathname)}`);
 	const page = editable(params.slug, locals.user);
 	const map = page.kind === 'map' ? getMapOfPage(page.id) : undefined;
+	const hex = page.kind === 'hexmap' && isMaster(locals.user) ? getHexMapOfPage(page.id) : undefined;
 	return {
 		page: {
 			slug: page.slug,
@@ -45,8 +48,10 @@ export const load: PageServerLoad = ({ params, locals, url }) => {
 		// Le impostazioni proprie della mappa (le cambia il Master) e della cronologia.
 		extra: {
 			map: map && isMaster(locals.user) ? mapFormValues(map) : null,
-			mode: getTimeline(page.id)?.mode ?? 'world'
+			mode: getTimeline(page.id)?.mode ?? 'world',
+			hex: hex ? hexFormValues(hex) : null
 		},
+		tilesets: hex ? tilesetChoices(locals.locale) : [],
 		parents: map ? listMaps(locals.user).filter((m) => m.id !== map.id).map(({ id, title }) => ({ id, title })) : [],
 		months: getCalendar().months,
 		categories: categoryTree(locals.user).flat.map(({ id, label }) => ({ id, label })),
@@ -71,8 +76,10 @@ export const actions: Actions = {
 		const f = await request.formData();
 		const r = readPageForm(f, u, getCalendar());
 		const map = page.kind === 'map' && isMaster(u) ? getMapOfPage(page.id) : undefined;
+		const hex = page.kind === 'hexmap' && isMaster(u) ? getHexMapOfPage(page.id) : undefined;
+		const hexForm = hex && f.has('orientation') ? readHexForm(f) : null;
 		const mode: TimelineMode = TIMELINE_MODES.includes(f.get('mode') as TimelineMode) ? (f.get('mode') as TimelineMode) : 'world';
-		const extra = { map: map ? readMapForm(f, map.width, map.id).values : null, mode };
+		const extra = { map: map ? readMapForm(f, map.width, map.id).values : null, mode, hex: hexForm?.values ?? null };
 		if (!r.ok) return fail(400, { error: r.error, values: r.values, extra });
 		// Solo chi può fare template trasforma una pagina in template (e viceversa).
 		if (r.input.kind !== page.kind && !canCreateKind('template', u)) r.input.kind = page.kind;
@@ -105,6 +112,7 @@ export const actions: Actions = {
 			if (m.error) return fail(400, { error: m.error, values: r.values, extra });
 			after = () => updateMap(map.id, m.input, file);
 		} else if (page.kind === 'timeline' && isMaster(u) && f.has('mode')) after = () => setTimelineMode(page.id, mode);
+		else if (hex && hexForm) after = () => updateHexMap(hex.id, hexForm.input, hexForm.renumber);
 		else if (home) {
 			r.input.categoryId = null;
 			after = () => setHomePage(page.id);

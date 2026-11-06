@@ -7,6 +7,7 @@ import { backlinks, createPage, getPageById, getPageBySlug, listPages, pageMeta,
 import { cleanFields, CONTENT_MAX } from './pageForm.ts';
 import { pageView } from './pageView.ts';
 import { searchPages } from './search.ts';
+import { hexLines } from './hexmaps.ts';
 import { categoryTree, createCategory, getCategory, moveTreeNode, pageTree, parseTagNames, updateCategory } from './taxonomy.ts';
 import { childrenOf, locate, nodeKey, type TreeNode } from '../tree.ts';
 
@@ -23,7 +24,8 @@ const TOOLS = [
 	},
 	{
 		name: 'read_page',
-		description: 'Legge una pagina dal suo indirizzo (slug): testo in HTML, colonna a lato e pagine che la citano. I collegamenti /wiki/<slug> portano ad altre pagine da leggere.',
+		description:
+			'Legge una pagina dal suo indirizzo (slug): testo in HTML, colonna a lato e pagine che la citano; in una mappa a esagoni anche gli esagoni, uno per riga (numero, terreno, cosa sanno i giocatori, cosa c\'è dentro). I collegamenti /wiki/<slug> portano ad altre pagine da leggere.',
 		inputSchema: { type: 'object', properties: { slug: { type: 'string' } }, required: ['slug'] },
 		annotations: { readOnlyHint: true }
 	},
@@ -260,7 +262,8 @@ function callTool(name: string, args: Record<string, unknown>, u: Viewer, locale
 		case 'read_page': {
 			const page = readable(args.slug, u);
 			const { html, fields, session } = pageView(page, u, locale);
-			return { slug: page.slug, title: page.title, kind: page.kind, fields, session, html, citedBy: backlinks(page.slug, u) };
+			const hexes = page.kind === 'hexmap' ? { hexes: hexLines(page.id, u, locale) } : {};
+			return { slug: page.slug, title: page.title, kind: page.kind, fields, session, html, ...hexes, citedBy: backlinks(page.slug, u) };
 		}
 		case 'list_pages': {
 			const { total, rows } = listPages(u, { noTemplates: true, limit: PAGE_SIZE, offset: Math.max(0, Math.trunc(Number(args.offset)) || 0) });

@@ -448,8 +448,63 @@ export const MIGRATIONS: (string | ((db: Database.Database) => void) | { rebuild
 	themesRemovedMigration,
 	// Ogni account crea le sue campagne, fino a un tetto che l'Admin cambia persona per persona.
 	`ALTER TABLE users ADD COLUMN campaign_limit INTEGER NOT NULL DEFAULT 3;`,
-	oneAdminMigration
+	oneAdminMigration,
+	// Mappe a esagoni: un tipo di pagina nuovo, con i suoi esagoni e quello che c'è dentro.
+	hexMapsMigration
 ];
+
+/**
+ * Il tipo «hexmap» entra nel vincolo dei tipi di pagina (SQLite non sa cambiare un CHECK: si toglie e si rimette la
+ * colonna, come in boardPagesMigration) e nascono le tabelle delle mappe a esagoni. Prima non c'erano: niente da convertire.
+ */
+export function hexMapsMigration(db: Database.Database) {
+	db.exec(`
+	CREATE TEMP TABLE page_kinds_old AS SELECT id, kind FROM pages;
+	DROP INDEX pages_kind;
+	ALTER TABLE pages DROP COLUMN kind;
+	ALTER TABLE pages ADD COLUMN kind TEXT NOT NULL DEFAULT 'page' CHECK (kind IN ('page','template','map','timeline','board','hexmap'));
+	UPDATE pages SET kind = (SELECT o.kind FROM temp.page_kinds_old o WHERE o.id = pages.id);
+	DROP TABLE temp.page_kinds_old;
+	CREATE INDEX pages_kind ON pages(kind);
+	CREATE TABLE hex_maps (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		page_id INTEGER NOT NULL UNIQUE REFERENCES pages(id) ON DELETE CASCADE,
+		orientation TEXT NOT NULL DEFAULT 'flat' CHECK (orientation IN ('flat','pointy')),
+		scale REAL,
+		unit TEXT NOT NULL DEFAULT '',
+		tileset TEXT NOT NULL DEFAULT 'tratto',
+		party_q INTEGER,
+		party_r INTEGER,
+		origin_col INTEGER,
+		origin_row INTEGER,
+		created_at INTEGER NOT NULL,
+		updated_at INTEGER NOT NULL
+	);
+	CREATE TABLE hex_cells (
+		map_id INTEGER NOT NULL REFERENCES hex_maps(id) ON DELETE CASCADE,
+		q INTEGER NOT NULL,
+		r INTEGER NOT NULL,
+		terrain TEXT NOT NULL,
+		state TEXT NOT NULL DEFAULT 'hidden' CHECK (state IN ('hidden','glimpsed','explored')),
+		note TEXT NOT NULL DEFAULT '',
+		revealed_at INTEGER,
+		PRIMARY KEY (map_id, q, r)
+	);
+	CREATE TABLE hex_features (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		map_id INTEGER NOT NULL REFERENCES hex_maps(id) ON DELETE CASCADE,
+		q INTEGER NOT NULL,
+		r INTEGER NOT NULL,
+		icon TEXT NOT NULL DEFAULT 'pin',
+		name TEXT NOT NULL,
+		description TEXT NOT NULL DEFAULT '',
+		page_slug TEXT,
+		visibility TEXT NOT NULL CHECK (visibility IN ('players','master')),
+		sort INTEGER NOT NULL DEFAULT 0
+	);
+	CREATE INDEX hex_features_cell ON hex_features(map_id, q, r);
+	`);
+}
 
 /**
  * Un solo Admin, e Master e Giocatore si è nelle campagne, non nell'account: gli account Master diventano account

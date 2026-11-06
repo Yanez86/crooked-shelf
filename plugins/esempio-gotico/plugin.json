@@ -2,14 +2,15 @@
 	"id": "esempio-gotico",
 	"name": "Esempio: atmosfera gotica",
 	"version": "1.0.0",
-	"description": "Plugin di esempio: un tema scuro, un template per le taverne, un calendario inventato e una regola della casa. Copialo per crearne uno tuo.",
-	"instructions": "1. Premi «Accendi».\n2. Tema: scegli «Gotico» nelle preferenze del tuo profilo.\n3. Template: «Taverna» compare nella linguetta Template e in Nuova pagina.\n4. Calendario: nella pagina Calendario, tra i calendari pronti, carica «Calendario di Lunargento» e premi Salva.\n5. Regola: in una pagina scrivi @regola[Riposo in taverna].\n\nPer farne uno tuo, copia la cartella plugins/esempio-gotico e segui docs/plugin.md.",
+	"description": "Plugin di esempio: un tema scuro, un template per le taverne, un calendario inventato, una regola della casa e un set di tasselli per le mappe a esagoni. Copialo per crearne uno tuo.",
+	"instructions": "1. Premi «Accendi».\n2. Tema: scegli «Gotico» nelle preferenze del tuo profilo.\n3. Template: «Taverna» compare nella linguetta Template e in Nuova pagina.\n4. Calendario: nella pagina Calendario, tra i calendari pronti, carica «Calendario di Lunargento» e premi Salva.\n5. Regola: in una pagina scrivi @regola[Riposo in taverna].\n6. Tasselli: in una mappa a esagoni, Modifica › Set di tasselli › «Pergamena» (c'è anche il Cimitero, un terreno in più).\n\nPer farne uno tuo, copia la cartella plugins/esempio-gotico e segui docs/plugin.md.",
 	"author": "Crooked Shelf",
 	"license": "AGPL-3.0",
 	"contributes": {
 		"themes": ["themes/gotico.json"],
 		"templates": ["templates/taverna.json"],
 		"calendars": ["calendars/lunargento.json"],
-		"rules": ["rules/regole-della-casa.json"]
+		"rules": ["rules/regole-della-casa.json"],
+		"hexTilesets": ["hexTilesets/pergamena.json"]
 	}
 }

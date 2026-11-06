@@ -674,7 +674,8 @@ test('una cronologia nuova è una pagina con i suoi eventi', async () => {
 
 test('mappe con pin, livelli e mappe annidate', async () => {
 	await admin.goto('/wiki/new');
-	await admin.locator('main').getByRole('link', { name: /^Nuova mappa/ }).click();
+	// «Nuova mappa», non «Nuova mappa a esagoni»: si riconosce dalla descrizione.
+	await admin.locator('main').getByRole('link', { name: /^Nuova mappa\s*Un'immagine/ }).click();
 	await admin.getByLabel('Titolo').fill('Costa della Spada');
 	await admin.getByLabel('Immagine della mappa').setInputFiles('tests/fixtures/map.png');
 	await admin.getByLabel('Larghezza reale').fill('1200');

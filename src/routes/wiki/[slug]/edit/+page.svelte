@@ -18,7 +18,7 @@
 	const extra = $derived(form?.extra ?? data.extra);
 	const kind = $derived(data.page.kind);
 	// Le impostazioni della mappa e il modo della cronologia li cambia il Master.
-	const hasSettings = $derived((kind === 'map' && !!extra.map) || (kind === 'timeline' && data.canSecret));
+	const hasSettings = $derived((kind === 'map' && !!extra.map) || (kind === 'timeline' && data.canSecret) || (kind === 'hexmap' && !!extra.hex));
 </script>
 
 <svelte:head><title>{t('page.editTitle', { title: data.page.title })}</title></svelte:head>
@@ -49,8 +49,8 @@
 {/key}
 
 {#snippet settings()}
-	{#if kind === 'map' || kind === 'timeline'}
-		<KindSettings {kind} map={extra.map ?? undefined} mode={extra.mode} parents={data.parents} />
+	{#if kind === 'map' || kind === 'timeline' || kind === 'hexmap'}
+		<KindSettings {kind} map={extra.map ?? undefined} mode={extra.mode} parents={data.parents} hex={extra.hex ?? undefined} tilesets={data.tilesets} renumber={kind === 'hexmap'} />
 	{/if}
 {/snippet}
 

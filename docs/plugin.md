@@ -12,6 +12,7 @@ Un plugin può aggiungere:
 | Lingue o traduzioni | `locales` |
 | Regole consultabili con `@` | `rules` |
 | Link delle regole a un sito esterno | `links` |
+| Set di tasselli per le mappe a esagoni | `hexTilesets` |
 
 L'esempio completo è in [`plugins/esempio-gotico`](../plugins/esempio-gotico): copialo e cambialo. [`plugins/dndbeyond`](../plugins/dndbeyond) è l'integrazione con D&D Beyond, fatta con un solo `links`.
 
@@ -40,7 +41,8 @@ I plugin sono spenti finché l'Admin non li accende. Un plugin installato con lo
 		"calendars": ["calendars/calendario.json"],
 		"locales": { "es": "locales/es.json" },
 		"rules": ["rules/regole.json"],
-		"links": ["links/sito.json"]
+		"links": ["links/sito.json"],
+		"hexTilesets": ["hexTilesets/pergamena.json"]
 	}
 }
 ```
@@ -95,6 +97,28 @@ Un elenco di voci consultabili con `@` e nella pagina Regole:
 `kind` è uno tra `spell`, `monster`, `condition`, `item`, `feat`, `species`, `class`, `background`, `rule`. Una voce con lo stesso nome di una dell'SRD la sostituisce (utile per traduzioni o varianti).
 
 Attenzione alle licenze: includi solo testi tuoi o con licenza libera.
+
+## Set di tasselli
+
+I disegni dei terreni delle mappe a esagoni, come in `hexTilesets/pergamena.json` dell'esempio:
+
+```json
+{
+	"id": "pergamena",
+	"name": "Pergamena",
+	"terrains": [
+		{ "id": "forest", "name": { "it": "Foresta", "en": "Forest" }, "fill": "#efe3c8", "ink": "#5a4325", "glyph": "M12 3l7 13H5zM12 16v5" }
+	]
+}
+```
+
+- `id` del set e dei terreni: lettere minuscole, numeri e trattini. Il set nella mappa si chiama `<plugin>/<set>`.
+- Usa gli id dei terreni inclusi (`plains`, `forest`, `hills`, `mountains`, `swamp`, `water`, `desert`, `tundra`, `jungle`, `badlands`) per gli stessi terreni: le mappe ricordano l'id, così cambiando set restano come sono. Puoi aggiungerne di nuovi (nell'esempio, `graveyard`).
+- `name`: un testo, oppure un nome per lingua.
+- `fill` e `ink`: il colore dell'esagono e del tratto, `#rrggbb`. Il tratto deve leggersi bene sul fondo (almeno 3:1).
+- `glyph`: il motivo, un tracciato SVG su una griglia 24 × 24 come le icone (solo i comandi dei tracciati, numeri, spazi e virgole; niente file SVG). La wiki lo ripete dentro l'esagono, così il terreno non si riconosce solo dal colore.
+
+Un terreno scritto male si salta e la pagina Plugin lo segnala. Se il plugin si spegne, le mappe che usavano il set tornano al set incluso: un terreno che quello non ha resta grigio, col bordo tratteggiato e il suo nome.
 
 ## Link
 

@@ -7,6 +7,8 @@ import { readMapForm } from '#lib/server/mapForm.ts';
 import { createMap, listMaps } from '#lib/server/maps.ts';
 import { setTimelineMode } from '#lib/server/timeline.ts';
 import { createBoard, readColumns } from '#lib/server/boards.ts';
+import { createHexMap } from '#lib/server/hexmaps.ts';
+import { readHexForm, tilesetChoices } from '#lib/server/hexPage.ts';
 import { saveImage } from '#lib/server/files.ts';
 import { categoryTree, listTags } from '#lib/server/taxonomy.ts';
 import { getTemplatePage, listTemplates, templateCopy } from '#lib/server/templates.ts';
@@ -16,7 +18,7 @@ import { slugify } from '#lib/slug.ts';
 import { canCreateKind, isPageKind, TIMELINE_MODES, type PageKind, type TimelineMode } from '#lib/pageKinds.ts';
 
 // Nell'ordine in cui si scelgono, dopo la pagina vuota.
-const OTHER_KINDS = ['board', 'timeline', 'template', 'map'] as const;
+const OTHER_KINDS = ['board', 'timeline', 'template', 'map', 'hexmap'] as const;
 
 export const load: PageServerLoad = ({ locals, url }) => {
 	if (!locals.user) redirect(303, `/login?next=${encodeURIComponent(url.pathname + url.search)}`);
@@ -48,6 +50,7 @@ export const load: PageServerLoad = ({ locals, url }) => {
 		otherKinds: chosen ? [] : OTHER_KINDS.filter((k) => canCreateKind(k, u)),
 		start: tpl ? { ...templateCopy(tpl, u, today), title: tpl.title } : null,
 		parents: kind === 'map' ? listMaps(u).map(({ id, title }) => ({ id, title })) : [],
+		tilesets: kind === 'hexmap' ? tilesetChoices(locals.locale) : [],
 		parentId: Number.isInteger(parent) && parent > 0 ? parent : null,
 		today,
 		months: getCalendar().months,
@@ -69,7 +72,8 @@ export const actions: Actions = {
 		const probe = readMapForm(f, null);
 		// In caso di errore tornano anche le impostazioni della mappa o della cronologia, per non perderle.
 		const columns = String(f.get('columns') ?? '').slice(0, 2000);
-		const extra = { map: probe.values, mode, columns };
+		const hex = readHexForm(f);
+		const extra = { map: probe.values, mode, columns, hex: hex.values };
 		if (!r.ok) return fail(400, { error: r.error, values: r.values, extra });
 		const kind = r.input.kind ?? 'page';
 		if (!canCreateKind(kind, u)) return fail(403, { error: 'errors.forbidden', values: r.values, extra });
@@ -87,6 +91,10 @@ export const actions: Actions = {
 			if (!saved.ok) return fail(400, { error: saved.error, values: r.values, extra });
 			const { input } = readMapForm(f, saved.file.width);
 			const page = createPage(r.input, u, (p) => createMap(p, input, saved.file, u.id));
+			redirect(303, `/wiki/${page.slug}`);
+		}
+		if (kind === 'hexmap') {
+			const page = createPage(r.input, u, (p) => createHexMap(p.id, hex.input));
 			redirect(303, `/wiki/${page.slug}`);
 		}
 		const after =

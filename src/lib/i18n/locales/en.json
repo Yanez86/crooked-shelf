@@ -1031,6 +1031,134 @@
 		},
 		"layerName": "Layer name"
 	},
+	"hex": {
+		"tilesets": {
+			"tratto": "Stroke"
+		},
+		"terrains": {
+			"plains": "Plains",
+			"forest": "Forest",
+			"hills": "Hills",
+			"mountains": "Mountains",
+			"swamp": "Swamp",
+			"water": "Water",
+			"desert": "Desert",
+			"tundra": "Tundra",
+			"jungle": "Jungle",
+			"badlands": "Badlands"
+		},
+		"states": {
+			"hidden": "Hidden",
+			"glimpsed": "Glimpsed",
+			"explored": "Explored"
+		},
+		"brush": {
+			"explored": "Explore",
+			"glimpsed": "Glimpse",
+			"hidden": "Hide"
+		},
+		"modes": {
+			"label": "Mode",
+			"terrain": "Terrain",
+			"features": "Features",
+			"fog": "Discovery",
+			"party": "Party"
+		},
+		"hints": {
+			"terrain": "Click a hex to paint it with the chosen terrain, also by dragging. The + on the edge adds a hex: it starts hidden from the players.",
+			"erase": "Click a hex to remove it. Hexes with features or the party in them stay.",
+			"features": "Click a hex to see its features and add some: towns, dungeons, places. Each one has its own visibility and can open a page.",
+			"fog": "Choose what the players know and click the hexes, also by dragging. Hidden hexes never reach their browser.",
+			"party": "Click a hex to move the party: that hex becomes explored, the ones around it glimpsed."
+		},
+		"settings": "Hex map",
+		"orientation": "Orientation",
+		"orientations": {
+			"flat": "Flat sides on top",
+			"pointy": "Points on top"
+		},
+		"orientationHint": "Changing it turns the map: hexes stay next to the same neighbours, only their numbers change.",
+		"renumber": "Renumber: the hex furthest up and left becomes 0101",
+		"renumberHint": "Numbers follow the top left corner by themselves until the players discover something; then they stay put, because the players have seen them.",
+		"across": "One hex is",
+		"unit": "Unit",
+		"scaleHint": "To tell distances, for example 6 miles.",
+		"tileset": "Tile set",
+		"tilesetHint": "More sets come with plugins. Changing set does not change the map: hexes remember the terrain, not the drawing.",
+		"tilesetMissing": "The set “{name}” is gone (its plugin is off or was removed): the map uses “Stroke”.",
+		"builtin": "Built in",
+		"fromPlugin": "Plugin “{name}”",
+		"erase": "Remove",
+		"revealAround": "Reveal around the party",
+		"removeParty": "Take the party off the map",
+		"views": {
+			"label": "View",
+			"map": "Map",
+			"list": "List"
+		},
+		"zoomIn": "Zoom in",
+		"zoomOut": "Zoom out",
+		"showLabels": "Hex numbers",
+		"asPlayer": "See it as a player",
+		"legend": {
+			"label": "Legend",
+			"explored": "Explored",
+			"glimpsed": "Glimpsed: the terrain yes, what is in it no",
+			"hidden": "Hidden from the players",
+			"secret": "Secret feature",
+			"party": "The party"
+		},
+		"cell": "Hex {label}",
+		"addCell": "Add hex {label}",
+		"partyHere": "the party is here",
+		"mapLabel": "Hex map: {title}",
+		"keyboardHint": "Arrow keys move between hexes, Enter picks one (and uses the tool that is on).",
+		"noSelection": "No hex chosen",
+		"noSelectionHint": "Choose a hex on the map or in the list.",
+		"whatPlayersKnow": "What the players know",
+		"revealedOn": "Discovered on {date}.",
+		"notRevealed": "Not discovered by the players yet.",
+		"glimpsedHint": "Glimpsed from afar: you know the terrain, not what is in it.",
+		"features": "Features",
+		"noFeatures": "No features.",
+		"noFeaturesGlimpsed": "You will know what is in it once you explore it.",
+		"addFeature": "Add a feature",
+		"newFeature": "New feature in {label}",
+		"editFeature": "Edit the feature",
+		"deleteFeature": "Delete the feature",
+		"featureAdded": "Feature added",
+		"featureSaved": "Feature saved",
+		"featureDeleted": "Feature deleted",
+		"waitExplored": "The players will see it once the hex is explored.",
+		"kind": "Kind",
+		"note": "Master's notes",
+		"noteHint": "Only you can see them.",
+		"noteSaved": "Note saved",
+		"saveNote": "Save the note",
+		"errCell": "That hex does not exist.",
+		"errTooMany": "The map already has as many hexes as it can.",
+		"errNoParty": "Put the party on the map first (Party mode).",
+		"errKept": "Some hexes stay: they have features or the party in them.",
+		"errSave": "The change was not saved: reloading the map.",
+		"painted": "{label}: {terrain}",
+		"added": "Added hex {label}",
+		"removed": "Removed hex {label}",
+		"stateSet": "{label}: {state}",
+		"partyMoved": "The party is in {label}",
+		"revealed": "Revealed the hexes around the party",
+		"cols": {
+			"hex": "Hex",
+			"terrain": "Terrain",
+			"state": "State",
+			"contents": "Features"
+		},
+		"listEmpty": "No hexes discovered yet.",
+		"summaryMaster": "{total} hexes, {known} known to the players",
+		"summaryPlayer": "{n} hexes discovered",
+		"scaleLabel": "One hex: {d}",
+		"secretFeature": "secret",
+		"showOnMap": "Show on the map"
+	},
 	"rules": {
 		"title": "Rules (SRD 5.2)",
 		"intro": "{n} entries from the System Reference Document 5.2: spells, monsters, conditions, magic items, feats, species, classes and backgrounds.",
@@ -1138,7 +1266,7 @@
 		"noColumns": "This board has no columns yet."
 	},
 	"plugins": {
-		"intro": "Plugins add themes, templates, calendars, languages, rules and links to external sites. They contain only data, not programs: installing them doesn't put the server at risk. They stay off until you turn them on. Click a plugin to read what it's for and how to use it.",
+		"intro": "Plugins add themes, templates, calendars, languages, rules, links to external sites and tile sets for hex maps. They contain only data, not programs: installing them doesn't put the server at risk. They stay off until you turn them on. Click a plugin to read what it's for and how to use it.",
 		"on": "On",
 		"off": "Off",
 		"enable": "Turn on",
@@ -1163,7 +1291,8 @@
 			"calendars": "{n} calendars",
 			"locales": "{n} languages",
 			"rules": "{n} rules",
-			"links": "{n} links"
+			"links": "{n} links",
+			"hexTilesets": "{n} tile sets"
 		},
 		"warnings": "{n} problems in the plugin (invalid parts are ignored)",
 		"installTitle": "Installing a plugin",
@@ -1304,30 +1433,35 @@
 		"map": "Map",
 		"timeline": "Timeline",
 		"board": "Board",
+		"hexmap": "Hex map",
 		"folder": {
 			"map": "Maps",
 			"template": "Templates",
 			"timeline": "Timelines",
-			"board": "Boards"
+			"board": "Boards",
+			"hexmap": "Hex maps"
 		},
 		"list": {
 			"page": "Pages",
 			"template": "Templates",
 			"map": "Maps",
 			"timeline": "Timelines",
-			"board": "Boards"
+			"board": "Boards",
+			"hexmap": "Hex maps"
 		},
 		"new": {
 			"template": "New template",
 			"map": "New map",
 			"timeline": "New timeline",
-			"board": "New board"
+			"board": "New board",
+			"hexmap": "New hex map"
 		},
 		"hint": {
 			"template": "Blocks, side column and icon to copy when making new pages.",
 			"map": "An image with pins, layers and nested maps.",
 			"timeline": "Events in date order, in the world or at the table.",
-			"board": "Note cards in columns to move around: clues, quests, questions."
+			"board": "Note cards in columns to move around: clues, quests, questions.",
+			"hexmap": "Hexes to build and discover: the Master sees everything, the players what they have explored."
 		},
 		"other": "Other page types",
 		"templateNote": "This is a template: every page made from it starts with its blocks, its side column and its icon.",

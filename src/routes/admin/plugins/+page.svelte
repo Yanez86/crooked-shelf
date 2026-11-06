@@ -6,7 +6,7 @@
 
 	let { data, form }: PageProps = $props();
 	const t = getT();
-	const KINDS = ['themes', 'templates', 'calendars', 'locales', 'rules', 'links'] as const;
+	const KINDS = ['themes', 'templates', 'calendars', 'locales', 'rules', 'links', 'hexTilesets'] as const;
 	type Plugin = (typeof data.plugins)[number];
 
 	const contents = (p: Plugin) => KINDS.filter((k) => p.counts[k] > 0).map((k) => t('plugins.kinds.' + k, { n: p.counts[k] })).join(', ');

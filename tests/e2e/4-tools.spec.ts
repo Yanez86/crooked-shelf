@@ -37,7 +37,7 @@ test('plugin: acceso porta tema, template, calendario e regole', async () => {
 	await admin.goto('/admin/plugins');
 	const card = admin.getByRole('listitem').filter({ hasText: 'Esempio: atmosfera gotica' });
 	await expect(card).toContainText('Spento');
-	await expect(card).toContainText('1 temi, 1 template, 1 calendari, 1 regole');
+	await expect(card).toContainText('1 temi, 1 template, 1 calendari, 1 regole, 1 set di tasselli');
 	await axe(admin, 'plugin');
 	await card.getByRole('button', { name: /Accendi/ }).click();
 	await expect(admin.getByRole('status').first()).toContainText('Plugin acceso');

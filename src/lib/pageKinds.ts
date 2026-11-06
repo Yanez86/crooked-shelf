@@ -7,14 +7,15 @@ import { iconPath } from './icons.ts';
  * - `template`: una pagina da fotocopiare, con la struttura (blocchi, colonna a lato, icona) decisa da chi la scrive;
  * - `map`: una pagina con una mappa (pin, livelli, mappe annidate);
  * - `timeline`: una pagina con una cronologia (eventi ordinati per data nel mondo o per data di gioco);
- * - `board`: una pagina con una bacheca di appunti (colonne e schede da spostare).
+ * - `board`: una pagina con una bacheca di appunti (colonne e schede da spostare);
+ * - `hexmap`: una pagina con una mappa a esagoni, costruita dal Master un esagono alla volta (vedi hex.ts).
  */
-export const PAGE_KINDS = ['page', 'template', 'map', 'timeline', 'board'] as const;
+export const PAGE_KINDS = ['page', 'template', 'map', 'timeline', 'board', 'hexmap'] as const;
 export type PageKind = (typeof PAGE_KINDS)[number];
 
 export const isPageKind = (v: unknown): v is PageKind => typeof v === 'string' && (PAGE_KINDS as readonly string[]).includes(v);
 
-/** Template, mappe e cronologie li crea il Master; pagine e bacheche chiunque abbia fatto l'accesso. */
+/** Template, mappe (anche a esagoni) e cronologie li crea il Master; pagine e bacheche chiunque abbia fatto l'accesso. */
 export const canCreateKind = (kind: PageKind, u: Viewer | null) => canWrite(u) && (kind === 'page' || kind === 'board' || isMaster(u));
 
 /** Cronologia del mondo (per data nel mondo, la scrive il Master) o della campagna (per data di gioco, anche i giocatori; ci entrano i resoconti di sessione). */
@@ -26,5 +27,6 @@ export const KIND_ICONS: Record<Exclude<PageKind, 'page'>, string> = {
 	template: iconPath('template'),
 	map: 'M9 4 3 6v14l6-2 6 2 6-2V4l-6 2zM9 4v14M15 6v14',
 	timeline: 'M6 2.5h12M6 21.5h12M7.5 2.5c0 4.5 9 5 9 9.5s-9 5-9 9.5M16.5 2.5c0 4.5-9 5-9 9.5s9 5 9 9.5',
-	board: 'M3.5 4.5h17v15h-17zM7 8h4v4H7zM13.5 8H17M13.5 11h3M7 15.5h10'
+	board: 'M3.5 4.5h17v15h-17zM7 8h4v4H7zM13.5 8H17M13.5 11h3M7 15.5h10',
+	hexmap: 'M7 3.5h10l5 8.5-5 8.5H7l-5-8.5zM7 3.5 12 12M17 3.5 12 12M2 12h10'
 };

@@ -10,6 +10,7 @@
 	import MapBoard from '#lib/components/MapBoard.svelte';
 	import TimelineBoard from '#lib/components/TimelineBoard.svelte';
 	import BoardView from '#lib/components/BoardView.svelte';
+	import HexMapBoard from '#lib/components/HexMapBoard.svelte';
 	import type { PageProps } from './$types';
 
 	let { data, form }: PageProps = $props();
@@ -84,6 +85,10 @@
 	{:else if data.boardData}
 		<section class="board" aria-label={t('kinds.board')}>
 			<BoardView data={data.boardData} slug={data.page.slug} form={result} />
+		</section>
+	{:else if data.hexData}
+		<section class="board" aria-label={t('kinds.hexmap')}>
+			{#key data.page.slug}<HexMapBoard data={data.hexData} title={data.page.title} slug={data.page.slug} form={result} />{/key}
 		</section>
 	{/if}
 

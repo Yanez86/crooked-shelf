@@ -1,0 +1,15 @@
+{
+	"id": "pergamena",
+	"name": "Pergamena",
+	"terrains": [
+		{ "id": "plains", "name": { "it": "Pianura", "en": "Plains" }, "fill": "#efe3c8", "ink": "#5a4325", "glyph": "M5 17L8 8M12 17V6M19 17l-3-9" },
+		{ "id": "forest", "name": { "it": "Foresta", "en": "Forest" }, "fill": "#efe3c8", "ink": "#5a4325", "glyph": "M8 4l5 9H3zM8 13v4M16 7l5 9H11zM16 16v4" },
+		{ "id": "hills", "name": { "it": "Colline", "en": "Hills" }, "fill": "#efe3c8", "ink": "#5a4325", "glyph": "M2 17Q8 6 14 17M10 17q6-9 12 0" },
+		{ "id": "mountains", "name": { "it": "Montagne", "en": "Mountains" }, "fill": "#efe3c8", "ink": "#5a4325", "glyph": "M2 19L9 5l7 14M11 19l5-9 6 9M7 9l2 2 2-2" },
+		{ "id": "swamp", "name": { "it": "Palude", "en": "Swamp" }, "fill": "#efe3c8", "ink": "#5a4325", "glyph": "M4 17h16M7 21h10M8 17L6 9M12 17V7M16 17l2-8" },
+		{ "id": "water", "name": { "it": "Acqua", "en": "Water" }, "fill": "#efe3c8", "ink": "#5a4325", "glyph": "M2 10q3-4 6 0t6 0 6 0M4 17q3-4 6 0t6 0 6 0" },
+		{ "id": "desert", "name": { "it": "Deserto", "en": "Desert" }, "fill": "#efe3c8", "ink": "#5a4325", "glyph": "M2 17q6-9 12 0M12 13q5-6 10 2M6 20h.01M12 21h.01M18 20h.01" },
+		{ "id": "badlands", "name": { "it": "Lande desolate", "en": "Wastes" }, "fill": "#efe3c8", "ink": "#5a4325", "glyph": "M3 18h18M5 18l3-8 3 8M13 18l2-6 2 6M9 6l1 2M15 5l1 2" },
+		{ "id": "graveyard", "name": { "it": "Cimitero", "en": "Graveyard" }, "fill": "#e6dcc9", "ink": "#3f2f1a", "glyph": "M7 20v-9a3 3 0 0 1 6 0v9M10 13v4M8.5 14.5h3M15 20v-6a2.5 2.5 0 0 1 5 0v6M3 20h18" }
+	]
+}

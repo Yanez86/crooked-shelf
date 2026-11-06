@@ -1031,6 +1031,134 @@
 		},
 		"layerName": "Nome del livello"
 	},
+	"hex": {
+		"tilesets": {
+			"tratto": "Tratto"
+		},
+		"terrains": {
+			"plains": "Pianura",
+			"forest": "Foresta",
+			"hills": "Colline",
+			"mountains": "Montagne",
+			"swamp": "Palude",
+			"water": "Acqua",
+			"desert": "Deserto",
+			"tundra": "Tundra",
+			"jungle": "Giungla",
+			"badlands": "Calanchi"
+		},
+		"states": {
+			"hidden": "Nascosto",
+			"glimpsed": "Intravisto",
+			"explored": "Esplorato"
+		},
+		"brush": {
+			"explored": "Esplora",
+			"glimpsed": "Intravedi",
+			"hidden": "Nascondi"
+		},
+		"modes": {
+			"label": "Modalità",
+			"terrain": "Terreno",
+			"features": "Elementi",
+			"fog": "Scoperta",
+			"party": "Gruppo"
+		},
+		"hints": {
+			"terrain": "Clic su un esagono per dipingerlo col terreno scelto, anche trascinando. Il + sul bordo aggiunge un esagono: nasce nascosto ai giocatori.",
+			"erase": "Clic su un esagono per toglierlo. Quelli con dentro degli elementi o il gruppo restano.",
+			"features": "Clic su un esagono per vederne gli elementi e aggiungerne: città, dungeon, luoghi. Ognuno ha la sua visibilità e può aprire una pagina.",
+			"fog": "Scegli cosa sanno i giocatori e clicca gli esagoni, anche trascinando. Gli esagoni nascosti non arrivano al loro browser.",
+			"party": "Clic su un esagono per spostare il gruppo: quell'esagono diventa esplorato, quelli intorno intravisti."
+		},
+		"settings": "Mappa a esagoni",
+		"orientation": "Orientamento",
+		"orientations": {
+			"flat": "Lati piatti in alto",
+			"pointy": "Punte in alto"
+		},
+		"orientationHint": "Cambiarlo gira la mappa: gli esagoni restano vicini come prima, cambiano solo i loro numeri.",
+		"renumber": "Rinumera: l'esagono più in alto a sinistra diventa 0101",
+		"renumberHint": "I numeri seguono da soli l'angolo in alto a sinistra finché i giocatori non scoprono niente; poi restano fermi, perché li hanno visti.",
+		"across": "Un esagono è largo",
+		"unit": "Unità",
+		"scaleHint": "Per dire le distanze, ad esempio 6 miglia.",
+		"tileset": "Set di tasselli",
+		"tilesetHint": "Altri set arrivano coi plugin. Cambiare set non cambia la mappa: gli esagoni ricordano il terreno, non il disegno.",
+		"tilesetMissing": "Il set «{name}» non c'è più (il plugin è spento o è stato tolto): la mappa usa «Tratto».",
+		"builtin": "Incluso",
+		"fromPlugin": "Plugin «{name}»",
+		"erase": "Togli",
+		"revealAround": "Rivela intorno al gruppo",
+		"removeParty": "Togli il gruppo dalla mappa",
+		"views": {
+			"label": "Vista",
+			"map": "Mappa",
+			"list": "Elenco"
+		},
+		"zoomIn": "Ingrandisci",
+		"zoomOut": "Rimpicciolisci",
+		"showLabels": "Numeri degli esagoni",
+		"asPlayer": "Guarda come un giocatore",
+		"legend": {
+			"label": "Legenda",
+			"explored": "Esplorato",
+			"glimpsed": "Intravisto: il terreno sì, cosa contiene no",
+			"hidden": "Nascosto ai giocatori",
+			"secret": "Elemento segreto",
+			"party": "Il gruppo"
+		},
+		"cell": "Esagono {label}",
+		"addCell": "Aggiungi l'esagono {label}",
+		"partyHere": "qui c'è il gruppo",
+		"mapLabel": "Mappa a esagoni: {title}",
+		"keyboardHint": "Con le frecce ci si sposta tra gli esagoni, con Invio se ne sceglie uno (e si usa lo strumento acceso).",
+		"noSelection": "Nessun esagono scelto",
+		"noSelectionHint": "Scegli un esagono sulla mappa o nell'elenco.",
+		"whatPlayersKnow": "Cosa sanno i giocatori",
+		"revealedOn": "Scoperto il {date}.",
+		"notRevealed": "Non ancora scoperto dai giocatori.",
+		"glimpsedHint": "Intravisto da lontano: conoscete il terreno, non cosa contiene.",
+		"features": "Elementi",
+		"noFeatures": "Nessun elemento.",
+		"noFeaturesGlimpsed": "Saprete cosa contiene quando lo esplorerete.",
+		"addFeature": "Aggiungi elemento",
+		"newFeature": "Nuovo elemento in {label}",
+		"editFeature": "Modifica l'elemento",
+		"deleteFeature": "Elimina l'elemento",
+		"featureAdded": "Elemento aggiunto",
+		"featureSaved": "Elemento salvato",
+		"featureDeleted": "Elemento eliminato",
+		"waitExplored": "I giocatori lo vedranno quando l'esagono sarà esplorato.",
+		"kind": "Tipo",
+		"note": "Note del Master",
+		"noteHint": "Le vedi solo tu.",
+		"noteSaved": "Nota salvata",
+		"saveNote": "Salva la nota",
+		"errCell": "Quell'esagono non c'è.",
+		"errTooMany": "La mappa ha già tutti gli esagoni che può avere.",
+		"errNoParty": "Prima metti il gruppo sulla mappa (modalità Gruppo).",
+		"errKept": "Alcuni esagoni restano: hanno dentro degli elementi o il gruppo.",
+		"errSave": "La modifica non è stata salvata: ricarico la mappa.",
+		"painted": "{label}: {terrain}",
+		"added": "Aggiunto l'esagono {label}",
+		"removed": "Tolto l'esagono {label}",
+		"stateSet": "{label}: {state}",
+		"partyMoved": "Il gruppo è in {label}",
+		"revealed": "Scoperti gli esagoni intorno al gruppo",
+		"cols": {
+			"hex": "Esagono",
+			"terrain": "Terreno",
+			"state": "Stato",
+			"contents": "Elementi"
+		},
+		"listEmpty": "Nessun esagono scoperto, per ora.",
+		"summaryMaster": "{total} esagoni, {known} noti ai giocatori",
+		"summaryPlayer": "{n} esagoni scoperti",
+		"scaleLabel": "Un esagono: {d}",
+		"secretFeature": "segreto",
+		"showOnMap": "Mostra sulla mappa"
+	},
 	"rules": {
 		"title": "Regole (SRD 5.2)",
 		"intro": "{n} voci del System Reference Document 5.2, in inglese: incantesimi, mostri, condizioni, oggetti magici, talenti, specie, classi e background.",
@@ -1138,7 +1266,7 @@
 		"noColumns": "Questa bacheca non ha ancora colonne."
 	},
 	"plugins": {
-		"intro": "I plugin aggiungono temi, template, calendari, lingue, regole e link a siti esterni. Contengono solo dati, non programmi: installarli non mette a rischio il server. Sono spenti finché non li accendi. Clicca su un plugin per leggere a cosa serve e come si usa.",
+		"intro": "I plugin aggiungono temi, template, calendari, lingue, regole, link a siti esterni e set di tasselli per le mappe a esagoni. Contengono solo dati, non programmi: installarli non mette a rischio il server. Sono spenti finché non li accendi. Clicca su un plugin per leggere a cosa serve e come si usa.",
 		"on": "Acceso",
 		"off": "Spento",
 		"enable": "Accendi",
@@ -1163,7 +1291,8 @@
 			"calendars": "{n} calendari",
 			"locales": "{n} lingue",
 			"rules": "{n} regole",
-			"links": "{n} link"
+			"links": "{n} link",
+			"hexTilesets": "{n} set di tasselli"
 		},
 		"warnings": "{n} problemi nel plugin (le parti non valide sono ignorate)",
 		"installTitle": "Installare un plugin",
@@ -1304,30 +1433,35 @@
 		"map": "Mappa",
 		"timeline": "Cronologia",
 		"board": "Bacheca",
+		"hexmap": "Mappa a esagoni",
 		"folder": {
 			"map": "Mappe",
 			"template": "Template",
 			"timeline": "Cronologie",
-			"board": "Bacheche"
+			"board": "Bacheche",
+			"hexmap": "Mappe a esagoni"
 		},
 		"list": {
 			"page": "Pagine",
 			"template": "Template",
 			"map": "Mappe",
 			"timeline": "Cronologie",
-			"board": "Bacheche"
+			"board": "Bacheche",
+			"hexmap": "Mappe a esagoni"
 		},
 		"new": {
 			"template": "Nuovo template",
 			"map": "Nuova mappa",
 			"timeline": "Nuova cronologia",
-			"board": "Nuova bacheca"
+			"board": "Nuova bacheca",
+			"hexmap": "Nuova mappa a esagoni"
 		},
 		"hint": {
 			"template": "Blocchi, colonna a lato e icona da fotocopiare per fare pagine nuove.",
 			"map": "Un'immagine con pin, livelli e mappe annidate.",
 			"timeline": "Eventi in ordine di data, nel mondo o al tavolo.",
-			"board": "Schede di appunti in colonne da spostare: indizi, missioni, domande."
+			"board": "Schede di appunti in colonne da spostare: indizi, missioni, domande.",
+			"hexmap": "Esagoni da costruire e scoprire: il Master vede tutto, i giocatori quello che hanno esplorato."
 		},
 		"other": "Altri tipi di pagina",
 		"templateNote": "Questo è un template: ogni pagina fatta con lui parte con i suoi blocchi, la sua colonna a lato e la sua icona.",

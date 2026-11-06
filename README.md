@@ -12,7 +12,7 @@ You install it once on a computer (PC, Raspberry Pi or VPS) and everyone uses it
 - **Campaigns**: one installation, many campaigns. Each one has its own Master, players and pages. Everyone can create their own, up to a limit set by the Admin, and manages them all from the Campaigns panel.
 - **Pages**: block editor with Markdown, `[[Page]]` links, cover, icon, tags and search. Start blank or from a **template**.
 - **Master's secrets**: the Master hides single blocks with the eye icon. Players never receive them, not even in search, versions or exports, and can still edit the page.
-- **Page types**: page, template, map (pins and layers), timeline (fantasy calendars), board (cards in columns).
+- **Page types**: page, template, map (pins and layers), hex map (built and discovered hex by hex), timeline (fantasy calendars), board (cards in columns).
 - **Player sheets**: every player gets a page in the PCs folder when they join.
 - **Sessions**: a calendar of game dates. Players answer in person, remote or absent; below a minimum the session is cancelled. After each session, optional Stars & Wishes feedback. An option the Master turns on per campaign.
 - **Rules**: `@spell[Fireball]` shows the SRD 5.2 text; the D&D Beyond plugin links to the site.
@@ -20,7 +20,7 @@ You install it once on a computer (PC, Raspberry Pi or VPS) and everyone uses it
 - **History**: every save is a version; deleted pages go to the trash.
 - **Accessibility**: WCAG 2.2 AA, keyboard only, text up to 200%, dyslexia fonts, Aria, Neon and Vintage themes (light and dark) plus custom ones.
 - **Languages**: Italian and English; more via a file or a plugin.
-- **Plugins**: data only (themes, templates, calendars, languages, rules, links), never code.
+- **Plugins**: data only (themes, templates, calendars, languages, rules, links, hex tile sets), never code.
 - **Claude**: the Master can connect Claude to a campaign to search, read and, if allowed, write pages.
 - **Your data**: full backup, also automatic every day into a folder such as OneDrive or Google Drive, optionally encrypted with a password; Markdown export (Obsidian-ready), `.shelf` world pack to move a world to another campaign.
 
@@ -68,7 +68,7 @@ La installi una volta su un computer (PC, Raspberry Pi o VPS) e tutti la usano d
 - **Campagne**: una installazione, più campagne. Ognuna ha il suo Master, i suoi giocatori e le sue pagine. Ognuno può crearne di sue, fino al limite scelto dall'Admin, e le gestisce tutte dal pannello Campagne.
 - **Pagine**: editor a blocchi con Markdown, collegamenti `[[Pagina]]`, copertina, icona, tag e ricerca. Si parte da una pagina bianca o da un **template**.
 - **Segreti del Master**: il Master oscura un singolo blocco con l'occhio. Ai giocatori non arriva mai, neanche nella ricerca, nelle versioni o nelle esportazioni, e possono comunque modificare la pagina.
-- **Tipi di pagina**: pagina, template, mappa (pin e livelli), cronologia (calendari fantasy), bacheca (schede in colonne).
+- **Tipi di pagina**: pagina, template, mappa (pin e livelli), mappa a esagoni (costruita e scoperta un esagono alla volta), cronologia (calendari fantasy), bacheca (schede in colonne).
 - **Schede giocatore**: ogni giocatore ha una pagina nella cartella PG, creata quando entra.
 - **Appuntamenti**: il calendario delle sessioni. I giocatori rispondono in presenza, da remoto o assenti; sotto il minimo la sessione salta. Dopo ogni sessione, Stars & Wishes facoltativo. È un'opzione che il Master accende per ogni campagna.
 - **Regole**: `@incantesimo[Fireball]` mostra il testo SRD 5.2; il plugin D&D Beyond porta al sito.
@@ -76,7 +76,7 @@ La installi una volta su un computer (PC, Raspberry Pi o VPS) e tutti la usano d
 - **Storia**: ogni salvataggio è una versione; le pagine eliminate vanno nel cestino.
 - **Accessibilità**: WCAG 2.2 AA, tutto da tastiera, testo fino al 200%, caratteri per la dislessia, temi Aria, Neon e Vintage (chiari e scuri) e personalizzati.
 - **Lingue**: italiano e inglese; altre con un file o un plugin.
-- **Plugin**: solo dati (temi, template, calendari, lingue, regole, link), mai codice.
+- **Plugin**: solo dati (temi, template, calendari, lingue, regole, link, set di tasselli), mai codice.
 - **Claude**: il Master può collegare Claude a una campagna per cercare, leggere e, se lo permette, scrivere pagine.
 - **I tuoi dati**: backup completo, anche automatico ogni giorno in una cartella come quella di OneDrive o Google Drive, se vuoi cifrato con una password; esportazione in Markdown (compatibile con Obsidian), pacchetto mondo `.shelf` per portare un mondo in un'altra campagna.
 

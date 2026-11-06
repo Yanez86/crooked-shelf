@@ -5,6 +5,7 @@ import { PAGE_KINDS, TIMELINE_MODES } from '../../pageKinds.ts';
 import type { PageField, SessionInfo } from '../../content/types.ts';
 import type { Calendar } from '../../calendar.ts';
 import { ANSWERS, MODES, REPEATS } from '../../schedule.ts';
+import { HEX_ORIENTATIONS, HEX_STATES } from '../../hex.ts';
 
 export const users = sqliteTable('users', {
 	id: integer('id').primaryKey({ autoIncrement: true }),
@@ -335,6 +336,75 @@ export const mapPins = sqliteTable('map_pins', {
 	targetMapId: integer('target_map_id'),
 	visibility: text('visibility', { enum: ['players', 'master'] }).notNull()
 });
+
+/**
+ * La mappa di una pagina «mappa a esagoni»: titolo, testo e visibilità sono quelli della pagina.
+ * `partyQ`/`partyR`: dove sta il segnalino del gruppo (nessun segnalino se mancano).
+ */
+export const hexMaps = sqliteTable('hex_maps', {
+	id: integer('id').primaryKey({ autoIncrement: true }),
+	pageId: integer('page_id')
+		.notNull()
+		.unique()
+		.references(() => pages.id, { onDelete: 'cascade' }),
+	orientation: text('orientation', { enum: HEX_ORIENTATIONS }).notNull().default('flat'),
+	/** Quanto è largo un esagono nel mondo (es. 6 miglia); null = non detto. */
+	scale: real('scale'),
+	unit: text('unit').notNull().default(''),
+	/** Il set di tasselli: `tratto` (incluso) o l'id di un set dei plugin. */
+	tileset: text('tileset').notNull().default('tratto'),
+	partyQ: integer('party_q'),
+	partyR: integer('party_r'),
+	/**
+	 * Da dove parte la numerazione (colonna e riga «offset» dell'esagono 0101). Null finché i giocatori non hanno
+	 * scoperto niente: intanto 0101 è l'esagono più in alto a sinistra. Alla prima scoperta si ferma, così i numeri
+	 * che i giocatori hanno visto non cambiano; il Master può rinumerare dalle impostazioni.
+	 */
+	originCol: integer('origin_col'),
+	originRow: integer('origin_row'),
+	createdAt: integer('created_at').notNull(),
+	updatedAt: integer('updated_at').notNull()
+});
+
+/**
+ * Un esagono, in coordinate assiali. `state` dice cosa ne sanno i giocatori: `hidden` non arriva loro affatto.
+ * `note` è del Master e non esce mai per gli altri; `revealedAt` è quando l'hanno scoperto (intravisto o esplorato).
+ */
+export const hexCells = sqliteTable(
+	'hex_cells',
+	{
+		mapId: integer('map_id')
+			.notNull()
+			.references(() => hexMaps.id, { onDelete: 'cascade' }),
+		q: integer('q').notNull(),
+		r: integer('r').notNull(),
+		terrain: text('terrain').notNull(),
+		state: text('state', { enum: HEX_STATES }).notNull().default('hidden'),
+		note: text('note').notNull().default(''),
+		revealedAt: integer('revealed_at')
+	},
+	(t) => [primaryKey({ columns: [t.mapId, t.q, t.r] })]
+);
+
+/** Cosa c'è in un esagono (città, dungeon, luogo…). I giocatori lo vedono se è `players` e l'esagono è esplorato. */
+export const hexFeatures = sqliteTable(
+	'hex_features',
+	{
+		id: integer('id').primaryKey({ autoIncrement: true }),
+		mapId: integer('map_id')
+			.notNull()
+			.references(() => hexMaps.id, { onDelete: 'cascade' }),
+		q: integer('q').notNull(),
+		r: integer('r').notNull(),
+		icon: text('icon').notNull().default('pin'),
+		name: text('name').notNull(),
+		description: text('description').notNull().default(''),
+		pageSlug: text('page_slug'),
+		visibility: text('visibility', { enum: ['players', 'master'] }).notNull(),
+		sort: integer('sort').notNull().default(0)
+	},
+	(t) => [index('hex_features_cell').on(t.mapId, t.q, t.r)]
+);
 
 /** Una pagina «cronologia»: del mondo o della campagna. */
 export const timelines = sqliteTable('timelines', {

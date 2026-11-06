@@ -20,6 +20,8 @@ import { checkTheme } from '../themes.ts';
 import { formatDate, fromText, isCalendar, toText } from '../calendar.ts';
 import { isPageKind, type PageKind, type TimelineMode } from '../pageKinds.ts';
 import { SESSION_TEMPLATE } from '../templates.ts';
+import { exportHexMap, hexLines, importHexMap, type HexExport } from './hexmaps.ts';
+import { PIN_ICONS } from './maps.ts';
 import { translate } from '../i18n/index.ts';
 import type { Visibility } from '../roles.ts';
 
@@ -36,7 +38,7 @@ export interface ExportOptions {
 	allPages: boolean;
 	categoryIds: number[];
 	tagIds: number[];
-	/** Pagine «mappa», con pin e livelli. */
+	/** Pagine «mappa», con pin e livelli, e mappe a esagoni. */
 	maps: boolean;
 	/** Pagine «template». */
 	templates: boolean;
@@ -107,6 +109,8 @@ interface PackPage {
 	session?: boolean;
 	map?: PackMap;
 	timeline?: { mode: TimelineMode; events: PackEvent[] };
+	/** Mappa a esagoni: senza segreti, solo quello che sanno i giocatori. */
+	hex?: HexExport;
 }
 
 const { pages, pageTags, mapLayers, mapPins, timelineEvents } = schema;
@@ -179,7 +183,7 @@ function exportablePages(o: ExportOptions, u: Viewer): PageRow[] {
 		// Le bacheche sono appunti del tavolo, non del mondo: restano nella campagna.
 		if (p.kind === 'board') return false;
 		if (p.kind === 'template') return o.templates;
-		if (p.kind === 'map') return o.maps;
+		if (p.kind === 'map' || p.kind === 'hexmap') return o.maps;
 		if (p.kind === 'timeline') return o.timeline && getTimeline(p.id)?.mode === 'world';
 		return o.allPages || (p.categoryId !== null && cats.has(p.categoryId)) || tagged.has(p.id);
 	});
@@ -291,7 +295,8 @@ export function exportWorld(o: ExportOptions, u: Viewer): Uint8Array {
 			kind: p.kind,
 			...(p.kind === 'template' ? { session: !!p.session } : {}),
 			...(p.kind === 'map' ? { map: mapOf(p) } : {}),
-			...(p.kind === 'timeline' ? { timeline: timelineOf(p) } : {})
+			...(p.kind === 'timeline' ? { timeline: timelineOf(p) } : {}),
+			...(p.kind === 'hexmap' ? { hex: exportHexMap(p.id, secrets) } : {})
 		};
 	});
 	out['pages.json'] = json(packPages);
@@ -494,7 +499,7 @@ export function importPack(pack: Pack, opts: { conflict: Conflict; calendar: boo
 		if (existing) updatePage(existing, input, u, true);
 		const page = existing ? getPageBySlug(existing.slug)! : createPage(input, u);
 		written.push({ p, kind, page, replaced: !!existing });
-		done[kind === 'template' ? 'templates' : kind === 'map' ? 'maps' : 'pages']++;
+		done[kind === 'template' ? 'templates' : kind === 'map' || kind === 'hexmap' ? 'maps' : 'pages']++;
 	}
 	const home = opts.home ? written.find((w) => w.kind === 'page' && w.p.slug === pack.manifest.home) : undefined;
 	if (home) setHomePage(home.page.id);
@@ -567,6 +572,11 @@ export function importPack(pack: Pack, opts: { conflict: Conflict; calendar: boo
 		);
 		done.events++;
 	};
+	// Mappe a esagoni: esagoni ed elementi del pacchetto (gli elementi portano alle pagine col loro nuovo indirizzo).
+	for (const { p, kind, page } of written) {
+		if (kind === 'hexmap' && p.hex && typeof p.hex === 'object') importHexMap(page.id, p.hex, (s) => slugMap.get(s) ?? s, PIN_ICONS);
+	}
+
 	for (const { p, kind, page, replaced } of written) {
 		if (kind !== 'timeline') continue;
 		setTimelineMode(page.id, p.timeline?.mode === 'campaign' ? 'campaign' : 'world');
@@ -664,7 +674,11 @@ export function exportMarkdown(u: Viewer): Uint8Array {
 		// Gli eventi della cronologia in fondo, uno per riga: data, titolo, descrizione.
 		const tl = p.kind === 'timeline' ? getTimeline(p.id) : undefined;
 		const events = tl ? listEvents(tl, u) : [];
-		const list: DocNode[] = events.length
+		// Le mappe a esagoni in fondo, un esagono per riga, come le vede chi esporta.
+		const hexes = p.kind === 'hexmap' ? hexLines(p.id, u, getSettings().defaultLocale) : [];
+		const list: DocNode[] = hexes.length
+			? [{ type: 'bulletList', content: hexes.map((h) => ({ type: 'listItem', content: [text(h)] })) }]
+			: events.length
 			? [
 					{
 						type: 'bulletList',

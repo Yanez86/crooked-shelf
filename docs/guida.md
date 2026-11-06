@@ -163,6 +163,21 @@ I **livelli** raggruppano i pin e si accendono e spengono da «Livelli». Il **L
 
 Sotto la mappa c'è l'elenco dei pin. Immagine, scala e mappa che la contiene si cambiano modificando la pagina; la «Descrizione», il testo della pagina, compare in un riquadro sopra la mappa.
 
+## Mappe a esagoni
+
+Una mappa che si costruisce un esagono alla volta, mentre i giocatori esplorano. La crea il Master con Nuova pagina › «Nuova mappa a esagoni», scegliendo orientamento (lati piatti o punte in alto), quanto è largo un esagono (es. 6 miglia) e il set di tasselli. Si parte da un esagono solo.
+
+Il Master ha quattro modalità:
+
+- **Terreno**: sceglie un terreno e clicca gli esagoni per dipingerli (col mouse anche trascinando). Il **+** intorno alla mappa aggiunge un esagono; «Togli» li toglie, tranne quelli con dentro elementi o il gruppo.
+- **Elementi**: clicca un esagono e, nella scheda a destra, «Aggiungi elemento»: città, dungeon, luogo… con nome, descrizione, pagina collegata e visibilità (Giocatori o Solo Master). La pagina collegata dice in che mappa compare.
+- **Scoperta**: decide cosa sanno i giocatori, esagono per esagono (anche trascinando): **nascosto**, **intravisto** (vedono il terreno, non cosa c'è dentro) o **esplorato** (vedono gli elementi per i giocatori). «Rivela intorno al gruppo» esplora l'esagono del gruppo e fa intravedere quelli intorno.
+- **Gruppo**: clicca un esagono per spostarci il segnalino del gruppo; quell'esagono diventa esplorato e quelli intorno intravisti.
+
+Nella scheda dell'esagono il Master cambia anche cosa sanno i giocatori e scrive le sue **note**, che vede solo lui. «Guarda come un giocatore» apre la vista giocatore della campagna.
+
+I giocatori ricevono solo gli esagoni scoperti: quelli nascosti non arrivano al loro browser, quindi non sanno neanche quanto è grande la mappa. Da tastiera ci si sposta tra gli esagoni con le frecce e Invio sceglie (o usa lo strumento acceso); «Elenco» mostra la stessa mappa come tabella. I numeri degli esagoni (0504: colonna e riga) seguono l'angolo in alto a sinistra finché i giocatori non scoprono niente, poi restano fermi; Modifica › «Rinumera» li fa ripartire. Altri set di tasselli arrivano coi plugin (vedi [Creare un plugin](plugin.md)): cambiare set non cambia la mappa.
+
 ## Galleria
 
 Tutte le immagini della campagna, le più recenti prima: copertine, colonna a lato, testo delle pagine, mappe e risorse. Sotto ognuna c'è dove compare; cliccandola si apre in grande (← → per scorrere, Esc per chiudere). Si filtrano per pagine, mappe o risorse. Ognuno vede solo le immagini di quello che può vedere.

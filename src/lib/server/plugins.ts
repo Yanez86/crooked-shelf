@@ -7,9 +7,11 @@ import { fromText, isCalendar, toText, type Calendar } from '../calendar.ts';
 import { isDoc, type DocNode } from '../content/types.ts';
 import { setExtraLocales, type Dict } from '../i18n/index.ts';
 import { RULE_KINDS, setRuleLinks, type RuleKind, type RuleLink } from '../rules/index.ts';
+import { checkTileset, type PluginTileset } from '../hexTiles.ts';
 
 /**
- * Plugin: cartelle con un plugin.json e file JSON (temi, template, calendari, lingue, regole, link a siti esterni).
+ * Plugin: cartelle con un plugin.json e file JSON (temi, template, calendari, lingue, regole, link a siti esterni,
+ * set di tasselli per le mappe a esagoni).
  * Solo dati, nessun codice: installarli non dà accesso al server. Si accendono da Amministrazione › Plugin.
  *
  * Cartelle lette: `plugins/` accanto al programma (esempi inclusi) e `<CS_DATA_DIR>/plugins` (quelli installati).
@@ -47,6 +49,8 @@ export interface Plugin {
 	locales: Record<string, Dict>;
 	rules: PluginRule[];
 	links: RuleLink[];
+	/** Set di tasselli delle mappe a esagoni (vedi hexTiles.ts). */
+	hexTilesets: PluginTileset[];
 	/** Problemi trovati nei file (il resto del plugin funziona). */
 	warnings: string[];
 }
@@ -98,6 +102,7 @@ function loadOne(dir: string): Plugin | null {
 		locales: {},
 		rules: [],
 		links: [],
+		hexTilesets: [],
 		warnings: []
 	};
 	if (!p.description) p.warnings.push('plugin.json: description');
@@ -154,6 +159,13 @@ function loadOne(dir: string): Plugin | null {
 			if (!RULE_KINDS.includes(k as RuleKind) || !name) continue;
 			p.rules.push({ k: k as RuleKind, i: text(e.key ?? e.i, 120) || name, n: name, s: text(e.summary ?? e.s, 300), t: text(e.text ?? e.t, 20000) });
 		}
+	});
+	each('hexTilesets', (data, file) => {
+		const r = checkTileset(data);
+		if (!r.ok) throw new Error(r.error);
+		if (p.hexTilesets.some((t) => t.id === r.tileset.id)) throw new Error('id');
+		p.hexTilesets.push(r.tileset);
+		for (const problem of r.problems) p.warnings.push(`hexTilesets: ${file} (${problem})`);
 	});
 	each('links', (data) => {
 		const l = data as Record<string, unknown>;
@@ -218,6 +230,9 @@ export const pluginsVersion = () => version;
 export const pluginThemes = () => enabledPlugins().flatMap((p) => p.themes);
 export const pluginTemplates = () => enabledPlugins().flatMap((p) => p.templates.map((t, i) => ({ ...t, key: `p:${p.id}:${i}`, plugin: p.name })));
 export const pluginCalendars = () => enabledPlugins().flatMap((p) => p.calendars.map((c, i) => ({ ...c, key: `p:${p.id}:${i}` })));
+/** I set di tasselli dei plugin accesi. L'id che si salva nella mappa è `<plugin>/<set>`. */
+export const pluginHexTilesets = () =>
+	enabledPlugins().flatMap((p) => p.hexTilesets.map((t) => ({ ...t, id: `${p.id}/${t.id}`, source: p.name, license: p.license })));
 export const pluginRules = () => enabledPlugins().flatMap((p) => p.rules.map((r) => ({ ...r, src: p.name })));
 
 /** Temi oltre a quelli inclusi: creati dall'Admin e portati dai plugin accesi. */

@@ -10,6 +10,8 @@ import { eventsForPage } from '#lib/server/timeline.ts';
 import { mapActions, mapView } from '#lib/server/mapPage.ts';
 import { addEvent, timelineView } from '#lib/server/timelinePage.ts';
 import { boardActions, boardView } from '#lib/server/boardPage.ts';
+import { hexActions, hexView } from '#lib/server/hexPage.ts';
+import { hexMapsForPage } from '#lib/server/hexmaps.ts';
 import { getCalendar, isHomePage } from '#lib/server/settings.ts';
 import { formatDate } from '#lib/calendar.ts';
 import { canCreateKind } from '#lib/pageKinds.ts';
@@ -46,11 +48,12 @@ export const load: PageServerLoad = ({ params, locals, url }) => {
 		mapData: page.kind === 'map' ? mapView(page, locals.user, locals.locale) : null,
 		timelineData: page.kind === 'timeline' ? timelineView(page, locals.user, locals.locale, url) : null,
 		boardData: page.kind === 'board' ? boardView(page, locals.user, locals.locale) : null,
+		hexData: page.kind === 'hexmap' ? hexView(page, locals.user, locals.locale) : null,
 		// Un template si fotocopia da qui; una nuova mappa può nascere dentro questa.
 		canCopy: page.kind === 'template' && canCreateKind('page', locals.user),
 		// Una scheda giocatore: di chi è, e il pulsante per metterci dentro una pagina nuova.
 		sheet: sheetInfo(page, locals.user),
-		maps: mapsForPage(page.slug, locals.user),
+		maps: [...mapsForPage(page.slug, locals.user), ...hexMapsForPage(page.slug, locals.user)],
 		events: eventsForPage(page.id, locals.user).map((e) => ({ id: e.id, title: e.title, when: when(e), realDate: e.realDate, timeline: e.timeline })),
 		trail: pageTrail(pageTree(locals.user), page.id),
 		tags: meta.tags,
@@ -69,9 +72,9 @@ export const actions: Actions = {
 	layer: async ({ params, request, locals }) => mapActions.layer(visiblePage(params.slug, locals.user), locals.user, await form(request)),
 	deleteLayer: async ({ params, request, locals }) => mapActions.deleteLayer(visiblePage(params.slug, locals.user), locals.user, await form(request)),
 	addEvent: async ({ params, request, locals }) => addEvent(visiblePage(params.slug, locals.user), locals.user, await form(request)),
-	// Schede e colonne delle bacheche.
+	// Schede e colonne delle bacheche, elementi e note delle mappe a esagoni.
 	...Object.fromEntries(
-		Object.entries(boardActions).map(([name, act]) => [
+		Object.entries({ ...boardActions, ...hexActions }).map(([name, act]) => [
 			name,
 			async ({ params, request, locals }: Parameters<Actions[string]>[0]) => act(visiblePage(params.slug, locals.user), locals.user, await form(request))
 		])

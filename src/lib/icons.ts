@@ -54,6 +54,9 @@ export const UI_ICONS: Record<string, string> = {
 	panel: 'M3.75 4.75h16.5v14.5H3.75zM9.5 4.75v14.5M5.75 8.5h1.75M5.75 11.5h1.75',
 	ruler: 'M3 16.5 16.5 3 21 7.5 7.5 21zM7.5 12l2 2M10.5 9l2 2M13.5 6l2 2',
 	marker: 'M12 21.25s-6.5-5.75-6.5-11.5a6.5 6.5 0 0 1 13 0c0 5.75-6.5 11.5-6.5 11.5zM12 7.75a2 2 0 1 0 0 4 2 2 0 0 0 0-4z',
+	// Mappe a esagoni: l'esagono (il terreno) e la bandierina (il gruppo).
+	hexagon: 'M7 3.5h10l5 8.5-5 8.5H7l-5-8.5z',
+	flag: 'M6 21V4M6 4h11l-2.5 4L17 12H6',
 	layers: 'M12 3 3 8l9 5 9-5zM3 12l9 5 9-5M3 16l9 5 9-5',
 	markerPlus: 'M12 21.25s-6.5-5.75-6.5-11.5a6.5 6.5 0 0 1 13 0c0 5.75-6.5 11.5-6.5 11.5zM12 7v5.5M9.25 9.75h5.5',
 	contrast: 'M3.75 3.75h16.5v16.5H3.75zM3.75 20.25 20.25 3.75',

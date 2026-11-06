@@ -18,7 +18,7 @@ export const load: PageServerLoad = () => {
 			author: p.author,
 			license: p.license,
 			enabled: on.has(p.id),
-			counts: { themes: p.themes.length, templates: p.templates.length, calendars: p.calendars.length, locales: Object.keys(p.locales).length, rules: p.rules.length, links: p.links.length },
+			counts: { themes: p.themes.length, templates: p.templates.length, calendars: p.calendars.length, locales: Object.keys(p.locales).length, rules: p.rules.length, links: p.links.length, hexTilesets: p.hexTilesets.length },
 			warnings: p.warnings
 		}))
 	};

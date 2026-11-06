@@ -31,7 +31,14 @@
 					kind: data.kind as PageKind
 				}
 	);
-	const extra = $derived(form?.extra ?? { map: { parentId: data.parentId, across: '', unit: '' }, mode: 'world', columns: undefined as string | undefined });
+	const extra = $derived(
+		form?.extra ?? {
+			map: { parentId: data.parentId, across: '', unit: '' },
+			mode: 'world',
+			columns: undefined as string | undefined,
+			hex: { orientation: 'flat', across: '', unit: '', tileset: 'tratto' }
+		}
+	);
 	const kind = $derived(values.kind);
 
 	/** Collegamento al modulo scelto, mantenendo titolo, indirizzo e categoria. */
@@ -106,14 +113,14 @@
 			submitLabel={kind === 'map' ? t('maps.create') : t('page.create')}
 			cancelHref={data.inside ? `/wiki/${data.inside.slug}` : '/wiki'}
 			inside={data.inside ?? undefined}
-			settings={kind === 'map' || kind === 'timeline' || kind === 'board' ? settings : undefined}
+			settings={kind === 'map' || kind === 'timeline' || kind === 'board' || kind === 'hexmap' ? settings : undefined}
 		/>
 	{/key}
 {/if}
 
 {#snippet settings()}
-	{#if kind === 'map' || kind === 'timeline' || kind === 'board'}
-		<KindSettings {kind} map={extra.map} mode={extra.mode} columns={extra.columns} parents={data.parents} requireImage={true} />
+	{#if kind === 'map' || kind === 'timeline' || kind === 'board' || kind === 'hexmap'}
+		<KindSettings {kind} map={extra.map} mode={extra.mode} columns={extra.columns} parents={data.parents} requireImage={true} hex={extra.hex} tilesets={data.tilesets} />
 	{/if}
 {/snippet}
 
