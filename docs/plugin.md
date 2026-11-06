@@ -46,13 +46,13 @@ I plugin sono spenti finché l'Admin non li accende. Un plugin installato con lo
 ```
 
 - `id`: lettere minuscole, numeri e trattini.
-- `description` e `instructions`: ogni plugin deve dire a cosa serve e come si usa. In `instructions`, `\n` va a capo. Si leggono cliccando sul plugin, insieme ad autore, licenza e contenuto; se mancano, la pagina Plugin lo segnala.
+- `description` e `instructions`: a cosa serve e come si usa (in `instructions`, `\n` va a capo). Si leggono cliccando sul plugin; se mancano, la pagina Plugin lo segnala.
 - I percorsi sono relativi alla cartella del plugin e non possono uscirne.
 - Un file non valido viene ignorato e segnalato nella pagina Plugin; il resto del plugin funziona.
 
 ## Tema
 
-Gli stessi colori dell'editor dei temi, in formato `#rrggbb`. Il tema viene **rifiutato** se qualche testo non è leggibile (contrasto WCAG AA). Il modo più semplice: crealo nell'editor dei temi e usa «Esporta». L'immagine di sfondo dell'editor non vale per i temi dei plugin.
+Gli stessi colori dell'editor dei temi, in formato `#rrggbb`. Il tema è **rifiutato** se un testo non è leggibile (contrasto WCAG AA). Conviene crearlo nell'editor dei temi e usare «Esporta». I temi dei plugin non hanno l'immagine di sfondo.
 
 ```json
 { "name": "Gotico", "scheme": "dark", "colors": { "bg": "#14111a", "text": "#efe9f5", "…": "…" } }
@@ -70,9 +70,9 @@ Gli stessi colori dell'editor dei temi, in formato `#rrggbb`. Il tema viene **ri
 }
 ```
 
-`content` è il formato dell'editor: il modo più semplice per ottenerlo è creare il template nella wiki (Nuova pagina › Nuovo template) e copiarlo da un pacchetto mondo esportato (in `pages.json`, la pagina con `"kind": "template"`). Un blocco con `"attrs": { "visibility": "master" }` è un segreto del Master: le copie lo hanno solo se le fa il Master. Il vecchio riquadro `{ "type": "secret", "content": [...] }` funziona ancora e diventa i blocchi che contiene, oscurati.
+`content` è il formato dell'editor: crea il template nella wiki (Nuova pagina › Nuovo template) e copialo da un pacchetto mondo esportato (in `pages.json`, la pagina con `"kind": "template"`). Un blocco con `"attrs": { "visibility": "master" }` è un segreto del Master: lo hanno solo le copie fatte dal Master. Il vecchio riquadro `{ "type": "secret", "content": [...] }` funziona ancora: diventa i suoi blocchi, oscurati.
 
-Accendendo il plugin, i suoi template diventano pagine della wiki (una volta sola): si modificano come ogni pagina, e restano anche se il plugin si spegne.
+Accendendo il plugin, i suoi template diventano pagine della wiki, una volta sola: si modificano come le altre e restano anche spegnendolo.
 
 ## Calendario
 
@@ -104,4 +104,4 @@ Porta i riferimenti `@regola` a un sito esterno. `{name}` diventa il nome della 
 { "site": "D&D Beyond", "url": "https://www.dndbeyond.com/search?q={name}" }
 ```
 
-`url` deve iniziare con `https://` e contenere `{name}`. Il riferimento nella pagina usa il primo link dei plugin accesi; l'anteprima e la scheda della regola li mostrano tutti, con il pulsante «Apri su `site`». Senza link, il riferimento porta alla scheda della regola, o resta testo se la voce non esiste.
+`url` inizia con `https://` e contiene `{name}`. Il riferimento usa il primo link dei plugin accesi; anteprima e scheda della regola li mostrano tutti, col pulsante «Apri su `site`». Senza link porta alla scheda della regola, o resta testo se la voce non esiste.
